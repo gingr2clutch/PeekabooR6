@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderBox } from "@/components/PlaceholderBox";
 import { SuccessRateVoter } from "@/components/SuccessRateVoter";
@@ -88,6 +89,7 @@ export default async function PeekDetailPage({
                   sizes="(max-width: 768px) 100vw, 480px"
                   className="object-cover"
                 />
+                <BirdsEyeWatermark placement="inset" size="compact" />
               </div>
             ) : (
               <PlaceholderBox label="Screenshot will appear here" aspect="aspect-video" />

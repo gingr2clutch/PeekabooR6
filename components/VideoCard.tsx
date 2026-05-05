@@ -33,7 +33,7 @@ export function VideoCard({ src, poster }: Props) {
         onPlay={() => setShowOverlay(false)}
         className="absolute inset-0 h-full w-full object-contain"
       />
-      <BirdsEyeWatermark placement="inset" />
+      <BirdsEyeWatermark placement="inset" size="compact" />
       {showOverlay && (
         <button
           type="button"
