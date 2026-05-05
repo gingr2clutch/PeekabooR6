@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AnimatedRate } from "@/components/AnimatedRate";
 import { PageHeader } from "@/components/PageHeader";
 import { PeekMedia } from "@/components/PeekMedia";
-import { SuccessRateVoter } from "@/components/SuccessRateVoter";
+import { VoteButtons } from "@/components/VoteButtons";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
 
@@ -60,12 +61,13 @@ export default async function PeekDetailPage({
   return (
     <>
       <PageHeader back={{ href: backHref, label: "Back" }} />
-      <main className="fade-in-up mx-auto max-w-5xl px-6 pb-20 pt-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+      <main className="fade-in-up mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">
+        {/* Page header */}
+        <div className="text-center">
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
             {peek.name}
           </h1>
-          <p className="mt-2 text-sm text-muted">
+          <p className="mt-3 text-sm text-muted">
             <Link href={`/maps/${map.slug}`} className="hover:text-brand">
               {map.name}
             </Link>{" "}
@@ -77,16 +79,31 @@ export default async function PeekDetailPage({
           </p>
         </div>
 
-        <div className="mb-12 flex flex-wrap items-start justify-center gap-x-12 gap-y-8">
-          <SuccessRateVoter
-            peekId={peek.id}
-            initialRate={peek.success_rate}
-          />
-          <DifficultyStat difficulty={peek.difficulty} />
-          <RiskStat risk={peek.risk} />
+        {/* Hero stats card — 32px below header */}
+        <section className="mt-8 rounded-card border border-border bg-card p-6 sm:p-8">
+          <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <StatCell label="Success rate">
+              <AnimatedRate
+                value={peek.success_rate}
+                className="text-[60px] font-bold leading-none tracking-tight text-brand sm:text-[72px]"
+              />
+            </StatCell>
+            <StatCell label="Difficulty">
+              <DifficultyDots difficulty={peek.difficulty} />
+            </StatCell>
+            <StatCell label="Risk">
+              <RiskPill risk={peek.risk} />
+            </StatCell>
+          </div>
+        </section>
+
+        {/* Vote buttons — 16px below stats card */}
+        <div className="mt-4 flex justify-center">
+          <VoteButtons peekId={peek.id} />
         </div>
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+        {/* Content section — 64px below buttons */}
+        <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
           <PeekMedia
             screenshotUrl={peek.screenshot_url}
             videoUrl={peek.video_url}
@@ -99,27 +116,39 @@ export default async function PeekDetailPage({
   );
 }
 
-function DifficultyStat({ difficulty }: { difficulty: number }) {
+function StatCell({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center justify-start gap-4 px-4 py-6 sm:py-2">
       <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-        Difficulty
+        {label}
       </span>
-      <div className="mt-3 flex gap-1.5">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <span
-            key={n}
-            className={`h-2.5 w-2.5 rounded-full ${
-              n <= difficulty ? "bg-ink" : "bg-border"
-            }`}
-          />
-        ))}
-      </div>
+      <div className="flex min-h-[72px] flex-1 items-center">{children}</div>
     </div>
   );
 }
 
-function RiskStat({ risk }: { risk: string }) {
+function DifficultyDots({ difficulty }: { difficulty: number }) {
+  return (
+    <div className="flex gap-1.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <span
+          key={n}
+          className={`h-2.5 w-2.5 rounded-full ${
+            n <= difficulty ? "bg-ink" : "bg-border"
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function RiskPill({ risk }: { risk: string }) {
   const riskColor =
     risk === "low"
       ? "text-emerald-700 bg-emerald-50 border-emerald-200"
@@ -127,16 +156,11 @@ function RiskStat({ risk }: { risk: string }) {
         ? "text-red-700 bg-red-50 border-red-200"
         : "text-amber-700 bg-amber-50 border-amber-200";
   return (
-    <div className="flex flex-col items-center">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-        Risk
-      </span>
-      <span
-        className={`mt-3 inline-flex items-center rounded-btn border px-2.5 py-1 text-xs font-medium capitalize ${riskColor}`}
-      >
-        {risk}
-      </span>
-    </div>
+    <span
+      className={`inline-flex items-center rounded-btn border px-3 py-1 text-sm font-medium capitalize ${riskColor}`}
+    >
+      {risk}
+    </span>
   );
 }
 
@@ -166,12 +190,13 @@ function Instructions({
       )}
 
       {tip && (
-        <div className="mt-8 border-t border-border pt-6">
+        <>
+          <hr className="my-6 border-border" />
           <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand">
             Pro tip
           </span>
           <p className="mt-2 text-[16px] leading-[1.6]">{tip}</p>
-        </div>
+        </>
       )}
     </div>
   );

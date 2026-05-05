@@ -56,21 +56,22 @@ export default async function MapPage({
     <>
       <PageHeader />
       <main className="fade-in-up mx-auto max-w-4xl px-6 pb-20 pt-6">
-        <div className="mb-8">
+        <div className="mb-10 text-center">
           <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
             {map.name}
           </h1>
-          <p className="mt-2 text-sm text-muted">
+          <p className="mt-3 inline-flex items-center gap-2 text-sm text-muted">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand" />
             {floorLabel} · {peekLabel}
           </p>
         </div>
 
-        <ul className="space-y-6">
+        <ul className="space-y-7">
           {floors.map((floor) => (
             <li key={floor.id}>
               <Link
                 href={`/maps/${map.slug}/${floor.slug}`}
-                className="group block overflow-hidden rounded-card border border-border bg-card transition-all duration-150 ease-out hover:-translate-y-0.5 hover:shadow-lg"
+                className="group block overflow-hidden rounded-card border border-border bg-card transition-all duration-200 ease-out hover:scale-[1.015] hover:border-brand/30 hover:shadow-lg"
               >
                 <div className="relative aspect-video w-full overflow-hidden bg-bg">
                   {floor.birds_eye_url ? (
@@ -79,7 +80,7 @@ export default async function MapPage({
                       alt={`${map.name} ${floor.name} bird's-eye view`}
                       fill
                       sizes="(max-width: 768px) 100vw, 768px"
-                      className="object-cover transition-transform duration-150 ease-out group-hover:scale-[1.02]"
+                      className="object-cover transition-transform duration-200 ease-out group-hover:scale-105"
                     />
                   ) : (
                     <div className="placeholder-stripes flex h-full w-full items-center justify-center">
@@ -88,23 +89,27 @@ export default async function MapPage({
                       </span>
                     </div>
                   )}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent from-60% to-black/15" />
                 </div>
 
                 <div className="flex items-center justify-between gap-4 px-5 py-4">
-                  <div className="min-w-0">
-                    <div className="text-lg font-semibold tracking-tight">
-                      {floor.name}
-                    </div>
-                    <div className="mt-0.5 text-sm text-muted">
-                      {(() => {
-                        const n = peekCountByFloor.get(floor.id) ?? 0;
-                        return `${n} ${n === 1 ? "peek" : "peeks"}`;
-                      })()}
+                  <div className="flex items-stretch gap-3 min-w-0">
+                    <span aria-hidden className="w-[3px] rounded-full bg-brand" />
+                    <div className="flex flex-col justify-center">
+                      <div className="text-xl font-bold tracking-tight">
+                        {floor.name}
+                      </div>
+                      <div className="mt-0.5 text-sm text-muted">
+                        {(() => {
+                          const n = peekCountByFloor.get(floor.id) ?? 0;
+                          return `${n} ${n === 1 ? "peek" : "peeks"}`;
+                        })()}
+                      </div>
                     </div>
                   </div>
                   <span
                     aria-hidden
-                    className="text-xl text-muted opacity-0 transition-all duration-150 ease-out group-hover:translate-x-0.5 group-hover:text-brand group-hover:opacity-100"
+                    className="text-xl text-muted transition-all duration-200 ease-out group-hover:translate-x-1 group-hover:text-brand"
                   >
                     →
                   </span>
