@@ -297,7 +297,7 @@ function SaveButton({ children }: { children: React.ReactNode }) {
   return (
     <button
       type="submit"
-      className="rounded-btn bg-ink px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-brand"
+      className="rounded-btn bg-ink px-3 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-brand active:scale-95"
     >
       {children}
     </button>

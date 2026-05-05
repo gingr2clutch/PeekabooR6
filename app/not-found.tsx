@@ -5,7 +5,7 @@ export default function NotFound() {
   return (
     <>
       <PageHeader />
-      <main className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-6 py-16 text-center">
+      <main className="fade-in-up mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-6 py-16 text-center">
         <h1 className="text-4xl font-semibold tracking-tight">Not found</h1>
         <p className="mt-3 text-muted">
           That page doesn't exist — or it isn't published yet.

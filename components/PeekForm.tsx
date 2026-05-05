@@ -162,7 +162,7 @@ export function PeekForm({ floors, action, submitLabel, initial }: Props) {
 
         <button
           type="submit"
-          className="rounded-btn bg-ink px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand"
+          className="rounded-btn bg-ink px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-brand active:scale-95"
         >
           {submitLabel}
         </button>

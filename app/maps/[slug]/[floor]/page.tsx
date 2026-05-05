@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
@@ -9,6 +10,21 @@ import {
 } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string; floor: string };
+}): Promise<Metadata> {
+  const map = await getMapBySlug(params.slug);
+  if (!map) return { title: "Not found" };
+  const floor = await getFloorBySlug(map.id, params.floor);
+  if (!floor) return { title: "Not found" };
+  return {
+    title: `${map.name} · ${floor.name}`,
+    description: `Spawn peeks on ${map.name} ${floor.name} — Rainbow Six Siege.`,
+  };
+}
 
 export default async function FloorPage({
   params,
@@ -26,7 +42,7 @@ export default async function FloorPage({
   return (
     <>
       <PageHeader back={{ href: `/maps/${map.slug}`, label: "Back" }} />
-      <main className="mx-auto max-w-5xl px-6 pb-20 pt-10">
+      <main className="fade-in-up mx-auto max-w-5xl px-6 pb-20 pt-10">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">
             {map.name} · {floor.name}
@@ -54,13 +70,14 @@ export default async function FloorPage({
             </div>
           )}
 
-          {peeks.map((peek) => (
+          {peeks.map((peek, i) => (
             <PeekPin
               key={peek.id}
               id={peek.id}
               name={peek.name}
               xPct={peek.x_pct}
               yPct={peek.y_pct}
+              number={i + 1}
             />
           ))}
         </div>

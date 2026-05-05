@@ -87,7 +87,9 @@ export async function getPublishedPeeksForFloor(
       "id, floor_id, name, x_pct, y_pct, screenshot_url, video_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published"
     )
     .eq("floor_id", floorId)
-    .eq("published", true);
+    .eq("published", true)
+    .order("success_rate", { ascending: false })
+    .order("created_at", { ascending: true });
   if (error) throw error;
   return data ?? [];
 }

@@ -1,13 +1,32 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderBox } from "@/components/PlaceholderBox";
 import { SuccessRateVoter } from "@/components/SuccessRateVoter";
+import { VideoCard } from "@/components/VideoCard";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const peek = await getPeekWithContext(params.id);
+  if (!peek || !peek.floors || !peek.floors.maps) {
+    return { title: "Not found" };
+  }
+  const { floors: floor } = peek;
+  const { maps: map } = floor;
+  return {
+    title: `${map.name} · ${floor.name} · ${peek.name}`,
+    description: `${peek.name} — spawn peek on ${map.name} ${floor.name}.`,
+  };
+}
 
 type Joined = Peek & {
   floors: (Floor & { maps: Map }) | null;
@@ -43,7 +62,7 @@ export default async function PeekDetailPage({
   return (
     <>
       <PageHeader back={{ href: backHref, label: "Back" }} />
-      <main className="mx-auto max-w-5xl px-6 pb-20 pt-10">
+      <main className="fade-in-up mx-auto max-w-5xl px-6 pb-20 pt-10">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">{peek.name}</h1>
           <p className="mt-2 text-sm text-muted">
@@ -61,7 +80,7 @@ export default async function PeekDetailPage({
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Card title="Where to look">
             {peek.screenshot_url ? (
-              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-inner">
+              <div className="relative aspect-video w-full overflow-hidden rounded-inner">
                 <Image
                   src={peek.screenshot_url}
                   alt={`Screenshot for ${peek.name}`}
@@ -71,13 +90,13 @@ export default async function PeekDetailPage({
                 />
               </div>
             ) : (
-              <PlaceholderBox label="Screenshot will appear here" />
+              <PlaceholderBox label="Screenshot will appear here" aspect="aspect-video" />
             )}
           </Card>
 
           <Card title="How to do it">
             {steps.length > 0 ? (
-              <ol className="flex flex-1 list-decimal flex-col justify-between gap-3 pl-5 text-[15px] leading-relaxed">
+              <ol className="list-decimal space-y-7 pl-5 text-[15px] leading-relaxed">
                 {steps.map((step, i) => (
                   <li key={i}>{step}</li>
                 ))}
@@ -89,7 +108,11 @@ export default async function PeekDetailPage({
             )}
           </Card>
 
-          <Card title="Rating">
+          <Card
+            title="Rating"
+            className="flex flex-col"
+            sectionClassName="order-4 md:order-none"
+          >
             <RatingCard
               peekId={peek.id}
               successRate={peek.success_rate}
@@ -99,16 +122,14 @@ export default async function PeekDetailPage({
             />
           </Card>
 
-          <Card title="Watch it">
+          <Card title="Watch it" sectionClassName="order-3 md:order-none">
             {peek.video_url ? (
-              <video
+              <VideoCard
                 src={peek.video_url}
-                controls
-                playsInline
-                className="aspect-[16/10] w-full rounded-inner bg-black"
+                poster={peek.screenshot_url ?? undefined}
               />
             ) : (
-              <PlaceholderBox label="Video clip will appear here" />
+              <PlaceholderBox label="Video clip will appear here" aspect="aspect-video" />
             )}
           </Card>
         </div>
@@ -121,19 +142,21 @@ function Card({
   title,
   children,
   className = "",
+  sectionClassName = "",
 }: {
   title: string;
   children: React.ReactNode;
   className?: string;
+  sectionClassName?: string;
 }) {
   return (
     <section
-      className={`flex flex-col rounded-card border border-border bg-card p-5 ${className}`}
+      className={`flex flex-col overflow-hidden rounded-card border border-border bg-card ${sectionClassName}`}
     >
-      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">
+      <div className="bg-brand px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-white">
         {title}
-      </h2>
-      {children}
+      </div>
+      <div className={`flex-1 p-5 ${className}`}>{children}</div>
     </section>
   );
 }
@@ -186,7 +209,7 @@ function RatingCard({
       </div>
 
       {tip && (
-        <div className="border-t border-border pt-3">
+        <div className="rounded-inner border border-brand/20 bg-brand/[0.06] p-3">
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-brand">
             Pro tip
           </p>

@@ -26,7 +26,7 @@ export default async function Home() {
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-6xl px-6 pb-20 pt-10">
+      <main className="fade-in-up mx-auto max-w-6xl px-6 pb-20 pt-10">
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
           <p className="mt-2 text-muted">Click the map you're on</p>
@@ -36,7 +36,7 @@ export default async function Home() {
           {maps.map((map) => {
             const hasCover = !!map.cover_image_url;
             const cardBase =
-              "group relative flex aspect-square items-center justify-center overflow-hidden rounded-card text-center text-base font-medium transition-all duration-150";
+              "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium transition-all duration-200";
 
             const cover = hasCover ? (
               <Image
@@ -70,7 +70,7 @@ export default async function Home() {
                     href={`/maps/${map.slug}`}
                     className={`${cardBase} border border-border ${
                       hasCover ? "" : "bg-card text-ink"
-                    } hover:-translate-y-0.5 hover:border-brand hover:shadow-sm`}
+                    } hover:-translate-y-1 hover:border-brand hover:shadow-lg`}
                   >
                     {cover}
                     {label}
@@ -83,7 +83,7 @@ export default async function Home() {
               <li key={map.id}>
                 <div
                   aria-disabled="true"
-                  className={`${cardBase} cursor-not-allowed border border-dashed border-border ${
+                  className={`${cardBase} !cursor-not-allowed border border-dashed border-border ${
                     hasCover ? "opacity-60" : "bg-card/60 text-muted"
                   }`}
                 >
