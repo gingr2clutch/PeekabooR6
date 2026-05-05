@@ -97,14 +97,14 @@ export default async function MapPage({
 
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30" />
 
-                  <div className="pointer-events-none absolute inset-x-0 top-1/2 h-[88px] -translate-y-1/2 bg-brand/90 sm:h-[104px]" />
+                  <div className="pointer-events-none absolute inset-x-0 top-1/2 h-[62px] -translate-y-1/2 bg-brand/90 md:h-[104px]" />
 
                   <div className="absolute inset-0 flex items-center justify-center px-6">
-                    <span className="flex flex-col items-center gap-1 text-center drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-                      <span className="text-3xl font-semibold leading-none tracking-tight text-white sm:text-4xl">
+                    <span className="flex flex-col items-center gap-0.5 text-center drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] md:gap-1">
+                      <span className="text-2xl font-semibold leading-none tracking-tight text-white md:text-4xl">
                         {floor.name}
                       </span>
-                      <span className="text-base font-normal text-white/75 sm:text-lg">
+                      <span className="text-xs font-normal text-white/80 md:text-lg">
                         {(() => {
                           const n = peekCountByFloor.get(floor.id) ?? 0;
                           return `${n} ${n === 1 ? "peek" : "peeks"}`;

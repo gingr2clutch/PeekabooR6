@@ -20,10 +20,10 @@ export function PeekPin({ id, name, xPct, yPct, number }: Props) {
       aria-label={`${number}. ${name}`}
     >
       <span className="absolute h-12 w-12 rounded-full" />
-      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-sm font-bold text-white shadow-md ring-2 ring-white transition-all duration-150 group-hover:scale-[1.2] group-hover:shadow-[0_0_12px_rgba(255,106,0,0.6)] sm:h-8 sm:w-8 sm:text-xs">
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white shadow-md ring-2 ring-white transition-all duration-150 group-hover:scale-[1.2] group-hover:shadow-[0_0_12px_rgba(255,106,0,0.6)] md:h-8 md:w-8 md:text-xs">
         {number}
       </span>
-      <span className="pointer-events-none absolute top-full mt-2 whitespace-nowrap rounded-btn bg-ink px-2 py-1 text-xs text-white opacity-0 shadow transition-opacity duration-150 group-hover:opacity-100">
+      <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 max-w-[180px] -translate-x-1/2 break-words rounded-btn bg-ink px-2.5 py-1 text-center text-[13px] leading-tight text-white opacity-0 shadow transition-opacity duration-150 group-hover:opacity-100 md:max-w-[240px] md:whitespace-nowrap md:text-xs">
         {name}
       </span>
     </Link>

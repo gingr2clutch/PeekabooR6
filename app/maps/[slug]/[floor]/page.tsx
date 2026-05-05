@@ -82,6 +82,12 @@ export default async function FloorPage({
           ))}
         </div>
 
+        {peeks.length > 0 && (
+          <p className="mt-3 text-center text-[13px] text-muted">
+            Ranked by success rate
+          </p>
+        )}
+
         {peeks.length === 0 && (
           <p className="mt-6 text-center text-sm text-muted">
             No spawn peeks pinned to this floor yet.
