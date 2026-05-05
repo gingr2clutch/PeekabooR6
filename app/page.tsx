@@ -1,0 +1,103 @@
+import Image from "next/image";
+import Link from "next/link";
+import { PageHeader } from "@/components/PageHeader";
+import { getMaps } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+
+// Pinned order for published maps. Anything published but not listed here
+// comes after these in alphabetical order. Unpublished maps come last,
+// alphabetical.
+const FEATURED_ORDER = ["Oregon", "Clubhouse", "Nighthaven Labs"];
+
+export default async function Home() {
+  const all = await getMaps();
+  const maps = [...all].sort((a, b) => {
+    if (a.published !== b.published) return a.published ? -1 : 1;
+    if (!a.published) return a.name.localeCompare(b.name);
+    const ai = FEATURED_ORDER.indexOf(a.name);
+    const bi = FEATURED_ORDER.indexOf(b.name);
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return (
+    <>
+      <PageHeader />
+      <main className="mx-auto max-w-6xl px-6 pb-20 pt-10">
+        <div className="mb-10 text-center">
+          <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
+          <p className="mt-2 text-muted">Click the map you're on</p>
+        </div>
+
+        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {maps.map((map) => {
+            const hasCover = !!map.cover_image_url;
+            const cardBase =
+              "group relative flex aspect-square items-center justify-center overflow-hidden rounded-card text-center text-base font-medium transition-all duration-150";
+
+            const cover = hasCover ? (
+              <Image
+                src={map.cover_image_url!}
+                alt=""
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                className={`object-cover ${
+                  map.published
+                    ? "transition-transform duration-150 group-hover:scale-105"
+                    : "grayscale"
+                }`}
+              />
+            ) : null;
+
+            const label = hasCover ? (
+              <>
+                <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                <span className="relative z-10 mt-auto w-full px-3 pb-3 text-left text-white drop-shadow">
+                  {map.name}
+                </span>
+              </>
+            ) : (
+              <span className="px-3">{map.name}</span>
+            );
+
+            if (map.published) {
+              return (
+                <li key={map.id}>
+                  <Link
+                    href={`/maps/${map.slug}`}
+                    className={`${cardBase} border border-border ${
+                      hasCover ? "" : "bg-card text-ink"
+                    } hover:-translate-y-0.5 hover:border-brand hover:shadow-sm`}
+                  >
+                    {cover}
+                    {label}
+                  </Link>
+                </li>
+              );
+            }
+
+            return (
+              <li key={map.id}>
+                <div
+                  aria-disabled="true"
+                  className={`${cardBase} cursor-not-allowed border border-dashed border-border ${
+                    hasCover ? "opacity-60" : "bg-card/60 text-muted"
+                  }`}
+                >
+                  {cover}
+                  {label}
+                  <span className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-btn border border-border bg-bg/90 px-2.5 py-1 text-[11px] uppercase tracking-wide text-muted backdrop-blur-sm">
+                    Coming soon
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </main>
+    </>
+  );
+}
