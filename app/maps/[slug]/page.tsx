@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PageHeader } from "@/components/PageHeader";
 import { getFloorsForMap, getMapBySlug } from "@/lib/db";
 import { supabasePublic } from "@/lib/supabase";
@@ -34,6 +33,7 @@ export default async function MapPage({
 
   const floorIds = floors.map((f) => f.id);
   const peekCountByFloor = new Map<string, number>();
+  let totalPeeks = 0;
   if (floorIds.length > 0) {
     const { data: peeks } = await supabasePublic()
       .from("peeks")
@@ -45,50 +45,42 @@ export default async function MapPage({
         p.floor_id,
         (peekCountByFloor.get(p.floor_id) ?? 0) + 1
       );
+      totalPeeks += 1;
     }
   }
+
+  const floorLabel = `${floors.length} ${floors.length === 1 ? "floor" : "floors"}`;
+  const peekLabel = `${totalPeeks} total ${totalPeeks === 1 ? "peek" : "peeks"}`;
 
   return (
     <>
       <PageHeader />
-      <main className="fade-in-up mx-auto max-w-4xl px-6 pb-20 pt-10">
-        <h1 className="mb-10 text-center text-5xl font-semibold tracking-tight sm:text-6xl">
-          {map.name}
-        </h1>
+      <main className="fade-in-up mx-auto max-w-4xl px-6 pb-20 pt-6">
+        <div className="mb-8">
+          <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
+            {map.name}
+          </h1>
+          <p className="mt-2 text-sm text-muted">
+            {floorLabel} · {peekLabel}
+          </p>
+        </div>
 
         <ul className="space-y-6">
           {floors.map((floor) => (
             <li key={floor.id}>
               <Link
                 href={`/maps/${map.slug}/${floor.slug}`}
-                className="group relative block cursor-pointer overflow-hidden rounded-card border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-brand hover:shadow-lg"
+                className="group block overflow-hidden rounded-card border border-border bg-card transition-all duration-150 ease-out hover:-translate-y-0.5 hover:shadow-lg"
               >
-                <div className="relative aspect-[16/10] w-full overflow-hidden">
+                <div className="relative aspect-video w-full overflow-hidden bg-bg">
                   {floor.birds_eye_url ? (
-                    <>
-                      <Image
-                        src={floor.birds_eye_url}
-                        alt=""
-                        aria-hidden
-                        fill
-                        sizes="(max-width: 768px) 100vw, 768px"
-                        className="scale-125 object-cover blur-[22px]"
-                      />
-                      <Image
-                        src={floor.birds_eye_url}
-                        alt={`${map.name} ${floor.name} bird's-eye view`}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 768px"
-                        className="object-cover"
-                        style={{
-                          WebkitMaskImage:
-                            "radial-gradient(ellipse at center, black 50%, transparent 100%)",
-                          maskImage:
-                            "radial-gradient(ellipse at center, black 50%, transparent 100%)",
-                        }}
-                      />
-                      <BirdsEyeWatermark />
-                    </>
+                    <Image
+                      src={floor.birds_eye_url}
+                      alt={`${map.name} ${floor.name} bird's-eye view`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 768px"
+                      className="object-cover transition-transform duration-150 ease-out group-hover:scale-[1.02]"
+                    />
                   ) : (
                     <div className="placeholder-stripes flex h-full w-full items-center justify-center">
                       <span className="rounded-btn bg-card/80 px-3 py-1 text-sm text-muted backdrop-blur-sm">
@@ -96,27 +88,25 @@ export default async function MapPage({
                       </span>
                     </div>
                   )}
+                </div>
 
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30" />
-
-                  <div className="pointer-events-none absolute inset-x-0 top-1/2 h-[62px] -translate-y-1/2 bg-brand/90 md:h-[104px]" />
-
-                  <div className="absolute inset-0 flex items-center justify-center px-6">
-                    <span className="flex flex-col items-center gap-0.5 text-center drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] md:gap-1">
-                      <span className="text-2xl font-semibold leading-none tracking-tight text-white md:text-4xl">
-                        {floor.name}
-                      </span>
-                      <span className="text-xs font-normal text-white/80 md:text-lg">
-                        {(() => {
-                          const n = peekCountByFloor.get(floor.id) ?? 0;
-                          return `${n} ${n === 1 ? "peek" : "peeks"}`;
-                        })()}
-                      </span>
-                    </span>
+                <div className="flex items-center justify-between gap-4 px-5 py-4">
+                  <div className="min-w-0">
+                    <div className="text-lg font-semibold tracking-tight">
+                      {floor.name}
+                    </div>
+                    <div className="mt-0.5 text-sm text-muted">
+                      {(() => {
+                        const n = peekCountByFloor.get(floor.id) ?? 0;
+                        return `${n} ${n === 1 ? "peek" : "peeks"}`;
+                      })()}
+                    </div>
                   </div>
-
-                  <span className="absolute bottom-5 right-6 text-xl font-medium text-white/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] transition-colors group-hover:text-brand sm:text-2xl">
-                    Open →
+                  <span
+                    aria-hidden
+                    className="text-xl text-muted opacity-0 transition-all duration-150 ease-out group-hover:translate-x-0.5 group-hover:text-brand group-hover:opacity-100"
+                  >
+                    →
                   </span>
                 </div>
               </Link>

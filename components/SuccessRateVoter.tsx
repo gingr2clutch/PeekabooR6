@@ -24,8 +24,6 @@ export function SuccessRateVoter({ peekId, initialRate }: Props) {
     }
   }, [peekId]);
 
-  // Count-up: animates 0 → rate over 600ms once on mount. After that, the
-  // displayed value just mirrors `rate` (which can change after a vote).
   useEffect(() => {
     if (hasAnimatedRef.current) {
       setDisplayRate(rate);
@@ -56,56 +54,85 @@ export function SuccessRateVoter({ peekId, initialRate }: Props) {
     });
   }
 
-  const baseBtn =
-    "flex flex-1 items-center justify-center gap-2 rounded-btn border px-3 py-2 text-sm font-medium transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:active:scale-100";
-
   return (
-    <div className="space-y-3">
-      <div className="text-center">
-        <div className="text-5xl font-semibold tracking-tight tabular-nums">
-          {displayRate}%
-        </div>
-        <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
-          Success rate
-        </div>
-      </div>
+    <div className="flex flex-col items-center">
+      <span className="text-[60px] font-bold leading-none tracking-tight text-brand tabular-nums sm:text-[72px]">
+        {displayRate}%
+      </span>
+      <span className="mt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+        Success rate
+      </span>
 
-      {hasVoted ? (
-        <div className="flex items-center justify-center gap-1.5 pt-2 text-sm font-medium text-[#1a9f4d]">
-          <svg
-            viewBox="0 0 16 16"
-            width="14"
-            height="14"
-            aria-hidden
-            className="fill-none stroke-current"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M3 8.5l3.5 3.5L13 5" />
-          </svg>
-          <span>Voted</span>
-        </div>
-      ) : (
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => vote(true)}
-            disabled={pending}
-            className={`${baseBtn} border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300`}
-          >
-            Kill <span aria-hidden>✅</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => vote(false)}
-            disabled={pending}
-            className={`${baseBtn} border-red-200 bg-red-50 text-red-700 hover:border-red-300`}
-          >
-            No kill <span aria-hidden>❌</span>
-          </button>
-        </div>
-      )}
+      <div className="mt-4 min-h-[36px]">
+        {hasVoted ? (
+          <div className="flex items-center gap-1.5 text-sm font-medium text-[#1a9f4d]">
+            <CheckIcon className="h-4 w-4" />
+            <span>Voted</span>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <GhostButton onClick={() => vote(true)} disabled={pending}>
+              <CheckIcon className="h-3.5 w-3.5" />
+              Worked for me
+            </GhostButton>
+            <GhostButton onClick={() => vote(false)} disabled={pending}>
+              <XIcon className="h-3.5 w-3.5" />
+              Didn't work
+            </GhostButton>
+          </div>
+        )}
+      </div>
     </div>
+  );
+}
+
+function GhostButton({
+  onClick,
+  disabled,
+  children,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="inline-flex items-center gap-1.5 rounded-btn border border-border bg-card px-3 py-1.5 text-sm text-ink transition-all duration-150 ease-out hover:border-brand hover:text-brand active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+    >
+      {children}
+    </button>
+  );
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden
+      className={`fill-none stroke-current ${className ?? ""}`}
+      strokeWidth={2.25}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 8.5l3.5 3.5L13 5" />
+    </svg>
+  );
+}
+
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden
+      className={`fill-none stroke-current ${className ?? ""}`}
+      strokeWidth={2.25}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 4l8 8M12 4l-8 8" />
+    </svg>
   );
 }
