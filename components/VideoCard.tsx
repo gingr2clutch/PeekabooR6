@@ -22,7 +22,7 @@ export function VideoCard({ src, poster }: Props) {
   }
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-inner bg-black">
+    <div className="relative aspect-video w-full overflow-hidden bg-black">
       <video
         ref={videoRef}
         src={src}

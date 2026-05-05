@@ -81,7 +81,7 @@ export default async function PeekDetailPage({
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Card title="Where to look">
             {peek.screenshot_url ? (
-              <div className="relative aspect-video w-full overflow-hidden rounded-inner">
+              <div className="relative aspect-video w-full overflow-hidden">
                 <Image
                   src={peek.screenshot_url}
                   alt={`Screenshot for ${peek.name}`}
