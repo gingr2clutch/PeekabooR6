@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PageHeader } from "@/components/PageHeader";
 import { PeekPin } from "@/components/PeekPin";
 import {
@@ -54,14 +55,17 @@ export default async function FloorPage({
 
         <div className="relative aspect-[16/10] w-full overflow-hidden rounded-card border border-border bg-card">
           {floor.birds_eye_url ? (
-            <Image
-              src={floor.birds_eye_url}
-              alt={`${map.name} ${floor.name} bird's-eye view`}
-              fill
-              sizes="(max-width: 1024px) 100vw, 1024px"
-              className="object-cover"
-              priority
-            />
+            <>
+              <Image
+                src={floor.birds_eye_url}
+                alt={`${map.name} ${floor.name} bird's-eye view`}
+                fill
+                sizes="(max-width: 1024px) 100vw, 1024px"
+                className="object-cover"
+                priority
+              />
+              <BirdsEyeWatermark />
+            </>
           ) : (
             <div className="placeholder-stripes flex h-full w-full items-center justify-center">
               <span className="rounded-btn bg-card/80 px-3 py-1 text-sm text-muted backdrop-blur-sm">
