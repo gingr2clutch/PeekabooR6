@@ -13,7 +13,7 @@ type Props = {
 export function BirdsEyeWatermark({ placement = "flush" }: Props = {}) {
   const position =
     placement === "inset"
-      ? "bottom-2 left-2 rounded-btn sm:bottom-3 sm:left-3"
+      ? "bottom-2 left-2 rounded-btn"
       : "bottom-0 left-0 rounded-tr-btn";
   return (
     <div

@@ -12,6 +12,34 @@ import {
 
 export const dynamic = "force-dynamic";
 
+// When two or more peeks share the same (x_pct, y_pct), they render on top of
+// each other and only the topmost is visible. We push duplicates onto a small
+// circle around the shared point so every pin remains tappable. Order in the
+// returned array is preserved (so pin numbers still match success-rate rank).
+function fanOutCoincidentPins<
+  T extends { x_pct: number; y_pct: number },
+>(peeks: T[]): Array<T & { displayX: number; displayY: number }> {
+  const seen = new Map<string, number>();
+  return peeks.map((peek) => {
+    // Bucket to ~0.5% so near-coincident points still cluster.
+    const key = `${Math.round(peek.x_pct * 2)},${Math.round(peek.y_pct * 2)}`;
+    const idx = seen.get(key) ?? 0;
+    seen.set(key, idx + 1);
+    if (idx === 0) {
+      return { ...peek, displayX: peek.x_pct, displayY: peek.y_pct };
+    }
+    // Spiral outward in 60° steps. Radius grows slowly so big clusters
+    // still stay near the original point.
+    const angle = (Math.PI / 3) * (idx - 1);
+    const radius = 3 + Math.floor((idx - 1) / 6) * 1.5;
+    return {
+      ...peek,
+      displayX: peek.x_pct + radius * Math.cos(angle),
+      displayY: peek.y_pct + radius * Math.sin(angle),
+    };
+  });
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -39,6 +67,7 @@ export default async function FloorPage({
   if (!floor) notFound();
 
   const peeks = await getPublishedPeeksForFloor(floor.id);
+  const positioned = fanOutCoincidentPins(peeks);
 
   return (
     <>
@@ -74,13 +103,13 @@ export default async function FloorPage({
             </div>
           )}
 
-          {peeks.map((peek, i) => (
+          {positioned.map((peek, i) => (
             <PeekPin
               key={peek.id}
               id={peek.id}
               name={peek.name}
-              xPct={peek.x_pct}
-              yPct={peek.y_pct}
+              xPct={peek.displayX}
+              yPct={peek.displayY}
               number={i + 1}
             />
           ))}

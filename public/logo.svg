@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 64" fill="none">
+  <!-- Icon at 0..64 (square) -->
+  <path d="M 4 0 L 32 0 L 32 18 A 14 14 0 0 0 32 46 L 32 64 L 4 64 A 4 4 0 0 1 0 60 L 0 4 A 4 4 0 0 1 4 0 Z" fill="#0a0a0a" />
+  <path d="M 32 18 A 14 14 0 0 1 32 46" stroke="#ff6a00" stroke-width="6" stroke-linecap="round" fill="none" />
+  <line x1="52" y1="32" x2="60" y2="32" stroke="#ff6a00" stroke-width="6" stroke-linecap="round" />
+  <circle cx="32" cy="32" r="4" fill="#ff6a00" />
+
+  <!-- Wordmark: peekaboo in orange, R6 in dark. System sans, semibold,
+       slight negative letter-spacing to match the site. -->
+  <text
+    x="80"
+    y="44"
+    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="32"
+    font-weight="600"
+    letter-spacing="-1.2"
+  ><tspan fill="#ff6a00">peekaboo</tspan><tspan fill="#0a0a0a">R6</tspan></text>
+</svg>
