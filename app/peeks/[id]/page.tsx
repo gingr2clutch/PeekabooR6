@@ -89,7 +89,7 @@ export default async function PeekDetailPage({
                   sizes="(max-width: 768px) 100vw, 480px"
                   className="object-cover"
                 />
-                <BirdsEyeWatermark placement="inset" size="compact" />
+                <BirdsEyeWatermark placement="flush" size="compact" />
               </div>
             ) : (
               <PlaceholderBox label="Screenshot will appear here" aspect="aspect-video" />
