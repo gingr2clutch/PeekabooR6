@@ -72,7 +72,7 @@ export default async function MapPage({
                         aria-hidden
                         fill
                         sizes="(max-width: 768px) 100vw, 768px"
-                        className="scale-125 object-cover blur-[24px]"
+                        className="scale-125 object-cover blur-[22px]"
                       />
                       <Image
                         src={floor.birds_eye_url}
@@ -82,9 +82,9 @@ export default async function MapPage({
                         className="object-cover"
                         style={{
                           WebkitMaskImage:
-                            "radial-gradient(ellipse at center, black 45%, transparent 100%)",
+                            "radial-gradient(ellipse at center, black 50%, transparent 100%)",
                           maskImage:
-                            "radial-gradient(ellipse at center, black 45%, transparent 100%)",
+                            "radial-gradient(ellipse at center, black 50%, transparent 100%)",
                         }}
                       />
                       <BirdsEyeWatermark />

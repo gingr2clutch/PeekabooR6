@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { BirdsEyeWatermark } from "./BirdsEyeWatermark";
 
 type Props = {
   src: string;
@@ -32,6 +33,7 @@ export function VideoCard({ src, poster }: Props) {
         onPlay={() => setShowOverlay(false)}
         className="absolute inset-0 h-full w-full object-contain"
       />
+      <BirdsEyeWatermark placement="inset" />
       {showOverlay && (
         <button
           type="button"
