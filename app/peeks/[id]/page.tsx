@@ -80,12 +80,12 @@ export default async function PeekDetailPage({
         </div>
 
         {/* Hero stats card — 32px below header */}
-        <section className="mt-8 rounded-card border border-border bg-card p-6 sm:p-8">
+        <section className="mt-6 rounded-card border border-border bg-card p-4 md:mt-8 md:p-8">
           <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             <StatCell label="Success rate">
               <AnimatedRate
                 value={peek.success_rate}
-                className="text-[60px] font-bold leading-none tracking-tight text-brand sm:text-[72px]"
+                className="text-4xl font-bold leading-none tracking-tight text-brand md:text-[72px]"
               />
             </StatCell>
             <StatCell label="Difficulty">
@@ -124,22 +124,24 @@ function StatCell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-start gap-4 px-4 py-6 sm:py-2">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+    <div className="flex flex-col items-center justify-start gap-2 px-2 py-4 md:gap-4 md:px-4 md:py-2">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted md:text-[11px]">
         {label}
       </span>
-      <div className="flex min-h-[72px] flex-1 items-center">{children}</div>
+      <div className="flex min-h-[44px] flex-1 items-center md:min-h-[72px]">
+        {children}
+      </div>
     </div>
   );
 }
 
 function DifficultyDots({ difficulty }: { difficulty: number }) {
   return (
-    <div className="flex gap-1.5">
+    <div className="flex gap-1 md:gap-1.5">
       {[1, 2, 3, 4, 5].map((n) => (
         <span
           key={n}
-          className={`h-2.5 w-2.5 rounded-full ${
+          className={`h-2 w-2 rounded-full md:h-2.5 md:w-2.5 ${
             n <= difficulty ? "bg-ink" : "bg-border"
           }`}
         />
@@ -157,7 +159,7 @@ function RiskPill({ risk }: { risk: string }) {
         : "text-amber-700 bg-amber-50 border-amber-200";
   return (
     <span
-      className={`inline-flex items-center rounded-btn border px-3 py-1 text-sm font-medium capitalize ${riskColor}`}
+      className={`inline-flex items-center rounded-btn border px-2 py-0.5 text-xs font-medium capitalize md:px-3 md:py-1 md:text-sm ${riskColor}`}
     >
       {risk}
     </span>
