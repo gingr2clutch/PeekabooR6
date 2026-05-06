@@ -55,7 +55,7 @@ export async function extractPosterFrame(
   );
 
   let blob: Blob;
-  if (source instanceof File || source instanceof Blob) {
+  if (typeof source !== "string") {
     blob = source;
   } else {
     try {
