@@ -51,17 +51,24 @@ export function PeekMedia({ videoUrl, name }: Props) {
         onClick={start}
         aria-label="Play video"
         tabIndex={played ? -1 : 0}
-        className={`group absolute inset-0 flex items-center justify-center bg-bg transition-opacity duration-200 ease-out ${
+        style={{
+          background:
+            "radial-gradient(circle at center, #fff5eb 0%, #fafaf9 70%)",
+        }}
+        className={`group absolute inset-0 flex items-center justify-center transition-opacity duration-200 ease-out ${
           played ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
       >
-        <span className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-white shadow-lg transition-transform duration-150 ease-out group-hover:scale-105">
+        <span
+          style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}
+          className="flex h-20 w-20 items-center justify-center rounded-full bg-white transition-all duration-150 ease-out group-hover:scale-[1.08] group-hover:bg-[#fff5eb] group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.18)]"
+        >
           <svg
             viewBox="0 0 24 24"
-            width="28"
-            height="28"
+            width="34"
+            height="34"
             aria-hidden
-            className="ml-1 fill-ink transition-colors duration-150 group-hover:fill-brand"
+            className="ml-1 fill-brand"
           >
             <path d="M8 5v14l11-7z" />
           </svg>
