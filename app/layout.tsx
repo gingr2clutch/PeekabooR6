@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,7 +19,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-bg text-ink">{children}</body>
+      <body className="min-h-screen bg-bg text-ink">
+        {children}
+        <Analytics
+          beforeSend={(event) => {
+            // Drop admin sessions so the dashboard reflects real visitors.
+            if (event.url.includes("/admin")) return null;
+            return event;
+          }}
+        />
+      </body>
     </html>
   );
 }
