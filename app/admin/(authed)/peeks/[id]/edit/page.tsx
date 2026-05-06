@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { DirectVideoUpload } from "@/components/DirectVideoUpload";
 import { PeekForm } from "@/components/PeekForm";
+import { RegeneratePosterButton } from "@/components/RegeneratePosterButton";
 import { getFloorOptions } from "@/lib/admin-data";
 import { supabaseAdmin } from "@/lib/supabase";
 import { deletePeekAction, updatePeekAction } from "../../actions";
@@ -22,13 +23,14 @@ type EditablePeek = {
   published: boolean;
   instructions: string[] | null;
   video_url: string | null;
+  poster_url: string | null;
 };
 
 async function getPeek(id: string): Promise<EditablePeek | null> {
   const { data, error } = await supabaseAdmin()
     .from("peeks")
     .select(
-      "id, floor_id, name, x_pct, y_pct, difficulty, risk, tip, success_rate, published, instructions, video_url"
+      "id, floor_id, name, x_pct, y_pct, difficulty, risk, tip, success_rate, published, instructions, video_url, poster_url"
     )
     .eq("id", id)
     .maybeSingle();
@@ -105,6 +107,21 @@ export default async function AdminEditPeekPage({
           Video clip
         </h2>
         <DirectVideoUpload peekId={peek.id} initialUrl={peek.video_url} />
+
+        {peek.video_url && (
+          <div className="mt-4 border-t border-border pt-4">
+            <p className="mb-2 text-xs text-muted">
+              {peek.poster_url
+                ? "Re-extract the poster frame if the current one looks off."
+                : "This video was uploaded before auto-poster generation. Generate one to skip the black-frame state on the public page."}
+            </p>
+            <RegeneratePosterButton
+              peekId={peek.id}
+              videoUrl={peek.video_url}
+              hasPoster={!!peek.poster_url}
+            />
+          </div>
+        )}
       </section>
     </div>
   );
