@@ -73,7 +73,7 @@ export default async function MapPage({
                 href={`/maps/${map.slug}/${floor.slug}`}
                 className="group block overflow-hidden rounded-card border border-border bg-card transition-all duration-200 ease-out hover:scale-[1.015] hover:border-brand/30 hover:shadow-lg"
               >
-                <div className="relative aspect-video w-full overflow-hidden bg-bg">
+                <div className="relative aspect-video w-full overflow-hidden bg-card">
                   {floor.birds_eye_url ? (
                     <Image
                       src={floor.birds_eye_url}
@@ -81,6 +81,12 @@ export default async function MapPage({
                       fill
                       sizes="(max-width: 768px) 100vw, 768px"
                       className="object-cover transition-transform duration-200 ease-out group-hover:scale-105"
+                      style={{
+                        WebkitMaskImage:
+                          "radial-gradient(ellipse at center, black 60%, transparent 100%)",
+                        maskImage:
+                          "radial-gradient(ellipse at center, black 60%, transparent 100%)",
+                      }}
                     />
                   ) : (
                     <div className="placeholder-stripes flex h-full w-full items-center justify-center">
@@ -89,8 +95,6 @@ export default async function MapPage({
                       </span>
                     </div>
                   )}
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent from-60% to-black/15" />
-                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.22)_100%)]" />
                 </div>
 
                 <div className="flex items-center justify-between gap-4 px-5 py-4">
