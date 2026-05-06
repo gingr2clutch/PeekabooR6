@@ -83,9 +83,9 @@ export default async function MapPage({
                       className="object-cover transition-transform duration-200 ease-out group-hover:scale-105"
                       style={{
                         WebkitMaskImage:
-                          "radial-gradient(ellipse at center, black 35%, transparent 95%)",
+                          "radial-gradient(ellipse at center, black 60%, transparent 100%)",
                         maskImage:
-                          "radial-gradient(ellipse at center, black 35%, transparent 95%)",
+                          "radial-gradient(ellipse at center, black 60%, transparent 100%)",
                       }}
                     />
                   ) : (
