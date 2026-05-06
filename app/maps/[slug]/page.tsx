@@ -103,9 +103,9 @@ export default async function MapPage({
                         }}
                       />
                       <BirdsEyeWatermark
-                        placement="inset"
+                        placement="flush"
                         size="compact"
-                        corner="right"
+                        corner="left"
                       />
                     </>
                   ) : (
