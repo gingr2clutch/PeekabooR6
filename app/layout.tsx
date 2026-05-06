@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
+import { PageViewTracker } from "@/components/PageViewTracker";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,11 +22,23 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen bg-bg text-ink">
         {children}
+        <PageViewTracker />
         <Analytics
           beforeSend={(event) => {
-            // Drop admin sessions so the dashboard reflects real visitors.
-            if (event.url.includes("/admin")) return null;
-            return event;
+            try {
+              const url = event.url || "";
+              if (url.includes("/admin")) return null;
+              if (
+                typeof window !== "undefined" &&
+                window.localStorage?.getItem("peekabooR6_owner") === "true"
+              ) {
+                return null;
+              }
+              return event;
+            } catch {
+              // If anything in the filter throws, default to tracking.
+              return event;
+            }
           }}
         />
       </body>
