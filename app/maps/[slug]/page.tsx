@@ -66,7 +66,7 @@ export default async function MapPage({
             {floorLabel} · {peekLabel}
           </p>
           <p className="mt-2 text-[15px] font-light italic text-muted">
-            Spawn peeks ranked by success rate
+            Choose your floor
           </p>
         </div>
 
