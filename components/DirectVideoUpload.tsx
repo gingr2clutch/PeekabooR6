@@ -3,9 +3,7 @@
 import { useRef, useState } from "react";
 import {
   clearPeekVideoUrl,
-  createPeekPosterUploadUrl,
   createPeekVideoUploadUrl,
-  setPeekPosterUrl,
   setPeekVideoUrl,
 } from "@/app/admin/(authed)/peeks/upload-actions";
 
@@ -17,13 +15,10 @@ type Props = {
 // Video uploader that talks to R2 directly via a presigned PUT URL. The file
 // never flows through Vercel, so Hobby's 4.5 MB body limit doesn't apply.
 //
-// Flow per file:
+// Flow:
 //   1. Server issues a presigned PUT URL.
 //   2. Browser PUTs the video to R2 (with progress events).
 //   3. Server records the public URL on the peek row.
-//   4. Browser draws the first video frame to a canvas, uploads that JPEG
-//      to R2 (also presigned), and records it as the poster URL. Failures
-//      here are non-fatal — the video itself is already saved.
 export function DirectVideoUpload({ peekId, initialUrl }: Props) {
   const [url, setUrl] = useState<string | null>(initialUrl);
   const [progress, setProgress] = useState(0);
@@ -43,25 +38,15 @@ export function DirectVideoUpload({ peekId, initialUrl }: Props) {
         file.type || "application/octet-stream"
       );
 
-      await putToR2(uploadUrl, file, file.type || "application/octet-stream", (pct) =>
-        setProgress(pct)
+      await putToR2(
+        uploadUrl,
+        file,
+        file.type || "application/octet-stream",
+        (pct) => setProgress(pct)
       );
       await setPeekVideoUrl(peekId, publicUrl);
       setUrl(publicUrl);
       setProgress(100);
-
-      // Best-effort poster generation. If anything fails (codec issues,
-      // CORS, blocked autoplay), swallow it — video already saved.
-      try {
-        const blob = await firstFrameBlob(file);
-        if (blob) {
-          const poster = await createPeekPosterUploadUrl(peekId);
-          await putToR2(poster.uploadUrl, blob, "image/jpeg");
-          await setPeekPosterUrl(peekId, poster.publicUrl);
-        }
-      } catch (posterErr) {
-        console.warn("[DirectVideoUpload] poster generation failed", posterErr);
-      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
@@ -164,14 +149,13 @@ export function DirectVideoUpload({ peekId, initialUrl }: Props) {
       )}
 
       <p className="text-[11px] text-muted">
-        Uploads straight to R2 — no Vercel size limit. Poster image is
-        auto-generated from the first frame.
+        Uploads straight to R2 — no Vercel size limit.
       </p>
     </div>
   );
 }
 
-// Generic browser → R2 PUT with optional progress callback.
+// Generic browser → R2 PUT with progress callback.
 function putToR2(
   uploadUrl: string,
   body: Blob,
@@ -201,71 +185,9 @@ function putToR2(
     xhr.onerror = () =>
       reject(
         new Error(
-          "Network error during upload. If this is the first time you're uploading a video, the R2 bucket might be missing CORS rules — check the dashboard."
+          "Network error during upload. R2 bucket may be missing CORS rules."
         )
       );
     xhr.send(body);
-  });
-}
-
-// Extracts the first frame of a video File as a JPEG Blob using a hidden
-// <video> + <canvas>. Resolves null if the browser can't decode the file
-// (we don't want this to block the video upload itself).
-function firstFrameBlob(file: File): Promise<Blob | null> {
-  return new Promise((resolve) => {
-    const objectUrl = URL.createObjectURL(file);
-    const video = document.createElement("video");
-    video.src = objectUrl;
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = "auto";
-    video.crossOrigin = "anonymous";
-
-    const cleanup = () => {
-      URL.revokeObjectURL(objectUrl);
-    };
-
-    const fail = () => {
-      cleanup();
-      resolve(null);
-    };
-
-    video.onerror = fail;
-
-    video.onloadedmetadata = () => {
-      // Many R6 captures start with a fade-in or black title card, so seek
-      // ~1s in (capped at 1/4 of the clip for short videos) to grab a real
-      // representative frame.
-      try {
-        const target = Math.min(1, (video.duration || 4) / 4);
-        video.currentTime = target;
-      } catch {
-        fail();
-      }
-    };
-
-    video.onseeked = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth || 1280;
-        canvas.height = video.videoHeight || 720;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          fail();
-          return;
-        }
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob(
-          (blob) => {
-            cleanup();
-            resolve(blob);
-          },
-          "image/jpeg",
-          0.85
-        );
-      } catch {
-        fail();
-      }
-    };
   });
 }
