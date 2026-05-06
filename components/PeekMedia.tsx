@@ -2,13 +2,14 @@ import { BirdsEyeWatermark } from "./BirdsEyeWatermark";
 
 type Props = {
   videoUrl: string | null;
+  posterUrl: string | null;
   name: string;
 };
 
 // Single video block on the peek detail page. The video is the only visual
 // element — when nothing's been uploaded yet, falls back to a clean
 // placeholder pane.
-export function PeekMedia({ videoUrl, name }: Props) {
+export function PeekMedia({ videoUrl, posterUrl, name }: Props) {
   if (!videoUrl) {
     return (
       <div className="placeholder-stripes flex aspect-video w-full items-center justify-center overflow-hidden rounded-card border border-border">
@@ -24,6 +25,7 @@ export function PeekMedia({ videoUrl, name }: Props) {
       <video
         key={videoUrl}
         src={videoUrl}
+        poster={posterUrl ?? undefined}
         controls
         playsInline
         preload="metadata"

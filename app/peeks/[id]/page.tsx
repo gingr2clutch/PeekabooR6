@@ -104,7 +104,11 @@ export default async function PeekDetailPage({
 
         {/* Content section — 64px below buttons */}
         <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
-          <PeekMedia videoUrl={peek.video_url} name={peek.name} />
+          <PeekMedia
+            videoUrl={peek.video_url}
+            posterUrl={peek.poster_url}
+            name={peek.name}
+          />
           <Instructions steps={steps} tip={peek.tip} />
         </div>
       </main>

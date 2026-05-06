@@ -61,7 +61,40 @@ export async function clearPeekVideoUrl(peekId: string): Promise<void> {
 
   const { error } = await supabaseAdmin()
     .from("peeks")
-    .update({ video_url: null })
+    .update({ video_url: null, poster_url: null })
+    .eq("id", peekId);
+  if (error) throw error;
+
+  revalidatePath(`/admin/peeks/${peekId}/edit`);
+  revalidatePath(`/peeks/${peekId}`);
+}
+
+// Same presigned-PUT pattern as video, but for the auto-generated poster
+// JPEG that's drawn from the video's first frame in the browser.
+export async function createPeekPosterUploadUrl(
+  peekId: string
+): Promise<{ uploadUrl: string; publicUrl: string }> {
+  if (!peekId) throw new Error("peekId required");
+
+  const key = `peeks/${peekId}-poster-${Date.now()}.jpg`;
+  const cmd = new PutObjectCommand({
+    Bucket: r2Bucket(),
+    Key: key,
+    ContentType: "image/jpeg",
+  });
+  const uploadUrl = await getSignedUrl(r2Client(), cmd, { expiresIn: 600 });
+  return { uploadUrl, publicUrl: r2PublicUrl(key) };
+}
+
+export async function setPeekPosterUrl(
+  peekId: string,
+  publicUrl: string
+): Promise<void> {
+  if (!peekId || !publicUrl) throw new Error("peekId and publicUrl required");
+
+  const { error } = await supabaseAdmin()
+    .from("peeks")
+    .update({ poster_url: publicUrl })
     .eq("id", peekId);
   if (error) throw error;
 
