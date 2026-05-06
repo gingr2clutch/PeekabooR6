@@ -44,6 +44,7 @@ create table if not exists peeks (
   useful_pct int default 0,
   vote_count int default 0,
   success_rate int not null default 50 check (success_rate between 0 and 100),
+  view_count int not null default 0,
   published boolean default false,
   created_at timestamptz default now()
 );

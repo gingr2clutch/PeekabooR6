@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AnimatedRate } from "@/components/AnimatedRate";
 import { PageHeader } from "@/components/PageHeader";
 import { PeekMedia } from "@/components/PeekMedia";
+import { PeekViewTracker } from "@/components/PeekViewTracker";
 import { VoteButtons } from "@/components/VoteButtons";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
@@ -35,7 +36,7 @@ async function getPeekWithContext(id: string): Promise<Joined | null> {
   const { data, error } = await supabasePublic()
     .from("peeks")
     .select(
-      "id, floor_id, name, x_pct, y_pct, video_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published))"
+      "id, floor_id, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, view_count, published, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published))"
     )
     .eq("id", id)
     .eq("published", true)
@@ -77,7 +78,13 @@ export default async function PeekDetailPage({
             </Link>{" "}
             › {peek.name}
           </p>
+          <p className="mt-1 text-xs text-muted">
+            {formatViews(peek.view_count)}{" "}
+            {peek.view_count === 1 ? "view" : "views"}
+          </p>
         </div>
+
+        <PeekViewTracker peekId={peek.id} />
 
         {/* Hero stats card — 32px below header */}
         <section className="mt-6 rounded-card border border-border bg-card p-4 md:mt-8 md:p-8">
@@ -110,6 +117,12 @@ export default async function PeekDetailPage({
       </main>
     </>
   );
+}
+
+function formatViews(n: number): string {
+  if (n < 1000) return `${n}`;
+  const k = n / 1000;
+  return `${k.toFixed(1).replace(/\.0$/, "")}k`;
 }
 
 function StatCell({
