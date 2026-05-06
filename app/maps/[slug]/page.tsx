@@ -57,13 +57,16 @@ export default async function MapPage({
     <>
       <PageHeader />
       <main className="fade-in-up mx-auto max-w-4xl px-6 pb-20 pt-6">
-        <div className="mb-10 text-center">
+        <div className="mb-8 text-center">
           <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
             {map.name}
           </h1>
           <p className="mt-3 inline-flex items-center gap-2 text-sm text-muted">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand" />
             {floorLabel} · {peekLabel}
+          </p>
+          <p className="mt-2 text-[15px] font-light italic text-muted">
+            Spawn peeks ranked by success rate
           </p>
         </div>
 
