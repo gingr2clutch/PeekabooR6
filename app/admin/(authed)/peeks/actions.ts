@@ -62,6 +62,15 @@ async function uploadStagedFile(
 }
 
 export async function createPeekAction(formData: FormData) {
+  console.log("[createPeekAction] start. form keys:", Array.from(formData.keys()));
+
+  const screenshot = formData.get("screenshot");
+  const video = formData.get("video");
+  console.log("[createPeekAction] file sizes:", {
+    screenshot: screenshot instanceof File ? `${screenshot.name} ${screenshot.size}b ${screenshot.type}` : "none",
+    video: video instanceof File ? `${video.name} ${video.size}b ${video.type}` : "none",
+  });
+
   const floor_id = String(formData.get("floor_id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   const x_pct = clamp(Number(formData.get("x_pct") ?? 50), 0, 100);
@@ -77,8 +86,28 @@ export async function createPeekAction(formData: FormData) {
   const published = formData.get("published") === "on";
   const instructions = parseInstructions(formData);
 
-  if (!floor_id || !name) return;
+  console.log("[createPeekAction] parsed payload:", {
+    floor_id,
+    name,
+    x_pct,
+    y_pct,
+    difficulty,
+    risk,
+    tip,
+    success_rate,
+    published,
+    instructionsCount: instructions.length,
+  });
 
+  if (!floor_id || !name) {
+    console.warn("[createPeekAction] aborting — missing required field", {
+      hasFloorId: !!floor_id,
+      hasName: !!name,
+    });
+    return;
+  }
+
+  console.log("[createPeekAction] inserting row...");
   const { data, error } = await supabaseAdmin()
     .from("peeks")
     .insert({
@@ -95,21 +124,46 @@ export async function createPeekAction(formData: FormData) {
     })
     .select("id")
     .single();
-  if (error) throw error;
+  console.log("[createPeekAction] insert result:", { data, error });
+  if (error) {
+    console.error("[createPeekAction] insert failed", error);
+    throw error;
+  }
 
-  const screenshotUrl = await uploadStagedFile(data.id, formData, "screenshot");
-  const videoUrl = await uploadStagedFile(data.id, formData, "video");
+  console.log("[createPeekAction] uploading staged files...");
+  let screenshotUrl: string | null = null;
+  let videoUrl: string | null = null;
+  try {
+    screenshotUrl = await uploadStagedFile(data.id, formData, "screenshot");
+    console.log("[createPeekAction] screenshot upload result:", screenshotUrl);
+  } catch (e) {
+    console.error("[createPeekAction] screenshot upload threw", e);
+    throw e;
+  }
+  try {
+    videoUrl = await uploadStagedFile(data.id, formData, "video");
+    console.log("[createPeekAction] video upload result:", videoUrl);
+  } catch (e) {
+    console.error("[createPeekAction] video upload threw", e);
+    throw e;
+  }
+
   const mediaPatch: Record<string, unknown> = {};
   if (screenshotUrl) mediaPatch.screenshot_url = screenshotUrl;
   if (videoUrl) mediaPatch.video_url = videoUrl;
   if (Object.keys(mediaPatch).length > 0) {
+    console.log("[createPeekAction] patching media URLs", mediaPatch);
     const { error: upErr } = await supabaseAdmin()
       .from("peeks")
       .update(mediaPatch)
       .eq("id", data.id);
-    if (upErr) throw upErr;
+    if (upErr) {
+      console.error("[createPeekAction] media patch failed", upErr);
+      throw upErr;
+    }
   }
 
+  console.log("[createPeekAction] success. redirecting to edit page", data.id);
   revalidatePath("/admin/peeks");
   redirect(`/admin/peeks/${data.id}/edit`);
 }
