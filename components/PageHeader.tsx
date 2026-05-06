@@ -17,7 +17,7 @@ export function PageHeader({ back, showMenu = true }: Props) {
         {back && (
           <Link
             href={back.href}
-            className="inline-flex items-center rounded-btn px-3 py-1.5 text-sm font-medium text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.05] hover:text-brand"
+            className="inline-flex items-center rounded-btn px-4 py-2 text-base font-medium text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.05] hover:text-brand"
             aria-label={back.label ?? "Back"}
           >
             <span aria-hidden>←</span>
