@@ -35,7 +35,7 @@ async function getPeekWithContext(id: string): Promise<Joined | null> {
   const { data, error } = await supabasePublic()
     .from("peeks")
     .select(
-      "id, floor_id, name, x_pct, y_pct, screenshot_url, video_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published))"
+      "id, floor_id, name, x_pct, y_pct, video_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published))"
     )
     .eq("id", id)
     .eq("published", true)
@@ -104,11 +104,7 @@ export default async function PeekDetailPage({
 
         {/* Content section — 64px below buttons */}
         <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
-          <PeekMedia
-            screenshotUrl={peek.screenshot_url}
-            videoUrl={peek.video_url}
-            name={peek.name}
-          />
+          <PeekMedia videoUrl={peek.video_url} name={peek.name} />
           <Instructions steps={steps} tip={peek.tip} />
         </div>
       </main>

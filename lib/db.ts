@@ -23,7 +23,6 @@ export type Peek = {
   name: string;
   x_pct: number;
   y_pct: number;
-  screenshot_url: string | null;
   video_url: string | null;
   instructions: string[] | null;
   difficulty: number;
@@ -84,7 +83,7 @@ export async function getPublishedPeeksForFloor(
   const { data, error } = await supabasePublic()
     .from("peeks")
     .select(
-      "id, floor_id, name, x_pct, y_pct, screenshot_url, video_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published"
+      "id, floor_id, name, x_pct, y_pct, video_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published"
     )
     .eq("floor_id", floorId)
     .eq("published", true)
@@ -98,7 +97,7 @@ export async function getPublishedPeek(id: string): Promise<Peek | null> {
   const { data, error } = await supabasePublic()
     .from("peeks")
     .select(
-      "id, floor_id, name, x_pct, y_pct, screenshot_url, video_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published"
+      "id, floor_id, name, x_pct, y_pct, video_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published"
     )
     .eq("id", id)
     .eq("published", true)

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/ConfirmButton";
+import { DirectVideoUpload } from "@/components/DirectVideoUpload";
 import { PeekForm } from "@/components/PeekForm";
 import { getFloorOptions } from "@/lib/admin-data";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -20,7 +21,6 @@ type EditablePeek = {
   success_rate: number;
   published: boolean;
   instructions: string[] | null;
-  screenshot_url: string | null;
   video_url: string | null;
 };
 
@@ -28,7 +28,7 @@ async function getPeek(id: string): Promise<EditablePeek | null> {
   const { data, error } = await supabaseAdmin()
     .from("peeks")
     .select(
-      "id, floor_id, name, x_pct, y_pct, difficulty, risk, tip, success_rate, published, instructions, screenshot_url, video_url"
+      "id, floor_id, name, x_pct, y_pct, difficulty, risk, tip, success_rate, published, instructions, video_url"
     )
     .eq("id", id)
     .maybeSingle();
@@ -97,10 +97,15 @@ export default async function AdminEditPeekPage({
           success_rate: peek.success_rate,
           published: peek.published,
           instructions,
-          screenshot_url: peek.screenshot_url,
-          video_url: peek.video_url,
         }}
       />
+
+      <section className="rounded-card border border-border bg-card p-5">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
+          Video clip
+        </h2>
+        <DirectVideoUpload peekId={peek.id} initialUrl={peek.video_url} />
+      </section>
     </div>
   );
 }

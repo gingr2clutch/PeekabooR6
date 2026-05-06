@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { InstructionsEditor } from "./InstructionsEditor";
 import { PinPlacer } from "./PinPlacer";
-import { StagedFileField } from "./StagedFileField";
 
 export type FloorOption = {
   id: string;
@@ -26,15 +25,15 @@ type Props = {
     risk?: "low" | "medium" | "high";
     published?: boolean;
     instructions?: string[];
-    screenshot_url?: string | null;
-    video_url?: string | null;
     tip?: string | null;
     success_rate?: number;
   };
 };
 
 export function PeekForm({ floors, action, submitLabel, initial }: Props) {
-  const [floorId, setFloorId] = useState(initial?.floor_id ?? floors[0]?.id ?? "");
+  const [floorId, setFloorId] = useState(
+    initial?.floor_id ?? floors[0]?.id ?? ""
+  );
   const [successRate, setSuccessRate] = useState(initial?.success_rate ?? 50);
 
   const selectedFloor = useMemo(
@@ -45,7 +44,6 @@ export function PeekForm({ floors, action, submitLabel, initial }: Props) {
   return (
     <form
       action={action}
-      encType="multipart/form-data"
       className="grid grid-cols-1 gap-6 lg:grid-cols-2"
     >
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
@@ -168,65 +166,20 @@ export function PeekForm({ floors, action, submitLabel, initial }: Props) {
         </button>
       </div>
 
-      <div className="space-y-6">
-        <div className="space-y-5 rounded-card border border-border bg-card p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-            Pin position
-          </h2>
-          <PinPlacer
-            src={selectedFloor?.birdsEyeUrl ?? null}
-            initialX={initial?.x_pct ?? 50}
-            initialY={initial?.y_pct ?? 50}
-            name={
-              selectedFloor
-                ? `${selectedFloor.mapName} ${selectedFloor.name}`
-                : undefined
-            }
-          />
-        </div>
-
-        {/* Media pickers only render on edit. On create, the row is saved
-            first (tiny payload — fits under Vercel's 4.5MB hobby limit)
-            then the user is redirected to the edit page where each file
-            uploads as its own request. */}
-        {initial?.id ? (
-          <>
-            <div className="space-y-3 rounded-card border border-border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-                Screenshot
-              </h2>
-              <StagedFileField
-                name="screenshot"
-                accept="image/*"
-                currentUrl={initial?.screenshot_url ?? null}
-                removeFlagName="remove_screenshot"
-                emptyLabel="Drop a screenshot here, or click to browse"
-              />
-            </div>
-
-            <div className="space-y-3 rounded-card border border-border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-                Video clip
-              </h2>
-              <StagedFileField
-                name="video"
-                accept="video/mp4,video/quicktime,video/*"
-                currentUrl={initial?.video_url ?? null}
-                removeFlagName="remove_video"
-                emptyLabel="Drop a clip (.mp4 or .mov) here, or click to browse"
-                previewKind="video"
-              />
-              <p className="text-[11px] text-muted">
-                MP4 or MOV. Max 50MB per file.
-              </p>
-            </div>
-          </>
-        ) : (
-          <div className="rounded-card border border-dashed border-border bg-card p-5 text-sm text-muted">
-            Save the peek first, then upload a screenshot and video on the
-            next screen.
-          </div>
-        )}
+      <div className="space-y-5 rounded-card border border-border bg-card p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          Pin position
+        </h2>
+        <PinPlacer
+          src={selectedFloor?.birdsEyeUrl ?? null}
+          initialX={initial?.x_pct ?? 50}
+          initialY={initial?.y_pct ?? 50}
+          name={
+            selectedFloor
+              ? `${selectedFloor.mapName} ${selectedFloor.name}`
+              : undefined
+          }
+        />
       </div>
     </form>
   );

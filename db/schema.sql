@@ -35,7 +35,6 @@ create table if not exists peeks (
   name text not null,
   x_pct real not null,
   y_pct real not null,
-  screenshot_url text,
   video_url text,
   instructions jsonb,
   difficulty int default 3,
