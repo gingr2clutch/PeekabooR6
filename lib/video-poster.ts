@@ -42,67 +42,115 @@ export function putToR2(
 
 // Extracts a representative frame (~1s in to skip fade-ins) from a video as
 // a JPEG Blob. Source can be a local File (newly picked) or a remote URL
-// (existing R2 video). For URL sources, the R2 bucket must include the
-// page's origin in its CORS allowlist.
-export function extractPosterFrame(
+// (existing R2 video). For URL sources we fetch the video as a Blob first
+// — that way the hidden <video> plays from a same-origin blob: URL and
+// canvas readback isn't blocked by tainting rules even if the remote
+// CDN's CORS replies are inconsistent.
+export async function extractPosterFrame(
   source: File | string
 ): Promise<Blob | null> {
-  return new Promise((resolve) => {
-    const isFile = source instanceof File;
-    const objectUrl = isFile ? URL.createObjectURL(source) : null;
-    const src = isFile ? objectUrl! : source;
+  console.log(
+    "[extractPosterFrame] start. source =",
+    source instanceof File ? `File(${source.name}, ${source.size}b)` : source
+  );
 
+  let blob: Blob;
+  if (source instanceof File || source instanceof Blob) {
+    blob = source;
+  } else {
+    try {
+      const res = await fetch(source, { mode: "cors", credentials: "omit" });
+      if (!res.ok) {
+        console.warn(
+          "[extractPosterFrame] fetch returned non-OK",
+          res.status,
+          res.statusText
+        );
+        return null;
+      }
+      blob = await res.blob();
+      console.log(
+        "[extractPosterFrame] fetched blob",
+        blob.size,
+        "bytes",
+        blob.type
+      );
+    } catch (e) {
+      console.warn("[extractPosterFrame] fetch threw", e);
+      return null;
+    }
+  }
+
+  return new Promise((resolve) => {
+    const blobUrl = URL.createObjectURL(blob);
     const video = document.createElement("video");
-    video.src = src;
+    video.src = blobUrl;
     video.muted = true;
     video.playsInline = true;
     video.preload = "auto";
-    if (!isFile) {
-      // Required so canvas.toBlob doesn't trip the tainted-canvas rule.
-      video.crossOrigin = "anonymous";
-    }
 
-    const cleanup = () => {
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-
-    const fail = () => {
+    const cleanup = () => URL.revokeObjectURL(blobUrl);
+    const fail = (reason: string) => {
+      console.warn("[extractPosterFrame] fail:", reason);
+      clearTimeout(timeout);
       cleanup();
       resolve(null);
     };
 
-    video.onerror = fail;
+    // Hard ceiling so the button never hangs forever.
+    const timeout = setTimeout(() => fail("timeout (15s)"), 15000);
+
+    video.onerror = () => fail(`video element error code ${video.error?.code}`);
 
     video.onloadedmetadata = () => {
+      console.log(
+        "[extractPosterFrame] loadedmetadata. duration=",
+        video.duration,
+        "size=",
+        video.videoWidth,
+        "x",
+        video.videoHeight
+      );
       try {
         const target = Math.min(1, (video.duration || 4) / 4);
         video.currentTime = target;
-      } catch {
-        fail();
+      } catch (e) {
+        fail(`seek threw: ${e}`);
       }
     };
 
     video.onseeked = () => {
+      console.log("[extractPosterFrame] seeked, drawing canvas");
       try {
         const canvas = document.createElement("canvas");
         canvas.width = video.videoWidth || 1280;
         canvas.height = video.videoHeight || 720;
         const ctx = canvas.getContext("2d");
         if (!ctx) {
-          fail();
+          fail("no 2d context");
           return;
         }
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         canvas.toBlob(
-          (blob) => {
+          (out) => {
+            clearTimeout(timeout);
             cleanup();
-            resolve(blob);
+            if (!out) {
+              console.warn("[extractPosterFrame] toBlob returned null");
+            } else {
+              console.log(
+                "[extractPosterFrame] poster blob ready",
+                out.size,
+                "bytes"
+              );
+            }
+            resolve(out);
           },
           "image/jpeg",
           0.85
         );
-      } catch {
-        fail();
+      } catch (e) {
+        fail(`drawImage threw: ${e}`);
       }
     };
   });

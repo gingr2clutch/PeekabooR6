@@ -25,26 +25,43 @@ export function RegeneratePosterButton({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [stage, setStage] = useState<string>("");
 
   async function run() {
+    console.log("[RegeneratePosterButton] click. videoUrl=", videoUrl);
     setError(null);
     setDone(false);
     setBusy(true);
+    setStage("Fetching video…");
     try {
+      console.log("[RegeneratePosterButton] extracting poster frame");
       const blob = await extractPosterFrame(videoUrl);
       if (!blob) {
         throw new Error(
-          "Couldn't extract a frame from the video. The R2 bucket likely needs your page's origin added to its CORS rules."
+          "Couldn't extract a frame. Likely cause: R2 bucket CORS doesn't allow GET from this origin. Open the browser console for details."
         );
       }
+      console.log(
+        "[RegeneratePosterButton] got blob",
+        blob.size,
+        "bytes — requesting presigned URL"
+      );
+      setStage("Uploading poster…");
       const { uploadUrl, publicUrl } = await createPeekPosterUploadUrl(peekId);
+      console.log("[RegeneratePosterButton] presigned URL ready");
       await putToR2(uploadUrl, blob, "image/jpeg");
+      console.log("[RegeneratePosterButton] PUT ok, saving DB row");
+      setStage("Saving…");
       await setPeekPosterUrl(peekId, publicUrl);
+      console.log("[RegeneratePosterButton] done. publicUrl=", publicUrl);
       setDone(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[RegeneratePosterButton] failed:", msg, e);
+      setError(msg);
     } finally {
       setBusy(false);
+      setStage("");
     }
   }
 
@@ -57,7 +74,7 @@ export function RegeneratePosterButton({
         className="rounded-btn border border-border bg-card px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:border-brand hover:text-brand disabled:opacity-60"
       >
         {busy
-          ? "Generating poster…"
+          ? stage || "Working…"
           : done
             ? "Poster updated ✓"
             : hasPoster
