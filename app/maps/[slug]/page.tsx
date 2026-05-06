@@ -90,6 +90,7 @@ export default async function MapPage({
                     </div>
                   )}
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent from-60% to-black/15" />
+                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.22)_100%)]" />
                 </div>
 
                 <div className="flex items-center justify-between gap-4 px-5 py-4">
