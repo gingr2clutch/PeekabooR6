@@ -75,19 +75,33 @@ export default async function MapPage({
               >
                 <div className="relative aspect-video w-full overflow-hidden bg-card">
                   {floor.birds_eye_url ? (
-                    <Image
-                      src={floor.birds_eye_url}
-                      alt={`${map.name} ${floor.name} bird's-eye view`}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 768px"
-                      className="object-cover transition-transform duration-200 ease-out group-hover:scale-105"
-                      style={{
-                        WebkitMaskImage:
-                          "radial-gradient(ellipse at center, black 60%, transparent 100%)",
-                        maskImage:
-                          "radial-gradient(ellipse at center, black 60%, transparent 100%)",
-                      }}
-                    />
+                    <>
+                      {/* Blurred copy underneath — fills the corners that
+                          the sharp top layer fades out of. */}
+                      <Image
+                        src={floor.birds_eye_url}
+                        alt=""
+                        aria-hidden
+                        fill
+                        sizes="(max-width: 768px) 100vw, 768px"
+                        className="scale-110 object-cover blur-[18px]"
+                      />
+                      {/* Sharp top layer with radial mask: centre stays
+                          crisp, edges fade into the blurred copy below. */}
+                      <Image
+                        src={floor.birds_eye_url}
+                        alt={`${map.name} ${floor.name} bird's-eye view`}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 768px"
+                        className="object-cover transition-transform duration-200 ease-out group-hover:scale-105"
+                        style={{
+                          WebkitMaskImage:
+                            "radial-gradient(ellipse at center, black 55%, transparent 100%)",
+                          maskImage:
+                            "radial-gradient(ellipse at center, black 55%, transparent 100%)",
+                        }}
+                      />
+                    </>
                   ) : (
                     <div className="placeholder-stripes flex h-full w-full items-center justify-center">
                       <span className="rounded-btn bg-card/80 px-3 py-1 text-sm text-muted backdrop-blur-sm">
