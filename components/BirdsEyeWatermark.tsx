@@ -1,12 +1,14 @@
 type Props = {
-  // "flush" sits the pill in the literal corner with only the top-right
-  // corner rounded (used on bird's-eye images). "inset" pulls it ~8px off
-  // the edges and rounds all corners (used on screenshots and video clips
-  // so it doesn't crowd the native controls bar).
+  // "flush" sits the pill in the literal corner with only the inner corner
+  // rounded (used on bird's-eye images). "inset" pulls it ~8px off the
+  // edges and rounds all corners (used on screenshots, video clips, and
+  // map-page floor cards).
   placement?: "flush" | "inset";
   // "default" is the original size used on full bird's-eye views; "compact"
   // is roughly 40% smaller for use on the smaller peek-detail cards.
   size?: "default" | "compact";
+  // Which bottom corner to anchor to.
+  corner?: "left" | "right";
 };
 
 // Small watermark dropped onto every public R6 capture (bird's-eye images,
@@ -16,11 +18,15 @@ type Props = {
 export function BirdsEyeWatermark({
   placement = "flush",
   size = "default",
+  corner = "left",
 }: Props = {}) {
+  const isRight = corner === "right";
   const position =
     placement === "inset"
-      ? "bottom-2 left-2 rounded-btn"
-      : "bottom-0 left-0 rounded-tr-btn";
+      ? `bottom-2 ${isRight ? "right-2" : "left-2"} rounded-btn`
+      : isRight
+        ? "bottom-0 right-0 rounded-tl-btn"
+        : "bottom-0 left-0 rounded-tr-btn";
 
   const pill =
     size === "compact"

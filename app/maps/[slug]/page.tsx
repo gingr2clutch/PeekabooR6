@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PageHeader } from "@/components/PageHeader";
 import { getFloorsForMap, getMapBySlug } from "@/lib/db";
 import { supabasePublic } from "@/lib/supabase";
@@ -100,6 +101,11 @@ export default async function MapPage({
                           maskImage:
                             "radial-gradient(ellipse at center, black 70%, transparent 100%)",
                         }}
+                      />
+                      <BirdsEyeWatermark
+                        placement="inset"
+                        size="compact"
+                        corner="right"
                       />
                     </>
                   ) : (
