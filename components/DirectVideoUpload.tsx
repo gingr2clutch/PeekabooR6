@@ -233,10 +233,12 @@ function firstFrameBlob(file: File): Promise<Blob | null> {
     video.onerror = fail;
 
     video.onloadedmetadata = () => {
-      // Some browsers paint a black frame at 0 — seek a little forward to
-      // grab a real first frame.
+      // Many R6 captures start with a fade-in or black title card, so seek
+      // ~1s in (capped at 1/4 of the clip for short videos) to grab a real
+      // representative frame.
       try {
-        video.currentTime = Math.min(0.1, (video.duration || 1) / 10);
+        const target = Math.min(1, (video.duration || 4) / 4);
+        video.currentTime = target;
       } catch {
         fail();
       }
