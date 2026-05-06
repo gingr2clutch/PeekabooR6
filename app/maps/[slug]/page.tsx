@@ -84,7 +84,7 @@ export default async function MapPage({
                         aria-hidden
                         fill
                         sizes="(max-width: 768px) 100vw, 768px"
-                        className="scale-110 object-cover blur-[18px]"
+                        className="scale-110 object-cover blur-[12px]"
                       />
                       {/* Sharp top layer with radial mask: centre stays
                           crisp, edges fade into the blurred copy below. */}
@@ -96,9 +96,9 @@ export default async function MapPage({
                         className="object-cover transition-transform duration-200 ease-out group-hover:scale-105"
                         style={{
                           WebkitMaskImage:
-                            "radial-gradient(ellipse at center, black 55%, transparent 100%)",
+                            "radial-gradient(ellipse at center, black 70%, transparent 100%)",
                           maskImage:
-                            "radial-gradient(ellipse at center, black 55%, transparent 100%)",
+                            "radial-gradient(ellipse at center, black 70%, transparent 100%)",
                         }}
                       />
                     </>
