@@ -6,28 +6,18 @@ type Props = {
   showMenu?: boolean;
 };
 
-// Top bar shared by every public page. Three-column grid so the centre slot
-// stays anchored to the page centre regardless of how wide the side slots
-// are. Left = wordmark, Centre = Maps link, Right = optional Back link.
+// Top bar shared by every public page. Wordmark on the left, optional Back
+// link pinned top-right.
 export function PageHeader({ back, showMenu = true }: Props) {
-  const ghostBtn =
-    "rounded-btn px-3 py-1.5 text-sm font-medium text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.05] hover:text-brand";
-
   return (
-    <header className="grid grid-cols-3 items-center gap-2 px-4 pt-6 sm:px-6">
-      <div className="justify-self-start">{showMenu && <Wordmark />}</div>
+    <header className="flex items-center justify-between gap-2 px-4 pt-6 sm:px-6">
+      <div>{showMenu && <Wordmark />}</div>
 
-      <div className="justify-self-center">
-        <Link href="/" className={ghostBtn}>
-          Maps
-        </Link>
-      </div>
-
-      <div className="justify-self-end">
+      <div>
         {back && (
           <Link
             href={back.href}
-            className={`${ghostBtn} inline-flex items-center`}
+            className="inline-flex items-center rounded-btn px-3 py-1.5 text-sm font-medium text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.05] hover:text-brand"
             aria-label={back.label ?? "Back"}
           >
             <span aria-hidden>←</span>
