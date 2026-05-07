@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
@@ -21,16 +20,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9948436713506762"
+          crossOrigin="anonymous"
+        ></script>
+      </head>
       <body className="flex min-h-screen flex-col bg-bg text-ink">
         <div className="flex-1">{children}</div>
         <SiteFooter />
         <Analytics />
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9948436713506762"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
       </body>
     </html>
   );
