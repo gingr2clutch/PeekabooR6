@@ -88,10 +88,10 @@ export default function PrivacyPolicyPage() {
             <h2 className="mb-2 text-lg font-semibold">Contact</h2>
             <p>
               <a
-                href="mailto:contact@peekaboor6.com"
+                href="mailto:gingr2clutch@gmail.com"
                 className="text-brand hover:underline"
               >
-                contact@peekaboor6.com
+                gingr2clutch@gmail.com
               </a>
             </p>
           </section>
