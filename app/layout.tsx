@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
+import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,8 +20,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-bg text-ink">
-        {children}
+      <body className="flex min-h-screen flex-col bg-bg text-ink">
+        <div className="flex-1">{children}</div>
+        <SiteFooter />
         <Analytics />
       </body>
     </html>
