@@ -1,44 +1,30 @@
-import { MobileMenu, MobileMenuBack, MobileMenuLink } from "./MobileMenu";
+import Link from "next/link";
 import { Wordmark } from "./Wordmark";
 
 type Props = {
   home?: boolean;
 };
 
+const navLinkCls =
+  "inline-flex items-center text-sm font-medium text-ink transition-colors duration-150 ease-out hover:text-brand sm:text-base";
+
 // Top bar shared by every public page.
 // Logo top-left (full on the homepage, icon-only elsewhere).
-// Hamburger menu top-right; all navigation lives inside it.
+// Inline Maps + Popular links top-right on every screen size.
 export function PageHeader({ home = false }: Props) {
   return (
-    <header className="flex items-center justify-between gap-2 px-4 pt-4 sm:px-6 sm:pt-6">
+    <header className="flex items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-6">
       <Wordmark showText={home} />
-      <MobileMenu>
-        <MobileMenuLink href="/" icon={<GridIcon />}>
+      <nav className="flex items-center gap-4 sm:gap-6">
+        <Link href="/" className={navLinkCls}>
           Maps
-        </MobileMenuLink>
-        <MobileMenuLink href="/popular" icon={<FlameIcon />}>
-          Popular
-        </MobileMenuLink>
-        {!home && <MobileMenuBack />}
-      </MobileMenu>
+        </Link>
+        <Link href="/popular" className={navLinkCls}>
+          <FlameIcon />
+          <span className="ml-1.5">Popular</span>
+        </Link>
+      </nav>
     </header>
-  );
-}
-
-function GridIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      width="16"
-      height="16"
-      aria-hidden
-      className="fill-current"
-    >
-      <rect x="1" y="1" width="6" height="6" rx="1" />
-      <rect x="9" y="1" width="6" height="6" rx="1" />
-      <rect x="1" y="9" width="6" height="6" rx="1" />
-      <rect x="9" y="9" width="6" height="6" rx="1" />
-    </svg>
   );
 }
 
@@ -46,8 +32,8 @@ function FlameIcon() {
   return (
     <svg
       viewBox="0 0 16 16"
-      width="16"
-      height="16"
+      width="14"
+      height="14"
       aria-hidden
       className="fill-current"
     >
