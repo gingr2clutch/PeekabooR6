@@ -1,18 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type AnchorHTMLAttributes,
+  type ButtonHTMLAttributes,
+  type ReactNode,
+} from "react";
 
 const itemCls =
-  "flex min-h-[44px] items-center gap-3 rounded-btn px-3 py-3 text-base font-medium text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand";
+  "flex min-h-[44px] items-center gap-3 rounded-btn px-3 py-3 text-left text-base font-medium text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand";
 
-export function MobileMenu() {
+const CloseContext = createContext<() => void>(() => {});
+
+function useCloseMenu() {
+  return useContext(CloseContext);
+}
+
+type MenuProps = {
+  children: ReactNode;
+  ariaLabel?: string;
+};
+
+export function MobileMenu({ children, ariaLabel = "Menu" }: MenuProps) {
   const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -22,7 +42,7 @@ export function MobileMenu() {
     <div className="relative md:hidden">
       <button
         type="button"
-        aria-label={open ? "Close menu" : "Open menu"}
+        aria-label={open ? `Close ${ariaLabel.toLowerCase()}` : `Open ${ariaLabel.toLowerCase()}`}
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((v) => !v)}
@@ -32,40 +52,80 @@ export function MobileMenu() {
       </button>
 
       {open && (
-        <>
+        <CloseContext.Provider value={close}>
           <button
             type="button"
-            aria-label="Close menu"
+            aria-label={`Close ${ariaLabel.toLowerCase()}`}
             tabIndex={-1}
-            onClick={() => setOpen(false)}
+            onClick={close}
             className="fixed inset-0 z-40 cursor-default bg-transparent"
           />
           <div
             role="menu"
+            aria-label={ariaLabel}
             className="absolute right-0 top-full z-50 mt-2 w-56 origin-top-right rounded-card border border-border bg-card p-2 shadow-lg"
           >
-            <Link
-              role="menuitem"
-              href="/"
-              className={itemCls}
-              onClick={() => setOpen(false)}
-            >
-              <GridIcon />
-              <span>Maps</span>
-            </Link>
-            <Link
-              role="menuitem"
-              href="/popular"
-              className={itemCls}
-              onClick={() => setOpen(false)}
-            >
-              <FlameIcon />
-              <span>Popular</span>
-            </Link>
+            {children}
           </div>
-        </>
+        </CloseContext.Provider>
       )}
     </div>
+  );
+}
+
+type MenuLinkProps = {
+  href: string;
+  icon?: ReactNode;
+  children: ReactNode;
+} & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href" | "className">;
+
+export function MobileMenuLink({
+  href,
+  icon,
+  children,
+  onClick,
+  ...rest
+}: MenuLinkProps) {
+  const close = useCloseMenu();
+  return (
+    <Link
+      href={href}
+      role="menuitem"
+      className={itemCls}
+      onClick={(e) => {
+        onClick?.(e);
+        close();
+      }}
+      {...rest}
+    >
+      {icon}
+      <span>{children}</span>
+    </Link>
+  );
+}
+
+type MenuButtonProps = {
+  icon?: ReactNode;
+  children: ReactNode;
+} & ButtonHTMLAttributes<HTMLButtonElement>;
+
+export function MobileMenuButton({
+  icon,
+  children,
+  type = "submit",
+  className,
+  ...rest
+}: MenuButtonProps) {
+  return (
+    <button
+      type={type}
+      role="menuitem"
+      className={`${itemCls} w-full ${className ?? ""}`}
+      {...rest}
+    >
+      {icon}
+      <span>{children}</span>
+    </button>
   );
 }
 
@@ -95,37 +155,6 @@ function CloseIcon() {
       strokeLinejoin="round"
     >
       <path d="M6 6l12 12M6 18L18 6" />
-    </svg>
-  );
-}
-
-function GridIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      width="16"
-      height="16"
-      aria-hidden
-      className="fill-current"
-    >
-      <rect x="1" y="1" width="6" height="6" rx="1" />
-      <rect x="9" y="1" width="6" height="6" rx="1" />
-      <rect x="1" y="9" width="6" height="6" rx="1" />
-      <rect x="9" y="9" width="6" height="6" rx="1" />
-    </svg>
-  );
-}
-
-function FlameIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      width="16"
-      height="16"
-      aria-hidden
-      className="fill-current"
-    >
-      <path d="M8.5 0.5c0.4 1.6-0.2 2.7-1 3.7-0.9 1.1-2 2.1-2 4.1 0 2.5 2 4.7 4.5 4.7s4.5-2 4.5-4.7c0-2.6-1.7-4.6-2.6-5.6-0.4 0.7-1 1-1.5 0.7C9.4 3 9.2 1.6 8.5 0.5zM8 8.5c0.6 0.6 1 1 1 1.8 0 1-0.7 1.7-1.7 1.7s-1.8-0.8-1.8-1.8c0-0.7 0.4-1.2 0.8-1.6C6.7 8.2 7.2 8 7.5 7.4 7.6 7.7 7.7 8.2 8 8.5z" />
     </svg>
   );
 }

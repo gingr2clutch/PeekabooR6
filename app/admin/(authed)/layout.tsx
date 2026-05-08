@@ -1,4 +1,9 @@
 import Link from "next/link";
+import {
+  MobileMenu,
+  MobileMenuButton,
+  MobileMenuLink,
+} from "@/components/MobileMenu";
 import { Wordmark } from "@/components/Wordmark";
 import { logoutAction } from "../actions";
 
@@ -9,9 +14,9 @@ export default function AuthedAdminLayout({
 }) {
   return (
     <>
-      <header className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-border bg-card px-6 py-3">
+      <header className="flex items-center gap-x-6 gap-y-3 border-b border-border bg-card px-4 py-3 sm:px-6">
         <Wordmark href="/admin/maps" />
-        <nav className="flex items-center gap-4 text-sm">
+        <nav className="hidden items-center gap-4 text-sm md:flex">
           <Link
             href="/admin/maps"
             className="text-ink transition-colors hover:text-brand"
@@ -25,7 +30,7 @@ export default function AuthedAdminLayout({
             Peeks
           </Link>
         </nav>
-        <form action={logoutAction} className="ml-auto">
+        <form action={logoutAction} className="ml-auto hidden md:block">
           <button
             type="submit"
             className="rounded-btn border border-border bg-card px-3 py-1.5 text-sm text-ink transition-colors hover:border-brand hover:text-brand"
@@ -33,8 +38,18 @@ export default function AuthedAdminLayout({
             Sign out
           </button>
         </form>
+
+        <div className="ml-auto md:hidden">
+          <MobileMenu>
+            <MobileMenuLink href="/admin/maps">Maps</MobileMenuLink>
+            <MobileMenuLink href="/admin/peeks">Peeks</MobileMenuLink>
+            <form action={logoutAction}>
+              <MobileMenuButton>Sign out</MobileMenuButton>
+            </form>
+          </MobileMenu>
+        </div>
       </header>
-      <div className="mx-auto max-w-6xl px-6 py-8">{children}</div>
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</div>
     </>
   );
 }

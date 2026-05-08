@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MobileMenu } from "./MobileMenu";
+import { MobileMenu, MobileMenuLink } from "./MobileMenu";
 import { Wordmark } from "./Wordmark";
 
 type Props = {
@@ -14,8 +14,8 @@ const backLinkCls =
   "inline-flex h-11 w-11 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand md:h-auto md:min-h-[44px] md:w-auto md:gap-2 md:px-3 md:py-2 md:text-base md:font-medium";
 
 // Top bar shared by every public page.
-// Mobile (<768px): [back-icon] [logo-icon] ........ [hamburger]
-// Desktop (>=768px): [back+text] [logo+text] ........ [Maps] [Popular]
+// Mobile (<768px): [back-icon?] [logo-icon] ........ [hamburger]
+// Desktop (>=768px): [back+text?] [logo+text] ........ [Maps] [Popular]
 export function PageHeader({ back, showMenu = true }: Props) {
   return (
     <header className="relative flex items-center gap-2 px-4 pt-4 sm:gap-3 sm:px-6 sm:pt-6">
@@ -44,7 +44,14 @@ export function PageHeader({ back, showMenu = true }: Props) {
         </Link>
       </nav>
 
-      <MobileMenu />
+      <MobileMenu>
+        <MobileMenuLink href="/" icon={<GridIcon />}>
+          Maps
+        </MobileMenuLink>
+        <MobileMenuLink href="/popular" icon={<FlameIcon />}>
+          Popular
+        </MobileMenuLink>
+      </MobileMenu>
     </header>
   );
 }
