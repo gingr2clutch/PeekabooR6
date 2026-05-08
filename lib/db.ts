@@ -94,6 +94,27 @@ export async function getPublishedPeeksForFloor(
   return data ?? [];
 }
 
+export type PeekWithContext = Peek & {
+  floors: (Floor & { maps: Map }) | null;
+};
+
+export async function getTopPeeks(limit = 5): Promise<PeekWithContext[]> {
+  // Overfetch then drop any whose map isn't published — supabase's filter
+  // syntax can't reach maps.published through the nested join cleanly.
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select(
+      "id, floor_id, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))"
+    )
+    .eq("published", true)
+    .order("success_rate", { ascending: false })
+    .order("vote_count", { ascending: false })
+    .limit(limit * 3);
+  if (error) throw error;
+  const rows = (data ?? []) as unknown as PeekWithContext[];
+  return rows.filter((p) => p.floors?.maps?.published).slice(0, limit);
+}
+
 export async function getPublishedPeek(id: string): Promise<Peek | null> {
   const { data, error } = await supabasePublic()
     .from("peeks")

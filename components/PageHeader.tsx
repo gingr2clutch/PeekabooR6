@@ -32,10 +32,14 @@ export function PageHeader({ back, showMenu = true }: Props) {
         {showMenu && <Wordmark />}
       </div>
 
-      <nav className="flex items-center gap-3">
+      <nav className="flex items-center gap-3 sm:gap-4">
         <Link href="/" className={navLinkCls}>
           <GridIcon />
           <span className="ml-1.5">Maps</span>
+        </Link>
+        <Link href="/popular" className={navLinkCls}>
+          <FlameIcon />
+          <span className="ml-1.5">Popular</span>
         </Link>
       </nav>
     </header>
@@ -70,6 +74,20 @@ function GridIcon() {
       <rect x="9" y="1" width="6" height="6" rx="1" />
       <rect x="1" y="9" width="6" height="6" rx="1" />
       <rect x="9" y="9" width="6" height="6" rx="1" />
+    </svg>
+  );
+}
+
+function FlameIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="14"
+      height="14"
+      aria-hidden
+      className="fill-current"
+    >
+      <path d="M8.5 0.5c0.4 1.6-0.2 2.7-1 3.7-0.9 1.1-2 2.1-2 4.1 0 2.5 2 4.7 4.5 4.7s4.5-2 4.5-4.7c0-2.6-1.7-4.6-2.6-5.6-0.4 0.7-1 1-1.5 0.7C9.4 3 9.2 1.6 8.5 0.5zM8 8.5c0.6 0.6 1 1 1 1.8 0 1-0.7 1.7-1.7 1.7s-1.8-0.8-1.8-1.8c0-0.7 0.4-1.2 0.8-1.6C6.7 8.2 7.2 8 7.5 7.4 7.6 7.7 7.7 8.2 8 8.5z" />
     </svg>
   );
 }
