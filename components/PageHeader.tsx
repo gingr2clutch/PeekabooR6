@@ -1,49 +1,17 @@
-import Link from "next/link";
-import { MobileMenu, MobileMenuLink } from "./MobileMenu";
+import { MobileMenu, MobileMenuBack, MobileMenuLink } from "./MobileMenu";
 import { Wordmark } from "./Wordmark";
 
 type Props = {
-  back?: { href: string; label?: string };
-  showMenu?: boolean;
+  home?: boolean;
 };
 
-const navLinkCls =
-  "inline-flex items-center text-sm font-medium text-ink transition-colors duration-150 ease-out hover:text-brand md:text-base";
-
-const backLinkCls =
-  "inline-flex h-11 w-11 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand md:h-auto md:min-h-[44px] md:w-auto md:gap-2 md:px-3 md:py-2 md:text-base md:font-medium";
-
 // Top bar shared by every public page.
-// Mobile (<768px): [back-icon?] [logo-icon] ........ [hamburger]
-// Desktop (>=768px): [back+text?] [logo+text] ........ [Maps] [Popular]
-export function PageHeader({ back, showMenu = true }: Props) {
+// Logo top-left (full on the homepage, icon-only elsewhere).
+// Hamburger menu top-right; all navigation lives inside it.
+export function PageHeader({ home = false }: Props) {
   return (
-    <header className="relative flex items-center gap-2 px-4 pt-4 sm:gap-3 sm:px-6 sm:pt-6">
-      {back && (
-        <Link
-          href={back.href}
-          className={backLinkCls}
-          aria-label={back.label ?? "Back"}
-        >
-          <ArrowLeftIcon />
-          <span className="hidden md:inline">{back.label ?? "Back"}</span>
-        </Link>
-      )}
-      {showMenu && <Wordmark />}
-
-      <div className="flex-1" />
-
-      <nav className="hidden items-center gap-3 sm:gap-4 md:flex">
-        <Link href="/" className={navLinkCls}>
-          <GridIcon />
-          <span className="ml-1.5">Maps</span>
-        </Link>
-        <Link href="/popular" className={navLinkCls}>
-          <FlameIcon />
-          <span className="ml-1.5">Popular</span>
-        </Link>
-      </nav>
-
+    <header className="flex items-center justify-between gap-2 px-4 pt-4 sm:px-6 sm:pt-6">
+      <Wordmark showText={home} />
       <MobileMenu>
         <MobileMenuLink href="/" icon={<GridIcon />}>
           Maps
@@ -51,23 +19,9 @@ export function PageHeader({ back, showMenu = true }: Props) {
         <MobileMenuLink href="/popular" icon={<FlameIcon />}>
           Popular
         </MobileMenuLink>
+        {!home && <MobileMenuBack />}
       </MobileMenu>
     </header>
-  );
-}
-
-function ArrowLeftIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden
-      className="h-6 w-6 fill-none stroke-current md:h-5 md:w-5"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M19 12H5M12 19l-7-7 7-7" />
-    </svg>
   );
 }
 
@@ -75,8 +29,8 @@ function GridIcon() {
   return (
     <svg
       viewBox="0 0 16 16"
-      width="14"
-      height="14"
+      width="16"
+      height="16"
       aria-hidden
       className="fill-current"
     >
@@ -92,8 +46,8 @@ function FlameIcon() {
   return (
     <svg
       viewBox="0 0 16 16"
-      width="14"
-      height="14"
+      width="16"
+      height="16"
       aria-hidden
       className="fill-current"
     >

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   createContext,
   useContext,
@@ -39,10 +40,12 @@ export function MobileMenu({ children, ariaLabel = "Menu" }: MenuProps) {
   }, [open]);
 
   return (
-    <div className="relative md:hidden">
+    <div className="relative">
       <button
         type="button"
-        aria-label={open ? `Close ${ariaLabel.toLowerCase()}` : `Open ${ariaLabel.toLowerCase()}`}
+        aria-label={
+          open ? `Close ${ariaLabel.toLowerCase()}` : `Open ${ariaLabel.toLowerCase()}`
+        }
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((v) => !v)}
@@ -114,18 +117,37 @@ export function MobileMenuButton({
   children,
   type = "submit",
   className,
+  onClick,
   ...rest
 }: MenuButtonProps) {
+  const close = useCloseMenu();
   return (
     <button
       type={type}
       role="menuitem"
       className={`${itemCls} w-full ${className ?? ""}`}
+      onClick={(e) => {
+        onClick?.(e);
+        close();
+      }}
       {...rest}
     >
       {icon}
       <span>{children}</span>
     </button>
+  );
+}
+
+export function MobileMenuBack() {
+  const router = useRouter();
+  return (
+    <MobileMenuButton
+      type="button"
+      icon={<BackArrowIcon />}
+      onClick={() => router.back()}
+    >
+      Back
+    </MobileMenuButton>
   );
 }
 
@@ -155,6 +177,23 @@ function CloseIcon() {
       strokeLinejoin="round"
     >
       <path d="M6 6l12 12M6 18L18 6" />
+    </svg>
+  );
+}
+
+function BackArrowIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="16"
+      height="16"
+      aria-hidden
+      className="fill-none stroke-current"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M14 8H2M8 14L2 8l6-6" />
     </svg>
   );
 }

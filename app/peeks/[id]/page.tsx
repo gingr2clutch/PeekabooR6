@@ -55,12 +55,12 @@ export default async function PeekDetailPage({
 
   const floor = peek.floors;
   const map = floor.maps;
-  const backHref = `/maps/${map.slug}/${floor.slug}`;
+  const floorHref = `/maps/${map.slug}/${floor.slug}`;
   const steps = Array.isArray(peek.instructions) ? peek.instructions : [];
 
   return (
     <>
-      <PageHeader back={{ href: backHref, label: "Back" }} />
+      <PageHeader />
       <main className="fade-in-up mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">
         {/* Page header */}
         <div className="text-center">
@@ -72,7 +72,7 @@ export default async function PeekDetailPage({
               {map.name}
             </Link>{" "}
             ›{" "}
-            <Link href={backHref} className="hover:text-brand">
+            <Link href={floorHref} className="hover:text-brand">
               {floor.name}
             </Link>{" "}
             › {peek.name}
