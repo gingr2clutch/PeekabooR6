@@ -61,3 +61,34 @@ h4 {
     animation: none;
   }
 }
+
+/* Soft gold glow for the rank-1 card on the Popular page. */
+.peek-glow-gold {
+  box-shadow: 0 4px 24px rgba(218, 165, 32, 0.16);
+}
+.peek-glow-gold:hover {
+  box-shadow: 0 8px 32px rgba(218, 165, 32, 0.26);
+}
+
+/* Gentle pulse for the trophy watermark behind rank 1. */
+@keyframes peek-trophy-pulse {
+  0%,
+  100% {
+    opacity: 0.16;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.24;
+    transform: scale(1.05);
+  }
+}
+.peek-trophy-pulse {
+  animation: peek-trophy-pulse 3.6s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .peek-trophy-pulse {
+    animation: none;
+  }
+}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MobileMenu } from "./MobileMenu";
 import { Wordmark } from "./Wordmark";
 
 type Props = {
@@ -7,32 +8,32 @@ type Props = {
 };
 
 const navLinkCls =
-  "inline-flex items-center text-sm font-medium text-ink transition-colors duration-150 ease-out hover:text-brand sm:text-base";
+  "inline-flex items-center text-sm font-medium text-ink transition-colors duration-150 ease-out hover:text-brand md:text-base";
 
 const backLinkCls =
-  "inline-flex min-h-[44px] items-center gap-2 rounded-btn px-3 py-2 text-base font-medium text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand";
+  "inline-flex h-11 w-11 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand md:h-auto md:min-h-[44px] md:w-auto md:gap-2 md:px-3 md:py-2 md:text-base md:font-medium";
 
-// Top bar shared by every public page. Back link (when present) is the
-// first thing on the left so it's the largest tap target. Wordmark sits to
-// its right; "Maps" nav stays anchored on the right edge.
+// Top bar shared by every public page.
+// Mobile (<768px): [back-icon] [logo-icon] ........ [hamburger]
+// Desktop (>=768px): [back+text] [logo+text] ........ [Maps] [Popular]
 export function PageHeader({ back, showMenu = true }: Props) {
   return (
-    <header className="flex items-center justify-between gap-2 px-4 pt-4 sm:px-6 sm:pt-6">
-      <div className="flex items-center gap-2 sm:gap-3">
-        {back && (
-          <Link
-            href={back.href}
-            className={backLinkCls}
-            aria-label={back.label ?? "Back"}
-          >
-            <ArrowLeftIcon />
-            <span>{back.label ?? "Back"}</span>
-          </Link>
-        )}
-        {showMenu && <Wordmark />}
-      </div>
+    <header className="relative flex items-center gap-2 px-4 pt-4 sm:gap-3 sm:px-6 sm:pt-6">
+      {back && (
+        <Link
+          href={back.href}
+          className={backLinkCls}
+          aria-label={back.label ?? "Back"}
+        >
+          <ArrowLeftIcon />
+          <span className="hidden md:inline">{back.label ?? "Back"}</span>
+        </Link>
+      )}
+      {showMenu && <Wordmark />}
 
-      <nav className="flex items-center gap-3 sm:gap-4">
+      <div className="flex-1" />
+
+      <nav className="hidden items-center gap-3 sm:gap-4 md:flex">
         <Link href="/" className={navLinkCls}>
           <GridIcon />
           <span className="ml-1.5">Maps</span>
@@ -42,6 +43,8 @@ export function PageHeader({ back, showMenu = true }: Props) {
           <span className="ml-1.5">Popular</span>
         </Link>
       </nav>
+
+      <MobileMenu />
     </header>
   );
 }
@@ -51,7 +54,7 @@ function ArrowLeftIcon() {
     <svg
       viewBox="0 0 24 24"
       aria-hidden
-      className="h-6 w-6 fill-none stroke-current sm:h-5 sm:w-5"
+      className="h-6 w-6 fill-none stroke-current md:h-5 md:w-5"
       strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
