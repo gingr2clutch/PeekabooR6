@@ -16,9 +16,11 @@ export function PageHeader({ home = false }: Props) {
     <header className="flex items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-6">
       <Wordmark showText={home} />
       <nav className="flex items-center gap-4 sm:gap-6">
-        <Link href="/" className={navLinkCls}>
-          Maps
-        </Link>
+        {!home && (
+          <Link href="/" className={navLinkCls}>
+            Maps
+          </Link>
+        )}
         <Link href="/popular" className={navLinkCls}>
           <FlameIcon />
           <span className="ml-1.5">Popular</span>
