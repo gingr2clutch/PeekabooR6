@@ -38,6 +38,15 @@ export async function createPeekVideoUploadUrl(
   return { uploadUrl, publicUrl: r2PublicUrl(key) };
 }
 
+async function peekSlug(peekId: string): Promise<string | null> {
+  const { data } = await supabaseAdmin()
+    .from("peeks")
+    .select("slug")
+    .eq("id", peekId)
+    .maybeSingle();
+  return data?.slug ?? null;
+}
+
 // Called by the client after a direct R2 PUT succeeds. Just records the
 // public URL on the peek row.
 export async function setPeekVideoUrl(
@@ -53,7 +62,8 @@ export async function setPeekVideoUrl(
   if (error) throw error;
 
   revalidatePath(`/admin/peeks/${peekId}/edit`);
-  revalidatePath(`/peeks/${peekId}`);
+  const slug = await peekSlug(peekId);
+  if (slug) revalidatePath(`/peeks/${slug}`);
 }
 
 export async function clearPeekVideoUrl(peekId: string): Promise<void> {
@@ -66,5 +76,6 @@ export async function clearPeekVideoUrl(peekId: string): Promise<void> {
   if (error) throw error;
 
   revalidatePath(`/admin/peeks/${peekId}/edit`);
-  revalidatePath(`/peeks/${peekId}`);
+  const slug = await peekSlug(peekId);
+  if (slug) revalidatePath(`/peeks/${slug}`);
 }

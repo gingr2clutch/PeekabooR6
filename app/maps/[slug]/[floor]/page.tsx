@@ -106,7 +106,7 @@ export default async function FloorPage({
           {positioned.map((peek, i) => (
             <PeekPin
               key={peek.id}
-              id={peek.id}
+              slug={peek.slug}
               name={peek.name}
               xPct={peek.displayX}
               yPct={peek.displayY}

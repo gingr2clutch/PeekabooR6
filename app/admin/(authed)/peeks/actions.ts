@@ -3,6 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
+import {
+  buildBasePeekSlug,
+  ensureUniquePeekSlug,
+  slugify,
+} from "@/lib/slug";
 
 function clamp(n: number, min: number, max: number): number {
   if (Number.isNaN(n)) return min;
@@ -31,6 +36,17 @@ function parseSuccessRate(v: FormDataEntryValue | null): number {
   const n = Math.round(Number(v ?? 50));
   if (Number.isNaN(n)) return 50;
   return clamp(n, 0, 100);
+}
+
+async function mapSlugForFloor(floorId: string): Promise<string> {
+  const { data, error } = await supabaseAdmin()
+    .from("floors")
+    .select("maps(slug)")
+    .eq("id", floorId)
+    .maybeSingle();
+  if (error) throw error;
+  const maps = (data?.maps ?? null) as { slug: string } | null;
+  return maps?.slug ?? "";
 }
 
 export async function createPeekAction(formData: FormData) {
@@ -75,10 +91,14 @@ export async function createPeekAction(formData: FormData) {
     return;
   }
 
+  const mapSlug = await mapSlugForFloor(floor_id);
+  const slug = await ensureUniquePeekSlug(buildBasePeekSlug(mapSlug, name));
+
   const { data, error } = await supabaseAdmin()
     .from("peeks")
     .insert({
       floor_id,
+      slug,
       name,
       x_pct,
       y_pct,
@@ -102,6 +122,7 @@ export async function updatePeekAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const floor_id = String(formData.get("floor_id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
+  const rawSlug = String(formData.get("slug") ?? "").trim();
   const x_pct = clamp(Number(formData.get("x_pct") ?? 50), 0, 100);
   const y_pct = clamp(Number(formData.get("y_pct") ?? 50), 0, 100);
   const difficulty = clamp(
@@ -117,10 +138,19 @@ export async function updatePeekAction(formData: FormData) {
 
   if (!id || !floor_id || !name) return;
 
+  // Slug field is optional on the edit form. Empty → regenerate from
+  // map + name. Non-empty → kebab-case it then collision-check.
+  const mapSlug = await mapSlugForFloor(floor_id);
+  const base = rawSlug
+    ? slugify(rawSlug) || buildBasePeekSlug(mapSlug, name)
+    : buildBasePeekSlug(mapSlug, name);
+  const slug = await ensureUniquePeekSlug(base, id);
+
   const { error } = await supabaseAdmin()
     .from("peeks")
     .update({
       floor_id,
+      slug,
       name,
       x_pct,
       y_pct,
@@ -136,7 +166,7 @@ export async function updatePeekAction(formData: FormData) {
 
   revalidatePath("/admin/peeks");
   revalidatePath(`/admin/peeks/${id}/edit`);
-  revalidatePath(`/peeks/${id}`);
+  revalidatePath(`/peeks/${slug}`);
 }
 
 export async function deletePeekAction(formData: FormData) {
@@ -160,5 +190,10 @@ export async function togglePublishedAction(formData: FormData) {
   if (error) throw error;
 
   revalidatePath("/admin/peeks");
-  revalidatePath(`/peeks/${id}`);
+  const { data: row } = await supabaseAdmin()
+    .from("peeks")
+    .select("slug")
+    .eq("id", id)
+    .maybeSingle();
+  if (row?.slug) revalidatePath(`/peeks/${row.slug}`);
 }

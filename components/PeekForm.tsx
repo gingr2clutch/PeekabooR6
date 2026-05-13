@@ -19,6 +19,7 @@ type Props = {
     id?: string;
     floor_id?: string;
     name?: string;
+    slug?: string;
     x_pct?: number;
     y_pct?: number;
     difficulty?: number;
@@ -82,6 +83,23 @@ export function PeekForm({ floors, action, submitLabel, initial }: Props) {
             className="w-full rounded-btn border border-border bg-card px-3 py-2 text-sm text-ink outline-none focus:border-brand"
           />
         </label>
+
+        {initial?.id && (
+          <label className="block text-xs text-muted">
+            <span className="mb-1 block">URL slug</span>
+            <input
+              name="slug"
+              defaultValue={initial.slug ?? ""}
+              placeholder="auto-generated from name"
+              className="w-full rounded-btn border border-border bg-card px-3 py-2 font-mono text-sm text-ink outline-none focus:border-brand"
+            />
+            <span className="mt-1 block text-[11px] text-muted">
+              The peek lives at <span className="font-mono">/peeks/&lt;slug&gt;</span>.
+              Leave blank to regenerate from the name. Collisions get -2, -3,
+              ... appended automatically.
+            </span>
+          </label>
+        )}
 
         <div>
           <span className="mb-1 block text-xs text-muted">Instructions</span>

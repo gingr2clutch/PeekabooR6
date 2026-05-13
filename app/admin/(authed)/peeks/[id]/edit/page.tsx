@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 type EditablePeek = {
   id: string;
   floor_id: string;
+  slug: string;
   name: string;
   x_pct: number;
   y_pct: number;
@@ -29,7 +30,7 @@ async function getPeek(id: string): Promise<EditablePeek | null> {
   const { data, error } = await supabaseAdmin()
     .from("peeks")
     .select(
-      "id, floor_id, name, x_pct, y_pct, difficulty, risk, tip, success_rate, published, instructions, video_url, poster_url"
+      "id, floor_id, slug, name, x_pct, y_pct, difficulty, risk, tip, success_rate, published, instructions, video_url, poster_url"
     )
     .eq("id", id)
     .maybeSingle();
@@ -60,7 +61,7 @@ export default async function AdminEditPeekPage({
           ← Back to peeks
         </Link>
         <Link
-          href={`/peeks/${peek.id}`}
+          href={`/peeks/${peek.slug}`}
           className="text-muted transition-colors hover:text-brand"
         >
           View public page →
@@ -89,6 +90,7 @@ export default async function AdminEditPeekPage({
         initial={{
           id: peek.id,
           floor_id: peek.floor_id,
+          slug: peek.slug,
           name: peek.name,
           x_pct: peek.x_pct,
           y_pct: peek.y_pct,

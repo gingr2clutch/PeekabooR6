@@ -32,6 +32,7 @@ create index if not exists floors_map_order_idx
 create table if not exists peeks (
   id uuid primary key default gen_random_uuid(),
   floor_id uuid references floors(id) on delete cascade,
+  slug text unique not null,
   name text not null,
   x_pct real not null,
   y_pct real not null,

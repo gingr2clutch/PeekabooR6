@@ -20,6 +20,7 @@ export type Floor = {
 export type Peek = {
   id: string;
   floor_id: string;
+  slug: string;
   name: string;
   x_pct: number;
   y_pct: number;
@@ -34,6 +35,9 @@ export type Peek = {
   success_rate: number;
   published: boolean;
 };
+
+const PEEK_COLUMNS =
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published";
 
 export async function getMaps(): Promise<Map[]> {
   const { data, error } = await supabasePublic()
@@ -83,9 +87,7 @@ export async function getPublishedPeeksForFloor(
 ): Promise<Peek[]> {
   const { data, error } = await supabasePublic()
     .from("peeks")
-    .select(
-      "id, floor_id, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published"
-    )
+    .select(PEEK_COLUMNS)
     .eq("floor_id", floorId)
     .eq("published", true)
     .order("success_rate", { ascending: false })
@@ -104,7 +106,7 @@ export async function getTopPeeks(limit = 5): Promise<PeekWithContext[]> {
   const { data, error } = await supabasePublic()
     .from("peeks")
     .select(
-      "id, floor_id, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))"
+      `${PEEK_COLUMNS}, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))`
     )
     .eq("published", true)
     .order("success_rate", { ascending: false })
@@ -115,13 +117,22 @@ export async function getTopPeeks(limit = 5): Promise<PeekWithContext[]> {
   return rows.filter((p) => p.floors?.maps?.published).slice(0, limit);
 }
 
-export async function getPublishedPeek(id: string): Promise<Peek | null> {
+export async function getPublishedPeekById(id: string): Promise<Peek | null> {
   const { data, error } = await supabasePublic()
     .from("peeks")
-    .select(
-      "id, floor_id, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published"
-    )
+    .select(PEEK_COLUMNS)
     .eq("id", id)
+    .eq("published", true)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function getPublishedPeekBySlug(slug: string): Promise<Peek | null> {
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select(PEEK_COLUMNS)
+    .eq("slug", slug)
     .eq("published", true)
     .maybeSingle();
   if (error) throw error;

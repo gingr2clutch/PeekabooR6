@@ -63,13 +63,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Only include peeks whose parent map is also published.
   const { data: peeks } = await supabase
     .from("peeks")
-    .select("id, floors!inner(maps!inner(published))")
+    .select("slug, floors!inner(maps!inner(published))")
     .eq("published", true)
     .eq("floors.maps.published", true);
 
   const peekEntries: MetadataRoute.Sitemap = (peeks ?? []).map(
-    (p: { id: string }) => ({
-      url: `${BASE_URL}/peeks/${p.id}`,
+    (p: { slug: string }) => ({
+      url: `${BASE_URL}/peeks/${p.slug}`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.7,

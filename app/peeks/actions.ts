@@ -18,7 +18,7 @@ export async function castVote(
 
   const { data: current, error: readErr } = await sb
     .from("peeks")
-    .select("success_rate, published")
+    .select("success_rate, published, slug")
     .eq("id", peekId)
     .maybeSingle();
   if (readErr || !current || !current.published) return null;
@@ -31,6 +31,6 @@ export async function castVote(
     .eq("id", peekId);
   if (writeErr) return null;
 
-  revalidatePath(`/peeks/${peekId}`);
+  if (current.slug) revalidatePath(`/peeks/${current.slug}`);
   return { success_rate: next };
 }

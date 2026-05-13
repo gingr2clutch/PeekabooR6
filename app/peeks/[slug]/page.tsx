@@ -1,21 +1,55 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { AnimatedRate } from "@/components/AnimatedRate";
 import { PageHeader } from "@/components/PageHeader";
 import { PeekMedia } from "@/components/PeekMedia";
 import { VoteButtons } from "@/components/VoteButtons";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
+import { isUuid } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
+
+type Joined = Peek & {
+  floors: (Floor & { maps: Map }) | null;
+};
+
+const JOIN_COLUMNS =
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published))";
+
+async function fetchBySlug(slug: string): Promise<Joined | null> {
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select(JOIN_COLUMNS)
+    .eq("slug", slug)
+    .eq("published", true)
+    .maybeSingle();
+  if (error) throw error;
+  return data as unknown as Joined | null;
+}
+
+async function fetchById(id: string): Promise<Joined | null> {
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select(JOIN_COLUMNS)
+    .eq("id", id)
+    .eq("published", true)
+    .maybeSingle();
+  if (error) throw error;
+  return data as unknown as Joined | null;
+}
 
 export async function generateMetadata({
   params,
 }: {
-  params: { id: string };
+  params: { slug: string };
 }): Promise<Metadata> {
-  const peek = await getPeekWithContext(params.id);
+  // Don't redirect during metadata generation — just look up by whichever
+  // identifier matches so the title is right.
+  const peek = isUuid(params.slug)
+    ? await fetchById(params.slug)
+    : await fetchBySlug(params.slug);
   if (!peek || !peek.floors || !peek.floors.maps) {
     return { title: "Not found" };
   }
@@ -27,29 +61,28 @@ export async function generateMetadata({
   };
 }
 
-type Joined = Peek & {
-  floors: (Floor & { maps: Map }) | null;
-};
-
-async function getPeekWithContext(id: string): Promise<Joined | null> {
-  const { data, error } = await supabasePublic()
-    .from("peeks")
-    .select(
-      "id, floor_id, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published))"
-    )
-    .eq("id", id)
-    .eq("published", true)
-    .maybeSingle();
-  if (error) throw error;
-  return data as unknown as Joined | null;
-}
-
 export default async function PeekDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: { slug: string };
 }) {
-  const peek = await getPeekWithContext(params.id);
+  // Old UUID URLs (/peeks/<uuid>) stay alive: look the peek up by id and
+  // 308 to its slug URL so search engines and any external links update.
+  if (isUuid(params.slug)) {
+    const byId = await fetchById(params.slug);
+    if (
+      byId &&
+      byId.slug &&
+      byId.floors &&
+      byId.floors.maps &&
+      byId.floors.maps.published
+    ) {
+      permanentRedirect(`/peeks/${byId.slug}`);
+    }
+    notFound();
+  }
+
+  const peek = await fetchBySlug(params.slug);
   if (!peek || !peek.floors || !peek.floors.maps || !peek.floors.maps.published)
     notFound();
 

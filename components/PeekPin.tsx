@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 type Props = {
-  id: string;
+  slug: string;
   name: string;
   xPct: number;
   yPct: number;
@@ -55,12 +55,12 @@ function tooltipClass(placement: Placement): string {
 // A numbered pin overlaid on the bird's-eye view. Position is the centre of
 // the dot. The hit target wraps the visible circle so phones aren't fiddly:
 // 36px on mobile, 32px from sm and up.
-export function PeekPin({ id, name, xPct, yPct, number }: Props) {
+export function PeekPin({ slug, name, xPct, yPct, number }: Props) {
   const placement = tooltipPlacement(xPct, yPct);
 
   return (
     <Link
-      href={`/peeks/${id}`}
+      href={`/peeks/${slug}`}
       className="group absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
       style={{ left: `${xPct}%`, top: `${yPct}%` }}
       aria-label={`${number}. ${name}`}

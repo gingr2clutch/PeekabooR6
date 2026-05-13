@@ -95,7 +95,7 @@ function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
   return (
     <li>
       <Link
-        href={`/peeks/${peek.id}`}
+        href={`/peeks/${peek.slug}`}
         style={cardStyle}
         className={`group flex items-center gap-4 rounded-card bg-card p-4 transition-all duration-150 ease-out hover:-translate-y-0.5 sm:gap-5 sm:p-5 ${cardCls}`}
       >
