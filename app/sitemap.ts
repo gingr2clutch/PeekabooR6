@@ -2,6 +2,13 @@ import type { MetadataRoute } from "next";
 import { supabasePublic } from "@/lib/supabase";
 import { articleSlugFor, listEligibleMaps } from "@/lib/blog";
 
+// Supabase reads use no-store under the hood, which Next 14's static
+// renderer treats as a dynamic data source. Mark this route dynamic so
+// the build doesn't try (and fail) to prerender it. Sitemap regenerates
+// on each request — fine for our traffic.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const BASE_URL = "https://peekaboor6.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
