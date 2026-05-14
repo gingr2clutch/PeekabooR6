@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { supabasePublic } from "@/lib/supabase";
+import { articleSlugFor, listEligibleMaps } from "@/lib/blog";
 
 const BASE_URL = "https://peekaboor6.com";
 
@@ -19,6 +20,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/blog`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
     },
     {
       url: `${BASE_URL}/about`,
@@ -76,5 +83,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   );
 
-  return [...staticEntries, ...mapEntries, ...peekEntries];
+  const eligible = await listEligibleMaps();
+  const blogEntries: MetadataRoute.Sitemap = eligible.map((e) => ({
+    url: `${BASE_URL}/blog/${articleSlugFor(e.map.slug)}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+
+  return [
+    ...staticEntries,
+    ...mapEntries,
+    ...peekEntries,
+    ...blogEntries,
+  ];
 }

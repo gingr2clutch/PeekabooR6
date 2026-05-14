@@ -10,20 +10,21 @@ const navLinkCls =
 
 // Top bar shared by every public page.
 // Logo top-left (full on the homepage, icon-only elsewhere).
-// Inline Maps + Popular links top-right on every screen size.
+// Inline Maps + Popular + Guides links top-right on every screen size.
 export function PageHeader({ home = false }: Props) {
   return (
     <header className="flex items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-6">
       <Wordmark showText={home} />
       <nav className="flex items-center gap-4 sm:gap-6">
-        {!home && (
-          <Link href="/" className={navLinkCls}>
-            Maps
-          </Link>
-        )}
+        <Link href="/" className={navLinkCls}>
+          Maps
+        </Link>
         <Link href="/popular" className={navLinkCls}>
           <FlameIcon />
           <span className="ml-1.5">Popular</span>
+        </Link>
+        <Link href="/blog" className={navLinkCls}>
+          Guides
         </Link>
       </nav>
     </header>
