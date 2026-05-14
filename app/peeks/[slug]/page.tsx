@@ -11,12 +11,16 @@ import { isUuid } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
 
+const SITE_URL = "https://peekaboor6.com";
+const MIN_VOTES_FOR_RATING = 10;
+
 type Joined = Peek & {
+  created_at: string;
   floors: (Floor & { maps: Map }) | null;
 };
 
 const JOIN_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published))";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
 
 async function fetchBySlug(slug: string): Promise<Joined | null> {
   const { data, error } = await supabasePublic()
@@ -91,6 +95,9 @@ export default async function PeekDetailPage({
   const floorHref = `/maps/${map.slug}/${floor.slug}`;
   const steps = Array.isArray(peek.instructions) ? peek.instructions : [];
 
+  const videoJsonLd = buildVideoJsonLd(peek, map, floor);
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd(peek, map);
+
   return (
     <>
       <PageHeader />
@@ -152,8 +159,105 @@ export default async function PeekDetailPage({
           <Instructions steps={steps} tip={peek.tip} />
         </div>
       </main>
+
+      {videoJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdText(videoJsonLd) }}
+        />
+      )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdText(breadcrumbJsonLd) }}
+      />
     </>
   );
+}
+
+// JSON-LD helpers ----------------------------------------------------------
+
+// Escape `<` so a peek name containing `</script>` can't break out of the
+// inline JSON-LD script tag.
+function jsonLdText(obj: unknown): string {
+  return JSON.stringify(obj).replace(/</g, "\\u003c");
+}
+
+function peekDescription(
+  peek: Joined,
+  map: Map,
+  floor: Floor
+): string {
+  const risk = peek.risk;
+  return `${peek.name} — a ${risk}-risk spawn peek on ${map.name} ${floor.name} with a ${peek.success_rate}% community-tested success rate in Rainbow Six Siege.`;
+}
+
+function buildVideoJsonLd(
+  peek: Joined,
+  map: Map,
+  floor: Floor
+): Record<string, unknown> | null {
+  if (!peek.video_url) return null;
+
+  const pageUrl = `${SITE_URL}/peeks/${peek.slug}`;
+  const thumbnail = peek.poster_url ?? map.cover_image_url ?? null;
+
+  const video: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: `${peek.name} — spawn peek on ${map.name} ${floor.name}`,
+    description: peekDescription(peek, map, floor),
+    uploadDate: peek.created_at,
+    contentUrl: peek.video_url,
+    embedUrl: pageUrl,
+  };
+  if (thumbnail) {
+    video.thumbnailUrl = [thumbnail];
+  }
+
+  // Only annotate ratings when there's a meaningful sample. Thin rating
+  // data hurts more than helps — Google may flag it and competitors can
+  // gain SEO ground if it looks fake.
+  if (peek.vote_count >= MIN_VOTES_FOR_RATING) {
+    video.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: String(peek.success_rate),
+      bestRating: "100",
+      worstRating: "0",
+      ratingCount: peek.vote_count,
+    };
+  }
+
+  return video;
+}
+
+function buildBreadcrumbJsonLd(
+  peek: Joined,
+  map: Map
+): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE_URL,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: map.name,
+        item: `${SITE_URL}/maps/${map.slug}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: peek.name,
+        item: `${SITE_URL}/peeks/${peek.slug}`,
+      },
+    ],
+  };
 }
 
 function StatCell({
