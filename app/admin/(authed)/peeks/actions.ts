@@ -197,3 +197,129 @@ export async function togglePublishedAction(formData: FormData) {
     .maybeSingle();
   if (row?.slug) revalidatePath(`/peeks/${row.slug}`);
 }
+
+// Inline single-field update used by the dashboard table. Returns ok/error
+// so the client can flash a saved indicator or revert its optimistic edit.
+export type InlineField =
+  | "name"
+  | "difficulty"
+  | "risk"
+  | "success_rate"
+  | "published";
+
+export type InlineUpdateResult =
+  | { ok: true; value: string | number | boolean }
+  | { ok: false; error: string };
+
+export async function updatePeekFieldAction(
+  id: string,
+  field: InlineField,
+  raw: string | number | boolean
+): Promise<InlineUpdateResult> {
+  if (!id) return { ok: false, error: "Missing peek id" };
+
+  let patch: Record<string, unknown> | null = null;
+  let normalized: string | number | boolean;
+
+  switch (field) {
+    case "name": {
+      const v = String(raw ?? "").trim();
+      if (!v) return { ok: false, error: "Name cannot be empty" };
+      patch = { name: v };
+      normalized = v;
+      break;
+    }
+    case "difficulty": {
+      const n = clamp(Math.round(Number(raw)), 1, 5);
+      patch = { difficulty: n };
+      normalized = n;
+      break;
+    }
+    case "risk": {
+      const v = parseRisk(raw == null ? null : String(raw));
+      patch = { risk: v };
+      normalized = v;
+      break;
+    }
+    case "success_rate": {
+      const n = clamp(Math.round(Number(raw)), 0, 100);
+      patch = { success_rate: n };
+      normalized = n;
+      break;
+    }
+    case "published": {
+      const v = Boolean(raw);
+      patch = { published: v };
+      normalized = v;
+      break;
+    }
+    default:
+      return { ok: false, error: "Unknown field" };
+  }
+
+  const { error } = await supabaseAdmin()
+    .from("peeks")
+    .update(patch)
+    .eq("id", id);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/peeks");
+  const { data: row } = await supabaseAdmin()
+    .from("peeks")
+    .select("slug")
+    .eq("id", id)
+    .maybeSingle();
+  if (row?.slug) revalidatePath(`/peeks/${row.slug}`);
+
+  return { ok: true, value: normalized };
+}
+
+export async function bulkSetPublishedAction(
+  ids: string[],
+  published: boolean
+): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { ok: false, error: "No peeks selected" };
+  }
+  const sb = supabaseAdmin();
+  const { error } = await sb
+    .from("peeks")
+    .update({ published })
+    .in("id", ids);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/peeks");
+  const { data: rows } = await sb
+    .from("peeks")
+    .select("slug")
+    .in("id", ids);
+  for (const r of (rows ?? []) as { slug: string }[]) {
+    if (r.slug) revalidatePath(`/peeks/${r.slug}`);
+  }
+  return { ok: true, count: ids.length };
+}
+
+export async function bulkDeletePeeksAction(
+  ids: string[]
+): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { ok: false, error: "No peeks selected" };
+  }
+  const sb = supabaseAdmin();
+
+  // Grab slugs before delete so we can revalidate the public peek pages
+  // (so anyone holding a stale cached page sees the 404).
+  const { data: rows } = await sb
+    .from("peeks")
+    .select("slug")
+    .in("id", ids);
+
+  const { error } = await sb.from("peeks").delete().in("id", ids);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/peeks");
+  for (const r of (rows ?? []) as { slug: string }[]) {
+    if (r.slug) revalidatePath(`/peeks/${r.slug}`);
+  }
+  return { ok: true, count: ids.length };
+}

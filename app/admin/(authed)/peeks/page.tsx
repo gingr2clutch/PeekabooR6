@@ -1,69 +1,99 @@
 import Link from "next/link";
-import { ConfirmButton } from "@/components/ConfirmButton";
 import { supabaseAdmin } from "@/lib/supabase";
-import { deletePeekAction, togglePublishedAction } from "./actions";
+import {
+  bulkDeletePeeksAction,
+  bulkSetPublishedAction,
+  updatePeekFieldAction,
+} from "./actions";
+import {
+  PeeksDashboardTable,
+  type DashboardMap,
+  type DashboardRow,
+} from "./PeeksDashboardTable";
 
 export const dynamic = "force-dynamic";
 
-type Row = {
+type JoinedPeek = {
   id: string;
+  slug: string;
   name: string;
   difficulty: number;
-  risk: string;
+  risk: "low" | "medium" | "high";
+  success_rate: number;
   published: boolean;
-  floor_id: string;
   floors: {
     id: string;
     name: string;
-    slug: string;
-    map_id: string;
     maps: { id: string; name: string; slug: string } | null;
   } | null;
 };
 
-async function getPeeks(filters: {
-  mapId?: string;
-  floorId?: string;
-}): Promise<Row[]> {
-  let query = supabaseAdmin()
+async function loadPeeks(): Promise<JoinedPeek[]> {
+  const { data, error } = await supabaseAdmin()
     .from("peeks")
     .select(
-      "id, name, difficulty, risk, published, floor_id, floors!inner(id, name, slug, map_id, maps!inner(id, name, slug))"
-    );
-  if (filters.floorId) query = query.eq("floor_id", filters.floorId);
-  if (filters.mapId) query = query.eq("floors.map_id", filters.mapId);
-
-  const { data, error } = await query.order("name", { ascending: true });
+      "id, slug, name, difficulty, risk, success_rate, published, floors(id, name, maps(id, name, slug))"
+    )
+    .order("name", { ascending: true });
   if (error) throw error;
-  return (data ?? []) as unknown as Row[];
+  return (data ?? []) as unknown as JoinedPeek[];
 }
 
-async function getFilterOptions() {
-  const { data: maps, error: mapsErr } = await supabaseAdmin()
+async function loadMaps(): Promise<DashboardMap[]> {
+  const { data, error } = await supabaseAdmin()
     .from("maps")
     .select("id, name, slug")
-    .order("name");
-  if (mapsErr) throw mapsErr;
-  const { data: floors, error: floorsErr } = await supabaseAdmin()
-    .from("floors")
-    .select("id, name, display_order, map_id")
-    .order("display_order");
-  if (floorsErr) throw floorsErr;
-  return { maps: maps ?? [], floors: floors ?? [] };
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as DashboardMap[];
 }
 
-export default async function AdminPeeksPage({
-  searchParams,
-}: {
-  searchParams: { map?: string; floor?: string };
-}) {
-  const { maps, floors } = await getFilterOptions();
-  const mapId = searchParams.map || undefined;
-  const floorId = searchParams.floor || undefined;
-  const filteredFloors = mapId
-    ? floors.filter((f) => f.map_id === mapId)
-    : floors;
-  const peeks = await getPeeks({ mapId, floorId });
+// Pull every /peeks/* page-view row and group by slug in memory. Fine for
+// admin-page latency; once page_views gets big enough to matter, swap this
+// for a Postgres view or a denormalized counter on peeks.
+async function loadViewCounts(): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  const { data, error } = await supabaseAdmin()
+    .from("page_views")
+    .select("path")
+    .like("path", "/peeks/%");
+  if (error) {
+    console.warn("[admin/peeks] view-count query failed:", error.message);
+    return counts;
+  }
+  for (const row of (data ?? []) as { path: string }[]) {
+    const slug = row.path.slice("/peeks/".length);
+    if (!slug) continue;
+    counts.set(slug, (counts.get(slug) ?? 0) + 1);
+  }
+  return counts;
+}
+
+export default async function AdminPeeksPage() {
+  const [peeks, maps, viewCounts] = await Promise.all([
+    loadPeeks(),
+    loadMaps(),
+    loadViewCounts(),
+  ]);
+
+  const rows: DashboardRow[] = peeks.map((p) => ({
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    difficulty: p.difficulty,
+    risk: p.risk,
+    success_rate: p.success_rate,
+    view_count: viewCounts.get(p.slug) ?? 0,
+    published: p.published,
+    map: p.floors?.maps
+      ? {
+          id: p.floors.maps.id,
+          name: p.floors.maps.name,
+          slug: p.floors.maps.slug,
+        }
+      : null,
+    floor: p.floors ? { id: p.floors.id, name: p.floors.name } : null,
+  }));
 
   return (
     <div className="space-y-6">
@@ -77,132 +107,13 @@ export default async function AdminPeeksPage({
         </Link>
       </div>
 
-      <form
-        method="get"
-        className="flex flex-wrap items-end gap-3 rounded-card border border-border bg-card p-4"
-      >
-        <label className="text-xs text-muted">
-          <span className="mb-1 block">Map</span>
-          <select
-            name="map"
-            defaultValue={mapId ?? ""}
-            className="rounded-btn border border-border bg-card px-3 py-1.5 text-sm outline-none focus:border-brand"
-          >
-            <option value="">All maps</option>
-            {maps.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs text-muted">
-          <span className="mb-1 block">Floor</span>
-          <select
-            name="floor"
-            defaultValue={floorId ?? ""}
-            className="rounded-btn border border-border bg-card px-3 py-1.5 text-sm outline-none focus:border-brand"
-          >
-            <option value="">All floors</option>
-            {filteredFloors.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          type="submit"
-          className="rounded-btn border border-border bg-card px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:border-brand hover:text-brand"
-        >
-          Apply
-        </button>
-        {(mapId || floorId) && (
-          <Link
-            href="/admin/peeks"
-            className="text-xs text-muted transition-colors hover:text-brand"
-          >
-            Clear filters
-          </Link>
-        )}
-      </form>
-
-      <div className="overflow-x-auto rounded-card border border-border bg-card">
-        <table className="w-full min-w-[720px] text-sm">
-          <thead className="border-b border-border bg-bg text-xs uppercase tracking-wide text-muted">
-            <tr>
-              <th className="px-4 py-2 text-left">Peek</th>
-              <th className="px-4 py-2 text-left">Map</th>
-              <th className="px-4 py-2 text-left">Floor</th>
-              <th className="px-4 py-2 text-left">Difficulty</th>
-              <th className="px-4 py-2 text-left">Risk</th>
-              <th className="px-4 py-2 text-left">Published</th>
-              <th className="px-4 py-2 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {peeks.map((p) => (
-              <tr key={p.id} className="border-b border-border last:border-0">
-                <td className="px-4 py-2 font-medium">{p.name}</td>
-                <td className="px-4 py-2 text-muted">
-                  {p.floors?.maps?.name ?? "—"}
-                </td>
-                <td className="px-4 py-2 text-muted">
-                  {p.floors?.name ?? "—"}
-                </td>
-                <td className="px-4 py-2 text-muted">{p.difficulty}/5</td>
-                <td className="px-4 py-2 text-muted capitalize">{p.risk}</td>
-                <td className="px-4 py-2">
-                  <form action={togglePublishedAction} className="inline">
-                    <input type="hidden" name="id" value={p.id} />
-                    <input
-                      type="hidden"
-                      name="next"
-                      value={p.published ? "off" : "on"}
-                    />
-                    <button
-                      type="submit"
-                      className={`rounded-btn border px-2 py-0.5 text-xs font-medium transition-colors ${
-                        p.published
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300"
-                          : "border-border bg-bg text-muted hover:border-brand hover:text-brand"
-                      }`}
-                    >
-                      {p.published ? "Published" : "Draft"}
-                    </button>
-                  </form>
-                </td>
-                <td className="px-4 py-2 text-right">
-                  <div className="flex justify-end gap-2">
-                    <Link
-                      href={`/admin/peeks/${p.id}/edit`}
-                      className="rounded-btn border border-border px-3 py-1 text-xs font-medium text-ink transition-colors hover:border-brand hover:text-brand"
-                    >
-                      Edit
-                    </Link>
-                    <form action={deletePeekAction} className="inline">
-                      <input type="hidden" name="id" value={p.id} />
-                      <ConfirmButton
-                        message={`Delete ${p.name}?`}
-                        className="rounded-btn border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 transition-colors hover:border-red-300 hover:bg-red-100"
-                      >
-                        Delete
-                      </ConfirmButton>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {peeks.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-muted">
-                  No peeks match those filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <PeeksDashboardTable
+        initialRows={rows}
+        maps={maps}
+        updateField={updatePeekFieldAction}
+        bulkSetPublished={bulkSetPublishedAction}
+        bulkDelete={bulkDeletePeeksAction}
+      />
     </div>
   );
 }
