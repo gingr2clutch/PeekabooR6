@@ -49,6 +49,20 @@ type Props = {
   ) => Promise<{ ok: true; count: number } | { ok: false; error: string }>;
 };
 
+type SortChoice = `${SortKey}:${"asc" | "desc"}`;
+
+const SORT_CHOICES: Array<{ value: SortChoice; label: string }> = [
+  { value: "success_rate:desc", label: "Success rate (high → low)" },
+  { value: "success_rate:asc", label: "Success rate (low → high)" },
+  { value: "name:asc", label: "Name (A → Z)" },
+  { value: "name:desc", label: "Name (Z → A)" },
+  { value: "view_count:desc", label: "Views (high → low)" },
+  { value: "difficulty:desc", label: "Difficulty (hard → easy)" },
+  { value: "difficulty:asc", label: "Difficulty (easy → hard)" },
+  { value: "map:asc", label: "Map (A → Z)" },
+  { value: "published:desc", label: "Status (published first)" },
+];
+
 const RISK_OPTIONS: Array<DashboardRow["risk"]> = ["low", "medium", "high"];
 const DIFFICULTY_BUCKETS: Array<{
   label: string;
@@ -283,6 +297,36 @@ export function PeeksDashboardTable({
             <option value="all">All</option>
             <option value="published">Published</option>
             <option value="draft">Draft</option>
+          </select>
+        </label>
+        <label className="text-xs text-muted">
+          <span className="mb-1 block">Sort by</span>
+          <select
+            value={`${sortKey}:${sortDir}` as SortChoice}
+            onChange={(e) => {
+              const [k, d] = e.target.value.split(":") as [
+                SortKey,
+                "asc" | "desc",
+              ];
+              setSortKey(k);
+              setSortDir(d);
+            }}
+            className="min-w-[200px] rounded-btn border border-border bg-card px-3 py-1.5 text-sm outline-none focus:border-brand"
+          >
+            {SORT_CHOICES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+            {/* Header-click sorts that aren't in the curated list still show
+                up here as a transient option so the dropdown stays in sync. */}
+            {!SORT_CHOICES.some(
+              (c) => c.value === (`${sortKey}:${sortDir}` as SortChoice)
+            ) && (
+              <option value={`${sortKey}:${sortDir}`}>
+                {sortKey} ({sortDir})
+              </option>
+            )}
           </select>
         </label>
         <label className="flex-1 text-xs text-muted">
