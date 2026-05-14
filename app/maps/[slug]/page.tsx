@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PageHeader } from "@/components/PageHeader";
+import { RandomPeekButton } from "@/components/RandomPeekButton";
 import { getFloorsForMap, getMapBySlug } from "@/lib/db";
 import { supabasePublic } from "@/lib/supabase";
 
@@ -70,14 +71,9 @@ export default async function MapPage({
           </p>
           {totalPeeks >= 2 && (
             <div className="mt-5">
-              <a
+              <RandomPeekButton
                 href={`/api/maps/${map.slug}/random-peek`}
-                rel="nofollow"
-                className="inline-flex items-center gap-2 rounded-btn border border-brand/40 bg-brand/[0.06] px-3.5 py-1.5 text-sm font-medium text-brand transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-brand hover:bg-brand/10 hover:shadow-sm"
-              >
-                <DiceIcon />
-                Random peek
-              </a>
+              />
             </div>
           )}
         </div>
@@ -164,27 +160,5 @@ export default async function MapPage({
         )}
       </main>
     </>
-  );
-}
-
-function DiceIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="16"
-      height="16"
-      aria-hidden
-      className="fill-none stroke-current"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="3" y="3" width="18" height="18" rx="3" />
-      <circle cx="8" cy="8" r="1.1" fill="currentColor" stroke="none" />
-      <circle cx="16" cy="8" r="1.1" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none" />
-      <circle cx="8" cy="16" r="1.1" fill="currentColor" stroke="none" />
-      <circle cx="16" cy="16" r="1.1" fill="currentColor" stroke="none" />
-    </svg>
   );
 }

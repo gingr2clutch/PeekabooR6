@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PageHeader } from "@/components/PageHeader";
@@ -74,6 +75,15 @@ export default async function FloorPage({
       <PageHeader />
       <main className="fade-in-up mx-auto max-w-5xl px-6 pb-20 pt-10">
         <div className="mb-8 text-center">
+          <div className="mb-3">
+            <Link
+              href={`/maps/${map.slug}`}
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-btn px-2.5 py-1 text-sm font-medium text-muted transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
+            >
+              <BackArrowIcon />
+              <span>{map.name}</span>
+            </Link>
+          </div>
           <h1 className="text-3xl font-semibold tracking-tight">
             {map.name} · {floor.name}
           </h1>
@@ -128,5 +138,22 @@ export default async function FloorPage({
         )}
       </main>
     </>
+  );
+}
+
+function BackArrowIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      aria-hidden
+      className="fill-none stroke-current"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
   );
 }
