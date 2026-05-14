@@ -97,6 +97,17 @@ export default async function PeekDetailPage({
       <main className="fade-in-up mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">
         {/* Page header */}
         <div className="text-center">
+          <div className="mb-3">
+            <Link
+              href={floorHref}
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-btn px-2.5 py-1 text-sm font-medium text-muted transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
+            >
+              <BackArrowIcon />
+              <span>
+                {map.name} · {floor.name}
+              </span>
+            </Link>
+          </div>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
             {peek.name}
           </h1>
@@ -192,6 +203,23 @@ function RiskPill({ risk }: { risk: string }) {
     >
       {risk}
     </span>
+  );
+}
+
+function BackArrowIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      aria-hidden
+      className="fill-none stroke-current"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
   );
 }
 
