@@ -60,8 +60,8 @@ export default async function WhatsNewPage() {
           </p>
         ) : (
           <ul className="space-y-3">
-            {peeks.map((peek) => (
-              <FeedItem key={peek.id} peek={peek} />
+            {peeks.map((peek, i) => (
+              <FeedItem key={peek.id} peek={peek} priority={i < 3} />
             ))}
           </ul>
         )}
@@ -70,10 +70,11 @@ export default async function WhatsNewPage() {
   );
 }
 
-function FeedItem({ peek }: { peek: FeedRow }) {
+function FeedItem({ peek, priority }: { peek: FeedRow; priority: boolean }) {
   const floor = peek.floors!;
   const map = floor.maps;
   const isNew = isPeekNew(peek.created_at);
+  const hasMedia = !!peek.poster_url || !!peek.video_url;
 
   return (
     <li>
@@ -82,29 +83,41 @@ function FeedItem({ peek }: { peek: FeedRow }) {
         className="group flex items-center gap-4 overflow-hidden rounded-card border border-border bg-card p-3 transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-lg sm:gap-5 sm:p-4"
       >
         <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-inner bg-bg sm:h-20 sm:w-32">
+          {/* Shimmer skeleton behind the media. Stays animated until the
+              image/video paints over it (object-cover hides the shimmer
+              once loaded). No JS state needed. */}
+          {hasMedia && (
+            <div
+              aria-hidden
+              className="peek-shimmer absolute inset-0"
+            />
+          )}
           {peek.poster_url ? (
             <Image
               src={peek.poster_url}
               alt=""
-              fill
-              sizes="(max-width: 640px) 96px, 128px"
-              className="object-cover transition-transform duration-200 group-hover:scale-105"
+              width={256}
+              height={160}
+              priority={priority}
+              loading={priority ? "eager" : "lazy"}
+              className="relative h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
             />
           ) : peek.video_url ? (
-            // No poster uploaded — fall back to the first video frame using
-            // the same `#t=0.1` media-fragment trick PeekMedia uses on the
-            // detail page. preload=metadata keeps the request cheap.
+            // No poster uploaded — fall back to the first video frame via
+            // the `#t=0.1` media-fragment trick PeekMedia uses. preload
+            // is "auto" for the first three rows so they show a frame
+            // immediately, "metadata" for the rest to stay cheap.
             // eslint-disable-next-line jsx-a11y/media-has-caption
             <video
               src={`${peek.video_url}#t=0.1`}
-              preload="metadata"
+              preload={priority ? "auto" : "metadata"}
               muted
               playsInline
               aria-hidden
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+              className="relative h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
             />
           ) : (
-            <div className="placeholder-stripes h-full w-full" />
+            <div className="placeholder-stripes relative h-full w-full" />
           )}
         </div>
 

@@ -118,3 +118,33 @@ h4 {
     animation: none;
   }
 }
+
+/* Sliding-gradient shimmer used as a skeleton placeholder behind
+   /whats-new thumbnails. The image (object-cover) paints over it
+   on load, so the shimmer is only visible during the loading window. */
+@keyframes peek-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.peek-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    rgba(230, 227, 220, 0.35) 0%,
+    rgba(230, 227, 220, 0.65) 50%,
+    rgba(230, 227, 220, 0.35) 100%
+  );
+  background-size: 200% 100%;
+  animation: peek-shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .peek-shimmer {
+    animation: none;
+    background: rgba(230, 227, 220, 0.4);
+  }
+}
