@@ -9,7 +9,7 @@ import { isPeekNew, weeklyBucket } from "@/lib/peek-recency";
 
 export const dynamic = "force-dynamic";
 
-const FEED_SIZE = 20;
+const FEED_SIZE = 10;
 
 export const metadata: Metadata = {
   title: "What's new",
