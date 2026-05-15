@@ -1,15 +1,9 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/ConfirmButton";
-import { DropUpload } from "@/components/DropUpload";
+import { DirectFloorImageUpload } from "@/components/DirectFloorImageUpload";
 import { supabaseAdmin } from "@/lib/supabase";
-import {
-  deleteFloorAction,
-  removeFloorImageAction,
-  updateFloorAction,
-  uploadFloorImageAction,
-} from "./actions";
+import { deleteFloorAction, updateFloorAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -98,40 +92,11 @@ export default async function AdminFloorPage({
             Bird's-eye view
           </h2>
 
-          {floor.birds_eye_url ? (
-            <div className="space-y-3">
-              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-inner border border-border">
-                <Image
-                  src={floor.birds_eye_url}
-                  alt={`${map.name} ${floor.name}`}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 480px"
-                  className="object-cover"
-                />
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <DropUpload
-                  action={uploadFloorImageAction}
-                  hidden={[{ name: "id", value: floor.id }]}
-                  label="Drop a new image to replace, or click to browse"
-                />
-              </div>
-              <form action={removeFloorImageAction}>
-                <input type="hidden" name="id" value={floor.id} />
-                <ConfirmButton
-                  message="Remove the bird's-eye image? Pins will still exist but the public view will show the placeholder."
-                  className="rounded-btn border border-border bg-bg px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-brand hover:text-brand"
-                >
-                  Remove image
-                </ConfirmButton>
-              </form>
-            </div>
-          ) : (
-            <DropUpload
-              action={uploadFloorImageAction}
-              hidden={[{ name: "id", value: floor.id }]}
-            />
-          )}
+          <DirectFloorImageUpload
+            floorId={floor.id}
+            floorName={`${map.name} ${floor.name}`}
+            initialUrl={floor.birds_eye_url}
+          />
 
           <p className="mt-3 text-xs text-muted">
             PNG or JPG. The bird's-eye is rendered at 16:10 — best results if
