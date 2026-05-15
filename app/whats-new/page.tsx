@@ -5,7 +5,7 @@ import { NewBadge } from "@/components/NewBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
-import { isPeekNew, relativeAgo } from "@/lib/peek-recency";
+import { isPeekNew, weeklyBucket } from "@/lib/peek-recency";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +90,19 @@ function FeedItem({ peek }: { peek: FeedRow }) {
               sizes="(max-width: 640px) 96px, 128px"
               className="object-cover transition-transform duration-200 group-hover:scale-105"
             />
+          ) : peek.video_url ? (
+            // No poster uploaded — fall back to the first video frame using
+            // the same `#t=0.1` media-fragment trick PeekMedia uses on the
+            // detail page. preload=metadata keeps the request cheap.
+            // eslint-disable-next-line jsx-a11y/media-has-caption
+            <video
+              src={`${peek.video_url}#t=0.1`}
+              preload="metadata"
+              muted
+              playsInline
+              aria-hidden
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+            />
           ) : (
             <div className="placeholder-stripes h-full w-full" />
           )}
@@ -111,7 +124,7 @@ function FeedItem({ peek }: { peek: FeedRow }) {
         </div>
 
         <div className="shrink-0 text-right text-xs text-muted sm:text-sm">
-          {relativeAgo(peek.created_at)}
+          {weeklyBucket(peek.created_at)}
         </div>
       </Link>
     </li>
