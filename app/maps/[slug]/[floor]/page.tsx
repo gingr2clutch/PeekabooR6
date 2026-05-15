@@ -10,6 +10,7 @@ import {
   getMapBySlug,
   getPublishedPeeksForFloor,
 } from "@/lib/db";
+import { isPeekNew } from "@/lib/peek-recency";
 
 export const dynamic = "force-dynamic";
 
@@ -121,6 +122,7 @@ export default async function FloorPage({
               xPct={peek.displayX}
               yPct={peek.displayY}
               number={i + 1}
+              isNew={isPeekNew(peek.created_at)}
             />
           ))}
         </div>

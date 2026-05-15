@@ -34,10 +34,11 @@ export type Peek = {
   vote_count: number;
   success_rate: number;
   published: boolean;
+  created_at: string;
 };
 
 const PEEK_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at";
 
 export async function getMaps(): Promise<Map[]> {
   const { data, error } = await supabasePublic()

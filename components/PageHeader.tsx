@@ -23,6 +23,9 @@ export function PageHeader({ home = false }: Props) {
           <FlameIcon />
           <span className="ml-1.5">Popular</span>
         </Link>
+        <Link href="/whats-new" className={navLinkCls}>
+          New
+        </Link>
         <Link href="/blog" className={navLinkCls}>
           Guides
         </Link>

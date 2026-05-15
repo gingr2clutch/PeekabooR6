@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import { NewBadge } from "@/components/NewBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { getTopPeeks, type PeekWithContext } from "@/lib/db";
+import { isPeekNew } from "@/lib/peek-recency";
 
 export const dynamic = "force-dynamic";
 
@@ -128,9 +130,12 @@ function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-base font-semibold tracking-tight text-ink group-hover:text-brand sm:text-lg">
-            {peek.name}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="truncate text-base font-semibold tracking-tight text-ink group-hover:text-brand sm:text-lg">
+              {peek.name}
+            </h2>
+            {isPeekNew(peek.created_at) && <NewBadge size="xs" />}
+          </div>
           <p className="mt-0.5 truncate text-xs text-muted sm:text-sm">
             {map.name} · {floor.name}
           </p>
