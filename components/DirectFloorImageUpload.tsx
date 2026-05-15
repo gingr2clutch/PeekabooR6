@@ -7,7 +7,11 @@ import {
   createFloorImageUploadUrl,
   setFloorImageUrl,
 } from "@/app/admin/(authed)/floors/[id]/upload-actions";
-import { putToR2 } from "@/lib/upload";
+import {
+  compressImageForUpload,
+  formatBytes,
+  putToR2,
+} from "@/lib/upload";
 
 type Props = {
   floorId: string;
@@ -26,37 +30,45 @@ export function DirectFloorImageUpload({
   const [url, setUrl] = useState<string | null>(initialUrl);
   const [progress, setProgress] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [phase, setPhase] = useState<"compress" | "upload" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [savings, setSavings] = useState<{
+    before: number;
+    after: number;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(file: File) {
     setError(null);
     setProgress(0);
     setBusy(true);
+    setSavings(null);
+    setPhase("compress");
     try {
+      const beforeBytes = file.size;
+      const compressed = await compressImageForUpload(file, "floor");
+      setSavings({ before: beforeBytes, after: compressed.size });
+      setPhase("upload");
+
       const { uploadUrl, publicUrl } = await createFloorImageUploadUrl(
         floorId,
-        file.name,
-        file.type || "application/octet-stream"
+        compressed.name,
+        compressed.type
       );
 
-      await putToR2(
-        uploadUrl,
-        file,
-        file.type || "application/octet-stream",
-        (pct) => setProgress(pct)
+      await putToR2(uploadUrl, compressed, compressed.type, (pct) =>
+        setProgress(pct)
       );
       await setFloorImageUrl(floorId, publicUrl);
       setUrl(publicUrl);
       setProgress(100);
     } catch (e) {
-      // Surface the real error to the dev tools console as well as the
-      // UI so a silent failure isn't possible.
       console.error("[DirectFloorImageUpload] upload failed:", e);
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
+      setPhase(null);
     }
   }
 
@@ -129,21 +141,32 @@ export function DirectFloorImageUpload({
           }}
         />
         <span className="px-4 text-sm text-muted">
-          {busy
-            ? `Uploading… ${progress}%`
-            : url
-              ? "Drop a new image to replace, or click to browse"
-              : "Drop an image (.png, .jpg, .webp) here, or click to browse"}
+          {phase === "compress"
+            ? "Compressing image…"
+            : phase === "upload"
+              ? `Uploading… ${progress}%`
+              : url
+                ? "Drop a new image to replace, or click to browse"
+                : "Drop an image (.png, .jpg, .webp) here, or click to browse"}
         </span>
       </label>
 
-      {busy && (
+      {busy && phase === "upload" && (
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
           <div
             className="h-full bg-brand transition-[width] duration-150 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
+      )}
+
+      {savings && !error && (
+        <p className="text-xs text-muted">
+          Compressed: {formatBytes(savings.before)} →{" "}
+          <span className="font-medium text-ink">
+            {formatBytes(savings.after)}
+          </span>
+        </p>
       )}
 
       {error && (
@@ -163,7 +186,8 @@ export function DirectFloorImageUpload({
       )}
 
       <p className="text-[11px] text-muted">
-        Uploads straight to R2 — no Vercel size limit.
+        Compressed to WebP (max 1600 wide, q=0.85) in the browser, then
+        uploaded straight to R2 — no Vercel size limit.
       </p>
     </div>
   );
