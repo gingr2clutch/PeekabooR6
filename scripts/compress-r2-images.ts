@@ -114,7 +114,7 @@ async function main() {
   if (fErr) throw fErr;
 
   console.log(`Floors with bird's-eye images: ${floors?.length ?? 0}`);
-  for (const f of (floors ?? []) as Array<{
+  for (const f of (floors ?? []) as unknown as Array<{
     id: string;
     name: string;
     birds_eye_url: string;
