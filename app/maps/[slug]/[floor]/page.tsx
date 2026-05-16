@@ -1,16 +1,13 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
+import { FloorView } from "@/components/FloorView";
 import { PageHeader } from "@/components/PageHeader";
-import { PeekPin } from "@/components/PeekPin";
 import {
   getFloorBySlug,
   getMapBySlug,
   getPublishedPeeksForFloor,
 } from "@/lib/db";
-import { isPeekNew } from "@/lib/peek-recency";
 
 export const dynamic = "force-dynamic";
 
@@ -93,45 +90,7 @@ export default async function FloorPage({
           </p>
         </div>
 
-        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-card border border-border bg-card">
-          {floor.birds_eye_url ? (
-            <>
-              <Image
-                src={floor.birds_eye_url}
-                alt={`${map.name} ${floor.name} bird's-eye view`}
-                fill
-                sizes="(max-width: 1024px) 100vw, 1024px"
-                className="object-cover"
-                priority
-              />
-              <BirdsEyeWatermark />
-            </>
-          ) : (
-            <div className="placeholder-stripes flex h-full w-full items-center justify-center">
-              <span className="rounded-btn bg-card/80 px-3 py-1 text-sm text-muted backdrop-blur-sm">
-                Bird's-eye view coming soon
-              </span>
-            </div>
-          )}
-
-          {positioned.map((peek, i) => (
-            <PeekPin
-              key={peek.id}
-              slug={peek.slug}
-              name={peek.name}
-              xPct={peek.displayX}
-              yPct={peek.displayY}
-              number={i + 1}
-              isNew={isPeekNew(peek.created_at)}
-            />
-          ))}
-        </div>
-
-        {peeks.length > 0 && (
-          <p className="mt-3 text-center text-[13px] text-muted">
-            Ranked by success rate
-          </p>
-        )}
+        <FloorView map={map} floor={floor} peeks={positioned} />
 
         {peeks.length === 0 && (
           <p className="mt-6 text-center text-sm text-muted">

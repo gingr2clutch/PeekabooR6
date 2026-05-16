@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 
 type Props = {
@@ -7,6 +9,8 @@ type Props = {
   yPct: number;
   number: number;
   isNew?: boolean;
+  isSelected?: boolean;
+  onSelect?: () => void;
 };
 
 type Placement =
@@ -20,6 +24,7 @@ type Placement =
 // doesn't push the tooltip past the image bounds.
 function tooltipPlacement(xPct: number, yPct: number): Placement {
   if (yPct > 78) return { side: "above", align: alignFor(xPct) };
+  if (yPct < 14) return { side: "below", align: alignFor(xPct) };
   if (xPct > 82) return { side: "left" };
   if (xPct < 12) return { side: "right" };
   return { side: "below", align: alignFor(xPct) };
@@ -32,7 +37,6 @@ function alignFor(xPct: number): "start" | "center" | "end" {
 }
 
 function tooltipClass(placement: Placement): string {
-  // Vertical placements (below/above) — use horizontal alignment.
   if (placement.side === "below" || placement.side === "above") {
     const v =
       placement.side === "below" ? "top-full mt-2" : "bottom-full mb-2";
@@ -46,16 +50,19 @@ function tooltipClass(placement: Placement): string {
     }
     return `${v} left-1/2 -translate-x-1/2`;
   }
-  // Horizontal placements — vertically centred against the pin.
   if (placement.side === "left") {
     return "right-full mr-2 top-1/2 -translate-y-1/2";
   }
   return "left-full ml-2 top-1/2 -translate-y-1/2";
 }
 
-// A numbered pin overlaid on the bird's-eye view. Position is the centre of
-// the dot. The hit target wraps the visible circle so phones aren't fiddly:
-// 36px on mobile, 32px from sm and up.
+// A numbered pin overlaid on the bird's-eye view. Two interaction models:
+//   - Devices with a fine pointer + hover: click navigates straight to
+//     /peeks/<slug>, hovering shows a floating tooltip with the name.
+//   - Touch devices: clicking is intercepted and toggles selection on a
+//     parent FloorView, which surfaces a fixed detail card below the
+//     map. The tooltip is hidden entirely so we never see a clipped or
+//     z-fighting label.
 export function PeekPin({
   slug,
   name,
@@ -63,26 +70,57 @@ export function PeekPin({
   yPct,
   number,
   isNew = false,
+  isSelected = false,
+  onSelect,
 }: Props) {
   const placement = tooltipPlacement(xPct, yPct);
+
+  function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
+    // Always stop propagation so the parent backdrop click (which
+    // deselects) doesn't fire when tapping directly on a pin.
+    e.stopPropagation();
+    // On touch devices intercept the navigation so the tap toggles
+    // selection instead. Desktop / fine-pointer users still navigate
+    // immediately via Link's default behavior.
+    if (
+      typeof window !== "undefined" &&
+      !window.matchMedia("(hover: hover) and (pointer: fine)").matches
+    ) {
+      e.preventDefault();
+      onSelect?.();
+    }
+  }
+
+  // Active or hovered pins float above siblings so their tooltip /
+  // highlight ring is never covered by adjacent pins.
+  const zCls = isSelected ? "z-40" : "z-20 hover:z-40";
+  const selectedScale = isSelected
+    ? "scale-[1.2] shadow-[0_0_12px_rgba(255,106,0,0.6)] ring-brand"
+    : "";
 
   return (
     <Link
       href={`/peeks/${slug}`}
-      className="group absolute z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
+      onClick={handleClick}
+      className={`group absolute ${zCls} flex -translate-x-1/2 -translate-y-1/2 items-center justify-center`}
       style={{ left: `${xPct}%`, top: `${yPct}%` }}
       aria-label={`${number}. ${name}`}
+      aria-pressed={isSelected || undefined}
     >
       <span className="absolute h-12 w-12 rounded-full" />
-      <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white shadow-md ring-2 ring-white transition-all duration-150 group-hover:scale-[1.2] group-hover:shadow-[0_0_12px_rgba(255,106,0,0.6)] md:h-8 md:w-8 md:text-xs">
+      <span
+        className={`relative flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white shadow-md ring-2 ring-white transition-all duration-150 group-hover:scale-[1.2] group-hover:shadow-[0_0_12px_rgba(255,106,0,0.6)] md:h-8 md:w-8 md:text-xs ${selectedScale}`}
+      >
         {number}
       </span>
+      {/* Floating tooltip — desktop hover only. Hidden on mobile so we
+          rely on the fixed detail card surfaced by FloorView. */}
       <span
-        className={`pointer-events-none absolute z-20 max-w-[140px] rounded-btn bg-ink px-2.5 py-1 text-center text-[13px] leading-tight text-white opacity-0 shadow transition-opacity duration-150 [hyphens:none] group-hover:opacity-100 md:text-xs ${tooltipClass(placement)}`}
+        className={`pointer-events-none absolute z-50 hidden max-w-[140px] rounded-btn bg-ink px-2.5 py-1 text-center text-[13px] leading-tight text-white opacity-0 shadow transition-opacity duration-150 [hyphens:none] group-hover:opacity-100 md:block md:text-xs ${tooltipClass(placement)}`}
       >
         {name}
         {isNew && (
-          <span className="ml-1 inline-flex items-center rounded-full bg-emerald-500 px-1 py-px text-[8px] font-semibold uppercase tracking-wider text-white align-middle">
+          <span className="ml-1 inline-flex items-center rounded-full bg-emerald-500 px-1 py-px align-middle text-[8px] font-semibold uppercase tracking-wider text-white">
             New
           </span>
         )}
