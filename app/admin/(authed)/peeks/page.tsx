@@ -5,11 +5,12 @@ import {
   bulkSetPublishedAction,
   updatePeekFieldAction,
 } from "./actions";
-import {
-  PeeksDashboardTable,
-  type DashboardMap,
-  type DashboardRow,
-} from "./PeeksDashboardTable";
+import { PeeksPageClient } from "./PeeksPageClient";
+import type {
+  CoverageFloor,
+  CoveragePeek,
+} from "./FloorCoverage";
+import type { DashboardMap, DashboardRow } from "./PeeksDashboardTable";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,8 @@ type JoinedPeek = {
   risk: "low" | "medium" | "high";
   success_rate: number;
   published: boolean;
+  x_pct: number;
+  y_pct: number;
   floors: {
     id: string;
     name: string;
@@ -28,11 +31,19 @@ type JoinedPeek = {
   } | null;
 };
 
+type FloorRow = {
+  id: string;
+  name: string;
+  display_order: number;
+  birds_eye_url: string | null;
+  maps: { id: string; name: string; slug: string } | null;
+};
+
 async function loadPeeks(): Promise<JoinedPeek[]> {
   const { data, error } = await supabaseAdmin()
     .from("peeks")
     .select(
-      "id, slug, name, difficulty, risk, success_rate, published, floors(id, name, maps(id, name, slug))"
+      "id, slug, name, difficulty, risk, success_rate, published, x_pct, y_pct, floors(id, name, maps(id, name, slug))"
     )
     .order("name", { ascending: true });
   if (error) throw error;
@@ -46,6 +57,17 @@ async function loadMaps(): Promise<DashboardMap[]> {
     .order("name", { ascending: true });
   if (error) throw error;
   return (data ?? []) as DashboardMap[];
+}
+
+async function loadFloors(): Promise<FloorRow[]> {
+  const { data, error } = await supabaseAdmin()
+    .from("floors")
+    .select(
+      "id, name, display_order, birds_eye_url, maps(id, name, slug)"
+    )
+    .order("display_order", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as FloorRow[];
 }
 
 // Pull every /peeks/* page-view row and group by slug in memory. Fine for
@@ -70,9 +92,10 @@ async function loadViewCounts(): Promise<Map<string, number>> {
 }
 
 export default async function AdminPeeksPage() {
-  const [peeks, maps, viewCounts] = await Promise.all([
+  const [peeks, maps, floors, viewCounts] = await Promise.all([
     loadPeeks(),
     loadMaps(),
+    loadFloors(),
     loadViewCounts(),
   ]);
 
@@ -95,6 +118,27 @@ export default async function AdminPeeksPage() {
     floor: p.floors ? { id: p.floors.id, name: p.floors.name } : null,
   }));
 
+  const coverageFloors: CoverageFloor[] = floors
+    .filter((f) => f.maps)
+    .map((f) => ({
+      id: f.id,
+      name: f.name,
+      display_order: f.display_order,
+      birds_eye_url: f.birds_eye_url,
+      map: f.maps as { id: string; name: string; slug: string },
+    }));
+
+  const coveragePeeks: CoveragePeek[] = peeks
+    .filter((p) => p.floors)
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      x_pct: p.x_pct,
+      y_pct: p.y_pct,
+      published: p.published,
+      floor_id: (p.floors as { id: string }).id,
+    }));
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -107,9 +151,11 @@ export default async function AdminPeeksPage() {
         </Link>
       </div>
 
-      <PeeksDashboardTable
+      <PeeksPageClient
         initialRows={rows}
         maps={maps}
+        coverageFloors={coverageFloors}
+        coveragePeeks={coveragePeeks}
         updateField={updatePeekFieldAction}
         bulkSetPublished={bulkSetPublishedAction}
         bulkDelete={bulkDeletePeeksAction}

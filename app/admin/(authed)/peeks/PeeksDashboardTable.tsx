@@ -35,6 +35,8 @@ type SortKey =
 type Props = {
   initialRows: DashboardRow[];
   maps: DashboardMap[];
+  filterMap: string;
+  onFilterMapChange: (slug: string) => void;
   updateField: (
     id: string,
     field: InlineField,
@@ -87,13 +89,14 @@ function cellKey(id: string, field: InlineField) {
 export function PeeksDashboardTable({
   initialRows,
   maps,
+  filterMap,
+  onFilterMapChange,
   updateField,
   bulkSetPublished,
   bulkDelete,
 }: Props) {
   const [rows, setRows] = useState(initialRows);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [filterMap, setFilterMap] = useState<string>("");
   const [filterStatus, setFilterStatus] =
     useState<"all" | "published" | "draft">("all");
   const [search, setSearch] = useState("");
@@ -274,7 +277,7 @@ export function PeeksDashboardTable({
           <span className="mb-1 block">Map</span>
           <select
             value={filterMap}
-            onChange={(e) => setFilterMap(e.target.value)}
+            onChange={(e) => onFilterMapChange(e.target.value)}
             className="min-w-[160px] rounded-btn border border-border bg-card px-3 py-1.5 text-sm outline-none focus:border-brand"
           >
             <option value="">All maps</option>
