@@ -113,6 +113,15 @@ export default async function BlogArticlePage({
             <p className="mt-4 text-[16px] leading-[1.7]">{data.why}</p>
           </section>
 
+          {data.sections.map((s, i) => (
+            <section key={i} className="mt-12">
+              <h2 className="text-xl font-semibold tracking-tight">
+                {s.heading}
+              </h2>
+              <p className="mt-4 text-[16px] leading-[1.7]">{s.body}</p>
+            </section>
+          ))}
+
           <section className="mt-12 space-y-12">
             <h2 className="text-xl font-semibold tracking-tight">
               Every documented spawn peek on {data.map.name}

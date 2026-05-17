@@ -28,12 +28,12 @@ export const metadata: Metadata = {
 export default async function BlogIndexPage() {
   const eligible = await listEligibleMaps();
 
-  // Build the excerpt from the same prose generator that the article uses,
-  // so the index card preview matches what readers land on.
+  // Each excerpt is generated from the map's data fingerprint, so two
+  // maps' index cards never lead with the same boilerplate sentence.
   const enriched = await Promise.all(
     eligible.map(async (e) => {
       const data = await loadArticleData(e.map.slug);
-      return data ? { entry: e, intro: data.intro } : null;
+      return data ? { entry: e, data } : null;
     })
   );
   const articles = enriched.filter(
@@ -61,7 +61,7 @@ export default async function BlogIndexPage() {
         )}
 
         <ul className="space-y-5">
-          {articles.map(({ entry, intro }) => {
+          {articles.map(({ entry, data }) => {
             const slug = articleSlugFor(entry.map.slug);
             const cover = entry.map.cover_image_url;
             return (
@@ -95,7 +95,7 @@ export default async function BlogIndexPage() {
                       {entry.floorCount === 1 ? "floor" : "floors"}
                     </p>
                     <p className="text-sm leading-relaxed text-ink/80">
-                      {articleExcerpt({ intro })}
+                      {articleExcerpt(data)}
                     </p>
                   </div>
                 </Link>
