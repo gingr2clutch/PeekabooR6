@@ -7,6 +7,7 @@ import { PeekMedia } from "@/components/PeekMedia";
 import { VoteButtons } from "@/components/VoteButtons";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
+import { peekTypeMeta } from "@/lib/peek-types";
 import { isUuid } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ type Joined = Peek & {
 };
 
 const JOIN_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, peek_type, published, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
 
 async function fetchBySlug(slug: string): Promise<Joined | null> {
   const { data, error } = await supabasePublic()
@@ -128,6 +129,7 @@ export default async function PeekDetailPage({
             </Link>{" "}
             › {peek.name}
           </p>
+          <PeekTypeChip peekType={peek.peek_type} />
         </div>
 
         {/* Hero stats card — 32px below header */}
@@ -290,6 +292,23 @@ function DifficultyDots({ difficulty }: { difficulty: number }) {
           }`}
         />
       ))}
+    </div>
+  );
+}
+
+function PeekTypeChip({ peekType }: { peekType: Peek["peek_type"] }) {
+  const meta = peekTypeMeta(peekType);
+  return (
+    <div className="mt-3 flex justify-center">
+      <span className="inline-flex items-center gap-1.5 rounded-btn border border-border bg-card px-2.5 py-1 text-xs font-medium text-ink">
+        <span
+          aria-hidden
+          className={`inline-flex h-4 w-4 items-center justify-center rounded-full ${meta.pinBg} ${meta.pinText} ring-1 ring-white shadow-[0_0_0_1px_rgba(26,26,26,0.85)] text-[8px] font-bold`}
+        >
+          {meta.letter}
+        </span>
+        <span>{meta.label}</span>
+      </span>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import type { PeekType } from "@/lib/db";
+import { peekTypeMeta } from "@/lib/peek-types";
 
 type Props = {
   slug: string;
@@ -8,6 +10,7 @@ type Props = {
   xPct: number;
   yPct: number;
   number: number;
+  peekType: PeekType;
   isNew?: boolean;
   isSelected?: boolean;
   onSelect?: () => void;
@@ -69,11 +72,13 @@ export function PeekPin({
   xPct,
   yPct,
   number,
+  peekType,
   isNew = false,
   isSelected = false,
   onSelect,
 }: Props) {
   const placement = tooltipPlacement(xPct, yPct);
+  const type = peekTypeMeta(peekType);
 
   function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
     // Always stop propagation so the parent backdrop click (which
@@ -94,9 +99,13 @@ export function PeekPin({
   // Active or hovered pins float above siblings so their tooltip /
   // highlight ring is never covered by adjacent pins.
   const zCls = isSelected ? "z-40" : "z-20 hover:z-40";
-  const selectedScale = isSelected
-    ? "scale-[1.2] shadow-[0_0_12px_rgba(255,106,0,0.6)] ring-brand"
-    : "";
+  const selectedExtra = isSelected ? `scale-[1.2] ${type.selectedShadow}` : "";
+
+  // White ring against the pin colour, dark hairline outside the ring so the
+  // pin still pops on light/sandy maps (Border especially), and a regular
+  // drop shadow for lift. Each glow on hover/select is type-coloured.
+  const pinShadow =
+    "shadow-[0_0_0_1px_rgba(26,26,26,0.85),0_2px_4px_rgba(0,0,0,0.35)]";
 
   return (
     <Link
@@ -104,14 +113,19 @@ export function PeekPin({
       onClick={handleClick}
       className={`group absolute ${zCls} flex -translate-x-1/2 -translate-y-1/2 items-center justify-center`}
       style={{ left: `${xPct}%`, top: `${yPct}%` }}
-      aria-label={`${number}. ${name}`}
+      aria-label={`${number}. ${name} — ${type.label}`}
       aria-pressed={isSelected || undefined}
     >
       <span className="absolute h-12 w-12 rounded-full" />
       <span
-        className={`relative flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white shadow-md ring-2 ring-white transition-all duration-150 group-hover:scale-[1.2] group-hover:shadow-[0_0_12px_rgba(255,106,0,0.6)] md:h-8 md:w-8 md:text-xs ${selectedScale}`}
+        className={`relative flex h-8 w-8 flex-col items-center justify-center rounded-full ${type.pinBg} ${type.pinText} ring-2 ring-white ${pinShadow} transition-all duration-150 group-hover:scale-[1.2] ${type.hoverShadow} md:h-9 md:w-9 ${selectedExtra}`}
       >
-        {number}
+        <span className="text-[8px] font-bold leading-none tracking-wide">
+          {type.letter}
+        </span>
+        <span className="mt-px text-[11px] font-bold leading-none md:text-xs">
+          {number}
+        </span>
       </span>
       {/* Floating tooltip — desktop hover only. Hidden on mobile so we
           rely on the fixed detail card surfaced by FloorView. */}

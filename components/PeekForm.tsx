@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { PeekType } from "@/lib/db";
+import { PEEK_TYPE_ORDER, PEEK_TYPES } from "@/lib/peek-types";
 import { InstructionsEditor } from "./InstructionsEditor";
 import { PinPlacer } from "./PinPlacer";
 
@@ -24,6 +26,7 @@ type Props = {
     y_pct?: number;
     difficulty?: number;
     risk?: "low" | "medium" | "high";
+    peek_type?: PeekType;
     published?: boolean;
     instructions?: string[];
     tip?: string | null;
@@ -134,6 +137,24 @@ export function PeekForm({ floors, action, submitLabel, initial }: Props) {
             </select>
           </label>
         </div>
+
+        <label className="block text-xs text-muted">
+          <span className="mb-1 block">Pin type</span>
+          <select
+            name="peek_type"
+            defaultValue={initial?.peek_type ?? "spawn"}
+            className="w-full rounded-btn border border-border bg-card px-3 py-2 text-sm outline-none focus:border-brand"
+          >
+            {PEEK_TYPE_ORDER.map((t) => (
+              <option key={t} value={t}>
+                {PEEK_TYPES[t].label}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-[11px] text-muted">
+            Drives the pin colour and letter on the floor view.
+          </span>
+        </label>
 
         <label className="block text-xs text-muted">
           <div className="mb-1 flex items-center justify-between">

@@ -26,6 +26,13 @@ function parseRisk(v: FormDataEntryValue | null): "low" | "medium" | "high" {
   return s === "low" || s === "high" ? s : "medium";
 }
 
+function parsePeekType(
+  v: FormDataEntryValue | null
+): "spawn" | "runout" | "mid_round" {
+  const s = String(v ?? "spawn");
+  return s === "runout" || s === "mid_round" ? s : "spawn";
+}
+
 function parseTip(v: FormDataEntryValue | null): string | null {
   const s = String(v ?? "").trim();
   if (!s) return null;
@@ -65,6 +72,7 @@ export async function createPeekAction(formData: FormData) {
     5
   );
   const risk = parseRisk(formData.get("risk"));
+  const peek_type = parsePeekType(formData.get("peek_type"));
   const tip = parseTip(formData.get("tip"));
   const success_rate = parseSuccessRate(formData.get("success_rate"));
   const published = formData.get("published") === "on";
@@ -77,6 +85,7 @@ export async function createPeekAction(formData: FormData) {
     y_pct,
     difficulty,
     risk,
+    peek_type,
     tip,
     success_rate,
     published,
@@ -104,6 +113,7 @@ export async function createPeekAction(formData: FormData) {
       y_pct,
       difficulty,
       risk,
+      peek_type,
       tip,
       success_rate,
       published,
@@ -131,6 +141,7 @@ export async function updatePeekAction(formData: FormData) {
     5
   );
   const risk = parseRisk(formData.get("risk"));
+  const peek_type = parsePeekType(formData.get("peek_type"));
   const tip = parseTip(formData.get("tip"));
   const success_rate = parseSuccessRate(formData.get("success_rate"));
   const published = formData.get("published") === "on";
@@ -156,6 +167,7 @@ export async function updatePeekAction(formData: FormData) {
       y_pct,
       difficulty,
       risk,
+      peek_type,
       tip,
       success_rate,
       published,

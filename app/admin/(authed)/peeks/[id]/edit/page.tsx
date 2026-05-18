@@ -18,6 +18,7 @@ type EditablePeek = {
   y_pct: number;
   difficulty: number;
   risk: "low" | "medium" | "high";
+  peek_type: "spawn" | "runout" | "mid_round";
   tip: string | null;
   success_rate: number;
   published: boolean;
@@ -30,7 +31,7 @@ async function getPeek(id: string): Promise<EditablePeek | null> {
   const { data, error } = await supabaseAdmin()
     .from("peeks")
     .select(
-      "id, floor_id, slug, name, x_pct, y_pct, difficulty, risk, tip, success_rate, published, instructions, video_url, poster_url"
+      "id, floor_id, slug, name, x_pct, y_pct, difficulty, risk, peek_type, tip, success_rate, published, instructions, video_url, poster_url"
     )
     .eq("id", id)
     .maybeSingle();
@@ -96,6 +97,7 @@ export default async function AdminEditPeekPage({
           y_pct: peek.y_pct,
           difficulty: peek.difficulty,
           risk: peek.risk,
+          peek_type: peek.peek_type,
           tip: peek.tip,
           success_rate: peek.success_rate,
           published: peek.published,

@@ -6,8 +6,9 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PeekPin } from "@/components/PeekPin";
-import type { Floor, Map, Peek } from "@/lib/db";
+import type { Floor, Map, Peek, PeekType } from "@/lib/db";
 import { isPeekNew } from "@/lib/peek-recency";
+import { PEEK_TYPE_ORDER, peekTypeMeta } from "@/lib/peek-types";
 
 type Positioned = Peek & { displayX: number; displayY: number };
 
@@ -81,6 +82,7 @@ export function FloorView({ map, floor, peeks }: Props) {
               xPct={peek.displayX}
               yPct={peek.displayY}
               number={i + 1}
+              peekType={peek.peek_type}
               isNew={isPeekNew(peek.created_at)}
               isSelected={selectedId === peek.id}
               onSelect={() => toggleSelect(peek.id)}
@@ -90,9 +92,12 @@ export function FloorView({ map, floor, peeks }: Props) {
       </div>
 
       {peeks.length > 0 && (
-        <p className="mt-3 text-center text-[13px] text-muted">
-          Ranked by success rate
-        </p>
+        <>
+          <PinLegend usedTypes={collectTypes(peeks)} />
+          <p className="mt-2 text-center text-[13px] text-muted">
+            Ranked by success rate
+          </p>
+        </>
       )}
 
       {/* Mobile-only detail card. Avoids the desktop tooltip's clipping
@@ -117,6 +122,41 @@ export function FloorView({ map, floor, peeks }: Props) {
         </div>
       )}
     </>
+  );
+}
+
+function collectTypes(peeks: Positioned[]): Set<PeekType> {
+  const out = new Set<PeekType>();
+  for (const p of peeks) out.add(p.peek_type);
+  return out;
+}
+
+function PinLegend({ usedTypes }: { usedTypes: Set<PeekType> }) {
+  // Order by the central config so the legend reads consistently no
+  // matter which subset of types is present on this floor. Showing only
+  // the types that actually appear keeps the legend honest.
+  const types = PEEK_TYPE_ORDER.filter((t) => usedTypes.has(t));
+  if (types.length === 0) return null;
+  return (
+    <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[12px] text-muted">
+      <span className="text-[11px] uppercase tracking-wide text-muted/80">
+        Pin types
+      </span>
+      {types.map((t) => {
+        const meta = peekTypeMeta(t);
+        return (
+          <span key={t} className="inline-flex items-center gap-1.5">
+            <span
+              aria-hidden
+              className={`inline-flex h-4 w-4 items-center justify-center rounded-full ${meta.pinBg} ${meta.pinText} ring-1 ring-white shadow-[0_0_0_1px_rgba(26,26,26,0.85)] text-[8px] font-bold`}
+            >
+              {meta.letter}
+            </span>
+            <span>{meta.short}</span>
+          </span>
+        );
+      })}
+    </div>
   );
 }
 

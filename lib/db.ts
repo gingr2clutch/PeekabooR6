@@ -17,6 +17,8 @@ export type Floor = {
   birds_eye_url: string | null;
 };
 
+export type PeekType = "spawn" | "runout" | "mid_round";
+
 export type Peek = {
   id: string;
   floor_id: string;
@@ -33,12 +35,13 @@ export type Peek = {
   useful_pct: number;
   vote_count: number;
   success_rate: number;
+  peek_type: PeekType;
   published: boolean;
   created_at: string;
 };
 
 const PEEK_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, peek_type, published, created_at";
 
 export async function getMaps(): Promise<Map[]> {
   const { data, error } = await supabasePublic()
