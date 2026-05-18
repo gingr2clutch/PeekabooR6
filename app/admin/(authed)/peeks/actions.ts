@@ -242,6 +242,7 @@ export type InlineField =
   | "name"
   | "difficulty"
   | "risk"
+  | "peek_type"
   | "success_rate"
   | "published";
 
@@ -279,6 +280,12 @@ export async function updatePeekFieldAction(
       normalized = v;
       break;
     }
+    case "peek_type": {
+      const v = parsePeekType(raw == null ? null : String(raw));
+      patch = { peek_type: v };
+      normalized = v;
+      break;
+    }
     case "success_rate": {
       const n = clamp(Math.round(Number(raw)), 0, 100);
       patch = { success_rate: n };
@@ -299,7 +306,17 @@ export async function updatePeekFieldAction(
     .from("peeks")
     .update(patch)
     .eq("id", id);
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    // Surface migration-driven failures clearly instead of bubbling
+    // Postgres jargon — the admin sees the message in the error tooltip.
+    if (isMissingColumnError(error) && field === "peek_type") {
+      return {
+        ok: false,
+        error: "peek_type column missing — run migration 013 first",
+      };
+    }
+    return { ok: false, error: error.message };
+  }
 
   revalidatePath("/admin/peeks");
   const { data: row } = await supabaseAdmin()

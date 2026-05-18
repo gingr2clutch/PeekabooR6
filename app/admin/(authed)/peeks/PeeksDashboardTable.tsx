@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
+import type { PeekType } from "@/lib/db";
+import { PEEK_TYPES, PEEK_TYPE_ORDER } from "@/lib/peek-types";
 import type {
   InlineField,
   InlineUpdateResult,
@@ -16,6 +18,7 @@ export type DashboardRow = {
   success_rate: number;
   view_count: number;
   published: boolean;
+  peek_type: PeekType | null;
   map: { id: string; name: string; slug: string } | null;
   floor: { id: string; name: string } | null;
 };
@@ -28,9 +31,16 @@ type SortKey =
   | "name"
   | "difficulty"
   | "risk"
+  | "peek_type"
   | "success_rate"
   | "view_count"
   | "published";
+
+const PEEK_TYPE_SORT_ORDER: Record<PeekType, number> = {
+  spawn: 0,
+  runout: 1,
+  mid_game: 2,
+};
 
 type Props = {
   initialRows: DashboardRow[];
@@ -99,6 +109,7 @@ export function PeeksDashboardTable({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [filterStatus, setFilterStatus] =
     useState<"all" | "published" | "draft">("all");
+  const [filterType, setFilterType] = useState<"" | PeekType>("");
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -113,10 +124,13 @@ export function PeeksDashboardTable({
       if (filterMap && r.map?.slug !== filterMap) return false;
       if (filterStatus === "published" && !r.published) return false;
       if (filterStatus === "draft" && r.published) return false;
+      // Treat null peek_type as 'spawn' so rows without the column (legacy
+      // schema) still match the Spawn filter and stay visible.
+      if (filterType && (r.peek_type ?? "spawn") !== filterType) return false;
       if (needle && !r.name.toLowerCase().includes(needle)) return false;
       return true;
     });
-  }, [rows, filterMap, filterStatus, search]);
+  }, [rows, filterMap, filterStatus, filterType, search]);
 
   const sorted = useMemo(() => {
     const cmp = (a: DashboardRow, b: DashboardRow): number => {
@@ -133,6 +147,11 @@ export function PeeksDashboardTable({
         case "risk": {
           const order = { low: 0, medium: 1, high: 2 } as const;
           return (order[a.risk] - order[b.risk]) * dir;
+        }
+        case "peek_type": {
+          const at = a.peek_type ?? "spawn";
+          const bt = b.peek_type ?? "spawn";
+          return (PEEK_TYPE_SORT_ORDER[at] - PEEK_TYPE_SORT_ORDER[bt]) * dir;
         }
         case "success_rate":
           return (a.success_rate - b.success_rate) * dir;
@@ -303,6 +322,21 @@ export function PeeksDashboardTable({
           </select>
         </label>
         <label className="text-xs text-muted">
+          <span className="mb-1 block">Type</span>
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value as "" | PeekType)}
+            className="rounded-btn border border-border bg-card px-3 py-1.5 text-sm outline-none focus:border-brand"
+          >
+            <option value="">All</option>
+            {PEEK_TYPE_ORDER.map((t) => (
+              <option key={t} value={t}>
+                {PEEK_TYPES[t].label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-xs text-muted">
           <span className="mb-1 block">Sort by</span>
           <select
             value={`${sortKey}:${sortDir}` as SortChoice}
@@ -428,7 +462,7 @@ export function PeeksDashboardTable({
 
       {/* Table */}
       <div className="overflow-x-auto rounded-card border border-border bg-card">
-        <table className="w-full min-w-[1080px] text-sm">
+        <table className="w-full min-w-[1180px] text-sm">
           <thead className="border-b border-border bg-bg text-xs uppercase tracking-wide text-muted">
             <tr>
               <th className="w-10 px-3 py-2 text-left">
@@ -448,6 +482,7 @@ export function PeeksDashboardTable({
               <Th label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={toggleSort} />
               <Th label="Difficulty" sortKey="difficulty" current={sortKey} dir={sortDir} onSort={toggleSort} />
               <Th label="Risk" sortKey="risk" current={sortKey} dir={sortDir} onSort={toggleSort} />
+              <Th label="Type" sortKey="peek_type" current={sortKey} dir={sortDir} onSort={toggleSort} />
               <Th label="Success" sortKey="success_rate" current={sortKey} dir={sortDir} onSort={toggleSort} align="right" />
               <Th label="Views" sortKey="view_count" current={sortKey} dir={sortDir} onSort={toggleSort} align="right" />
               <Th label="Status" sortKey="published" current={sortKey} dir={sortDir} onSort={toggleSort} />
@@ -457,7 +492,7 @@ export function PeeksDashboardTable({
           <tbody>
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={10} className="px-4 py-8 text-center text-muted">
+                <td colSpan={11} className="px-4 py-8 text-center text-muted">
                   No peeks match those filters.
                 </td>
               </tr>
@@ -502,6 +537,14 @@ export function PeeksDashboardTable({
                       flash={savedFlash[cellKey(r.id, "risk")]}
                       error={errorFlash[cellKey(r.id, "risk")]}
                       onCommit={(v) => commitField(r.id, "risk", v)}
+                    />
+                  </td>
+                  <td className="px-4 py-2">
+                    <InlineType
+                      value={r.peek_type ?? "spawn"}
+                      flash={savedFlash[cellKey(r.id, "peek_type")]}
+                      error={errorFlash[cellKey(r.id, "peek_type")]}
+                      onCommit={(v) => commitField(r.id, "peek_type", v)}
                     />
                   </td>
                   <td className="px-4 py-2 text-right">
@@ -759,6 +802,36 @@ function InlineRisk({
       {RISK_OPTIONS.map((r) => (
         <option key={r} value={r}>
           {r[0].toUpperCase() + r.slice(1)}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function InlineType({
+  value,
+  flash,
+  error,
+  onCommit,
+}: {
+  value: PeekType;
+  flash?: boolean;
+  error?: string;
+  onCommit: (v: PeekType) => void;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => {
+        const next = e.target.value as PeekType;
+        if (next !== value) onCommit(next);
+      }}
+      title={error}
+      className={`rounded-btn border border-border bg-card px-2 py-1 text-sm outline-none focus:border-brand ${flashCls(flash, error)}`}
+    >
+      {PEEK_TYPE_ORDER.map((t) => (
+        <option key={t} value={t}>
+          {PEEK_TYPES[t].label}
         </option>
       ))}
     </select>
