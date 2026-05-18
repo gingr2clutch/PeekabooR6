@@ -24,6 +24,7 @@ type JoinedPeek = {
   published: boolean;
   x_pct: number;
   y_pct: number;
+  peek_type?: "spawn" | "runout" | "mid_round" | null;
   floors: {
     id: string;
     name: string;
@@ -40,14 +41,27 @@ type FloorRow = {
 };
 
 async function loadPeeks(): Promise<JoinedPeek[]> {
-  const { data, error } = await supabaseAdmin()
+  // Try with peek_type; if migration 013 hasn't been applied yet,
+  // PostgREST returns 42703 — fall back to the legacy column set so the
+  // admin list keeps rendering.
+  const base =
+    "id, slug, name, difficulty, risk, success_rate, published, x_pct, y_pct, floors(id, name, maps(id, name, slug))";
+  const sb = supabaseAdmin();
+  const first = await sb
     .from("peeks")
-    .select(
-      "id, slug, name, difficulty, risk, success_rate, published, x_pct, y_pct, floors(id, name, maps(id, name, slug))"
-    )
+    .select(`${base}, peek_type`)
     .order("name", { ascending: true });
-  if (error) throw error;
-  return (data ?? []) as unknown as JoinedPeek[];
+  if (!first.error) return (first.data ?? []) as unknown as JoinedPeek[];
+  if (first.error.code !== "42703") throw first.error;
+  console.warn(
+    "[admin/peeks] peek_type column missing — falling back (run migration 013 to enable inline Type editor)"
+  );
+  const second = await sb
+    .from("peeks")
+    .select(base)
+    .order("name", { ascending: true });
+  if (second.error) throw second.error;
+  return (second.data ?? []) as unknown as JoinedPeek[];
 }
 
 async function loadMaps(): Promise<DashboardMap[]> {
@@ -108,6 +122,7 @@ export default async function AdminPeeksPage() {
     success_rate: p.success_rate,
     view_count: viewCounts.get(p.slug) ?? 0,
     published: p.published,
+    peek_type: p.peek_type ?? null,
     map: p.floors?.maps
       ? {
           id: p.floors.maps.id,

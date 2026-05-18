@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
+import type { PeekType } from "@/lib/db";
+import { PEEK_TYPES, PEEK_TYPE_ORDER } from "@/lib/peek-types";
 import type {
   InlineField,
   InlineUpdateResult,
@@ -16,6 +18,7 @@ export type DashboardRow = {
   success_rate: number;
   view_count: number;
   published: boolean;
+  peek_type: PeekType | null;
   map: { id: string; name: string; slug: string } | null;
   floor: { id: string; name: string } | null;
 };
@@ -428,7 +431,7 @@ export function PeeksDashboardTable({
 
       {/* Table */}
       <div className="overflow-x-auto rounded-card border border-border bg-card">
-        <table className="w-full min-w-[1080px] text-sm">
+        <table className="w-full min-w-[1140px] text-sm">
           <thead className="border-b border-border bg-bg text-xs uppercase tracking-wide text-muted">
             <tr>
               <th className="w-10 px-3 py-2 text-left">
@@ -448,6 +451,7 @@ export function PeeksDashboardTable({
               <Th label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={toggleSort} />
               <Th label="Difficulty" sortKey="difficulty" current={sortKey} dir={sortDir} onSort={toggleSort} />
               <Th label="Risk" sortKey="risk" current={sortKey} dir={sortDir} onSort={toggleSort} />
+              <th className="px-4 py-2 text-left">Type</th>
               <Th label="Success" sortKey="success_rate" current={sortKey} dir={sortDir} onSort={toggleSort} align="right" />
               <Th label="Views" sortKey="view_count" current={sortKey} dir={sortDir} onSort={toggleSort} align="right" />
               <Th label="Status" sortKey="published" current={sortKey} dir={sortDir} onSort={toggleSort} />
@@ -457,7 +461,7 @@ export function PeeksDashboardTable({
           <tbody>
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={10} className="px-4 py-8 text-center text-muted">
+                <td colSpan={11} className="px-4 py-8 text-center text-muted">
                   No peeks match those filters.
                 </td>
               </tr>
@@ -502,6 +506,14 @@ export function PeeksDashboardTable({
                       flash={savedFlash[cellKey(r.id, "risk")]}
                       error={errorFlash[cellKey(r.id, "risk")]}
                       onCommit={(v) => commitField(r.id, "risk", v)}
+                    />
+                  </td>
+                  <td className="px-4 py-2">
+                    <InlineType
+                      value={r.peek_type ?? "spawn"}
+                      flash={savedFlash[cellKey(r.id, "peek_type")]}
+                      error={errorFlash[cellKey(r.id, "peek_type")]}
+                      onCommit={(v) => commitField(r.id, "peek_type", v)}
                     />
                   </td>
                   <td className="px-4 py-2 text-right">
@@ -759,6 +771,36 @@ function InlineRisk({
       {RISK_OPTIONS.map((r) => (
         <option key={r} value={r}>
           {r[0].toUpperCase() + r.slice(1)}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function InlineType({
+  value,
+  flash,
+  error,
+  onCommit,
+}: {
+  value: PeekType;
+  flash?: boolean;
+  error?: string;
+  onCommit: (v: PeekType) => void;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => {
+        const next = e.target.value as PeekType;
+        if (next !== value) onCommit(next);
+      }}
+      title={error ?? PEEK_TYPES[value].label}
+      className={`rounded-btn border border-border bg-card px-2 py-1 text-center text-sm font-bold outline-none focus:border-brand ${flashCls(flash, error)}`}
+    >
+      {PEEK_TYPE_ORDER.map((t) => (
+        <option key={t} value={t} title={PEEK_TYPES[t].label}>
+          {PEEK_TYPES[t].letter}
         </option>
       ))}
     </select>
