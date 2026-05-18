@@ -47,8 +47,11 @@ function parseSuccessRate(v: FormDataEntryValue | null): number {
 
 // Returns true if the Supabase error is "column does not exist" — used to
 // transparently support schemas that haven't yet had migration 013 applied.
+// PostgREST surfaces two distinct codes for this case: 42703 on SELECT
+// (raw Postgres) and PGRST204 on INSERT/UPDATE (schema-cache miss). We
+// have to match both — only matching one means writes still 500.
 function isMissingColumnError(err: { code?: string } | null | undefined) {
-  return !!err && err.code === "42703";
+  return !!err && (err.code === "42703" || err.code === "PGRST204");
 }
 
 async function mapSlugForFloor(floorId: string): Promise<string> {
