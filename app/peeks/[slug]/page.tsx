@@ -20,8 +20,9 @@ type Joined = Peek & {
   floors: (Floor & { maps: Map }) | null;
 };
 
+// peek_type is intentionally omitted — see comment on PEEK_COLUMNS in lib/db.ts.
 const JOIN_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, peek_type, published, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
 
 async function fetchBySlug(slug: string): Promise<Joined | null> {
   const { data, error } = await supabasePublic()
@@ -297,6 +298,9 @@ function DifficultyDots({ difficulty }: { difficulty: number }) {
 }
 
 function PeekTypeChip({ peekType }: { peekType: Peek["peek_type"] }) {
+  // Hide rather than show a misleading default — when the column hasn't
+  // been read (older schemas), we don't know the type, so silently skip.
+  if (!peekType) return null;
   const meta = peekTypeMeta(peekType);
   return (
     <div className="mt-3 flex justify-center">

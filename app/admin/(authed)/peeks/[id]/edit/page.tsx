@@ -18,7 +18,7 @@ type EditablePeek = {
   y_pct: number;
   difficulty: number;
   risk: "low" | "medium" | "high";
-  peek_type: "spawn" | "runout" | "mid_round";
+  peek_type?: "spawn" | "runout" | "mid_round" | null;
   tip: string | null;
   success_rate: number;
   published: boolean;
@@ -27,16 +27,29 @@ type EditablePeek = {
   poster_url: string | null;
 };
 
+// Try with peek_type first; if the column is missing (Supabase project on
+// an older schema), retry without it so the editor still loads.
 async function getPeek(id: string): Promise<EditablePeek | null> {
-  const { data, error } = await supabaseAdmin()
+  const base =
+    "id, floor_id, slug, name, x_pct, y_pct, difficulty, risk, tip, success_rate, published, instructions, video_url, poster_url";
+  const withType = supabaseAdmin()
     .from("peeks")
-    .select(
-      "id, floor_id, slug, name, x_pct, y_pct, difficulty, risk, peek_type, tip, success_rate, published, instructions, video_url, poster_url"
-    )
+    .select(`${base}, peek_type`)
     .eq("id", id)
     .maybeSingle();
-  if (error) throw error;
-  return data as EditablePeek | null;
+  const first = await withType;
+  if (!first.error) return first.data as EditablePeek | null;
+  if (first.error.code !== "42703") throw first.error;
+  console.warn(
+    "[admin/peeks/edit] peek_type column missing — falling back to legacy select"
+  );
+  const fallback = await supabaseAdmin()
+    .from("peeks")
+    .select(base)
+    .eq("id", id)
+    .maybeSingle();
+  if (fallback.error) throw fallback.error;
+  return fallback.data as EditablePeek | null;
 }
 
 export default async function AdminEditPeekPage({
@@ -97,7 +110,7 @@ export default async function AdminEditPeekPage({
           y_pct: peek.y_pct,
           difficulty: peek.difficulty,
           risk: peek.risk,
-          peek_type: peek.peek_type,
+          peek_type: peek.peek_type ?? undefined,
           tip: peek.tip,
           success_rate: peek.success_rate,
           published: peek.published,

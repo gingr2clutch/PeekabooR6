@@ -45,6 +45,12 @@ function parseSuccessRate(v: FormDataEntryValue | null): number {
   return clamp(n, 0, 100);
 }
 
+// Returns true if the Supabase error is "column does not exist" — used to
+// transparently support schemas that haven't yet had migration 013 applied.
+function isMissingColumnError(err: { code?: string } | null | undefined) {
+  return !!err && err.code === "42703";
+}
+
 async function mapSlugForFloor(floorId: string): Promise<string> {
   const { data, error } = await supabaseAdmin()
     .from("floors")
@@ -103,26 +109,37 @@ export async function createPeekAction(formData: FormData) {
   const mapSlug = await mapSlugForFloor(floor_id);
   const slug = await ensureUniquePeekSlug(buildBasePeekSlug(mapSlug, name));
 
-  const { data, error } = await supabaseAdmin()
+  const basePayload = {
+    floor_id,
+    slug,
+    name,
+    x_pct,
+    y_pct,
+    difficulty,
+    risk,
+    tip,
+    success_rate,
+    published,
+    instructions: instructions.length ? instructions : null,
+  };
+  let { data, error } = await supabaseAdmin()
     .from("peeks")
-    .insert({
-      floor_id,
-      slug,
-      name,
-      x_pct,
-      y_pct,
-      difficulty,
-      risk,
-      peek_type,
-      tip,
-      success_rate,
-      published,
-      instructions: instructions.length ? instructions : null,
-    })
+    .insert({ ...basePayload, peek_type })
     .select("id")
     .single();
+  if (isMissingColumnError(error)) {
+    console.warn(
+      "[createPeekAction] peek_type column missing — inserting without it (run migration 013 to enable)"
+    );
+    ({ data, error } = await supabaseAdmin()
+      .from("peeks")
+      .insert(basePayload)
+      .select("id")
+      .single());
+  }
   console.log("[createPeekAction] insert result:", { data, error });
   if (error) throw error;
+  if (!data) throw new Error("Insert succeeded but returned no row");
 
   revalidatePath("/admin/peeks");
   redirect(`/admin/peeks/${data.id}/edit`);
@@ -157,23 +174,32 @@ export async function updatePeekAction(formData: FormData) {
     : buildBasePeekSlug(mapSlug, name);
   const slug = await ensureUniquePeekSlug(base, id);
 
-  const { error } = await supabaseAdmin()
+  const basePayload = {
+    floor_id,
+    slug,
+    name,
+    x_pct,
+    y_pct,
+    difficulty,
+    risk,
+    tip,
+    success_rate,
+    published,
+    instructions: instructions.length ? instructions : null,
+  };
+  let { error } = await supabaseAdmin()
     .from("peeks")
-    .update({
-      floor_id,
-      slug,
-      name,
-      x_pct,
-      y_pct,
-      difficulty,
-      risk,
-      peek_type,
-      tip,
-      success_rate,
-      published,
-      instructions: instructions.length ? instructions : null,
-    })
+    .update({ ...basePayload, peek_type })
     .eq("id", id);
+  if (isMissingColumnError(error)) {
+    console.warn(
+      "[updatePeekAction] peek_type column missing — updating without it (run migration 013 to enable)"
+    );
+    ({ error } = await supabaseAdmin()
+      .from("peeks")
+      .update(basePayload)
+      .eq("id", id));
+  }
   if (error) throw error;
 
   revalidatePath("/admin/peeks");

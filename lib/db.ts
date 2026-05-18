@@ -35,13 +35,20 @@ export type Peek = {
   useful_pct: number;
   vote_count: number;
   success_rate: number;
-  peek_type: PeekType;
+  // Optional because migration 013 (peek_type column) is applied
+  // separately; renderers fall back to 'spawn' when this is absent.
+  peek_type?: PeekType | null;
   published: boolean;
   created_at: string;
 };
 
+// peek_type is intentionally NOT in the SELECT list. PostgREST hard-fails
+// the whole query with 42703 when an unknown column is requested, so
+// adding it here would 500 every public route on a Supabase project
+// that hasn't yet run db/migrations/013_peeks_type.sql. Once the
+// migration is applied in every environment, append `, peek_type` here.
 const PEEK_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, peek_type, published, created_at";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at";
 
 export async function getMaps(): Promise<Map[]> {
   const { data, error } = await supabasePublic()

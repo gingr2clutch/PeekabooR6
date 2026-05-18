@@ -82,7 +82,7 @@ export function FloorView({ map, floor, peeks }: Props) {
               xPct={peek.displayX}
               yPct={peek.displayY}
               number={i + 1}
-              peekType={peek.peek_type}
+              peekType={peek.peek_type ?? "spawn"}
               isNew={isPeekNew(peek.created_at)}
               isSelected={selectedId === peek.id}
               onSelect={() => toggleSelect(peek.id)}
@@ -127,7 +127,7 @@ export function FloorView({ map, floor, peeks }: Props) {
 
 function collectTypes(peeks: Positioned[]): Set<PeekType> {
   const out = new Set<PeekType>();
-  for (const p of peeks) out.add(p.peek_type);
+  for (const p of peeks) out.add(p.peek_type ?? "spawn");
   return out;
 }
 

@@ -76,8 +76,9 @@ export type ArticleData = {
   modifiedDate: string; // ISO
 };
 
+// peek_type is intentionally omitted — see comment on PEEK_COLUMNS in lib/db.ts.
 const PEEK_COLUMNS_WITH_TIME =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, peek_type, published, created_at, floors(id, slug, name)";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at, floors(id, slug, name)";
 
 // --- queries ---
 
