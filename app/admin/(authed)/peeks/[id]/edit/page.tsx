@@ -18,7 +18,7 @@ type EditablePeek = {
   y_pct: number;
   difficulty: number;
   risk: "low" | "medium" | "high";
-  peek_type?: "spawn" | "runout" | "mid_round" | null;
+  peek_type?: "spawn" | "runout" | "mid_game" | null;
   tip: string | null;
   success_rate: number;
   published: boolean;

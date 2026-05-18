@@ -28,9 +28,9 @@ function parseRisk(v: FormDataEntryValue | null): "low" | "medium" | "high" {
 
 function parsePeekType(
   v: FormDataEntryValue | null
-): "spawn" | "runout" | "mid_round" {
+): "spawn" | "runout" | "mid_game" {
   const s = String(v ?? "spawn");
-  return s === "runout" || s === "mid_round" ? s : "spawn";
+  return s === "runout" || s === "mid_game" ? s : "spawn";
 }
 
 function parseTip(v: FormDataEntryValue | null): string | null {

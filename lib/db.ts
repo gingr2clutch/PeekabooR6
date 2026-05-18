@@ -17,7 +17,7 @@ export type Floor = {
   birds_eye_url: string | null;
 };
 
-export type PeekType = "spawn" | "runout" | "mid_round";
+export type PeekType = "spawn" | "runout" | "mid_game";
 
 export type Peek = {
   id: string;
@@ -93,18 +93,35 @@ export async function getFloorBySlug(
   return data;
 }
 
+// Try with peek_type first so the floor view can colour pins by type.
+// Older Supabase projects that haven't run migration 013 still answer
+// the legacy column set — fall back to that and log a warning. Once the
+// migration is applied everywhere this fallback can be removed.
 export async function getPublishedPeeksForFloor(
   floorId: string
 ): Promise<Peek[]> {
-  const { data, error } = await supabasePublic()
+  const sb = supabasePublic();
+  const first = await sb
+    .from("peeks")
+    .select(`${PEEK_COLUMNS}, peek_type`)
+    .eq("floor_id", floorId)
+    .eq("published", true)
+    .order("success_rate", { ascending: false })
+    .order("created_at", { ascending: true });
+  if (!first.error) return (first.data ?? []) as Peek[];
+  if (first.error.code !== "42703") throw first.error;
+  console.warn(
+    "[getPublishedPeeksForFloor] peek_type column missing — falling back (run migration 013 to enable colour-coded pins)"
+  );
+  const second = await sb
     .from("peeks")
     .select(PEEK_COLUMNS)
     .eq("floor_id", floorId)
     .eq("published", true)
     .order("success_rate", { ascending: false })
     .order("created_at", { ascending: true });
-  if (error) throw error;
-  return data ?? [];
+  if (second.error) throw second.error;
+  return (second.data ?? []) as Peek[];
 }
 
 export type PeekWithContext = Peek & {

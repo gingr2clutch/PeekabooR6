@@ -120,10 +120,10 @@ export function PeekPin({
       <span
         className={`relative flex h-8 w-8 flex-col items-center justify-center rounded-full ${type.pinBg} ${type.pinText} ring-2 ring-white ${pinShadow} transition-all duration-150 group-hover:scale-[1.2] ${type.hoverShadow} md:h-9 md:w-9 ${selectedExtra}`}
       >
-        <span className="text-[8px] font-bold leading-none tracking-wide">
+        <span className="text-[9px] font-bold leading-none tracking-wide">
           {type.letter}
         </span>
-        <span className="mt-px text-[11px] font-bold leading-none md:text-xs">
+        <span className="mt-[1px] text-[11px] font-bold leading-none md:text-xs">
           {number}
         </span>
       </span>

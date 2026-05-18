@@ -6,7 +6,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PeekPin } from "@/components/PeekPin";
-import type { Floor, Map, Peek, PeekType } from "@/lib/db";
+import type { Floor, Map, Peek } from "@/lib/db";
 import { isPeekNew } from "@/lib/peek-recency";
 import { PEEK_TYPE_ORDER, peekTypeMeta } from "@/lib/peek-types";
 
@@ -93,7 +93,7 @@ export function FloorView({ map, floor, peeks }: Props) {
 
       {peeks.length > 0 && (
         <>
-          <PinLegend usedTypes={collectTypes(peeks)} />
+          <PinLegend />
           <p className="mt-2 text-center text-[13px] text-muted">
             Ranked by success rate
           </p>
@@ -125,34 +125,27 @@ export function FloorView({ map, floor, peeks }: Props) {
   );
 }
 
-function collectTypes(peeks: Positioned[]): Set<PeekType> {
-  const out = new Set<PeekType>();
-  for (const p of peeks) out.add(p.peek_type ?? "spawn");
-  return out;
-}
-
-function PinLegend({ usedTypes }: { usedTypes: Set<PeekType> }) {
-  // Order by the central config so the legend reads consistently no
-  // matter which subset of types is present on this floor. Showing only
-  // the types that actually appear keeps the legend honest.
-  const types = PEEK_TYPE_ORDER.filter((t) => usedTypes.has(t));
-  if (types.length === 0) return null;
+// Static colour + letter key. Shows all three types regardless of which
+// the current floor actually uses, so the meaning of each pin is always
+// visible. The letter mirrors what's drawn inside the pin so the key
+// reads as a direct legend, not just a colour swatch.
+function PinLegend() {
   return (
-    <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[12px] text-muted">
+    <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12px] text-muted">
       <span className="text-[11px] uppercase tracking-wide text-muted/80">
         Pin types
       </span>
-      {types.map((t) => {
+      {PEEK_TYPE_ORDER.map((t) => {
         const meta = peekTypeMeta(t);
         return (
           <span key={t} className="inline-flex items-center gap-1.5">
             <span
               aria-hidden
-              className={`inline-flex h-4 w-4 items-center justify-center rounded-full ${meta.pinBg} ${meta.pinText} ring-1 ring-white shadow-[0_0_0_1px_rgba(26,26,26,0.85)] text-[8px] font-bold`}
+              className={`inline-flex h-4 w-4 items-center justify-center rounded-full ${meta.pinBg} ${meta.pinText} text-[9px] font-bold shadow-[0_0_0_1px_rgba(26,26,26,0.85)]`}
             >
               {meta.letter}
             </span>
-            <span>{meta.short}</span>
+            <span>{meta.label}</span>
           </span>
         );
       })}
