@@ -62,6 +62,35 @@ h4 {
   }
 }
 
+/* Staggered entrance for floor-page peek pins. Each pin's wrapper sets
+   its own animation-delay so #1 lands first, #2 next, etc. */
+@keyframes peek-pin-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.peek-pin-in {
+  display: inline-block;
+  transform-origin: center;
+  animation: peek-pin-in 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .peek-pin-in {
+    animation: none;
+  }
+}
+
 /* Soft gold glow for the rank-1 card on the Popular page. */
 .peek-glow-gold {
   box-shadow: 0 4px 24px rgba(218, 165, 32, 0.16);

@@ -109,9 +109,14 @@ export function PeekPin({
     >
       <span className="absolute h-12 w-12 rounded-full" />
       <span
-        className={`relative flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white shadow-md ring-2 ring-white transition-all duration-150 group-hover:scale-[1.2] group-hover:shadow-[0_0_12px_rgba(255,106,0,0.6)] md:h-8 md:w-8 md:text-xs ${selectedScale}`}
+        className="peek-pin-in"
+        style={{ animationDelay: `${(number - 1) * 80}ms` }}
       >
-        {number}
+        <span
+          className={`relative flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white shadow-md ring-2 ring-white transition-all duration-150 group-hover:scale-[1.2] group-hover:shadow-[0_0_12px_rgba(255,106,0,0.6)] md:h-8 md:w-8 md:text-xs ${selectedScale}`}
+        >
+          {number}
+        </span>
       </span>
       {/* Floating tooltip — desktop hover only. Hidden on mobile so we
           rely on the fixed detail card surfaced by FloorView. */}
