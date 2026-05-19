@@ -110,7 +110,7 @@ export function PeekPin({
       <span className="absolute h-12 w-12 rounded-full" />
       <span
         className="peek-pin-in"
-        style={{ animationDelay: `${(number - 1) * 80}ms` }}
+        style={{ animationDelay: `${(number - 1) * 100}ms` }}
       >
         <span
           className={`relative flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white shadow-md ring-2 ring-white transition-all duration-150 group-hover:scale-[1.2] group-hover:shadow-[0_0_12px_rgba(255,106,0,0.6)] md:h-8 md:w-8 md:text-xs ${selectedScale}`}
