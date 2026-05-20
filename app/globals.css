@@ -68,6 +68,10 @@ h4 {
   0% {
     opacity: 0;
     transform: translateY(-8px) scale(0.6);
+    filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+  }
+  50% {
+    filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
   }
   60% {
     opacity: 1;
@@ -80,12 +84,14 @@ h4 {
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+    filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.18));
   }
 }
 
 .peek-pin-in {
   display: inline-block;
   transform-origin: center;
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.18));
   animation: peek-pin-in 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
