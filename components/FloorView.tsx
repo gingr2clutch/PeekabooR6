@@ -168,7 +168,7 @@ function SelectedPeekCard({
       <div className="flex items-start gap-3">
         <span
           aria-hidden
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold text-white"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold text-white ring-4 ring-brand/20"
         >
           {rank}
         </span>
@@ -189,22 +189,22 @@ function SelectedPeekCard({
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-        <Stat
-          label="Success"
-          value={
-            <>
-              <AnimatedNumber value={peek.success_rate} />%
-            </>
-          }
-          highlight
-        />
-        <Stat label="Difficulty" value={`${peek.difficulty}/5`} />
-        <Stat label="Risk" value={peek.risk} capitalize />
+        <StatTile label="Success">
+          <span className="text-base font-bold text-brand">
+            <AnimatedNumber value={peek.success_rate} />%
+          </span>
+        </StatTile>
+        <StatTile label="Difficulty">
+          <DifficultyDots level={peek.difficulty} />
+        </StatTile>
+        <StatTile label="Risk">
+          <RiskIndicator level={peek.risk} />
+        </StatTile>
       </div>
 
       <Link
         href={`/peeks/${peek.slug}`}
-        className="mt-3 inline-flex w-full items-center justify-center rounded-btn bg-ink px-3 py-2 text-sm font-medium text-white transition-colors duration-150 ease-out hover:bg-brand active:scale-[0.99]"
+        className="mt-3 inline-flex w-full items-center justify-center rounded-btn bg-brand px-3 py-2 text-sm font-semibold text-white transition-colors duration-150 ease-out hover:bg-brand/90 active:scale-[0.99]"
       >
         View full peek →
       </Link>
@@ -250,29 +250,58 @@ function AnimatedNumber({
   return <>{current}</>;
 }
 
-function Stat({
+function StatTile({
   label,
-  value,
-  highlight,
-  capitalize,
+  children,
 }: {
   label: string;
-  value: React.ReactNode;
-  highlight?: boolean;
-  capitalize?: boolean;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-btn border border-border bg-bg px-2 py-2">
+    <div className="flex flex-col items-center justify-between rounded-btn border border-border bg-bg px-2 py-2">
       <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-muted">
         {label}
       </div>
-      <div
-        className={`mt-0.5 text-sm font-semibold ${
-          highlight ? "text-brand" : "text-ink"
-        } ${capitalize ? "capitalize" : ""}`}
-      >
-        {value}
-      </div>
+      <div className="mt-1 flex h-5 items-center justify-center">{children}</div>
     </div>
+  );
+}
+
+function DifficultyDots({ level }: { level: number }) {
+  const total = 5;
+  const filled = Math.max(0, Math.min(total, Math.round(level)));
+  return (
+    <div
+      className="flex items-center gap-1"
+      role="img"
+      aria-label={`Difficulty ${filled} out of ${total}`}
+    >
+      {Array.from({ length: total }).map((_, i) => (
+        <span
+          key={i}
+          aria-hidden
+          className={
+            i < filled
+              ? "h-1.5 w-1.5 rounded-full bg-ink/80"
+              : "h-1.5 w-1.5 rounded-full border border-border bg-transparent"
+          }
+        />
+      ))}
+    </div>
+  );
+}
+
+function RiskIndicator({ level }: { level: "low" | "medium" | "high" }) {
+  const dotCls =
+    level === "low"
+      ? "bg-emerald-500"
+      : level === "high"
+        ? "bg-rose-500"
+        : "bg-amber-500";
+  return (
+    <span className="inline-flex items-center gap-1.5 text-sm font-semibold capitalize text-ink">
+      <span aria-hidden className={`h-2 w-2 rounded-full ${dotCls}`} />
+      {level}
+    </span>
   );
 }
