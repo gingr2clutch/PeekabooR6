@@ -14,11 +14,11 @@ export function Wordmark({ href = "/", showText = false }: Props) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/favicon.svg"
+        src="/logo.svg"
         alt=""
-        width={32}
-        height={32}
-        className="h-7 w-7 md:h-8 md:w-8"
+        width={36}
+        height={36}
+        className="h-8 w-8 md:h-9 md:w-9"
       />
       {showText && (
         <span>
