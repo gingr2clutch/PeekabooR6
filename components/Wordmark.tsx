@@ -14,7 +14,7 @@ export function Wordmark({ href = "/", showText = false }: Props) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/logo.svg"
+        src="/logo.svg?v=2"
         alt=""
         width={36}
         height={36}
