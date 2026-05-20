@@ -179,28 +179,73 @@ h4 {
   }
 }
 
-/* Quick tumble for the dice icon on the Random Peek button. */
-@keyframes peek-dice-tumble {
-  0% {
-    transform: rotate(0deg) scale(1);
+/* Random Peek button — filled brand CTA on map landing page. Three layers
+   of motion on the dice icon (idle wobble, hover tumble, tap spin) plus a
+   subtle scale on the button itself for hover/press. */
+.peek-rp-btn {
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+              background-color 150ms ease-out;
+}
+
+.peek-rp-btn-dice {
+  transform-origin: center;
+  animation: peek-rp-idle-wobble 10s ease-in-out infinite;
+}
+
+/* Idle wobble — dice rests at 0° for ~5s, then a brief 600ms shake, then
+   ~4.4s of rest before the next cycle. Wobble lives mid-keyframe so when
+   the animation restarts (e.g. after un-hover) the user gets fresh rest
+   time, not an immediate shake. */
+@keyframes peek-rp-idle-wobble {
+  0%, 50% { transform: rotate(0deg); }
+  51% { transform: rotate(-10deg); }
+  53% { transform: rotate(10deg); }
+  55% { transform: rotate(-6deg); }
+  56%, 100% { transform: rotate(0deg); }
+}
+
+/* Hover only on devices with a real hover state. Desktop gets a smooth
+   one-shot tumble and a small button scale-up. */
+@media (hover: hover) {
+  .peek-rp-btn:hover {
+    transform: scale(1.02);
   }
-  30% {
-    transform: rotate(180deg) scale(1.18);
-  }
-  65% {
-    transform: rotate(540deg) scale(0.94);
-  }
-  100% {
-    transform: rotate(720deg) scale(1);
+  .peek-rp-btn:hover .peek-rp-btn-dice {
+    animation: peek-rp-hover-tumble 500ms ease-in-out;
   }
 }
-.peek-dice-tumble {
-  animation: peek-dice-tumble 350ms cubic-bezier(0.42, 0.04, 0.28, 1.18);
-  transform-origin: center;
+
+@keyframes peek-rp-hover-tumble {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Press feedback: button scales down briefly while pointer is down. */
+.peek-rp-btn:active {
+  transform: scale(0.96);
+}
+
+/* Tap spin — class added via ref on click. Declared after the hover rule
+   so it wins on equal specificity if both apply during the click window. */
+.peek-rp-btn-dice.peek-rp-tap-spin {
+  animation: peek-rp-tap-spin 400ms cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+@keyframes peek-rp-tap-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(720deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .peek-dice-tumble {
+  .peek-rp-btn,
+  .peek-rp-btn:hover,
+  .peek-rp-btn:active {
+    transform: none;
+    transition: none;
+  }
+  .peek-rp-btn-dice,
+  .peek-rp-btn:hover .peek-rp-btn-dice,
+  .peek-rp-btn-dice.peek-rp-tap-spin {
     animation: none;
   }
 }
