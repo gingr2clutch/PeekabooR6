@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Link2, Share2, X } from "lucide-react";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PeekPin } from "@/components/PeekPin";
 import type { Floor, Map, Peek } from "@/lib/db";
@@ -127,6 +127,7 @@ export function FloorView({ map, floor, peeks }: Props) {
               key={displayedSelected.id}
               peek={displayedSelected}
               rank={displayedSelectedIndex + 1}
+              mapName={map.name}
               floorName={floor.name}
               onClose={deselect}
               isClosing={panelClosing}
@@ -148,20 +149,23 @@ export function FloorView({ map, floor, peeks }: Props) {
 function SelectedPeekCard({
   peek,
   rank,
+  mapName,
   floorName,
   onClose,
   isClosing,
 }: {
   peek: Positioned;
   rank: number;
+  mapName: string;
   floorName: string;
   onClose: () => void;
   isClosing: boolean;
 }) {
   const animCls = isClosing ? "peek-card-out" : "peek-card-in";
+  const shareTitle = `${peek.name} · ${mapName} ${floorName}`;
   return (
     <div
-      className={`rounded-card border border-border bg-card p-4 shadow-sm ${animCls}`}
+      className={`rounded-card border border-border bg-card p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)] ${animCls}`}
       role="region"
       aria-label="Selected peek details"
     >
@@ -208,8 +212,130 @@ function SelectedPeekCard({
       >
         View full peek →
       </Link>
+
+      <ShareCopyRow slug={peek.slug} title={shareTitle} />
     </div>
   );
+}
+
+// Sibling pair of subtle buttons under the primary CTA. Share triggers the
+// native sheet on supporting browsers, otherwise falls back to clipboard.
+// Copy link always copies. Both flash "Copied ✓" on success — width is
+// stable because the grid sets each cell to 50%.
+function ShareCopyRow({ slug, title }: { slug: string; title: string }) {
+  const [shareCopied, setShareCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const shareTimerRef = useRef<number | null>(null);
+  const linkTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (shareTimerRef.current) window.clearTimeout(shareTimerRef.current);
+      if (linkTimerRef.current) window.clearTimeout(linkTimerRef.current);
+    };
+  }, []);
+
+  function getUrl(): string {
+    const base = typeof window !== "undefined" ? window.location.origin : "";
+    return `${base}/peeks/${slug}`;
+  }
+
+  function flashShare() {
+    setShareCopied(true);
+    if (shareTimerRef.current) window.clearTimeout(shareTimerRef.current);
+    shareTimerRef.current = window.setTimeout(() => {
+      setShareCopied(false);
+      shareTimerRef.current = null;
+    }, 1500);
+  }
+
+  function flashLink() {
+    setLinkCopied(true);
+    if (linkTimerRef.current) window.clearTimeout(linkTimerRef.current);
+    linkTimerRef.current = window.setTimeout(() => {
+      setLinkCopied(false);
+      linkTimerRef.current = null;
+    }, 1500);
+  }
+
+  async function handleShare() {
+    const url = getUrl();
+    if (
+      typeof navigator !== "undefined" &&
+      typeof navigator.share === "function"
+    ) {
+      try {
+        await navigator.share({ title, url });
+        return;
+      } catch {
+        // User cancelled or share failed — fall through to clipboard.
+      }
+    }
+    if (await copyToClipboard(url)) flashShare();
+  }
+
+  async function handleCopy() {
+    if (await copyToClipboard(getUrl())) flashLink();
+  }
+
+  const btnCls =
+    "inline-flex h-9 items-center justify-center gap-1.5 rounded-btn border border-border bg-card px-3 text-sm font-medium text-ink transition-colors hover:border-brand hover:text-brand active:scale-[0.99]";
+
+  return (
+    <div className="mt-2 grid grid-cols-2 gap-2">
+      <button
+        type="button"
+        onClick={handleShare}
+        aria-label="Share this peek"
+        className={btnCls}
+      >
+        <Share2 size={14} strokeWidth={2} aria-hidden />
+        <span>{shareCopied ? "Copied \u2713" : "Share"}</span>
+      </button>
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label="Copy peek link"
+        className={btnCls}
+      >
+        <Link2 size={14} strokeWidth={2} aria-hidden />
+        <span>{linkCopied ? "Copied \u2713" : "Copy link"}</span>
+      </button>
+    </div>
+  );
+}
+
+// Clipboard with a legacy fallback for non-secure-context / older browsers.
+async function copyToClipboard(text: string): Promise<boolean> {
+  if (typeof navigator === "undefined") return false;
+  try {
+    if (
+      typeof window !== "undefined" &&
+      window.isSecureContext &&
+      navigator.clipboard
+    ) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Fall through to legacy path.
+  }
+  if (typeof document === "undefined") return false;
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "-1000px";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
 }
 
 // Counts a number up from 0 to its real value on mount via requestAnimationFrame.
