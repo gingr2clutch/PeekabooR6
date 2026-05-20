@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PeekPin } from "@/components/PeekPin";
@@ -23,6 +23,28 @@ type Props = {
 // hover tooltip and click-to-navigate behavior.
 export function FloorView({ map, floor, peeks }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Mirror of selectedId that lags by the panel exit-animation duration so
+  // the card can play its slide-out before unmounting. While `panelClosing`
+  // is true, the card is still rendered with peek-card-out applied.
+  const [displayedSelectedId, setDisplayedSelectedId] =
+    useState<string | null>(null);
+  const [panelClosing, setPanelClosing] = useState(false);
+
+  useEffect(() => {
+    if (selectedId) {
+      setDisplayedSelectedId(selectedId);
+      setPanelClosing(false);
+      return;
+    }
+    if (displayedSelectedId) {
+      setPanelClosing(true);
+      const t = window.setTimeout(() => {
+        setDisplayedSelectedId(null);
+        setPanelClosing(false);
+      }, 200);
+      return () => window.clearTimeout(t);
+    }
+  }, [selectedId, displayedSelectedId]);
 
   function toggleSelect(id: string) {
     setSelectedId((prev) => (prev === id ? null : id));
@@ -32,10 +54,11 @@ export function FloorView({ map, floor, peeks }: Props) {
     setSelectedId(null);
   }
 
-  const selectedIndex = selectedId
-    ? peeks.findIndex((p) => p.id === selectedId)
+  const displayedSelectedIndex = displayedSelectedId
+    ? peeks.findIndex((p) => p.id === displayedSelectedId)
     : -1;
-  const selected = selectedIndex >= 0 ? peeks[selectedIndex] : null;
+  const displayedSelected =
+    displayedSelectedIndex >= 0 ? peeks[displayedSelectedIndex] : null;
 
   return (
     <>
@@ -99,12 +122,14 @@ export function FloorView({ map, floor, peeks }: Props) {
           and z-stacking issues entirely on the smallest screens. */}
       {peeks.length > 0 && (
         <div className="mt-4 md:hidden">
-          {selected ? (
+          {displayedSelected ? (
             <SelectedPeekCard
-              peek={selected}
-              rank={selectedIndex + 1}
+              key={displayedSelected.id}
+              peek={displayedSelected}
+              rank={displayedSelectedIndex + 1}
               floorName={floor.name}
               onClose={deselect}
+              isClosing={panelClosing}
             />
           ) : (
             <p
@@ -125,15 +150,18 @@ function SelectedPeekCard({
   rank,
   floorName,
   onClose,
+  isClosing,
 }: {
   peek: Positioned;
   rank: number;
   floorName: string;
   onClose: () => void;
+  isClosing: boolean;
 }) {
+  const animCls = isClosing ? "peek-card-out" : "peek-card-in";
   return (
     <div
-      className="rounded-card border border-border bg-card p-4 shadow-sm"
+      className={`rounded-card border border-border bg-card p-4 shadow-sm ${animCls}`}
       role="region"
       aria-label="Selected peek details"
     >
@@ -161,7 +189,15 @@ function SelectedPeekCard({
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-        <Stat label="Success" value={`${peek.success_rate}%`} highlight />
+        <Stat
+          label="Success"
+          value={
+            <>
+              <AnimatedNumber value={peek.success_rate} />%
+            </>
+          }
+          highlight
+        />
         <Stat label="Difficulty" value={`${peek.difficulty}/5`} />
         <Stat label="Risk" value={peek.risk} capitalize />
       </div>
@@ -176,6 +212,44 @@ function SelectedPeekCard({
   );
 }
 
+// Counts a number up from 0 to its real value on mount via requestAnimationFrame.
+// Reduced-motion users skip the animation and see the final value immediately.
+function AnimatedNumber({
+  value,
+  durationMs = 400,
+}: {
+  value: number;
+  durationMs?: number;
+}) {
+  const [current, setCurrent] = useState(() => {
+    if (typeof window === "undefined") return value;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? value
+      : 0;
+  });
+
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setCurrent(value);
+      return;
+    }
+    let rafId = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / durationMs, 1);
+      // ease-out quadratic — fast start, settles on the value
+      const eased = 1 - (1 - t) * (1 - t);
+      setCurrent(Math.round(eased * value));
+      if (t < 1) rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [value, durationMs]);
+
+  return <>{current}</>;
+}
+
 function Stat({
   label,
   value,
@@ -183,7 +257,7 @@ function Stat({
   capitalize,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   highlight?: boolean;
   capitalize?: boolean;
 }) {

@@ -94,8 +94,11 @@ export function PeekPin({
   // Active or hovered pins float above siblings so their tooltip /
   // highlight ring is never covered by adjacent pins.
   const zCls = isSelected ? "z-40" : "z-20 hover:z-40";
-  const selectedScale = isSelected
-    ? "scale-[1.2] shadow-[0_0_12px_rgba(255,106,0,0.6)] ring-brand"
+  // Selected pins grow, pick up a brand-orange ring, and emit a soft glow.
+  // Transitions animate via .peek-pin-pressable so it eases in smoothly.
+  const ringCls = isSelected ? "ring-[3px] ring-brand" : "ring-2 ring-white";
+  const selectedStyle = isSelected
+    ? "scale-[1.2] shadow-[0_0_16px_rgba(255,106,0,0.55)]"
     : "";
 
   return (
@@ -113,7 +116,7 @@ export function PeekPin({
         style={{ animationDelay: `${(number - 1) * 100}ms` }}
       >
         <span
-          className={`relative flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white shadow-md ring-2 ring-white transition-all duration-150 group-hover:scale-[1.2] group-hover:shadow-[0_0_12px_rgba(255,106,0,0.6)] md:h-8 md:w-8 md:text-xs ${selectedScale}`}
+          className={`peek-pin-pressable relative flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white shadow-md ${ringCls} group-hover:scale-[1.2] group-hover:shadow-[0_0_12px_rgba(255,106,0,0.6)] group-active:scale-[0.92] md:h-8 md:w-8 md:text-xs ${selectedStyle}`}
         >
           {number}
         </span>

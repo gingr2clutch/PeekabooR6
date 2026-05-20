@@ -101,6 +101,53 @@ h4 {
   }
 }
 
+/* All pin state changes (hover, press, select) share the entrance spring
+   curve so the motion language stays consistent. */
+.peek-pin-pressable {
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Floor-page selected-pin detail card — springs up on open, slides out on
+   close, sharing the pin-entrance curve so panels feel like a continuation
+   of the tap. */
+@keyframes peek-card-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes peek-card-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+.peek-card-in {
+  animation: peek-card-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.peek-card-out {
+  animation: peek-card-out 200ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .peek-card-in,
+  .peek-card-out {
+    animation: none;
+  }
+}
+
 /* Soft gold glow for the rank-1 card on the Popular page. */
 .peek-glow-gold {
   box-shadow: 0 4px 24px rgba(218, 165, 32, 0.16);
