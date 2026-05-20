@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link2, Share2, X } from "lucide-react";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PeekPin } from "@/components/PeekPin";
@@ -30,6 +30,83 @@ export function FloorView({ map, floor, peeks }: Props) {
     useState<string | null>(null);
   const [panelClosing, setPanelClosing] = useState(false);
 
+  // Pin layout pass — runs client-side because it needs the rendered map
+  // dimensions to convert percent coords to pixels for collision avoidance
+  // and edge clamping. Stored coords on peeks are never mutated; this only
+  // overrides display positions.
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [adjustedPeeks, setAdjustedPeeks] = useState<Positioned[]>(peeks);
+
+  useLayoutEffect(() => {
+    const el = mapRef.current;
+    if (!el) return;
+
+    function recompute() {
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      if (w <= 0 || h <= 0) return;
+
+      // Pin diameter matches the visible-pin Tailwind classes
+      // (h-6 mobile, md:h-7 desktop). 4px minimum visual gap.
+      const desktop =
+        typeof window !== "undefined" &&
+        window.matchMedia("(min-width: 768px)").matches;
+      const pinPx = desktop ? 28 : 24;
+      const minDist = pinPx + 4;
+      const r = pinPx / 2;
+
+      const pts = peeks.map((p) => ({
+        peek: p,
+        x: (p.displayX / 100) * w,
+        y: (p.displayY / 100) * h,
+      }));
+
+      // Iterative repulsion — for each overlapping pair, push them
+      // apart along the line connecting their centres by the overlap
+      // amount. 5 passes is plenty for typical floors (<20 pins).
+      for (let iter = 0; iter < 5; iter++) {
+        let moved = false;
+        for (let i = 0; i < pts.length; i++) {
+          for (let j = i + 1; j < pts.length; j++) {
+            const dx = pts[j].x - pts[i].x;
+            const dy = pts[j].y - pts[i].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist >= minDist || dist < 0.001) continue;
+            const push = (minDist - dist) / 2;
+            const ux = dx / dist;
+            const uy = dy / dist;
+            pts[i].x -= ux * push;
+            pts[i].y -= uy * push;
+            pts[j].x += ux * push;
+            pts[j].y += uy * push;
+            moved = true;
+          }
+        }
+        if (!moved) break;
+      }
+
+      // Clamp so the full pin circle stays inside the map bounds.
+      const next: Positioned[] = pts.map(({ peek, x, y }) => {
+        const cx = Math.max(r, Math.min(w - r, x));
+        const cy = Math.max(r, Math.min(h - r, y));
+        return {
+          ...peek,
+          displayX: (cx / w) * 100,
+          displayY: (cy / h) * 100,
+        };
+      });
+      setAdjustedPeeks(next);
+    }
+
+    recompute();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(recompute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [peeks]);
+
   useEffect(() => {
     if (selectedId) {
       setDisplayedSelectedId(selectedId);
@@ -55,10 +132,10 @@ export function FloorView({ map, floor, peeks }: Props) {
   }
 
   const displayedSelectedIndex = displayedSelectedId
-    ? peeks.findIndex((p) => p.id === displayedSelectedId)
+    ? adjustedPeeks.findIndex((p) => p.id === displayedSelectedId)
     : -1;
   const displayedSelected =
-    displayedSelectedIndex >= 0 ? peeks[displayedSelectedIndex] : null;
+    displayedSelectedIndex >= 0 ? adjustedPeeks[displayedSelectedIndex] : null;
 
   return (
     <>
@@ -66,7 +143,7 @@ export function FloorView({ map, floor, peeks }: Props) {
           can extend beyond the visual bounds of the map without being
           clipped. The bordered/rounded image lives in a separate
           clipped sibling below it. */}
-      <div className="relative aspect-[16/10] w-full">
+      <div ref={mapRef} className="relative aspect-[16/10] w-full">
         <div className="absolute inset-0 overflow-hidden rounded-card border border-border bg-card">
           {floor.birds_eye_url ? (
             <>
@@ -96,7 +173,7 @@ export function FloorView({ map, floor, peeks }: Props) {
             if (e.target === e.currentTarget) deselect();
           }}
         >
-          {peeks.map((peek, i) => (
+          {adjustedPeeks.map((peek, i) => (
             <PeekPin
               key={peek.id}
               slug={peek.slug}
