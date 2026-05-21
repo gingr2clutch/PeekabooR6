@@ -217,7 +217,7 @@ export function SubmitPeekForm({ maps }: Props) {
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-brand"
             />
             <span>
-              I&apos;ll use #peekaboor6 if I post this clip on TikTok
+              I&apos;ll use/add #peekaboor6 if I post this clip on TikTok
             </span>
           </label>
           <label className="flex cursor-pointer items-start gap-2 text-sm text-ink">
@@ -233,12 +233,12 @@ export function SubmitPeekForm({ maps }: Props) {
           </label>
         </div>
         <a
-          href="https://www.tiktok.com/@peekaboor6"
+          href="https://www.tiktok.com/@peekaboo_r6"
           target="_blank"
           rel="noopener noreferrer"
           className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand/80"
         >
-          Follow @peekaboor6 on TikTok for new peeks →
+          Follow @peekaboo_r6 on TikTok for new peeks →
         </a>
       </section>
 
