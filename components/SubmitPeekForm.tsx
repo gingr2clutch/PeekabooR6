@@ -289,7 +289,7 @@ export function SubmitPeekForm({ maps }: Props) {
             if (clipUrlError) setClipUrlError(validateClipUrl(e.target.value));
           }}
           onBlur={(e) => setClipUrlError(validateClipUrl(e.target.value))}
-          placeholder="Paste a YouTube, Twitch, Medal, or Streamable link of the peek in action"
+          placeholder="Paste a TikTok, YouTube, Twitch, or Medal link of the peek in action"
           className={inputCls}
           aria-invalid={clipUrlError ? "true" : undefined}
         />
