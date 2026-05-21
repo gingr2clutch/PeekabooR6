@@ -41,6 +41,8 @@ export function SubmitPeekForm({ maps }: Props) {
   const [clipUrl, setClipUrl] = useState("");
   const [submitterName, setSubmitterName] = useState("");
   const [submitterEmail, setSubmitterEmail] = useState("");
+  const [agreeHashtag, setAgreeHashtag] = useState(false);
+  const [agreeQuality, setAgreeQuality] = useState(false);
   const [honeypot, setHoneypot] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -76,6 +78,8 @@ export function SubmitPeekForm({ maps }: Props) {
     setSubmitterName("");
     setSubmitterEmail("");
     setPinCoords(null);
+    setAgreeHashtag(false);
+    setAgreeQuality(false);
     setClipUrlError(null);
   }
 
@@ -93,6 +97,12 @@ export function SubmitPeekForm({ maps }: Props) {
     if (honeypot.trim() !== "") {
       setStatus("success");
       resetAfterSuccess();
+      return;
+    }
+
+    if (!agreeHashtag || !agreeQuality) {
+      setErrorMsg("Please confirm the submission guidelines.");
+      setStatus("error");
       return;
     }
 
@@ -177,7 +187,8 @@ export function SubmitPeekForm({ maps }: Props) {
     "w-full rounded-btn border border-border bg-card px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-brand";
   const labelCls = "block text-xs text-muted";
   const submitting = status === "submitting";
-  const submitDisabled = submitting || !pinCoords;
+  const submitDisabled =
+    submitting || !pinCoords || !agreeHashtag || !agreeQuality;
 
   return (
     <form
@@ -194,6 +205,42 @@ export function SubmitPeekForm({ maps }: Props) {
         aria-hidden
         style={{ display: "none" }}
       />
+
+      <section className="rounded-btn border border-brand/30 bg-brand/[0.05] p-4">
+        <h2 className="text-sm font-semibold text-ink">Before you submit</h2>
+        <div className="mt-3 space-y-2">
+          <label className="flex cursor-pointer items-start gap-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={agreeHashtag}
+              onChange={(e) => setAgreeHashtag(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-brand"
+            />
+            <span>
+              I&apos;ll use #peekaboor6 if I post this clip on TikTok
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={agreeQuality}
+              onChange={(e) => setAgreeQuality(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-brand"
+            />
+            <span>
+              My clip is high quality — clear gameplay, peek angle visible
+            </span>
+          </label>
+        </div>
+        <a
+          href="https://www.tiktok.com/@peekaboor6"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand/80"
+        >
+          Follow @peekaboor6 on TikTok for new peeks →
+        </a>
+      </section>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className={labelCls}>
