@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/react";
+import Script from "next/script";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 
@@ -37,7 +37,12 @@ export default function RootLayout({
       <body className="flex min-h-screen flex-col bg-bg text-ink">
         <div className="flex-1">{children}</div>
         <SiteFooter />
-        <Analytics />
+        <Script
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "5dfe065169644aecb43f6b7794b7264e"}'
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
