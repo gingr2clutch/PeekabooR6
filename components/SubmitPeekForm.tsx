@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { MiniMapPicker } from "@/components/MiniMapPicker";
 import { supabasePublic } from "@/lib/supabase";
 
 type Floor = {
@@ -8,6 +9,7 @@ type Floor = {
   slug: string;
   name: string;
   display_order: number;
+  birds_eye_url: string | null;
 };
 type MapWithFloors = {
   id: string;
@@ -19,25 +21,46 @@ type MapWithFloors = {
 type Props = { maps: MapWithFloors[] };
 type Status = "idle" | "submitting" | "success" | "error";
 
+function isHttpUrl(s: string): boolean {
+  if (!s) return true; // empty is allowed
+  return /^https?:\/\//i.test(s.trim());
+}
+
 export function SubmitPeekForm({ maps }: Props) {
   const initialMap = maps[0]?.slug ?? "";
   const initialFloor = maps[0]?.floors[0]?.slug ?? "";
 
   const [mapSlug, setMapSlug] = useState(initialMap);
   const [floorSlug, setFloorSlug] = useState(initialFloor);
+  const [pinCoords, setPinCoords] = useState<{ x: number; y: number } | null>(
+    null
+  );
   const [locationDesc, setLocationDesc] = useState("");
   const [peekDesc, setPeekDesc] = useState("");
-  const [operatorSuggestions, setOperatorSuggestions] = useState("");
+  const [proTip, setProTip] = useState("");
+  const [clipUrl, setClipUrl] = useState("");
   const [submitterName, setSubmitterName] = useState("");
   const [submitterEmail, setSubmitterEmail] = useState("");
   const [honeypot, setHoneypot] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [clipUrlError, setClipUrlError] = useState<string | null>(null);
 
   const selectedMap = useMemo(
     () => maps.find((m) => m.slug === mapSlug) ?? null,
     [maps, mapSlug]
   );
+  const selectedFloor = useMemo(
+    () => selectedMap?.floors.find((f) => f.slug === floorSlug) ?? null,
+    [selectedMap, floorSlug]
+  );
+
+  // Pin position belongs to a specific floor — clear it when the user
+  // changes floor (which also fires when changing map, since the map
+  // change picks a new default floor).
+  useEffect(() => {
+    setPinCoords(null);
+  }, [floorSlug]);
 
   function onMapChange(slug: string) {
     setMapSlug(slug);
@@ -45,12 +68,21 @@ export function SubmitPeekForm({ maps }: Props) {
     setFloorSlug(next?.floors[0]?.slug ?? "");
   }
 
-  function resetTextFields() {
+  function resetAfterSuccess() {
     setLocationDesc("");
     setPeekDesc("");
-    setOperatorSuggestions("");
+    setProTip("");
+    setClipUrl("");
     setSubmitterName("");
     setSubmitterEmail("");
+    setPinCoords(null);
+    setClipUrlError(null);
+  }
+
+  function validateClipUrl(v: string): string | null {
+    if (!v.trim()) return null;
+    if (!isHttpUrl(v)) return "Link must start with http:// or https://";
+    return null;
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -60,30 +92,43 @@ export function SubmitPeekForm({ maps }: Props) {
     // Honeypot: bots fill all fields. Pretend success and skip the write.
     if (honeypot.trim() !== "") {
       setStatus("success");
-      resetTextFields();
+      resetAfterSuccess();
       return;
     }
 
-    if (
-      !mapSlug ||
-      !floorSlug ||
-      !locationDesc.trim() ||
-      !peekDesc.trim()
-    ) {
+    if (!mapSlug || !floorSlug || !peekDesc.trim()) {
       setErrorMsg("Please fill in the required fields.");
       setStatus("error");
       return;
     }
 
+    if (!pinCoords) {
+      setErrorMsg("Tap the map to drop a pin where the peek is.");
+      setStatus("error");
+      return;
+    }
+
+    const clipErr = validateClipUrl(clipUrl);
+    if (clipErr) {
+      setClipUrlError(clipErr);
+      setStatus("error");
+      setErrorMsg(null);
+      return;
+    }
+
     setStatus("submitting");
     setErrorMsg(null);
+    setClipUrlError(null);
 
     const payload = {
       map_slug: mapSlug,
       floor_slug: floorSlug,
-      location_description: locationDesc.trim(),
+      pin_x: pinCoords.x,
+      pin_y: pinCoords.y,
+      location_description: locationDesc.trim() || null,
       peek_description: peekDesc.trim(),
-      operator_suggestions: operatorSuggestions.trim() || null,
+      pro_tip: proTip.trim() || null,
+      clip_url: clipUrl.trim() || null,
       submitter_name: submitterName.trim() || null,
       submitter_email: submitterEmail.trim() || null,
       status: "pending",
@@ -101,7 +146,7 @@ export function SubmitPeekForm({ maps }: Props) {
     }
 
     setStatus("success");
-    resetTextFields();
+    resetAfterSuccess();
   }
 
   if (status === "success") {
@@ -132,13 +177,13 @@ export function SubmitPeekForm({ maps }: Props) {
     "w-full rounded-btn border border-border bg-card px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-brand";
   const labelCls = "block text-xs text-muted";
   const submitting = status === "submitting";
+  const submitDisabled = submitting || !pinCoords;
 
   return (
     <form
       onSubmit={handleSubmit}
       className="space-y-5 rounded-card border border-border bg-card p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]"
     >
-      {/* Honeypot — hidden from real users, kept in the tab order's blind spot. */}
       <input
         type="text"
         name="honeypot"
@@ -189,14 +234,24 @@ export function SubmitPeekForm({ maps }: Props) {
         </label>
       </div>
 
+      <div>
+        <span className={`${labelCls} mb-1`}>Where on the map? *</span>
+        <MiniMapPicker
+          mapSlug={mapSlug || null}
+          floorSlug={floorSlug || null}
+          birdsEyeUrl={selectedFloor?.birds_eye_url ?? null}
+          value={pinCoords}
+          onChange={setPinCoords}
+        />
+      </div>
+
       <label className={labelCls}>
-        <span className="mb-1 block">Location description *</span>
+        <span className="mb-1 block">Location description</span>
         <input
           type="text"
-          required
           value={locationDesc}
           onChange={(e) => setLocationDesc(e.target.value)}
-          placeholder="e.g. second-floor balcony, north corner"
+          placeholder="Extra detail (optional) — e.g. crouched behind the railing, not standing"
           className={inputCls}
         />
       </label>
@@ -214,14 +269,35 @@ export function SubmitPeekForm({ maps }: Props) {
       </label>
 
       <label className={labelCls}>
-        <span className="mb-1 block">Operator suggestions</span>
-        <input
-          type="text"
-          value={operatorSuggestions}
-          onChange={(e) => setOperatorSuggestions(e.target.value)}
-          placeholder="e.g. Jackal, Ying"
-          className={inputCls}
+        <span className="mb-1 block">Pro tip</span>
+        <textarea
+          rows={2}
+          value={proTip}
+          onChange={(e) => setProTip(e.target.value)}
+          placeholder="Any extra tip — timing, angle, common mistakes to avoid"
+          className={`${inputCls} resize-y`}
         />
+      </label>
+
+      <label className={labelCls}>
+        <span className="mb-1 block">Clip / video</span>
+        <input
+          type="url"
+          value={clipUrl}
+          onChange={(e) => {
+            setClipUrl(e.target.value);
+            if (clipUrlError) setClipUrlError(validateClipUrl(e.target.value));
+          }}
+          onBlur={(e) => setClipUrlError(validateClipUrl(e.target.value))}
+          placeholder="Paste a YouTube, Twitch, Medal, or Streamable link of the peek in action"
+          className={inputCls}
+          aria-invalid={clipUrlError ? "true" : undefined}
+        />
+        {clipUrlError && (
+          <span className="mt-1 block text-[11px] text-red-600">
+            {clipUrlError}
+          </span>
+        )}
       </label>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -258,7 +334,7 @@ export function SubmitPeekForm({ maps }: Props) {
         <p className="text-[11px] text-muted">* required</p>
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitDisabled}
           className="inline-flex items-center justify-center rounded-btn bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? "Submitting…" : "Submit peek"}

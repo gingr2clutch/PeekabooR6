@@ -16,6 +16,7 @@ type FloorRow = {
   slug: string;
   name: string;
   display_order: number;
+  birds_eye_url: string | null;
 };
 type MapWithFloors = {
   id: string;
@@ -27,7 +28,9 @@ type MapWithFloors = {
 async function loadMapsWithFloors(): Promise<MapWithFloors[]> {
   const { data, error } = await supabasePublic()
     .from("maps")
-    .select("id, slug, name, floors(id, slug, name, display_order)")
+    .select(
+      "id, slug, name, floors(id, slug, name, display_order, birds_eye_url)"
+    )
     .eq("published", true)
     .order("name", { ascending: true });
   if (error) throw error;
