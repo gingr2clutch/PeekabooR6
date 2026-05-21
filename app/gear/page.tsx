@@ -1,19 +1,34 @@
 import type { Metadata } from "next";
-import { ExternalLink } from "lucide-react";
+import {
+  ExternalLink,
+  Gamepad2,
+  Headphones,
+  Keyboard,
+  type LucideIcon,
+  Mouse,
+  Wrench,
+} from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 
 export const metadata: Metadata = {
   title: "Gear we recommend",
-  description:
-    "Hand-picked gear for R6 players — controllers, peripherals, and accessories worth checking out.",
+  description: "What we use. What we recommend.",
 };
 
 type Product = {
-  category: string;
+  category: keyof typeof CATEGORY_ICONS;
   name: string;
   description: string;
   url: string;
 };
+
+const CATEGORY_ICONS = {
+  Mouse: Mouse,
+  Keyboard: Keyboard,
+  Headset: Headphones,
+  Controller: Gamepad2,
+  Accessory: Wrench,
+} satisfies Record<string, LucideIcon>;
 
 const PRODUCTS: Product[] = [
   {
@@ -63,12 +78,10 @@ export default function GearPage() {
             Gear we recommend
           </h1>
           <p className="mt-2 text-muted">
-            Hand-picked gear for R6 players — controllers, peripherals, and
-            accessories worth checking out.
+            What we use. What we recommend.
           </p>
-          <p className="mt-3 text-xs text-muted">
+          <p className="mt-3 text-[13px] italic text-muted/80">
             As an Amazon Associate, peekabooR6 earns from qualifying purchases.
-            These links may earn us a commission at no extra cost to you.
           </p>
         </div>
 
@@ -83,9 +96,11 @@ export default function GearPage() {
 }
 
 function ProductCard({ product }: { product: Product }) {
+  const Icon = CATEGORY_ICONS[product.category];
   return (
-    <article className="flex flex-col rounded-card border border-border bg-card p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
-      <span className="inline-flex w-fit items-center rounded-btn bg-brand/[0.08] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-brand">
+    <article className="gear-card flex flex-col rounded-card border border-border border-t-2 border-t-brand bg-card p-5">
+      <span className="inline-flex w-fit items-center gap-1 rounded-btn bg-brand/[0.08] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-brand">
+        <Icon size={14} strokeWidth={2.2} aria-hidden />
         {product.category}
       </span>
       <h3 className="mt-3 text-base font-semibold leading-snug text-ink">

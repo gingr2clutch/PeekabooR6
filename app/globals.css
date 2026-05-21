@@ -148,6 +148,23 @@ h4 {
   }
 }
 
+/* Gear-page product cards — light resting shadow plus a desktop-only
+   hover lift. Touch devices don't get a sticky hover state because the
+   :hover rule lives inside @media (hover: hover). */
+.gear-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+@media (hover: hover) {
+  .gear-card {
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+  .gear-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
 /* Soft gold glow for the rank-1 card on the Popular page. */
 .peek-glow-gold {
   box-shadow: 0 4px 24px rgba(218, 165, 32, 0.16);
