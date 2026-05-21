@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { BookOpen, Flame, Map, Menu, Sparkles, X } from "lucide-react";
+import { BookOpen, Flame, Map, Menu, Plus, Sparkles, X } from "lucide-react";
 import { Wordmark } from "./Wordmark";
 
 const ICON_SIZE = 16;
@@ -20,6 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/popular", label: "Popular", Icon: Flame },
   { href: "/whats-new", label: "New", Icon: Sparkles },
   { href: "/blog", label: "Guides", Icon: BookOpen },
+  { href: "/submit", label: "Submit a peek", Icon: Plus },
 ];
 
 const desktopLinkCls =
