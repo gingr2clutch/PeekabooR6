@@ -217,7 +217,7 @@ export function SubmitPeekForm({ maps }: Props) {
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-brand"
             />
             <span>
-              I&apos;ll use/add #peekaboor6 if I post this clip on TikTok
+              I&apos;ll use/add #peekaboor6 if this clip is on TikTok
             </span>
           </label>
           <label className="flex cursor-pointer items-start gap-2 text-sm text-ink">
