@@ -182,6 +182,26 @@ const RISK_LABELS: Record<BlogPeek["risk"], string> = {
   high: "high-risk",
 };
 
+// Per-map opening sentence keyed by Supabase map.slug. Each guide leads
+// with map-specific colour instead of the boilerplate "defining maps for
+// spawn-side gunfights" line, which read as duplicate content across all
+// the auto-generated /blog/best-spawn-peeks-<map> pages. Maps not listed
+// here fall back to the original generic sentence inside renderIntro.
+const MAP_INTROS: Record<string, string> = {
+  oregon:
+    "Oregon's wooden compound and iconic tower create steep vertical spawn-peek angles you won't find on any other Siege map.",
+  chalet:
+    "Chalet's sprawling alpine exterior, with its balconies and panoramic windows, gives Defenders some of the longest spawn-peek sightlines in the game.",
+  clubhouse:
+    "Clubhouse pairs an open construction-site spawn with multi-story biker compound windows, making nearly every exterior angle a potential pre-round duel.",
+  border:
+    "Border's flat, exposed compound leaves Attackers little cover between the van and the building — slow rotations get punished fast here.",
+  "nighthaven-labs":
+    "Nighthaven Labs' modern glass-and-concrete exterior is still being mapped by the community, and the spawn-peek meta here is evolving fast.",
+  consulate:
+    "Consulate sits surrounded on three sides by Attacker spawns, turning nearly every exterior window into a viable spawn-peek position.",
+};
+
 function topPeekFloorName(peek: BlogPeek): string {
   return peek.floor.name;
 }
@@ -197,7 +217,11 @@ function renderIntro(
   const floorCount = floors.length;
   const lowMed = countByRisk.low + countByRisk.medium;
 
-  const first = `${map.name} is one of Rainbow Six Siege's defining maps for spawn-side gunfights. ${peekCount} community-tested peek angles span its ${floorCount} ${floorCount === 1 ? "floor" : "floors"}, and they continue to determine who wins the opening seconds of a round. Defenders who learn even one of these can tilt round one in their favor; attackers who don't recognize the angles get punished crossing the spawn perimeter before they ever reach the building.`;
+  const lead =
+    MAP_INTROS[map.slug] ??
+    `${map.name} is one of Rainbow Six Siege's defining maps for spawn-side gunfights.`;
+
+  const first = `${lead} ${peekCount} community-tested peek angles span its ${floorCount} ${floorCount === 1 ? "floor" : "floors"}, and they continue to determine who wins the opening seconds of a round. Defenders who learn even one of these can tilt round one in their favor; attackers who don't recognize the angles get punished crossing the spawn perimeter before they ever reach the building.`;
 
   const second = `This guide breaks down every viable spawn peek on ${map.name}, ranked by community success rate. ${top.name} leads the list at ${top.success_rate}% — a ${RISK_LABELS[top.risk]} play out of ${topPeekFloorName(top)} that has paid off consistently for players willing to hold the angle. ${countByRisk.high} of the documented angles fall into the high-risk bracket and demand precise timing, while the remaining ${lowMed} are reliable round-one openers. Whether you're learning ${map.name} from the attacking side or refining your defender setup, the breakdown below maps every peek to its floor, its difficulty, and the success rate the community has tracked.`;
 
