@@ -75,6 +75,8 @@ function FeedItem({ peek, priority }: { peek: FeedRow; priority: boolean }) {
   const floor = peek.floors!;
   const map = floor.maps;
   const isNew = isPeekNew(peek.created_at);
+  const hasPin =
+    typeof peek.x_pct === "number" && typeof peek.y_pct === "number";
 
   return (
     <li>
@@ -98,11 +100,36 @@ function FeedItem({ peek, priority }: { peek: FeedRow; priority: boolean }) {
                 className="relative h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
               />
             </>
+          ) : floor.birds_eye_url ? (
+            // Auto-generated mini-map preview: floor overhead with a pin
+            // dot at the peek's stored x_pct / y_pct. Visually rhymes
+            // with the live floor page; no manual screenshot needed.
+            <>
+              <Image
+                src={floor.birds_eye_url}
+                alt=""
+                width={256}
+                height={160}
+                priority={priority}
+                loading={priority ? "eager" : "lazy"}
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+              />
+              {/* Subtle darken so the orange pin reads against
+                  any floor texture. */}
+              <div aria-hidden className="absolute inset-0 bg-ink/15" />
+              {hasPin && (
+                <span
+                  aria-hidden
+                  style={{
+                    left: `${peek.x_pct}%`,
+                    top: `${peek.y_pct}%`,
+                  }}
+                  className="absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand shadow-md ring-2 ring-white"
+                />
+              )}
+            </>
           ) : (
-            // Intentional empty state for peeks without a poster yet — a
-            // tinted card with a small camera mark. Reads as "no preview
-            // yet" rather than broken. Avoids the perf disaster of using
-            // 40 MB MP4/MOV files as thumbnails via preload.
+            // Final fallback when neither poster nor floor map exists.
             <div
               aria-hidden
               className="flex h-full w-full items-center justify-center bg-brand/[0.06]"
