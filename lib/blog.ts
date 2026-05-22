@@ -189,17 +189,17 @@ const RISK_LABELS: Record<BlogPeek["risk"], string> = {
 // here fall back to the original generic sentence inside renderIntro.
 const MAP_INTROS: Record<string, string> = {
   oregon:
-    "Oregon's wooden compound and iconic tower create steep vertical spawn-peek angles you won't find on any other Siege map.",
+    "Tower, dorms, and basement windows make Oregon a spawn-peek nightmare for Attackers. Almost every spawn has at least one angle on it.",
   chalet:
-    "Chalet's sprawling alpine exterior, with its balconies and panoramic windows, gives Defenders some of the longest spawn-peek sightlines in the game.",
+    "Chalet's main house has some of the longest spawn-peek sightlines in Siege. Defenders can hit every Attacker spawn from upstairs windows.",
   clubhouse:
-    "Clubhouse pairs an open construction-site spawn with multi-story biker compound windows, making nearly every exterior angle a potential pre-round duel.",
+    "Construction spawn is wide open and Defenders abuse it from garage, CCTV, and upstairs. Slow rotations get punished.",
   border:
-    "Border's flat, exposed compound leaves Attackers little cover between the van and the building — slow rotations get punished fast here.",
+    "One of the most exposed maps in the game. If you don't push out of spawn fast, you're getting picked from the building.",
   "nighthaven-labs":
-    "Nighthaven Labs' modern glass-and-concrete exterior is still being mapped by the community, and the spawn-peek meta here is evolving fast.",
+    "Newer map — the spawn-peek meta is still being figured out. Expect unconventional angles.",
   consulate:
-    "Consulate sits surrounded on three sides by Attacker spawns, turning nearly every exterior window into a viable spawn-peek position.",
+    "Attackers spawn on three sides and Defenders can hit every spawn from the building. Front, garage, and side are all spawn-peek hotspots.",
 };
 
 function topPeekFloorName(peek: BlogPeek): string {
