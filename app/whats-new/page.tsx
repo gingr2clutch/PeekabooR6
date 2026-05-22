@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { Camera } from "lucide-react";
 import { NewBadge } from "@/components/NewBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { supabasePublic } from "@/lib/supabase";
@@ -74,7 +75,6 @@ function FeedItem({ peek, priority }: { peek: FeedRow; priority: boolean }) {
   const floor = peek.floors!;
   const map = floor.maps;
   const isNew = isPeekNew(peek.created_at);
-  const hasMedia = !!peek.poster_url || !!peek.video_url;
 
   return (
     <li>
@@ -83,41 +83,37 @@ function FeedItem({ peek, priority }: { peek: FeedRow; priority: boolean }) {
         className="group flex items-center gap-4 overflow-hidden rounded-card border border-border bg-card p-3 transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-lg sm:gap-5 sm:p-4"
       >
         <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-inner bg-bg sm:h-20 sm:w-32">
-          {/* Shimmer skeleton behind the media. Stays animated until the
-              image/video paints over it (object-cover hides the shimmer
-              once loaded). No JS state needed. */}
-          {hasMedia && (
+          {peek.poster_url ? (
+            <>
+              {/* Shimmer behind the poster — covered as soon as the
+                  WebP decodes. */}
+              <div aria-hidden className="peek-shimmer absolute inset-0" />
+              <Image
+                src={peek.poster_url}
+                alt=""
+                width={256}
+                height={160}
+                priority={priority}
+                loading={priority ? "eager" : "lazy"}
+                className="relative h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+              />
+            </>
+          ) : (
+            // Intentional empty state for peeks without a poster yet — a
+            // tinted card with a small camera mark. Reads as "no preview
+            // yet" rather than broken. Avoids the perf disaster of using
+            // 40 MB MP4/MOV files as thumbnails via preload.
             <div
               aria-hidden
-              className="peek-shimmer absolute inset-0"
-            />
-          )}
-          {peek.poster_url ? (
-            <Image
-              src={peek.poster_url}
-              alt=""
-              width={256}
-              height={160}
-              priority={priority}
-              loading={priority ? "eager" : "lazy"}
-              className="relative h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-            />
-          ) : peek.video_url ? (
-            // No poster uploaded — fall back to the first video frame via
-            // the `#t=0.1` media-fragment trick PeekMedia uses. preload
-            // is "auto" for the first three rows so they show a frame
-            // immediately, "metadata" for the rest to stay cheap.
-            // eslint-disable-next-line jsx-a11y/media-has-caption
-            <video
-              src={`${peek.video_url}#t=0.1`}
-              preload={priority ? "auto" : "metadata"}
-              muted
-              playsInline
-              aria-hidden
-              className="relative h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-            />
-          ) : (
-            <div className="placeholder-stripes relative h-full w-full" />
+              className="flex h-full w-full items-center justify-center bg-brand/[0.06]"
+            >
+              <Camera
+                size={22}
+                strokeWidth={1.5}
+                className="text-brand/35"
+                aria-hidden
+              />
+            </div>
           )}
         </div>
 
