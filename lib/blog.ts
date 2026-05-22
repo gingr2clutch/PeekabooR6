@@ -189,17 +189,17 @@ const RISK_LABELS: Record<BlogPeek["risk"], string> = {
 // here fall back to the original generic sentence inside renderIntro.
 const MAP_INTROS: Record<string, string> = {
   oregon:
-    "Every spawn peek for the Oregon farmhouse, pinned to the floor map with clips and pro tips.",
+    "Every Oregon spawn peek, pinned to the floor map with clips and pro tips.",
   chalet:
-    "Every spawn peek for the Chalet ski lodge, pinned to the floor map with clips and pro tips.",
+    "All the best Chalet spawn peek angles, with floor map pins and clips.",
   clubhouse:
-    "Every spawn peek for the Clubhouse biker compound, pinned to the floor map with clips and pro tips.",
+    "Clubhouse spawn peeks mapped out floor-by-floor, with clips and tips.",
   border:
-    "Every spawn peek for the Border crossing, pinned to the floor map with clips and pro tips.",
+    "Every spawn peek on Border, with floor map pins, clips, and community pro tips.",
   "nighthaven-labs":
-    "Every spawn peek for the Nighthaven Labs facility, pinned to the floor map with clips and pro tips.",
+    "The full Nighthaven Labs spawn peek guide — floor maps, clips, and pro tips.",
   consulate:
-    "Every spawn peek for the Consulate building, pinned to the floor map with clips and pro tips.",
+    "Spawn peeks for every angle on Consulate, pinned to the floor map with clips.",
 };
 
 function topPeekFloorName(peek: BlogPeek): string {
