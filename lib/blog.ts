@@ -189,17 +189,17 @@ const RISK_LABELS: Record<BlogPeek["risk"], string> = {
 // here fall back to the original generic sentence inside renderIntro.
 const MAP_INTROS: Record<string, string> = {
   oregon:
-    "Tower, dorms, and basement windows make Oregon a spawn-peek nightmare for Attackers. Almost every spawn has at least one angle on it.",
+    "Every spawn peek for the Oregon farmhouse, pinned to the floor map with clips and pro tips.",
   chalet:
-    "Chalet's main house has some of the longest spawn-peek sightlines in Siege. Defenders can hit every Attacker spawn from upstairs windows.",
+    "Every spawn peek for the Chalet ski lodge, pinned to the floor map with clips and pro tips.",
   clubhouse:
-    "Construction spawn is wide open and Defenders abuse it from garage, CCTV, and upstairs. Slow rotations get punished.",
+    "Every spawn peek for the Clubhouse biker compound, pinned to the floor map with clips and pro tips.",
   border:
-    "One of the most exposed maps in the game. If you don't push out of spawn fast, you're getting picked from the building.",
+    "Every spawn peek for the Border crossing, pinned to the floor map with clips and pro tips.",
   "nighthaven-labs":
-    "Newer map — the spawn-peek meta is still being figured out. Expect unconventional angles.",
+    "Every spawn peek for the Nighthaven Labs facility, pinned to the floor map with clips and pro tips.",
   consulate:
-    "Attackers spawn on three sides and Defenders can hit every spawn from the building. Front, garage, and side are all spawn-peek hotspots.",
+    "Every spawn peek for the Consulate building, pinned to the floor map with clips and pro tips.",
 };
 
 function topPeekFloorName(peek: BlogPeek): string {
