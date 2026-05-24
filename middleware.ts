@@ -46,13 +46,22 @@ export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   // /peeks/<uuid> → 308 to slug. Slug paths skip after the regex test.
+  // Temporary x-mw header lets us debug whether middleware fired on prod.
   const peekMatch = path.match(/^\/peeks\/([^/]+)$/);
   if (peekMatch) {
+    let mark = "peek-slug";
     if (UUID_RE.test(peekMatch[1])) {
+      mark = "peek-uuid-tried";
       const redirect = await redirectPeekUuid(req, peekMatch[1]);
-      if (redirect) return redirect;
+      if (redirect) {
+        redirect.headers.set("x-mw", "peek-uuid-redirect");
+        return redirect;
+      }
+      mark = "peek-uuid-fallthrough";
     }
-    return NextResponse.next();
+    const next = NextResponse.next();
+    next.headers.set("x-mw", mark);
+    return next;
   }
 
   // /admin/:path+ — existing auth gate, unchanged.
@@ -77,5 +86,5 @@ export async function middleware(req: NextRequest) {
 // Protect every /admin/* path except /admin itself (the login page), and
 // 308-redirect /peeks/<uuid> URLs to /peeks/<slug>.
 export const config = {
-  matcher: ["/admin/:path+", "/peeks/:slug"],
+  matcher: ["/admin/:path+", "/peeks/:slug*"],
 };
