@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 
@@ -43,6 +44,9 @@ export default function RootLayout({
           data-cf-beacon='{"token": "5dfe065169644aecb43f6b7794b7264e"}'
           strategy="afterInteractive"
         />
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        )}
       </body>
     </html>
   );
