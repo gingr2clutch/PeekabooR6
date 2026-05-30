@@ -59,6 +59,7 @@ export default async function PopularPage() {
             <span>Popular peeks</span>
           </h1>
           <p className="mt-2 text-muted">Top 5 by success rate</p>
+          <p className="mt-1 text-xs text-muted/70">Player voted</p>
         </div>
 
         {peeks.length === 0 ? (
