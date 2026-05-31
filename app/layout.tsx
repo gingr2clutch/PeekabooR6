@@ -40,7 +40,11 @@ export default function RootLayout({
           data-cfasync="false"
           src="https://the.gatekeeperconsent.com/cmp.min.js"
         ></script>
-        <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
+        {/* `async` intentionally omitted: React 18 Float hoists
+            <script async src=…> to the top of <head>, which would reorder
+            this header script ahead of the privacy scripts above. Ezoic
+            requires privacy scripts to load first to read user consent. */}
+        <script src="//www.ezojs.com/ezoic/sa.min.js"></script>
         <script
           dangerouslySetInnerHTML={{
             __html:
