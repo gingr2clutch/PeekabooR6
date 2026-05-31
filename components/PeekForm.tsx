@@ -28,6 +28,7 @@ type Props = {
     instructions?: string[];
     tip?: string | null;
     success_rate?: number;
+    base_success_rate?: number;
   };
 };
 
@@ -35,7 +36,11 @@ export function PeekForm({ floors, action, submitLabel, initial }: Props) {
   const [floorId, setFloorId] = useState(
     initial?.floor_id ?? floors[0]?.id ?? ""
   );
-  const [successRate, setSuccessRate] = useState(initial?.success_rate ?? 50);
+  // Slider reflects the admin-set base. Falls back to success_rate so
+  // pre-migration rows (without a base value) still render sensibly.
+  const [successRate, setSuccessRate] = useState(
+    initial?.base_success_rate ?? initial?.success_rate ?? 50
+  );
 
   const selectedFloor = useMemo(
     () => floors.find((f) => f.id === floorId) ?? null,

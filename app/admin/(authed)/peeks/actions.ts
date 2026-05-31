@@ -106,6 +106,9 @@ export async function createPeekAction(formData: FormData) {
       risk,
       tip,
       success_rate,
+      // New peeks have no vote history yet — base and current rate
+      // start identical so the slider value is the visible rate.
+      base_success_rate: success_rate,
       published,
       instructions: instructions.length ? instructions : null,
     })
@@ -157,7 +160,10 @@ export async function updatePeekAction(formData: FormData) {
       difficulty,
       risk,
       tip,
-      success_rate,
+      // Form save updates the admin-set BASE only — the visible
+      // success_rate column is owned by the public vote handler so a
+      // routine edit never clobbers vote-driven drift.
+      base_success_rate: success_rate,
       published,
       instructions: instructions.length ? instructions : null,
     })
