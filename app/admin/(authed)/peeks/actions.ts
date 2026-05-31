@@ -35,7 +35,7 @@ function parseTip(v: FormDataEntryValue | null): string | null {
 function parseSuccessRate(v: FormDataEntryValue | null): number {
   const n = Math.round(Number(v ?? 50));
   if (Number.isNaN(n)) return 50;
-  return clamp(n, 0, 100);
+  return clamp(n, 10, 92);
 }
 
 async function mapSlugForFloor(floorId: string): Promise<string> {
@@ -248,7 +248,7 @@ export async function updatePeekFieldAction(
       break;
     }
     case "success_rate": {
-      const n = clamp(Math.round(Number(raw)), 0, 100);
+      const n = clamp(Math.round(Number(raw)), 10, 92);
       patch = { success_rate: n };
       normalized = n;
       break;

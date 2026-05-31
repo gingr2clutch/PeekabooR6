@@ -7,6 +7,7 @@ import { Link2, Share2, X } from "lucide-react";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PeekPin } from "@/components/PeekPin";
 import type { Floor, Map, Peek } from "@/lib/db";
+import { displayRate } from "@/lib/rate";
 import { isPeekNew } from "@/lib/peek-recency";
 
 type Positioned = Peek & { displayX: number; displayY: number };
@@ -272,7 +273,7 @@ function SelectedPeekCard({
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
         <StatTile label="Success">
           <span className="text-base font-bold text-brand">
-            <AnimatedNumber value={peek.success_rate} />%
+            <AnimatedNumber value={displayRate(peek.success_rate)} />%
           </span>
         </StatTile>
         <StatTile label="Difficulty">

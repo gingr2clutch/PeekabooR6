@@ -1,5 +1,6 @@
 import { supabasePublic } from "./supabase";
 import type { Floor, Map, Peek } from "./db";
+import { displayRate } from "./rate";
 
 export const MIN_PEEKS_FOR_ARTICLE = 3;
 export const BLOG_BASE_URL = "https://peekaboor6.com";
@@ -223,7 +224,7 @@ function renderIntro(
 
   const first = `${lead} ${peekCount} community-tested peek angles span its ${floorCount} ${floorCount === 1 ? "floor" : "floors"}, and they continue to determine who wins the opening seconds of a round. Defenders who learn even one of these can tilt round one in their favor; attackers who don't recognize the angles get punished crossing the spawn perimeter before they ever reach the building.`;
 
-  const second = `This guide breaks down every viable spawn peek on ${map.name}, ranked by community success rate. ${top.name} leads the list at ${top.success_rate}% — a ${RISK_LABELS[top.risk]} play out of ${topPeekFloorName(top)} that has paid off consistently for players willing to hold the angle. ${countByRisk.high} of the documented angles fall into the high-risk bracket and demand precise timing, while the remaining ${lowMed} are reliable round-one openers. Whether you're learning ${map.name} from the attacking side or refining your defender setup, the breakdown below maps every peek to its floor, its difficulty, and the success rate the community has tracked.`;
+  const second = `This guide breaks down every viable spawn peek on ${map.name}, ranked by community success rate. ${top.name} leads the list at ${displayRate(top.success_rate)}% — a ${RISK_LABELS[top.risk]} play out of ${topPeekFloorName(top)} that has paid off consistently for players willing to hold the angle. ${countByRisk.high} of the documented angles fall into the high-risk bracket and demand precise timing, while the remaining ${lowMed} are reliable round-one openers. Whether you're learning ${map.name} from the attacking side or refining your defender setup, the breakdown below maps every peek to its floor, its difficulty, and the success rate the community has tracked.`;
 
   return `${first}\n\n${second}`;
 }
@@ -266,7 +267,7 @@ function renderFaq(
   return [
     {
       q: `What's the best spawn peek on ${map.name}?`,
-      a: `${top.name} on ${topPeekFloorName(top)} currently leads the community success-rate database at ${top.success_rate}%. It's a ${RISK_LABELS[top.risk]} play with a difficulty of ${top.difficulty}/5 — read the full breakdown below for the exact step-out and timing.`,
+      a: `${top.name} on ${topPeekFloorName(top)} currently leads the community success-rate database at ${displayRate(top.success_rate)}%. It's a ${RISK_LABELS[top.risk]} play with a difficulty of ${top.difficulty}/5 — read the full breakdown below for the exact step-out and timing.`,
     },
     {
       q: `How many spawn peeks does ${map.name} have?`,
@@ -284,7 +285,7 @@ function renderFaq(
 }
 
 export function peekLeadIn(peek: BlogPeek): string {
-  const rate = peek.success_rate;
+  const rate = displayRate(peek.success_rate);
   const variant = simpleHash(peek.slug) % 4;
   const floorName = peek.floor.name;
   const votes = peek.vote_count;

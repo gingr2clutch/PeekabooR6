@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { displayRate } from "@/lib/rate";
 import { InstructionsEditor } from "./InstructionsEditor";
 import { PinPlacer } from "./PinPlacer";
 
@@ -36,10 +37,10 @@ export function PeekForm({ floors, action, submitLabel, initial }: Props) {
   const [floorId, setFloorId] = useState(
     initial?.floor_id ?? floors[0]?.id ?? ""
   );
-  // Slider reflects the admin-set base. Falls back to success_rate so
-  // pre-migration rows (without a base value) still render sensibly.
+  // Slider reflects the admin-set base, clamped into the visible
+  // [10, 92] range so the value can't be set outside what users see.
   const [successRate, setSuccessRate] = useState(
-    initial?.base_success_rate ?? initial?.success_rate ?? 50
+    displayRate(initial?.base_success_rate ?? initial?.success_rate ?? 50)
   );
 
   const selectedFloor = useMemo(
@@ -148,8 +149,8 @@ export function PeekForm({ floors, action, submitLabel, initial }: Props) {
           <input
             type="range"
             name="success_rate"
-            min={0}
-            max={100}
+            min={10}
+            max={92}
             value={successRate}
             onChange={(e) => setSuccessRate(Number(e.target.value))}
             className="w-full accent-brand"

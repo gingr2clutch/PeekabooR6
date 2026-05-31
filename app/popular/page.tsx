@@ -4,6 +4,7 @@ import Link from "next/link";
 import { NewBadge } from "@/components/NewBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { getTopPeeks, type PeekWithContext } from "@/lib/db";
+import { displayRate } from "@/lib/rate";
 import { isPeekNew } from "@/lib/peek-recency";
 
 export const dynamic = "force-dynamic";
@@ -81,7 +82,7 @@ export default async function PopularPage() {
 function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
   const floor = peek.floors!;
   const map = floor.maps;
-  const rate = Math.round(peek.success_rate);
+  const rate = displayRate(peek.success_rate);
   const medal = MEDALS[rank];
 
   const cardStyle: CSSProperties | undefined = medal

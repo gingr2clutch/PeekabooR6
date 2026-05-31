@@ -7,6 +7,7 @@ import { PeekMedia } from "@/components/PeekMedia";
 import { VoteButtons } from "@/components/VoteButtons";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
+import { displayRate } from "@/lib/rate";
 import { isUuid } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
@@ -135,7 +136,7 @@ export default async function PeekDetailPage({
           <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             <StatCell label="Success rate">
               <AnimatedRate
-                value={peek.success_rate}
+                value={displayRate(peek.success_rate)}
                 className="text-4xl font-bold leading-none tracking-tight text-brand md:text-[72px]"
               />
             </StatCell>
@@ -188,7 +189,7 @@ function peekDescription(
   floor: Floor
 ): string {
   const risk = peek.risk;
-  return `${peek.name} — a ${risk}-risk spawn peek on ${map.name} ${floor.name} with a ${peek.success_rate}% community-tested success rate in Rainbow Six Siege.`;
+  return `${peek.name} — a ${risk}-risk spawn peek on ${map.name} ${floor.name} with a ${displayRate(peek.success_rate)}% community-tested success rate in Rainbow Six Siege.`;
 }
 
 function buildVideoJsonLd(
@@ -220,7 +221,7 @@ function buildVideoJsonLd(
   if (peek.vote_count >= MIN_VOTES_FOR_RATING) {
     video.aggregateRating = {
       "@type": "AggregateRating",
-      ratingValue: String(peek.success_rate),
+      ratingValue: String(displayRate(peek.success_rate)),
       bestRating: "100",
       worstRating: "0",
       ratingCount: peek.vote_count,

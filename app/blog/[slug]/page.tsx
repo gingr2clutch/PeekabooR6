@@ -13,6 +13,7 @@ import {
   type ArticleData,
   type BlogPeek,
 } from "@/lib/blog";
+import { displayRate } from "@/lib/rate";
 
 export const dynamic = "force-dynamic";
 
@@ -215,7 +216,7 @@ function PeekSection({ peek, rank }: { peek: BlogPeek; rank: number }) {
             Success
           </dt>
           <dd className="mt-1 text-2xl font-bold leading-none tracking-tight text-brand">
-            {peek.success_rate}%
+            {displayRate(peek.success_rate)}%
           </dd>
         </div>
         <div>
@@ -316,7 +317,7 @@ function buildVideoJsonLd(data: ArticleData) {
       "@context": "https://schema.org",
       "@type": "VideoObject",
       name: `${p.name} — spawn peek on ${data.map.name}`,
-      description: `${p.name} is a ${p.risk}-risk spawn peek on ${data.map.name} ${p.floor.name} with a ${p.success_rate}% community success rate.`,
+      description: `${p.name} is a ${p.risk}-risk spawn peek on ${data.map.name} ${p.floor.name} with a ${displayRate(p.success_rate)}% community success rate.`,
       thumbnailUrl: p.poster_url ? [p.poster_url] : undefined,
       uploadDate: p.created_at,
       contentUrl: p.video_url ?? undefined,

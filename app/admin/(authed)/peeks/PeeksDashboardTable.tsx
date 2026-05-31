@@ -504,8 +504,8 @@ export function PeeksDashboardTable({
                   <td className="px-4 py-2 text-right">
                     <InlineNumber
                       value={r.success_rate}
-                      min={0}
-                      max={100}
+                      min={10}
+                      max={92}
                       suffix="%"
                       flash={savedFlash[cellKey(r.id, "success_rate")]}
                       error={errorFlash[cellKey(r.id, "success_rate")]}
