@@ -45,6 +45,31 @@ async function fetchById(id: string): Promise<Joined | null> {
   return data as unknown as Joined | null;
 }
 
+type NearbyPeek = {
+  id: string;
+  slug: string;
+  name: string;
+  x_pct: number | null;
+  y_pct: number | null;
+  success_rate: number;
+};
+
+// One query, indexed by peeks_published_floor_idx. Returns every other
+// published peek on the same floor; the caller sorts by distance.
+async function fetchSameFloorPeeks(
+  floorId: string,
+  excludeId: string
+): Promise<NearbyPeek[]> {
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select("id, slug, name, x_pct, y_pct, success_rate")
+    .eq("floor_id", floorId)
+    .eq("published", true)
+    .neq("id", excludeId);
+  if (error) throw error;
+  return (data ?? []) as NearbyPeek[];
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -98,6 +123,20 @@ export default async function PeekDetailPage({
 
   const videoJsonLd = buildVideoJsonLd(peek, map, floor);
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(peek, map);
+
+  // Closest 4 peeks on this floor by Euclidean distance over (x_pct, y_pct).
+  // Peeks missing either coord sort last (Infinity). If none, section hides.
+  const sameFloor = await fetchSameFloorPeeks(peek.floor_id, peek.id);
+  const nearby = sameFloor
+    .map((p) => {
+      const ok = Number.isFinite(p.x_pct) && Number.isFinite(p.y_pct);
+      const dx = ok ? (p.x_pct as number) - peek.x_pct : 0;
+      const dy = ok ? (p.y_pct as number) - peek.y_pct : 0;
+      return { p, dist: ok ? Math.sqrt(dx * dx + dy * dy) : Infinity };
+    })
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, 4)
+    .map((x) => x.p);
 
   return (
     <>
@@ -159,6 +198,36 @@ export default async function PeekDetailPage({
           <PeekMedia videoUrl={peek.video_url} name={peek.name} />
           <Instructions steps={steps} tip={peek.tip} />
         </div>
+
+        {nearby.length > 0 && (
+          <section className="mt-16">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+              Peeks close by
+            </h2>
+            <ul className="mt-4 space-y-3">
+              {nearby.map((p) => (
+                <li key={p.id}>
+                  <Link
+                    href={`/peeks/${p.slug}`}
+                    className="group flex items-center justify-between gap-4 rounded-card border border-border bg-card p-4 transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-brand hover:shadow-md"
+                  >
+                    <h3 className="min-w-0 flex-1 truncate text-base font-semibold text-ink group-hover:text-brand">
+                      {p.name}
+                    </h3>
+                    <div className="shrink-0 text-right">
+                      <div className="text-xl font-bold leading-none tracking-tight text-brand">
+                        {displayRate(p.success_rate)}%
+                      </div>
+                      <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                        Success
+                      </div>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </main>
 
       {videoJsonLd && (
