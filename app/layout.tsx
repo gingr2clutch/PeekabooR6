@@ -29,29 +29,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Ezoic — privacy scripts MUST come before the header script.
-            Raw <script> tags so data-cfasync="false" passes through to
-            HTML verbatim (Cloudflare Rocket Loader skips tagged scripts). */}
-        <script
-          data-cfasync="false"
-          src="https://cmp.gatekeeperconsent.com/min.js"
-        ></script>
-        <script
-          data-cfasync="false"
-          src="https://the.gatekeeperconsent.com/cmp.min.js"
-        ></script>
-        {/* `async` intentionally omitted: React 18 Float hoists
-            <script async src=…> to the top of <head>, which would reorder
-            this header script ahead of the privacy scripts above. Ezoic
-            requires privacy scripts to load first to read user consent. */}
-        <script src="//www.ezojs.com/ezoic/sa.min.js"></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "window.ezstandalone = window.ezstandalone || {};\nezstandalone.cmd = ezstandalone.cmd || [];",
-          }}
-        />
-        <script src="//ezoicanalytics.com/analytics.js"></script>
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9948436713506762"
