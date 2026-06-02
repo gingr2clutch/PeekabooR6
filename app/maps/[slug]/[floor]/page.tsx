@@ -5,6 +5,7 @@ import { FloorView } from "@/components/FloorView";
 import { PageHeader } from "@/components/PageHeader";
 import {
   getFloorBySlug,
+  getFloorsForMap,
   getMapBySlug,
   getPublishedPeeksForFloor,
 } from "@/lib/db";
@@ -67,6 +68,9 @@ export default async function FloorPage({
 
   const peeks = await getPublishedPeeksForFloor(floor.id);
   const positioned = fanOutCoincidentPins(peeks);
+  // Same query path /maps/[slug]/page.tsx uses — one extra round trip,
+  // ordered by display_order ascending.
+  const allFloors = await getFloorsForMap(map.id);
 
   return (
     <>
@@ -88,6 +92,38 @@ export default async function FloorPage({
           <p className="mt-2 text-muted">
             Spawn peeks · click any pin for details
           </p>
+          {allFloors.length > 1 && (
+            <nav
+              aria-label="Floors"
+              className="mt-5 flex flex-wrap justify-center gap-2"
+            >
+              {allFloors.map((f) => {
+                const isCurrent = f.id === floor.id;
+                const base =
+                  "inline-flex items-center rounded-btn px-3 py-1.5 text-sm font-medium transition-all duration-150 ease-out";
+                const state = isCurrent
+                  ? "bg-brand text-white shadow-sm"
+                  : "border border-border bg-card text-ink hover:border-brand hover:text-brand";
+                return isCurrent ? (
+                  <span
+                    key={f.id}
+                    aria-current="page"
+                    className={`${base} ${state}`}
+                  >
+                    {f.name}
+                  </span>
+                ) : (
+                  <Link
+                    key={f.id}
+                    href={`/maps/${map.slug}/${f.slug}`}
+                    className={`${base} ${state}`}
+                  >
+                    {f.name}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
         </div>
 
         <FloorView map={map} floor={floor} peeks={positioned} />
