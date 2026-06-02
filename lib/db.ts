@@ -153,3 +153,22 @@ export async function getPublishedPeekBySlug(slug: string): Promise<Peek | null>
   if (error) throw error;
   return data;
 }
+
+export type PublicCreator = Pick<
+  Creator,
+  "id" | "display_name" | "tiktok" | "bio" | "profile_image_url"
+>;
+
+// Public read for the /creators page. Only safe-to-expose columns —
+// never selects code, claimed_at, approved_at, or created_at. Anon
+// access requires an RLS policy on creators allowing select where
+// approved_at is not null; without it this returns an empty list.
+export async function getApprovedCreators(): Promise<PublicCreator[]> {
+  const { data, error } = await supabasePublic()
+    .from("creators")
+    .select("id, display_name, tiktok, bio, profile_image_url")
+    .not("approved_at", "is", null)
+    .order("approved_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
