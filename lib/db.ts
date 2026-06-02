@@ -37,6 +37,20 @@ export type Peek = {
   created_at: string;
 };
 
+// Code-gated creator invitations. Admin-only data — public queries don't
+// read this table. Profile fields are null until claim time.
+export type Creator = {
+  id: string;
+  code: string;
+  display_name: string | null;
+  tiktok: string | null;
+  bio: string | null;
+  profile_image_url: string | null;
+  claimed_at: string | null;
+  approved_at: string | null;
+  created_at: string;
+};
+
 const PEEK_COLUMNS =
   "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at";
 

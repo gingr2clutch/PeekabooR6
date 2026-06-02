@@ -97,3 +97,24 @@ create policy "Authenticated can read page views"
   on page_views for select
   to authenticated
   using (true);
+
+-- Code-gated creator invitations. Admin generates a code; invited creator
+-- claims it via the public signup form (phase 2 — not yet built); admin
+-- approves to feature them. Admin-only — RLS enabled with no policies so
+-- anon gets nothing; server-side uses service-role to bypass.
+create table if not exists creators (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  display_name text,
+  tiktok text,
+  bio text,
+  profile_image_url text,
+  claimed_at timestamptz,
+  approved_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists creators_claimed_idx on creators (claimed_at);
+create index if not exists creators_approved_idx on creators (approved_at);
+
+alter table creators enable row level security;
