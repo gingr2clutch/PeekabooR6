@@ -10,6 +10,7 @@ import {
   Plus,
   ShoppingBag,
   Sparkles,
+  Users,
   X,
 } from "lucide-react";
 import { Wordmark } from "./Wordmark";
@@ -28,6 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Maps", Icon: Map },
   { href: "/popular", label: "Popular", Icon: Flame },
   { href: "/whats-new", label: "New", Icon: Sparkles },
+  { href: "/creators", label: "Creators", Icon: Users },
   { href: "/blog", label: "Guides", Icon: BookOpen },
   { href: "/submit", label: "Submit a peek", Icon: Plus },
   { href: "/gear", label: "Shop for gear", Icon: ShoppingBag },
