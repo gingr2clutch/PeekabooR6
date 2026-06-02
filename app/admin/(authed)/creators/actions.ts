@@ -46,3 +46,28 @@ export async function generateCreatorCodeAction(): Promise<GenerateResult> {
     error: "Could not generate a unique code after several attempts — try again.",
   };
 }
+
+// Form-action toggle for the admin table. Reads the current approved_at,
+// flips it (null → now / now → null), writes back. Idempotent enough that
+// a double-click is harmless.
+export async function toggleCreatorApprovalAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const sb = supabaseAdmin();
+
+  const { data: current, error: readErr } = await sb
+    .from("creators")
+    .select("approved_at")
+    .eq("id", id)
+    .maybeSingle();
+  if (readErr || !current) return;
+
+  const next = current.approved_at ? null : new Date().toISOString();
+  const { error: writeErr } = await sb
+    .from("creators")
+    .update({ approved_at: next })
+    .eq("id", id);
+  if (writeErr) return;
+
+  revalidatePath("/admin/creators");
+}

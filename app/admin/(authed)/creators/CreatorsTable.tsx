@@ -1,4 +1,5 @@
 import type { Creator } from "@/lib/db";
+import { toggleCreatorApprovalAction } from "./actions";
 
 function statusOf(c: Creator): { label: string; cls: string } {
   if (c.approved_at) {
@@ -41,13 +42,14 @@ export function CreatorsTable({ creators }: { creators: Creator[] }) {
             <th className="px-4 py-2 text-left">Created</th>
             <th className="px-4 py-2 text-left">Display name</th>
             <th className="px-4 py-2 text-left">TikTok</th>
+            <th className="px-4 py-2 text-right">Action</th>
           </tr>
         </thead>
         <tbody>
           {creators.length === 0 && (
             <tr>
               <td
-                colSpan={7}
+                colSpan={8}
                 className="px-4 py-8 text-center text-muted"
               >
                 No creators yet — click <span className="font-medium text-ink">+ Generate code</span> to create the first invite.
@@ -85,6 +87,25 @@ export function CreatorsTable({ creators }: { creators: Creator[] }) {
                 </td>
                 <td className="px-4 py-2 text-muted">
                   {c.tiktok ?? "—"}
+                </td>
+                <td className="px-4 py-2 text-right">
+                  {c.claimed_at ? (
+                    <form action={toggleCreatorApprovalAction}>
+                      <input type="hidden" name="id" value={c.id} />
+                      <button
+                        type="submit"
+                        className={
+                          c.approved_at
+                            ? "rounded-btn border border-border bg-card px-3 py-1 text-xs font-medium text-ink transition-colors hover:border-brand hover:text-brand"
+                            : "rounded-btn border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 transition-colors hover:border-emerald-300"
+                        }
+                      >
+                        {c.approved_at ? "Unapprove" : "Approve"}
+                      </button>
+                    </form>
+                  ) : (
+                    <span className="text-xs text-muted">—</span>
+                  )}
                 </td>
               </tr>
             );
