@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import {
   claimCodeAction,
+  createCreatorImageUploadUrl,
   validateCodeAction,
   type ValidateResult,
   type ClaimResult,
 } from "@/app/claim/actions";
+import { compressImageForUpload, putToR2 } from "@/lib/upload";
 
 type Step = "code" | "profile";
 type Status = "idle" | "submitting" | "success";
@@ -22,8 +25,40 @@ export function ClaimForm() {
   const [bio, setBio] = useState("");
   const [claimError, setClaimError] = useState<string | null>(null);
 
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [status, setStatus] = useState<Status>("idle");
   const [pending, startTransition] = useTransition();
+
+  async function handleProfileImage(file: File) {
+    setUploadError(null);
+    setUploading(true);
+    setUploadProgress(0);
+    try {
+      const compressed = await compressImageForUpload(file, "peek");
+      const presign = await createCreatorImageUploadUrl(
+        validatedCode,
+        compressed.name,
+        compressed.type
+      );
+      if (!presign.ok) {
+        setUploadError(presign.error);
+        return;
+      }
+      await putToR2(presign.uploadUrl, compressed, compressed.type, (pct) =>
+        setUploadProgress(pct)
+      );
+      setProfileImageUrl(presign.publicUrl);
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setUploading(false);
+    }
+  }
 
   function handleCodeSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,6 +93,7 @@ export function ClaimForm() {
         display_name: displayName,
         tiktok,
         bio,
+        profile_image_url: profileImageUrl,
       });
       if (res.ok) {
         setStatus("success");
@@ -138,6 +174,98 @@ export function ClaimForm() {
         </span>
       </div>
 
+      <div>
+        <span className={labelCls}>
+          Profile picture (recommended — use your TikTok pic so fans recognize you)
+        </span>
+        <div className="mt-2 flex items-center gap-4">
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border border-border bg-bg">
+            {profileImageUrl ? (
+              <Image
+                key={profileImageUrl}
+                src={profileImageUrl}
+                alt="Profile preview"
+                fill
+                sizes="80px"
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-muted">
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden
+                  className="h-8 w-8 fill-none stroke-current"
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" />
+                </svg>
+              </div>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/*"
+              className="sr-only"
+              disabled={uploading || submitting}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleProfileImage(file);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+              }}
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading || submitting}
+                className="rounded-btn border border-border bg-card px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {profileImageUrl ? "Replace" : "Choose image"}
+              </button>
+              {profileImageUrl && !uploading && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProfileImageUrl(null);
+                    setUploadError(null);
+                  }}
+                  disabled={submitting}
+                  className="rounded-btn border border-border bg-bg px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            {uploading && (
+              <div className="mt-2">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
+                  <div
+                    className="h-full bg-brand transition-[width] duration-150 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-[11px] text-muted">
+                  Uploading… {uploadProgress}%
+                </p>
+              </div>
+            )}
+            {uploadError && (
+              <p className="mt-2 text-[11px] text-red-600" role="alert">
+                {uploadError}
+              </p>
+            )}
+            <p className="mt-1 text-[11px] text-muted">
+              Optional — PNG, JPG, or WebP. Compressed in the browser.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <label className={labelCls}>
         <span className="mb-1 block">Display name *</span>
         <input
@@ -189,10 +317,10 @@ export function ClaimForm() {
         <p className="text-[11px] text-muted">* required</p>
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || uploading}
           className="inline-flex items-center justify-center rounded-btn bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {submitting ? "Submitting…" : "Claim my code"}
+          {submitting ? "Submitting…" : uploading ? "Uploading…" : "Claim my code"}
         </button>
       </div>
     </form>

@@ -1,5 +1,8 @@
 "use server";
 
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { r2Bucket, r2Client, r2PublicUrl } from "@/lib/r2";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // Length caps — generous but bounded.
@@ -45,6 +48,52 @@ export async function validateCodeAction(
   return { ok: true, code: data.code };
 }
 
+// Mirrors the floor-upload presign flow (see app/admin/(authed)/floors/[id]/
+// upload-actions.ts). Gated on a valid + unclaimed code so the endpoint
+// isn't a free public R2 ingress.
+function safeExtension(filename: string, mime: string): string {
+  const fromName = filename.split(".").pop()?.toLowerCase() ?? "";
+  if (/^[a-z0-9]{2,5}$/.test(fromName)) return fromName;
+  if (mime === "image/png") return "png";
+  if (mime === "image/jpeg") return "jpg";
+  if (mime === "image/webp") return "webp";
+  return "bin";
+}
+
+export type CreatorImageUploadResult =
+  | { ok: true; uploadUrl: string; publicUrl: string }
+  | { ok: false; error: string };
+
+export async function createCreatorImageUploadUrl(
+  rawCode: string,
+  filename: string,
+  contentType: string
+): Promise<CreatorImageUploadResult> {
+  const code = normalizeCode(rawCode);
+  if (!code) return { ok: false, error: "Missing code." };
+
+  const { data, error } = await supabaseAdmin()
+    .from("creators")
+    .select("code, claimed_at")
+    .eq("code", code)
+    .maybeSingle();
+  if (error || !data) return { ok: false, error: "Code not found." };
+  if (data.claimed_at) {
+    return { ok: false, error: "This code has already been used." };
+  }
+
+  const ext = safeExtension(filename, contentType);
+  const key = `creators/${code}-${Date.now()}.${ext}`;
+
+  const cmd = new PutObjectCommand({
+    Bucket: r2Bucket(),
+    Key: key,
+    ContentType: contentType,
+  });
+  const uploadUrl = await getSignedUrl(r2Client(), cmd, { expiresIn: 600 });
+  return { ok: true, uploadUrl, publicUrl: r2PublicUrl(key) };
+}
+
 export type ClaimResult = { ok: true } | { ok: false; error: string };
 
 // Step 2: atomic claim. The WHERE filter on claimed_at IS NULL is part
@@ -59,11 +108,13 @@ export async function claimCodeAction(input: {
   display_name: string;
   tiktok: string;
   bio: string;
+  profile_image_url?: string | null;
 }): Promise<ClaimResult> {
   const code = normalizeCode(input.code);
   const displayName = input.display_name.trim();
   const tiktok = normalizeTiktok(input.tiktok);
   const bio = input.bio.trim();
+  const profileImageUrl = (input.profile_image_url ?? "").trim() || null;
 
   if (!code) return { ok: false, error: "Missing code." };
   if (!displayName) {
@@ -88,6 +139,14 @@ export async function claimCodeAction(input: {
       error: `Bio must be ${MAX_BIO} characters or fewer.`,
     };
   }
+  // Must be an R2 public URL — the only thing createCreatorImageUploadUrl
+  // can produce. Stops a hand-crafted payload from pointing anywhere else.
+  if (profileImageUrl) {
+    const base = (process.env.R2_PUBLIC_URL ?? "").replace(/\/$/, "");
+    if (!base || !profileImageUrl.startsWith(`${base}/creators/`)) {
+      return { ok: false, error: "Invalid profile image." };
+    }
+  }
 
   const { data, error } = await supabaseAdmin()
     .from("creators")
@@ -95,6 +154,7 @@ export async function claimCodeAction(input: {
       display_name: displayName,
       tiktok,
       bio: bio || null,
+      profile_image_url: profileImageUrl,
       claimed_at: new Date().toISOString(),
     })
     .eq("code", code)
