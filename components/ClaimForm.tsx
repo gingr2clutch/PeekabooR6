@@ -14,6 +14,19 @@ import { compressImageForUpload, putToR2 } from "@/lib/upload";
 type Step = "code" | "profile";
 type Status = "idle" | "submitting" | "success";
 
+const RANK_OPTIONS = [
+  "Copper",
+  "Bronze",
+  "Silver",
+  "Gold",
+  "Platinum",
+  "Emerald",
+  "Diamond",
+  "Champion",
+];
+const REGION_OPTIONS = ["NA", "EU", "LATAM", "APAC", "Oceania", "MENA"];
+const PLATFORM_OPTIONS = ["PC", "PlayStation", "Xbox"];
+
 export function ClaimForm() {
   const [step, setStep] = useState<Step>("code");
   const [code, setCode] = useState("");
@@ -23,6 +36,12 @@ export function ClaimForm() {
   const [displayName, setDisplayName] = useState("");
   const [tiktok, setTiktok] = useState("");
   const [bio, setBio] = useState("");
+  const [rank, setRank] = useState("");
+  const [region, setRegion] = useState("");
+  const [platform, setPlatform] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [twitchUrl, setTwitchUrl] = useState("");
+  const [xUrl, setXUrl] = useState("");
   const [claimError, setClaimError] = useState<string | null>(null);
 
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
@@ -94,6 +113,12 @@ export function ClaimForm() {
         tiktok,
         bio,
         profile_image_url: profileImageUrl,
+        rank: rank || null,
+        region: region || null,
+        platform: platform || null,
+        youtube_url: youtubeUrl || null,
+        twitch_url: twitchUrl || null,
+        x_url: xUrl || null,
       });
       if (res.ok) {
         setStatus("success");
@@ -306,6 +331,97 @@ export function ClaimForm() {
           Up to 500 characters.
         </span>
       </label>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <label className={labelCls}>
+          <span className="mb-1 block">Rank</span>
+          <select
+            value={rank}
+            onChange={(e) => setRank(e.target.value)}
+            className={inputCls}
+          >
+            <option value="">—</option>
+            {RANK_OPTIONS.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className={labelCls}>
+          <span className="mb-1 block">Region</span>
+          <select
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            className={inputCls}
+          >
+            <option value="">—</option>
+            {REGION_OPTIONS.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className={labelCls}>
+          <span className="mb-1 block">Platform</span>
+          <select
+            value={platform}
+            onChange={(e) => setPlatform(e.target.value)}
+            className={inputCls}
+          >
+            <option value="">—</option>
+            {PLATFORM_OPTIONS.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+          Other links (optional)
+        </p>
+        <label className={labelCls}>
+          <span className="mb-1 block">YouTube</span>
+          <input
+            type="url"
+            value={youtubeUrl}
+            onChange={(e) => setYoutubeUrl(e.target.value)}
+            maxLength={200}
+            placeholder="https://youtube.com/@yourchannel"
+            className={inputCls}
+          />
+        </label>
+
+        <label className={labelCls}>
+          <span className="mb-1 block">Twitch</span>
+          <input
+            type="url"
+            value={twitchUrl}
+            onChange={(e) => setTwitchUrl(e.target.value)}
+            maxLength={200}
+            placeholder="https://twitch.tv/yourchannel"
+            className={inputCls}
+          />
+        </label>
+
+        <label className={labelCls}>
+          <span className="mb-1 block">X (Twitter)</span>
+          <input
+            type="url"
+            value={xUrl}
+            onChange={(e) => setXUrl(e.target.value)}
+            maxLength={200}
+            placeholder="https://x.com/yourhandle"
+            className={inputCls}
+          />
+        </label>
+      </div>
 
       {claimError && (
         <p className="text-sm text-red-600" role="alert">

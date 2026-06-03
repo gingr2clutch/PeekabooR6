@@ -46,6 +46,12 @@ export type Creator = {
   tiktok: string | null;
   bio: string | null;
   profile_image_url: string | null;
+  rank: string | null;
+  region: string | null;
+  platform: string | null;
+  youtube_url: string | null;
+  twitch_url: string | null;
+  x_url: string | null;
   claimed_at: string | null;
   approved_at: string | null;
   created_at: string;
@@ -156,7 +162,17 @@ export async function getPublishedPeekBySlug(slug: string): Promise<Peek | null>
 
 export type PublicCreator = Pick<
   Creator,
-  "id" | "display_name" | "tiktok" | "bio" | "profile_image_url"
+  | "id"
+  | "display_name"
+  | "tiktok"
+  | "bio"
+  | "profile_image_url"
+  | "rank"
+  | "region"
+  | "platform"
+  | "youtube_url"
+  | "twitch_url"
+  | "x_url"
 >;
 
 // Public read for the /creators page. Only safe-to-expose columns —
@@ -166,7 +182,9 @@ export type PublicCreator = Pick<
 export async function getApprovedCreators(): Promise<PublicCreator[]> {
   const { data, error } = await supabasePublic()
     .from("creators")
-    .select("id, display_name, tiktok, bio, profile_image_url")
+    .select(
+      "id, display_name, tiktok, bio, profile_image_url, rank, region, platform, youtube_url, twitch_url, x_url"
+    )
     .not("approved_at", "is", null)
     .order("approved_at", { ascending: false });
   if (error) throw error;

@@ -9,6 +9,41 @@ import { supabaseAdmin } from "@/lib/supabase";
 const MAX_DISPLAY_NAME = 60;
 const MAX_TIKTOK = 32;
 const MAX_BIO = 500;
+const MAX_URL = 200;
+
+// Allow-lists for the enum-ish fields. Kept in sync with the dropdowns
+// in components/ClaimForm.tsx — server-side check rejects anything else
+// so a tampered request can't shove arbitrary strings into rank/region/
+// platform. Empty/null is always allowed.
+const ALLOWED_RANKS = [
+  "Copper",
+  "Bronze",
+  "Silver",
+  "Gold",
+  "Platinum",
+  "Emerald",
+  "Diamond",
+  "Champion",
+];
+const ALLOWED_REGIONS = ["NA", "EU", "LATAM", "APAC", "Oceania", "MENA"];
+const ALLOWED_PLATFORMS = ["PC", "PlayStation", "Xbox"];
+
+// Rejects anything that isn't a syntactically valid http/https URL.
+// Empty string → null (caller treats null as "not provided"). Returns
+// undefined on validation failure so the caller can surface an error.
+function normalizeHttpUrl(s: string | null | undefined): string | null | undefined {
+  const trimmed = (s ?? "").trim();
+  if (!trimmed) return null;
+  if (trimmed.length > MAX_URL) return undefined;
+  let u: URL;
+  try {
+    u = new URL(trimmed);
+  } catch {
+    return undefined;
+  }
+  if (u.protocol !== "http:" && u.protocol !== "https:") return undefined;
+  return u.toString();
+}
 
 function normalizeCode(s: string): string {
   return s.trim().toUpperCase();
@@ -109,12 +144,45 @@ export async function claimCodeAction(input: {
   tiktok: string;
   bio: string;
   profile_image_url?: string | null;
+  rank?: string | null;
+  region?: string | null;
+  platform?: string | null;
+  youtube_url?: string | null;
+  twitch_url?: string | null;
+  x_url?: string | null;
 }): Promise<ClaimResult> {
   const code = normalizeCode(input.code);
   const displayName = input.display_name.trim();
   const tiktok = normalizeTiktok(input.tiktok);
   const bio = input.bio.trim();
   const profileImageUrl = (input.profile_image_url ?? "").trim() || null;
+
+  // Allow-list check: empty/null is fine, but any non-empty value must
+  // be one of the known options. Anything else → null (silently drop).
+  function pickFromAllowed(
+    raw: string | null | undefined,
+    allowed: string[]
+  ): string | null {
+    const v = (raw ?? "").trim();
+    if (!v) return null;
+    return allowed.includes(v) ? v : null;
+  }
+  const rank = pickFromAllowed(input.rank, ALLOWED_RANKS);
+  const region = pickFromAllowed(input.region, ALLOWED_REGIONS);
+  const platform = pickFromAllowed(input.platform, ALLOWED_PLATFORMS);
+
+  const youtubeUrl = normalizeHttpUrl(input.youtube_url);
+  const twitchUrl = normalizeHttpUrl(input.twitch_url);
+  const xUrl = normalizeHttpUrl(input.x_url);
+  if (youtubeUrl === undefined) {
+    return { ok: false, error: "YouTube link must be a valid http(s) URL." };
+  }
+  if (twitchUrl === undefined) {
+    return { ok: false, error: "Twitch link must be a valid http(s) URL." };
+  }
+  if (xUrl === undefined) {
+    return { ok: false, error: "X link must be a valid http(s) URL." };
+  }
 
   if (!code) return { ok: false, error: "Missing code." };
   if (!displayName) {
@@ -155,6 +223,12 @@ export async function claimCodeAction(input: {
       tiktok,
       bio: bio || null,
       profile_image_url: profileImageUrl,
+      rank,
+      region,
+      platform,
+      youtube_url: youtubeUrl,
+      twitch_url: twitchUrl,
+      x_url: xUrl,
       claimed_at: new Date().toISOString(),
     })
     .eq("code", code)
