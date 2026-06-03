@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { PageHeader } from "@/components/PageHeader";
-import { getApprovedCreators, type PublicCreator } from "@/lib/db";
+import {
+  getApprovedCreators,
+  getPublishedPeekCount,
+  type PublicCreator,
+} from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +16,12 @@ export const metadata: Metadata = {
 };
 
 export default async function CreatorsPage() {
-  const creators = await getApprovedCreators();
+  // Site-wide peek count is only displayed on the founder card, but it's
+  // cheap (head:true) and runs in parallel with the creators read.
+  const [creators, publishedPeekCount] = await Promise.all([
+    getApprovedCreators(),
+    getPublishedPeekCount(),
+  ]);
 
   return (
     <>
@@ -32,7 +41,11 @@ export default async function CreatorsPage() {
         ) : (
           <ul className="space-y-4">
             {creators.map((c) => (
-              <CreatorCard key={c.id} creator={c} />
+              <CreatorCard
+                key={c.id}
+                creator={c}
+                publishedPeekCount={publishedPeekCount}
+              />
             ))}
           </ul>
         )}
@@ -41,9 +54,17 @@ export default async function CreatorsPage() {
   );
 }
 
-function CreatorCard({ creator }: { creator: PublicCreator }) {
+function CreatorCard({
+  creator,
+  publishedPeekCount,
+}: {
+  creator: PublicCreator;
+  publishedPeekCount: number;
+}) {
   const handle = (creator.tiktok ?? "").replace(/^@+/, "").trim();
   const tiktokUrl = handle ? `https://www.tiktok.com/@${handle}` : null;
+  const isFounder = creator.is_founder === true;
+  const displayName = creator.display_name ?? "Unnamed creator";
 
   const badges = [creator.rank, creator.region, creator.platform].filter(
     (v): v is string => !!v && v.trim() !== ""
@@ -63,7 +84,7 @@ function CreatorCard({ creator }: { creator: PublicCreator }) {
         {creator.profile_image_url ? (
           <Image
             src={creator.profile_image_url}
-            alt={creator.display_name ?? "Creator"}
+            alt={displayName}
             fill
             sizes="64px"
             className="object-cover"
@@ -74,9 +95,18 @@ function CreatorCard({ creator }: { creator: PublicCreator }) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <h2 className="truncate text-base font-semibold tracking-tight text-ink sm:text-lg">
-          {creator.display_name ?? "Unnamed creator"}
-        </h2>
+        {isFounder ? (
+          <h2
+            className="truncate bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-base font-semibold tracking-tight text-transparent sm:text-lg"
+            style={{ filter: "drop-shadow(0 0 10px rgba(217,70,239,0.35))" }}
+          >
+            {displayName}
+          </h2>
+        ) : (
+          <h2 className="truncate text-base font-semibold tracking-tight text-ink sm:text-lg">
+            {displayName}
+          </h2>
+        )}
         {tiktokUrl && (
           <a
             href={tiktokUrl}
@@ -88,8 +118,13 @@ function CreatorCard({ creator }: { creator: PublicCreator }) {
             @{handle}
           </a>
         )}
-        {badges.length > 0 && (
+        {(isFounder || badges.length > 0) && (
           <div className="mt-2 flex flex-wrap gap-1.5">
+            {isFounder && (
+              <span className="inline-flex items-center rounded-btn border border-pink-300/60 bg-gradient-to-r from-purple-500/[0.08] to-pink-500/[0.08] px-2 py-0.5 text-[11px] font-semibold text-pink-600">
+                {publishedPeekCount} {publishedPeekCount === 1 ? "peek" : "peeks"}
+              </span>
+            )}
             {badges.map((b) => (
               <span
                 key={b}

@@ -52,6 +52,7 @@ export type Creator = {
   youtube_url: string | null;
   twitch_url: string | null;
   x_url: string | null;
+  is_founder: boolean;
   claimed_at: string | null;
   approved_at: string | null;
   created_at: string;
@@ -173,6 +174,7 @@ export type PublicCreator = Pick<
   | "youtube_url"
   | "twitch_url"
   | "x_url"
+  | "is_founder"
 >;
 
 // Public read for the /creators page. Only safe-to-expose columns —
@@ -183,10 +185,22 @@ export async function getApprovedCreators(): Promise<PublicCreator[]> {
   const { data, error } = await supabasePublic()
     .from("creators")
     .select(
-      "id, display_name, tiktok, bio, profile_image_url, rank, region, platform, youtube_url, twitch_url, x_url"
+      "id, display_name, tiktok, bio, profile_image_url, rank, region, platform, youtube_url, twitch_url, x_url, is_founder"
     )
     .not("approved_at", "is", null)
     .order("approved_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
+}
+
+// Site-wide count of published peeks. Matches the published filter used
+// by /popular and the per-map count on /maps/[slug]. Uses head:true so
+// PostgREST returns just the Content-Range count without shipping rows.
+export async function getPublishedPeekCount(): Promise<number> {
+  const { count, error } = await supabasePublic()
+    .from("peeks")
+    .select("id", { count: "exact", head: true })
+    .eq("published", true);
+  if (error) throw error;
+  return count ?? 0;
 }
