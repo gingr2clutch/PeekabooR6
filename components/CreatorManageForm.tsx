@@ -3,17 +3,15 @@
 import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import {
-  claimCodeAction,
-  createCreatorImageUploadUrl,
-  validateCodeAction,
-  type ValidateResult,
-  type ClaimResult,
-} from "@/app/claim/actions";
+  createManageImageUploadUrl,
+  updateCreatorByTokenAction,
+  type ManageUpdateResult,
+} from "@/app/manage/[token]/actions";
 import { compressImageForUpload, putToR2 } from "@/lib/upload";
 
-type Step = "code" | "profile";
-type Status = "idle" | "submitting" | "success";
-
+// Mirrors the dropdown choices in components/ClaimForm.tsx — keep these
+// lists in sync with lib/creator-validation.ts's allow-lists. Anything
+// outside the allow-list is silently dropped server-side.
 const RANK_OPTIONS = [
   "Copper",
   "Bronze",
@@ -27,31 +25,48 @@ const RANK_OPTIONS = [
 const REGION_OPTIONS = ["NA", "EU", "LATAM", "APAC", "Oceania", "MENA"];
 const PLATFORM_OPTIONS = ["PC", "PlayStation", "Xbox"];
 
-export function ClaimForm() {
-  const [step, setStep] = useState<Step>("code");
-  const [code, setCode] = useState("");
-  const [validatedCode, setValidatedCode] = useState("");
-  const [codeError, setCodeError] = useState<string | null>(null);
+type InitialProfile = {
+  display_name: string | null;
+  tiktok: string | null;
+  bio: string | null;
+  profile_image_url: string | null;
+  rank: string | null;
+  region: string | null;
+  platform: string | null;
+  youtube_url: string | null;
+  twitch_url: string | null;
+  x_url: string | null;
+};
 
-  const [displayName, setDisplayName] = useState("");
-  const [tiktok, setTiktok] = useState("");
-  const [bio, setBio] = useState("");
-  const [rank, setRank] = useState("");
-  const [region, setRegion] = useState("");
-  const [platform, setPlatform] = useState("");
-  const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [twitchUrl, setTwitchUrl] = useState("");
-  const [xUrl, setXUrl] = useState("");
-  const [claimError, setClaimError] = useState<string | null>(null);
+type Status = "idle" | "submitting" | "saved";
 
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+export function CreatorManageForm({
+  token,
+  initial,
+}: {
+  token: string;
+  initial: InitialProfile;
+}) {
+  const [displayName, setDisplayName] = useState(initial.display_name ?? "");
+  const [tiktok, setTiktok] = useState(initial.tiktok ?? "");
+  const [bio, setBio] = useState(initial.bio ?? "");
+  const [rank, setRank] = useState(initial.rank ?? "");
+  const [region, setRegion] = useState(initial.region ?? "");
+  const [platform, setPlatform] = useState(initial.platform ?? "");
+  const [youtubeUrl, setYoutubeUrl] = useState(initial.youtube_url ?? "");
+  const [twitchUrl, setTwitchUrl] = useState(initial.twitch_url ?? "");
+  const [xUrl, setXUrl] = useState(initial.x_url ?? "");
+
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(
+    initial.profile_image_url
+  );
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [status, setStatus] = useState<Status>("idle");
-  const [manageToken, setManageToken] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   async function handleProfileImage(file: File) {
@@ -60,8 +75,8 @@ export function ClaimForm() {
     setUploadProgress(0);
     try {
       const compressed = await compressImageForUpload(file, "peek");
-      const presign = await createCreatorImageUploadUrl(
-        validatedCode,
+      const presign = await createManageImageUploadUrl(
+        token,
         compressed.name,
         compressed.type
       );
@@ -80,36 +95,17 @@ export function ClaimForm() {
     }
   }
 
-  function handleCodeSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setCodeError(null);
-    const trimmed = code.trim();
-    if (!trimmed) {
-      setCodeError("Enter your code.");
-      return;
-    }
-    startTransition(async () => {
-      const res: ValidateResult = await validateCodeAction(trimmed);
-      if (res.ok) {
-        setValidatedCode(res.code);
-        setStep("profile");
-      } else {
-        setCodeError(res.error);
-      }
-    });
-  }
-
-  function handleClaimSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setClaimError(null);
+    setError(null);
     if (!displayName.trim() || !tiktok.trim()) {
-      setClaimError("Display name and TikTok handle are required.");
+      setError("Display name and TikTok handle are required.");
       return;
     }
     setStatus("submitting");
     startTransition(async () => {
-      const res: ClaimResult = await claimCodeAction({
-        code: validatedCode,
+      const res: ManageUpdateResult = await updateCreatorByTokenAction({
+        token,
         display_name: displayName,
         tiktok,
         bio,
@@ -122,52 +118,13 @@ export function ClaimForm() {
         x_url: xUrl || null,
       });
       if (res.ok) {
-        setManageToken(res.manage_token);
-        setStatus("success");
+        setStatus("saved");
+        window.setTimeout(() => setStatus("idle"), 2500);
       } else {
         setStatus("idle");
-        setClaimError(res.error);
+        setError(res.error);
       }
     });
-  }
-
-  if (status === "success") {
-    const managePath = manageToken ? `/manage/${manageToken}` : null;
-    // Display host comes from the browser so dev/preview URLs render
-    // correctly; falls back to the production host on first paint.
-    const displayHost =
-      typeof window !== "undefined" ? window.location.host : "peekaboor6.com";
-    return (
-      <div className="space-y-5 rounded-card border border-border bg-card p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]">
-        <div>
-          <h2 className="text-lg font-semibold text-ink">
-            Thanks — you&apos;re pending review.
-          </h2>
-          <p className="mt-2 text-sm text-muted">
-            We&apos;ll feature you on the Creators page once we&apos;ve
-            checked your details. No further action needed on your end.
-          </p>
-        </div>
-
-        {managePath && (
-          <div className="rounded-btn border border-brand/30 bg-brand/[0.05] p-4">
-            <p className="text-sm font-semibold text-ink">
-              Your private manage link
-            </p>
-            <p className="mt-1 text-xs text-muted">
-              Bookmark this to edit your profile later.
-            </p>
-            <a
-              href={managePath}
-              className="mt-3 block break-all rounded-btn border border-border bg-card px-3 py-2 font-mono text-xs text-brand transition-colors hover:border-brand"
-            >
-              {displayHost}
-              {managePath}
-            </a>
-          </div>
-        )}
-      </div>
-    );
   }
 
   const inputCls =
@@ -177,59 +134,10 @@ export function ClaimForm() {
     "space-y-5 rounded-card border border-border bg-card p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.04)]";
   const submitting = pending || status === "submitting";
 
-  if (step === "code") {
-    return (
-      <form onSubmit={handleCodeSubmit} className={cardCls}>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-          Step 1 of 2
-        </p>
-        <label className={labelCls}>
-          <span className="mb-1 block">Creator code</span>
-          <input
-            type="text"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            autoFocus
-            autoComplete="off"
-            placeholder="e.g. K7M9PXAB"
-            className={`${inputCls} font-mono uppercase tracking-wider`}
-            aria-invalid={codeError ? "true" : undefined}
-          />
-          {codeError && (
-            <span className="mt-1 block text-[11px] text-red-600">
-              {codeError}
-            </span>
-          )}
-        </label>
-
-        <div className="flex items-center justify-end">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="inline-flex items-center justify-center rounded-btn bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitting ? "Checking…" : "Continue →"}
-          </button>
-        </div>
-      </form>
-    );
-  }
-
   return (
-    <form onSubmit={handleClaimSubmit} className={cardCls}>
-      <div className="flex items-center justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-          Step 2 of 2
-        </p>
-        <span className="rounded-btn border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-          Code accepted
-        </span>
-      </div>
-
+    <form onSubmit={handleSubmit} className={cardCls}>
       <div>
-        <span className={labelCls}>
-          Profile picture (recommended — use your TikTok pic so fans recognize you)
-        </span>
+        <span className={labelCls}>Profile picture</span>
         <div className="mt-2 flex items-center gap-4">
           <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border border-border bg-bg">
             {profileImageUrl ? (
@@ -311,9 +219,6 @@ export function ClaimForm() {
                 {uploadError}
               </p>
             )}
-            <p className="mt-1 text-[11px] text-muted">
-              Optional — PNG, JPG, or WebP. Compressed in the browser.
-            </p>
           </div>
         </div>
       </div>
@@ -326,7 +231,6 @@ export function ClaimForm() {
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           maxLength={60}
-          placeholder="How you want to appear on the Creators page"
           className={inputCls}
         />
       </label>
@@ -351,7 +255,6 @@ export function ClaimForm() {
           onChange={(e) => setBio(e.target.value)}
           maxLength={500}
           rows={4}
-          placeholder="A short intro — playstyle, rank, what you post. Optional."
           className={`${inputCls} resize-y`}
         />
         <span className="mt-1 block text-[11px] text-muted">
@@ -450,21 +353,32 @@ export function ClaimForm() {
         </label>
       </div>
 
-      {claimError && (
+      {error && (
         <p className="text-sm text-red-600" role="alert">
-          {claimError}
+          {error}
         </p>
       )}
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] text-muted">* required</p>
-        <button
-          type="submit"
-          disabled={submitting || uploading}
-          className="inline-flex items-center justify-center rounded-btn bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {submitting ? "Submitting…" : uploading ? "Uploading…" : "Claim my code"}
-        </button>
+        <div className="flex items-center gap-3">
+          {status === "saved" && (
+            <span className="text-xs font-medium text-emerald-700">
+              Saved ✓
+            </span>
+          )}
+          <button
+            type="submit"
+            disabled={submitting || uploading}
+            className="inline-flex items-center justify-center rounded-btn bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand/90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {submitting
+              ? "Saving…"
+              : uploading
+                ? "Uploading…"
+                : "Save changes"}
+          </button>
+        </div>
       </div>
     </form>
   );
