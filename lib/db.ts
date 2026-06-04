@@ -80,12 +80,17 @@ export async function getMapBySlug(slug: string): Promise<Map | null> {
   return data;
 }
 
+// Floors render top-down site-wide: highest physical floor first, basement
+// last — so the tab/list order on the map landing page and the inline
+// floor tabs on /maps/[slug]/[floor] match how you'd read a building cross
+// section. Assumes display_order is assigned bottom-up (basement = lowest
+// value, roof = highest), which matches the admin's create-floor flow.
 export async function getFloorsForMap(mapId: string): Promise<Floor[]> {
   const { data, error } = await supabasePublic()
     .from("floors")
     .select("id, map_id, slug, name, display_order, birds_eye_url")
     .eq("map_id", mapId)
-    .order("display_order", { ascending: true });
+    .order("display_order", { ascending: false });
   if (error) throw error;
   return data ?? [];
 }
