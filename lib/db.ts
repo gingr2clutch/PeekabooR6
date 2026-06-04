@@ -80,19 +80,73 @@ export async function getMapBySlug(slug: string): Promise<Map | null> {
   return data;
 }
 
-// Floors render top-down site-wide: highest physical floor first, basement
-// last — so the tab/list order on the map landing page and the inline
-// floor tabs on /maps/[slug]/[floor] match how you'd read a building cross
-// section. Assumes display_order is assigned bottom-up (basement = lowest
-// value, roof = highest), which matches the admin's create-floor flow.
+// Maps the slug/name of a floor to a numeric physical altitude (higher =
+// closer to the roof). Required because production `display_order` is
+// inconsistent across maps — some have basement=3 / first=1 / second=2,
+// some have everything tied at 1, etc. Parsing the name gives us a
+// single rule that works for every map regardless of what was typed in
+// the admin floor form.
+function floorAltitude(slug: string, name: string): number {
+  const combined = `${slug ?? ""} ${name ?? ""}`.toLowerCase();
+
+  // Specific labels FIRST so "Sub-basement 2" isn't mistaken for floor 2.
+  if (combined.includes("roof")) return 100;
+  if (combined.includes("basement")) {
+    return combined.includes("sub") ? -2 : -1;
+  }
+  // Kanal: upper bridge sits above lower bridge, both below the floors.
+  if (combined.includes("upper") && combined.includes("bridge")) return 0.5;
+  if (combined.includes("lower") && combined.includes("bridge")) return -0.5;
+  if (combined.includes("ground")) return 0;
+
+  // Numbered floors — words first, then numerals as a fallback.
+  const wordToNum: Record<string, number> = {
+    first: 1,
+    second: 2,
+    third: 3,
+    fourth: 4,
+    fifth: 5,
+    sixth: 6,
+    seventh: 7,
+    eighth: 8,
+    ninth: 9,
+    tenth: 10,
+  };
+  for (const [word, num] of Object.entries(wordToNum)) {
+    if (combined.includes(word)) return num;
+  }
+  const m = combined.match(/(\d+)/);
+  if (m) {
+    const num = parseInt(m[1], 10);
+    if (Number.isFinite(num) && num > 0 && num < 100) return num;
+  }
+
+  // Unknown floor name — sink it to the bottom so it doesn't accidentally
+  // outrank a real floor. Tiebreakers below keep its position stable.
+  return -1000;
+}
+
+// Floors render top-down on every map: highest physical floor first,
+// basement last. The order is derived from the floor's NAME/slug, not
+// the database's display_order column — production data has that column
+// set inconsistently per map and it can't be trusted as a height index.
+// See floorAltitude() above for the parsing rules.
 export async function getFloorsForMap(mapId: string): Promise<Floor[]> {
   const { data, error } = await supabasePublic()
     .from("floors")
     .select("id, map_id, slug, name, display_order, birds_eye_url")
-    .eq("map_id", mapId)
-    .order("display_order", { ascending: false });
+    .eq("map_id", mapId);
   if (error) throw error;
-  return data ?? [];
+  const floors = data ?? [];
+  return [...floors].sort((a, b) => {
+    const da = floorAltitude(a.slug, a.name);
+    const db = floorAltitude(b.slug, b.name);
+    if (da !== db) return db - da;
+    if (a.display_order !== b.display_order) {
+      return a.display_order - b.display_order;
+    }
+    return a.name.localeCompare(b.name);
+  });
 }
 
 export async function getFloorBySlug(
