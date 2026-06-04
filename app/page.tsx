@@ -10,6 +10,12 @@ export const dynamic = "force-dynamic";
 // alphabetical.
 const FEATURED_ORDER = ["Oregon", "Clubhouse", "Nighthaven Labs"];
 
+// TEMP: Calypso Casino "new map" highlight. Pinned to first position +
+// rendered with a purple pulse glow and a "NEW MAP" badge. To remove:
+// drop this constant, the pin-to-front block below, the isNewMap branch
+// in the card render, and the .new-map-pulse rules in app/globals.css.
+const NEW_MAP_NAME = "Calypso Casino";
+
 export default async function Home() {
   const all = await getMaps();
   const maps = [...all].sort((a, b) => {
@@ -22,6 +28,16 @@ export default async function Home() {
     if (bi !== -1) return 1;
     return a.name.localeCompare(b.name);
   });
+
+  // TEMP: pull the new-map card to position 0 if it's published. No-op
+  // if it isn't found or isn't published (keeps sort behaviour intact).
+  const newMapIdx = maps.findIndex(
+    (m) => m.name === NEW_MAP_NAME && m.published
+  );
+  if (newMapIdx > 0) {
+    const [pinned] = maps.splice(newMapIdx, 1);
+    maps.unshift(pinned);
+  }
 
   return (
     <>
@@ -71,15 +87,26 @@ export default async function Home() {
             );
 
             if (map.published) {
+              // TEMP: Calypso Casino new-map highlight branch.
+              const isNewMap = map.name === NEW_MAP_NAME;
               return (
                 <li key={map.id}>
                   <Link
                     href={`/maps/${map.slug}`}
-                    className={`${cardBase} border border-border ${
+                    className={`${cardBase} border ${
+                      isNewMap
+                        ? "new-map-pulse border-purple-400/60 hover:border-purple-500"
+                        : "border-border hover:border-brand"
+                    } ${
                       hasCover ? "" : "bg-card text-ink"
-                    } hover:-translate-y-1 hover:border-brand hover:shadow-lg`}
+                    } hover:-translate-y-1 hover:shadow-lg`}
                   >
                     {cover}
+                    {isNewMap && (
+                      <span className="absolute right-2 top-2 z-20 inline-flex items-center rounded-btn bg-purple-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                        New map
+                      </span>
+                    )}
                     {label}
                   </Link>
                 </li>
