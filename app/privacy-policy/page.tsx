@@ -51,20 +51,7 @@ export default function PrivacyPolicyPage() {
               <li>Vercel — hosting and basic analytics</li>
               <li>Cloudflare R2 — image and video storage</li>
               <li>Supabase — database</li>
-              <li>Google AdSense — advertising</li>
             </ul>
-            <p className="mt-2">
-              Google AdSense and its partners may use cookies to serve ads
-              based on your prior visits to this site or other sites. You can
-              opt out of personalized advertising at{" "}
-              <a
-                href="https://www.google.com/settings/ads"
-                className="text-brand hover:underline"
-              >
-                google.com/settings/ads
-              </a>
-              .
-            </p>
           </section>
 
           <section>
