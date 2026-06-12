@@ -120,6 +120,7 @@ export default async function PeekDetailPage({
   const map = floor.maps;
   const floorHref = `/maps/${map.slug}/${floor.slug}`;
   const steps = Array.isArray(peek.instructions) ? peek.instructions : [];
+  const hasInstructionsContent = steps.length > 0 || !!peek.tip;
 
   const videoJsonLd = buildVideoJsonLd(peek, map, floor);
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(peek, map);
@@ -193,15 +194,29 @@ export default async function PeekDetailPage({
           <VoteButtons peekId={peek.id} />
         </div>
 
-        {/* Content section — 64px below buttons */}
-        <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
-          {peek.tiktok_url ? (
-            <TikTokLinkCard url={peek.tiktok_url} />
-          ) : (
-            <PeekMedia videoUrl={peek.video_url} name={peek.name} />
-          )}
-          <Instructions steps={steps} tip={peek.tip} />
-        </div>
+        {/* Content section — 64px below buttons. When there are no
+            steps and no pro tip, the instructions column would be empty
+            and the media column would render at half width with dead
+            space beside it. Drop to a single column in that case so
+            the media spans the row. */}
+        {hasInstructionsContent ? (
+          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
+            {peek.tiktok_url ? (
+              <TikTokLinkCard url={peek.tiktok_url} />
+            ) : (
+              <PeekMedia videoUrl={peek.video_url} name={peek.name} />
+            )}
+            <Instructions steps={steps} tip={peek.tip} />
+          </div>
+        ) : (
+          <div className="mt-16">
+            {peek.tiktok_url ? (
+              <TikTokLinkCard url={peek.tiktok_url} />
+            ) : (
+              <PeekMedia videoUrl={peek.video_url} name={peek.name} />
+            )}
+          </div>
+        )}
 
         {nearby.length > 0 && (
           <section className="mt-16">
@@ -232,6 +247,13 @@ export default async function PeekDetailPage({
             </ul>
           </section>
         )}
+
+        <p className="mt-12 text-center text-sm text-muted">
+          Know a better peek?{" "}
+          <Link href="/submit" className="font-medium text-brand hover:underline">
+            Submit it →
+          </Link>
+        </p>
       </main>
 
       {videoJsonLd && (
@@ -449,27 +471,25 @@ function Instructions({
   steps: string[];
   tip: string | null;
 }) {
+  if (steps.length === 0 && !tip) return null;
   return (
     <div>
-      <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-        How to do it
-      </h2>
-
-      {steps.length > 0 ? (
-        <ol className="mt-4 list-decimal space-y-5 pl-5 text-[16px] leading-[1.6]">
-          {steps.map((step, i) => (
-            <li key={i}>{step}</li>
-          ))}
-        </ol>
-      ) : (
-        <p className="mt-4 text-sm text-muted">
-          Step-by-step instructions will appear here.
-        </p>
+      {steps.length > 0 && (
+        <>
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+            How to do it
+          </h2>
+          <ol className="mt-4 list-decimal space-y-5 pl-5 text-[16px] leading-[1.6]">
+            {steps.map((step, i) => (
+              <li key={i}>{step}</li>
+            ))}
+          </ol>
+        </>
       )}
 
       {tip && (
         <>
-          <hr className="my-6 border-border" />
+          {steps.length > 0 && <hr className="my-6 border-border" />}
           <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand">
             Pro tip
           </span>
