@@ -4,6 +4,24 @@ import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase";
 import { buildBasePeekSlug, ensureUniquePeekSlug } from "@/lib/slug";
 
+// Hostnames the public detail page treats as "watch on TikTok" — keeps
+// the approve flow in sync with what the front-end actually recognises.
+const TIKTOK_HOSTS = new Set([
+  "tiktok.com",
+  "www.tiktok.com",
+  "vt.tiktok.com",
+]);
+
+function isTikTokUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+    return TIKTOK_HOSTS.has(u.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
 // Form-action signature in Next.js 14 must return void | Promise<void>,
 // so errors are thrown — Next surfaces them via its error boundary and
 // the submission row stays put for retry. Logs hit the server output.
@@ -57,13 +75,19 @@ export async function approveSubmissionAction(
   const base = buildBasePeekSlug(map.slug, name);
   const slug = await ensureUniquePeekSlug(base);
 
+  // TikTok clips route to tiktok_url so the detail page renders the
+  // "Open on TikTok" card; everything else stays as video_url.
+  const clipUrl = sub.clip_url ?? null;
+  const routeToTikTok = !!clipUrl && isTikTokUrl(clipUrl);
+
   const { error: insertErr } = await sb.from("peeks").insert({
     floor_id: floor.id,
     slug,
     name,
     x_pct: Number(sub.pin_x ?? 0),
     y_pct: Number(sub.pin_y ?? 0),
-    video_url: sub.clip_url ?? null,
+    video_url: routeToTikTok ? null : clipUrl,
+    tiktok_url: routeToTikTok ? clipUrl : null,
     tip: sub.pro_tip ?? null,
     instructions: null,
     difficulty: 3,
