@@ -21,9 +21,29 @@ type MapWithFloors = {
 type Props = { maps: MapWithFloors[] };
 type Status = "idle" | "submitting" | "success" | "error";
 
-function isHttpUrl(s: string): boolean {
-  if (!s) return true; // empty is allowed
-  return /^https?:\/\//i.test(s.trim());
+const MAX_NAME = 80;
+
+// Strict TikTok host check — the field's purpose is the TikTok clip.
+// Non-TikTok URLs would still work technically (the admin approve action
+// would route them to video_url) but the label promises a TikTok URL,
+// so we reject the rest at submission time to match the UX.
+function validateTiktokUrl(s: string): string | null {
+  const v = s.trim();
+  if (!v) return null; // optional
+  let u: URL;
+  try {
+    u = new URL(v);
+  } catch {
+    return "Must be a valid URL.";
+  }
+  if (u.protocol !== "http:" && u.protocol !== "https:") {
+    return "Must start with http:// or https://.";
+  }
+  const host = u.hostname.toLowerCase();
+  if (host !== "tiktok.com" && !host.endsWith(".tiktok.com")) {
+    return "Must be a tiktok.com link.";
+  }
+  return null;
 }
 
 export function SubmitPeekForm({ maps }: Props) {
@@ -35,18 +55,14 @@ export function SubmitPeekForm({ maps }: Props) {
   const [pinCoords, setPinCoords] = useState<{ x: number; y: number } | null>(
     null
   );
-  const [locationDesc, setLocationDesc] = useState("");
-  const [peekDesc, setPeekDesc] = useState("");
-  const [proTip, setProTip] = useState("");
-  const [clipUrl, setClipUrl] = useState("");
-  const [submitterName, setSubmitterName] = useState("");
-  const [submitterEmail, setSubmitterEmail] = useState("");
+  const [name, setName] = useState("");
+  const [tiktokUrl, setTiktokUrl] = useState("");
   const [agreeHashtag, setAgreeHashtag] = useState(false);
   const [agreeQuality, setAgreeQuality] = useState(false);
   const [honeypot, setHoneypot] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [clipUrlError, setClipUrlError] = useState<string | null>(null);
+  const [tiktokUrlError, setTiktokUrlError] = useState<string | null>(null);
 
   const selectedMap = useMemo(
     () => maps.find((m) => m.slug === mapSlug) ?? null,
@@ -71,22 +87,12 @@ export function SubmitPeekForm({ maps }: Props) {
   }
 
   function resetAfterSuccess() {
-    setLocationDesc("");
-    setPeekDesc("");
-    setProTip("");
-    setClipUrl("");
-    setSubmitterName("");
-    setSubmitterEmail("");
+    setName("");
+    setTiktokUrl("");
     setPinCoords(null);
     setAgreeHashtag(false);
     setAgreeQuality(false);
-    setClipUrlError(null);
-  }
-
-  function validateClipUrl(v: string): string | null {
-    if (!v.trim()) return null;
-    if (!isHttpUrl(v)) return "Link must start with http:// or https://";
-    return null;
+    setTiktokUrlError(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -106,7 +112,8 @@ export function SubmitPeekForm({ maps }: Props) {
       return;
     }
 
-    if (!mapSlug || !floorSlug || !peekDesc.trim()) {
+    const trimmedName = name.trim();
+    if (!mapSlug || !floorSlug || !trimmedName) {
       setErrorMsg("Please fill in the required fields.");
       setStatus("error");
       return;
@@ -118,9 +125,9 @@ export function SubmitPeekForm({ maps }: Props) {
       return;
     }
 
-    const clipErr = validateClipUrl(clipUrl);
-    if (clipErr) {
-      setClipUrlError(clipErr);
+    const tiktokErr = validateTiktokUrl(tiktokUrl);
+    if (tiktokErr) {
+      setTiktokUrlError(tiktokErr);
       setStatus("error");
       setErrorMsg(null);
       return;
@@ -128,19 +135,27 @@ export function SubmitPeekForm({ maps }: Props) {
 
     setStatus("submitting");
     setErrorMsg(null);
-    setClipUrlError(null);
+    setTiktokUrlError(null);
 
+    // Payload uses the existing peek_submissions schema:
+    // - the user's "Name" goes into peek_description (admin approve uses
+    //   this as the draft peek's name; we cap input at 80 chars so the
+    //   admin truncation never kicks in).
+    // - TikTok URL goes into clip_url; the approve action recognises
+    //   tiktok.com hosts and routes to tiktok_url on the new peek.
+    // - removed fields (location_description, pro_tip, submitter_*) are
+    //   stored as null.
     const payload = {
       map_slug: mapSlug,
       floor_slug: floorSlug,
       pin_x: pinCoords.x,
       pin_y: pinCoords.y,
-      location_description: locationDesc.trim() || null,
-      peek_description: peekDesc.trim(),
-      pro_tip: proTip.trim() || null,
-      clip_url: clipUrl.trim() || null,
-      submitter_name: submitterName.trim() || null,
-      submitter_email: submitterEmail.trim() || null,
+      location_description: null,
+      peek_description: trimmedName,
+      pro_tip: null,
+      clip_url: tiktokUrl.trim() || null,
+      submitter_name: null,
+      submitter_email: null,
       status: "pending",
     };
 
@@ -293,83 +308,40 @@ export function SubmitPeekForm({ maps }: Props) {
       </div>
 
       <label className={labelCls}>
-        <span className="mb-1 block">Location description</span>
+        <span className="mb-1 block">Name of the peek *</span>
         <input
           type="text"
-          value={locationDesc}
-          onChange={(e) => setLocationDesc(e.target.value)}
-          placeholder="Extra detail (optional) — e.g. crouched behind the railing, not standing"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={MAX_NAME}
+          placeholder="e.g. Tellers hallway"
           className={inputCls}
         />
       </label>
 
       <label className={labelCls}>
-        <span className="mb-1 block">Peek description *</span>
-        <textarea
-          required
-          rows={3}
-          value={peekDesc}
-          onChange={(e) => setPeekDesc(e.target.value)}
-          placeholder="What you're aiming at, why it works"
-          className={`${inputCls} resize-y`}
-        />
-      </label>
-
-      <label className={labelCls}>
-        <span className="mb-1 block">Pro tip</span>
-        <textarea
-          rows={2}
-          value={proTip}
-          onChange={(e) => setProTip(e.target.value)}
-          placeholder="Any extra tip — timing, angle, common mistakes to avoid"
-          className={`${inputCls} resize-y`}
-        />
-      </label>
-
-      <label className={labelCls}>
-        <span className="mb-1 block">Clip / video</span>
+        <span className="mb-1 block">TikTok URL</span>
         <input
           type="url"
-          value={clipUrl}
+          value={tiktokUrl}
           onChange={(e) => {
-            setClipUrl(e.target.value);
-            if (clipUrlError) setClipUrlError(validateClipUrl(e.target.value));
+            setTiktokUrl(e.target.value);
+            if (tiktokUrlError) {
+              setTiktokUrlError(validateTiktokUrl(e.target.value));
+            }
           }}
-          onBlur={(e) => setClipUrlError(validateClipUrl(e.target.value))}
-          placeholder="Paste a TikTok, YouTube, Twitch, or Medal link of the peek in action"
+          onBlur={(e) => setTiktokUrlError(validateTiktokUrl(e.target.value))}
+          placeholder="https://www.tiktok.com/@you/video/..."
           className={inputCls}
-          aria-invalid={clipUrlError ? "true" : undefined}
+          aria-invalid={tiktokUrlError ? "true" : undefined}
         />
-        {clipUrlError && (
+        {tiktokUrlError && (
           <span className="mt-1 block text-[11px] text-red-600">
-            {clipUrlError}
+            {tiktokUrlError}
           </span>
         )}
       </label>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <label className={labelCls}>
-          <span className="mb-1 block">Your name</span>
-          <input
-            type="text"
-            value={submitterName}
-            onChange={(e) => setSubmitterName(e.target.value)}
-            placeholder="For credit (optional)"
-            className={inputCls}
-          />
-        </label>
-
-        <label className={labelCls}>
-          <span className="mb-1 block">Email</span>
-          <input
-            type="email"
-            value={submitterEmail}
-            onChange={(e) => setSubmitterEmail(e.target.value)}
-            placeholder="If we have questions (optional)"
-            className={inputCls}
-          />
-        </label>
-      </div>
 
       {status === "error" && errorMsg && (
         <p className="text-sm text-red-600" role="alert">
