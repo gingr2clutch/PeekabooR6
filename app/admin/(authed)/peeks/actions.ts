@@ -185,6 +185,45 @@ export async function deletePeekAction(formData: FormData) {
   redirect("/admin/peeks");
 }
 
+// Single-field updater for the TikTok URL section on the edit page.
+// Empty input → null. Non-empty must parse as an http(s) URL or the
+// update is rejected (server error boundary surfaces the throw).
+export async function updatePeekTiktokUrlAction(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing peek id.");
+
+  const raw = String(formData.get("tiktok_url") ?? "").trim();
+  let value: string | null = null;
+  if (raw) {
+    let u: URL;
+    try {
+      u = new URL(raw);
+    } catch {
+      throw new Error("TikTok URL must be a valid http(s) URL.");
+    }
+    if (u.protocol !== "http:" && u.protocol !== "https:") {
+      throw new Error("TikTok URL must use http or https.");
+    }
+    value = u.toString();
+  }
+
+  const { error } = await supabaseAdmin()
+    .from("peeks")
+    .update({ tiktok_url: value })
+    .eq("id", id);
+  if (error) throw error;
+
+  revalidatePath("/admin/peeks");
+  revalidatePath(`/admin/peeks/${id}/edit`);
+
+  const { data: row } = await supabaseAdmin()
+    .from("peeks")
+    .select("slug")
+    .eq("id", id)
+    .maybeSingle();
+  if (row?.slug) revalidatePath(`/peeks/${row.slug}`);
+}
+
 export async function togglePublishedAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const next = formData.get("next") === "on";

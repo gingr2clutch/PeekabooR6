@@ -5,7 +5,11 @@ import { DirectVideoUpload } from "@/components/DirectVideoUpload";
 import { PeekForm } from "@/components/PeekForm";
 import { getFloorOptions } from "@/lib/admin-data";
 import { supabaseAdmin } from "@/lib/supabase";
-import { deletePeekAction, updatePeekAction } from "../../actions";
+import {
+  deletePeekAction,
+  updatePeekAction,
+  updatePeekTiktokUrlAction,
+} from "../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -25,13 +29,14 @@ type EditablePeek = {
   instructions: string[] | null;
   video_url: string | null;
   poster_url: string | null;
+  tiktok_url: string | null;
 };
 
 async function getPeek(id: string): Promise<EditablePeek | null> {
   const { data, error } = await supabaseAdmin()
     .from("peeks")
     .select(
-      "id, floor_id, slug, name, x_pct, y_pct, difficulty, risk, tip, success_rate, base_success_rate, published, instructions, video_url, poster_url"
+      "id, floor_id, slug, name, x_pct, y_pct, difficulty, risk, tip, success_rate, base_success_rate, published, instructions, video_url, poster_url, tiktok_url"
     )
     .eq("id", id)
     .maybeSingle();
@@ -110,6 +115,35 @@ export default async function AdminEditPeekPage({
           Video clip
         </h2>
         <DirectVideoUpload peekId={peek.id} initialUrl={peek.video_url} />
+      </section>
+
+      <section className="rounded-card border border-border bg-card p-5">
+        <form action={updatePeekTiktokUrlAction} className="space-y-3">
+          <input type="hidden" name="id" value={peek.id} />
+          <label className="block text-xs text-muted">
+            <span className="mb-1 block">TikTok URL (optional)</span>
+            <input
+              type="url"
+              name="tiktok_url"
+              defaultValue={peek.tiktok_url ?? ""}
+              placeholder="https://www.tiktok.com/@creator/video/..."
+              className="w-full rounded-btn border border-border bg-card px-3 py-2 text-sm text-ink outline-none focus:border-brand"
+            />
+            <span className="mt-1 block text-[11px] text-muted">
+              When set, the public peek page swaps the inline video for an
+              &ldquo;Open on TikTok&rdquo; card and the floor pin renders
+              with the purple→orange gradient.
+            </span>
+          </label>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="rounded-btn bg-ink px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-brand active:scale-95"
+            >
+              Save TikTok URL
+            </button>
+          </div>
+        </form>
       </section>
     </div>
   );
