@@ -21,7 +21,7 @@ type Joined = Peek & {
 };
 
 const JOIN_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
 
 async function fetchBySlug(slug: string): Promise<Joined | null> {
   const { data, error } = await supabasePublic()
@@ -195,7 +195,11 @@ export default async function PeekDetailPage({
 
         {/* Content section — 64px below buttons */}
         <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
-          <PeekMedia videoUrl={peek.video_url} name={peek.name} />
+          {peek.tiktok_url ? (
+            <TikTokLinkCard url={peek.tiktok_url} />
+          ) : (
+            <PeekMedia videoUrl={peek.video_url} name={peek.name} />
+          )}
           <Instructions steps={steps} tip={peek.tip} />
         </div>
 
@@ -377,6 +381,47 @@ function RiskPill({ risk }: { risk: string }) {
     >
       {risk}
     </span>
+  );
+}
+
+// Replaces the in-line PeekMedia player when peek.tiktok_url is set.
+// Sits in the same grid cell so the rest of the layout (Instructions /
+// hero stats / nearby) is unchanged. Opens in a new tab — TikTok blocks
+// iframe embeds without explicit oEmbed handling, so a link is the
+// honest UX.
+function TikTokLinkCard({ url }: { url: string }) {
+  return (
+    <div>
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+        Watch the peek
+      </h2>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 flex aspect-video w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-card border border-border bg-gradient-to-br from-purple-500 via-fuchsia-500 to-brand text-white shadow-md transition-all duration-150 ease-out hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.99]"
+      >
+        <TikTokGlyph className="h-12 w-12 drop-shadow-md" />
+        <span className="text-base font-semibold drop-shadow-md sm:text-lg">
+          Open on TikTok
+        </span>
+        <span className="text-xs font-medium opacity-90 drop-shadow-sm">
+          Opens in a new tab
+        </span>
+      </a>
+    </div>
+  );
+}
+
+function TikTokGlyph({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden
+      className={`fill-current ${className ?? ""}`}
+    >
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.1z" />
+    </svg>
   );
 }
 

@@ -183,6 +183,7 @@ export function FloorView({ map, floor, peeks }: Props) {
               yPct={peek.displayY}
               number={i + 1}
               isNew={isPeekNew(peek.created_at)}
+              hasTiktok={!!peek.tiktok_url}
               isSelected={selectedId === peek.id}
               onSelect={() => toggleSelect(peek.id)}
             />

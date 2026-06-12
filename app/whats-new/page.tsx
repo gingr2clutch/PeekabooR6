@@ -27,7 +27,7 @@ async function loadFeed(): Promise<FeedRow[]> {
   const { data, error } = await supabasePublic()
     .from("peeks")
     .select(
-      "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))"
+      "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))"
     )
     .eq("published", true)
     .order("created_at", { ascending: false })

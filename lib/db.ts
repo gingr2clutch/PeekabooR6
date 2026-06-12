@@ -26,6 +26,7 @@ export type Peek = {
   y_pct: number;
   video_url: string | null;
   poster_url: string | null;
+  tiktok_url: string | null;
   instructions: string[] | null;
   difficulty: number;
   risk: "low" | "medium" | "high";
@@ -59,7 +60,7 @@ export type Creator = {
 };
 
 const PEEK_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at";
 
 export async function getMaps(): Promise<Map[]> {
   const { data, error } = await supabasePublic()
