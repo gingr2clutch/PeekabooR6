@@ -21,6 +21,9 @@ export default function AuthedAdminLayout({
           <Link href="/admin/peeks" className={navLinkCls}>
             Peeks
           </Link>
+          <Link href="/admin/submissions" className={navLinkCls}>
+            Submissions
+          </Link>
           <Link href="/admin/creators" className={navLinkCls}>
             Creators
           </Link>
