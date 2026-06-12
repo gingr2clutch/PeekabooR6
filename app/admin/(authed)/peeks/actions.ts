@@ -160,10 +160,16 @@ export async function updatePeekAction(formData: FormData) {
       difficulty,
       risk,
       tip,
-      // Form save updates the admin-set BASE only — the visible
-      // success_rate column is owned by the public vote handler so a
-      // routine edit never clobbers vote-driven drift.
+      // Slider writes both the admin-set base AND the visible rate.
+      // An earlier version only updated base_success_rate, on the theory
+      // that vote-driven drift on success_rate shouldn't be clobbered —
+      // but for peeks with no/few votes that left admin edits invisible
+      // on the public page. Treating an explicit slider change as the
+      // intended visible rate matches createPeekAction's behaviour and
+      // is what an admin expects when they move the slider and save.
+      // Votes resume drift from this new base afterwards.
       base_success_rate: success_rate,
+      success_rate,
       published,
       instructions: instructions.length ? instructions : null,
     })
