@@ -4,18 +4,18 @@ import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase";
 import { buildBasePeekSlug, ensureUniquePeekSlug } from "@/lib/slug";
 
-export type ActionResult =
-  | { ok: true }
-  | { ok: false; error: string };
+// Form-action signature in Next.js 14 must return void | Promise<void>,
+// so errors are thrown — Next surfaces them via its error boundary and
+// the submission row stays put for retry. Logs hit the server output.
 
 // Approve: create a draft peek from the submission, then delete the
 // submission row. Peek is inserted with published=false + sensible
 // defaults so the admin can finish it in the existing peeks dashboard.
 export async function approveSubmissionAction(
   formData: FormData
-): Promise<ActionResult> {
+): Promise<void> {
   const id = String(formData.get("id") ?? "").trim();
-  if (!id) return { ok: false, error: "Missing id." };
+  if (!id) throw new Error("Missing id.");
 
   const sb = supabaseAdmin();
 
@@ -24,8 +24,8 @@ export async function approveSubmissionAction(
     .select("*")
     .eq("id", id)
     .maybeSingle();
-  if (readErr) return { ok: false, error: readErr.message };
-  if (!sub) return { ok: false, error: "Submission not found." };
+  if (readErr) throw new Error(readErr.message);
+  if (!sub) throw new Error("Submission not found.");
 
   // Resolve floor by (map_slug, floor_slug) — the submission only stores
   // the slug pair, but peeks.floor_id is a UUID FK.
@@ -34,10 +34,8 @@ export async function approveSubmissionAction(
     .select("id, slug")
     .eq("slug", sub.map_slug)
     .maybeSingle();
-  if (mapErr) return { ok: false, error: mapErr.message };
-  if (!map) {
-    return { ok: false, error: `Map "${sub.map_slug}" not found.` };
-  }
+  if (mapErr) throw new Error(mapErr.message);
+  if (!map) throw new Error(`Map "${sub.map_slug}" not found.`);
 
   const { data: floor, error: floorErr } = await sb
     .from("floors")
@@ -45,12 +43,11 @@ export async function approveSubmissionAction(
     .eq("map_id", map.id)
     .eq("slug", sub.floor_slug)
     .maybeSingle();
-  if (floorErr) return { ok: false, error: floorErr.message };
+  if (floorErr) throw new Error(floorErr.message);
   if (!floor) {
-    return {
-      ok: false,
-      error: `Floor "${sub.floor_slug}" not found on ${sub.map_slug}.`,
-    };
+    throw new Error(
+      `Floor "${sub.floor_slug}" not found on ${sub.map_slug}.`
+    );
   }
 
   // Draft name from the description — admin edits it later in the peeks
@@ -73,31 +70,29 @@ export async function approveSubmissionAction(
     risk: "medium",
     published: false,
   });
-  if (insertErr) return { ok: false, error: insertErr.message };
+  if (insertErr) throw new Error(insertErr.message);
 
   const { error: delErr } = await sb
     .from("peek_submissions")
     .delete()
     .eq("id", id);
-  if (delErr) return { ok: false, error: delErr.message };
+  if (delErr) throw new Error(delErr.message);
 
   revalidatePath("/admin/submissions");
   revalidatePath("/admin/peeks");
-  return { ok: true };
 }
 
 export async function rejectSubmissionAction(
   formData: FormData
-): Promise<ActionResult> {
+): Promise<void> {
   const id = String(formData.get("id") ?? "").trim();
-  if (!id) return { ok: false, error: "Missing id." };
+  if (!id) throw new Error("Missing id.");
 
   const { error } = await supabaseAdmin()
     .from("peek_submissions")
     .delete()
     .eq("id", id);
-  if (error) return { ok: false, error: error.message };
+  if (error) throw new Error(error.message);
 
   revalidatePath("/admin/submissions");
-  return { ok: true };
 }
