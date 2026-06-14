@@ -53,7 +53,7 @@ export function GearUpHomeCard() {
       target="_blank"
       rel={LINK_REL}
       aria-label="Lower your ping in R6 with GearUP (affiliate link, opens in new tab)"
-      className="mx-auto mt-12 flex max-w-md items-center gap-3 rounded-card bg-[#1a1a2e] px-4 py-2.5 text-sm transition-all duration-150 ease-out hover:shadow-md active:scale-[0.995]"
+      className="mx-auto mt-6 flex max-w-md items-center gap-3 rounded-card bg-[#1a1a2e] px-4 py-2.5 text-sm transition-all duration-150 ease-out hover:shadow-md active:scale-[0.995]"
     >
       <span aria-hidden className="text-lg leading-none">
         ⚡
