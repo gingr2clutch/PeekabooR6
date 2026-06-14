@@ -46,6 +46,9 @@ export default async function Home() {
       <PageHeader home />
       <main className="fade-in-up mx-auto max-w-6xl px-6 pb-20 pt-10">
         <AnnouncementBanner />
+        <div className="mb-8">
+          <GearUpHomeCard />
+        </div>
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
           <p className="mt-2 text-muted">Click the map you're on</p>
@@ -134,8 +137,6 @@ export default async function Home() {
             );
           })}
         </ul>
-
-        <GearUpHomeCard />
       </main>
     </>
   );
