@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { AnimatedRate } from "@/components/AnimatedRate";
-import { GearUpBanner } from "@/components/GearUp";
 import { PageHeader } from "@/components/PageHeader";
 import { PeekMedia } from "@/components/PeekMedia";
 import { VoteButtons } from "@/components/VoteButtons";
@@ -195,19 +194,12 @@ export default async function PeekDetailPage({
           <VoteButtons peekId={peek.id} />
         </div>
 
-        {/* GearUP affiliate banner — sits above the content section so
-            it's visible before the "How to do it" instructions. Keeps
-            the same vertical rhythm as the content grid below. */}
-        <div className="mt-16">
-          <GearUpBanner />
-        </div>
-
         {/* Content section — when there are no steps and no pro tip the
             instructions column would be empty and the media column would
             render at half width with dead space beside it. Drop to a
             single column in that case so the media spans the row. */}
         {hasInstructionsContent ? (
-          <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
+          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
             {peek.tiktok_url ? (
               <TikTokLinkCard url={peek.tiktok_url} />
             ) : (
@@ -216,7 +208,7 @@ export default async function PeekDetailPage({
             <Instructions steps={steps} tip={peek.tip} />
           </div>
         ) : (
-          <div className="mt-8">
+          <div className="mt-16">
             {peek.tiktok_url ? (
               <TikTokLinkCard url={peek.tiktok_url} />
             ) : (
