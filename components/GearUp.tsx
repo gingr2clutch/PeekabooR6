@@ -1,0 +1,68 @@
+// =====================================================================
+// GEARUP AFFILIATE LINK — REPLACE THIS BEFORE THIS BANNER GOES LIVE.
+// Paste your real affiliate URL from the GearUP affiliate dashboard in
+// place of the placeholder below. Until you do, every click on either
+// the peek-detail banner or the homepage card lands on a dummy host
+// that does nothing for you. Search "GEARUP_AFFILIATE_URL" to find it.
+// =====================================================================
+const GEARUP_AFFILIATE_URL =
+  "https://REPLACE-ME-GEARUP-AFFILIATE-LINK.example/r6";
+
+// rel="sponsored" is the Google-recommended attribute for affiliate
+// links and tells crawlers this is a paid placement (kept alongside
+// noopener/noreferrer for tab-open safety). Sponsored disclosure inside
+// the card itself satisfies the FTC endorsement guidelines.
+const LINK_REL = "noopener noreferrer sponsored";
+
+// Full-width banner placed above the instructions section on every peek
+// detail page. Stacks vertically on mobile, side-by-side on >=sm so the
+// CTA stays prominent on larger screens.
+export function GearUpBanner() {
+  return (
+    <a
+      href={GEARUP_AFFILIATE_URL}
+      target="_blank"
+      rel={LINK_REL}
+      aria-label="Try GearUP free (affiliate link, opens in new tab)"
+      className="group block overflow-hidden rounded-card bg-[#1a1a2e] p-4 text-left transition-all duration-150 ease-out hover:shadow-lg active:scale-[0.995] sm:p-5"
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base font-bold text-white sm:text-lg">
+            Lagging in ranked?
+          </h3>
+          <p className="mt-1 text-xs text-slate-400 sm:text-sm">
+            GearUP Booster reduces your ping so you can focus on the peek
+          </p>
+        </div>
+        <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-brand px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors group-hover:bg-brand/90 group-active:scale-[0.99]">
+          Try GearUP Free
+        </span>
+      </div>
+      <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+        Sponsored · affiliate link
+      </p>
+    </a>
+  );
+}
+
+// Subtle one-line variant for the homepage, below the map grid. Single
+// row on every breakpoint so it doesn't dominate the page; the link
+// itself is the whole row, with the bolt emoji as the leading visual.
+export function GearUpHomeCard() {
+  return (
+    <a
+      href={GEARUP_AFFILIATE_URL}
+      target="_blank"
+      rel={LINK_REL}
+      aria-label="Reduce your R6 ping with GearUP (affiliate link, opens in new tab)"
+      className="mx-auto mt-12 flex max-w-md items-center gap-3 rounded-card bg-[#1a1a2e] px-4 py-2.5 text-sm transition-all duration-150 ease-out hover:shadow-md active:scale-[0.995]"
+    >
+      <span aria-hidden className="text-lg leading-none">
+        ⚡
+      </span>
+      <span className="min-w-0 flex-1 text-white">Reduce your R6 ping</span>
+      <span className="shrink-0 font-semibold text-brand">Try free →</span>
+    </a>
+  );
+}

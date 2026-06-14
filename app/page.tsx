@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
+import { GearUpHomeCard } from "@/components/GearUp";
 import { PageHeader } from "@/components/PageHeader";
 import { getMaps } from "@/lib/db";
 
@@ -133,6 +134,8 @@ export default async function Home() {
             );
           })}
         </ul>
+
+        <GearUpHomeCard />
       </main>
     </>
   );
