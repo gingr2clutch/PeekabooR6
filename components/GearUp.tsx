@@ -1,12 +1,9 @@
-// =====================================================================
-// GEARUP AFFILIATE LINK — REPLACE THIS BEFORE THIS BANNER GOES LIVE.
-// Paste your real affiliate URL from the GearUP affiliate dashboard in
-// place of the placeholder below. Until you do, every click on either
-// the peek-detail banner or the homepage card lands on a dummy host
-// that does nothing for you. Search "GEARUP_AFFILIATE_URL" to find it.
-// =====================================================================
+// GearUP affiliate link. Tracks under affid=aff700160 — every click on
+// the peek-detail banner or the homepage card credits that affiliate ID.
+// Replace if/when the affiliate relationship changes; this is the only
+// place the URL is defined.
 const GEARUP_AFFILIATE_URL =
-  "https://REPLACE-ME-GEARUP-AFFILIATE-LINK.example/r6";
+  "https://www.gearupbooster.com/?affid=aff700160";
 
 // rel="sponsored" is the Google-recommended attribute for affiliate
 // links and tells crawlers this is a paid placement (kept alongside
