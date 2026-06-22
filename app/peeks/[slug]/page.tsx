@@ -1,22 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { AnimatedRate } from "@/components/AnimatedRate";
 import { PageHeader } from "@/components/PageHeader";
 import { PeekMedia } from "@/components/PeekMedia";
 import { VoteButtons } from "@/components/VoteButtons";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
-import { MEASURED_MIN_VOTES, rating, votesText } from "@/lib/rate";
-import {
-  EffectivenessBadge,
-  effectivenessTextColor,
-} from "@/components/EffectivenessBadge";
+import { rating, votesText, type Grade } from "@/lib/rate";
+import { GradeBadge } from "@/components/GradeBadge";
 import { isUuid } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
 
 const SITE_URL = "https://peekaboor6.com";
+
+// Grade on a 4-point scale for schema.org AggregateRating (measured tier only).
+const GRADE_RATING_VALUE: Record<Grade, number> = { S: 4, A: 3, B: 2, C: 1 };
 
 type Joined = Peek & {
   created_at: string;
@@ -181,13 +180,7 @@ export default async function PeekDetailPage({
         {/* Hero stats card — 32px below header */}
         <section className="mt-6 rounded-card border border-border bg-card p-4 md:mt-8 md:p-8">
           <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-            <StatCell
-              label={
-                peek.vote_count >= MEASURED_MIN_VOTES
-                  ? "Success rate"
-                  : "Effectiveness"
-              }
-            >
+            <StatCell label="Effectiveness">
               <SuccessStat peek={peek} />
             </StatCell>
             <StatCell label="Difficulty">
@@ -280,27 +273,15 @@ function jsonLdText(obj: unknown): string {
   return JSON.stringify(obj).replace(/</g, "\\u003c");
 }
 
-// Compact rating figure for the "Peeks close by" list. Estimate tier shows
-// the Effectiveness band; measured tier shows the real percentage.
+// Compact rating figure for the "Peeks close by" list — grade badge with a
+// caption of the vote count (measured) or "Effectiveness" (estimate).
 function NearbyStat({ peek }: { peek: NearbyPeek }) {
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
-  if (r.tier === "estimate") {
-    return (
-      <div className="shrink-0 text-right">
-        <EffectivenessBadge level={r.level} />
-        <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-          Effectiveness
-        </div>
-      </div>
-    );
-  }
   return (
     <div className="shrink-0 text-right">
-      <div className="text-xl font-bold leading-none tracking-tight text-brand">
-        {r.pct}%
-      </div>
+      <GradeBadge grade={r.grade} />
       <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-        {votesText(r.votes)}
+        {r.tier === "measured" ? votesText(r.votes) : "Effectiveness"}
       </div>
     </div>
   );
@@ -314,11 +295,11 @@ function peekDescription(
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   const base = `${peek.name} — a ${peek.risk}-risk spawn peek on ${map.name} ${floor.name} in Rainbow Six Siege`;
   if (r.tier === "estimate") {
-    return `${base}, rated ${r.level} for effectiveness.`;
+    return `${base}, graded ${r.grade} for effectiveness.`;
   }
-  return `${base} with a ${r.pct}% community-tested success rate across ${votesText(
+  return `${base}, graded ${r.grade} for effectiveness from ${votesText(
     r.votes
-  )}.`;
+  )} of community feedback.`;
 }
 
 function buildVideoJsonLd(
@@ -344,16 +325,16 @@ function buildVideoJsonLd(
     video.thumbnailUrl = [thumbnail];
   }
 
-  // Only emit aggregateRating for measured-tier peeks — a real worked/total
-  // percentage from actual votes. Admin estimates are never published as a
-  // numeric rating (Google may flag thin/fabricated rating data).
+  // Only emit aggregateRating for measured-tier peeks (real votes). The grade
+  // is expressed on a 4-point scale (S=4 … C=1) — no raw percentage. Admin
+  // estimates are never published as a numeric rating.
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   if (r.tier === "measured") {
     video.aggregateRating = {
       "@type": "AggregateRating",
-      ratingValue: String(r.pct),
-      bestRating: "100",
-      worstRating: "0",
+      ratingValue: String(GRADE_RATING_VALUE[r.grade]),
+      bestRating: "4",
+      worstRating: "1",
       ratingCount: r.votes,
     };
   }
@@ -391,31 +372,19 @@ function buildBreadcrumbJsonLd(
   };
 }
 
-// Hero rating figure. Estimate-tier peeks show their Effectiveness band in
-// the band's colour (no percentage); measured-tier peeks animate the real
-// percentage and label its vote count.
+// Hero rating figure — the headline grade badge. Measured-tier peeks show the
+// vote count beneath so the grade reads as community-backed; estimate-tier
+// peeks show the grade alone. Never a percentage.
 function SuccessStat({ peek }: { peek: Peek }) {
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
-  if (r.tier === "estimate") {
-    return (
-      <span
-        className={`text-4xl font-bold leading-none tracking-tight md:text-6xl ${effectivenessTextColor(
-          r.level
-        )}`}
-      >
-        {r.level}
-      </span>
-    );
-  }
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <AnimatedRate
-        value={r.pct}
-        className="text-4xl font-bold leading-none tracking-tight text-brand md:text-[72px]"
-      />
-      <span className="text-[11px] font-medium text-muted md:text-xs">
-        {votesText(r.votes)}
-      </span>
+      <GradeBadge grade={r.grade} size="lg" />
+      {r.tier === "measured" && (
+        <span className="text-[11px] font-medium text-muted md:text-xs">
+          {votesText(r.votes)}
+        </span>
+      )}
     </div>
   );
 }

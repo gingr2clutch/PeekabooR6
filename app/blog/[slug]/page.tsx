@@ -14,7 +14,7 @@ import {
   type BlogPeek,
 } from "@/lib/blog";
 import { rating, votesText } from "@/lib/rate";
-import { EffectivenessBadge } from "@/components/EffectivenessBadge";
+import { GradeBadge } from "@/components/GradeBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -269,32 +269,22 @@ function PeekSection({ peek, rank }: { peek: BlogPeek; rank: number }) {
   );
 }
 
-// Rating stat chip. Estimate-tier peeks show an Effectiveness band (no %);
-// measured-tier peeks show the real percentage with its vote count.
+// Effectiveness grade chip. Grade for every peek; measured-tier peeks add
+// their vote count beneath so the grade reads as community-backed.
 function ReliabilityCell({ peek }: { peek: BlogPeek }) {
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
-  if (r.tier === "estimate") {
-    return (
-      <div>
-        <dt className="text-[11px] uppercase tracking-wide text-muted">
-          Effectiveness
-        </dt>
-        <dd className="mt-1">
-          <EffectivenessBadge level={r.level} />
-        </dd>
-      </div>
-    );
-  }
   return (
     <div>
-      <dt className="text-[11px] uppercase tracking-wide text-muted">Success</dt>
+      <dt className="text-[11px] uppercase tracking-wide text-muted">
+        Effectiveness
+      </dt>
       <dd className="mt-1">
-        <span className="text-2xl font-bold leading-none tracking-tight text-brand">
-          {r.pct}%
-        </span>
-        <span className="mt-1 block text-[11px] font-medium normal-case text-muted">
-          {votesText(r.votes)}
-        </span>
+        <GradeBadge grade={r.grade} />
+        {r.tier === "measured" && (
+          <span className="mt-1 block text-[11px] font-medium normal-case text-muted">
+            {votesText(r.votes)}
+          </span>
+        )}
       </dd>
     </div>
   );
@@ -336,16 +326,16 @@ function buildArticleJsonLd(data: ArticleData, url: string) {
 }
 
 // Structured-data description per peek video. Mirrors the on-page copy rule:
-// effectiveness band for estimate-tier angles, measured % otherwise.
+// an effectiveness grade, with the vote count once it's community-backed.
 function videoPeekDescription(p: BlogPeek, mapName: string): string {
   const r = rating(p.base_success_rate, p.worked_votes, p.vote_count);
   const base = `${p.name} is a ${p.risk}-risk spawn peek on ${mapName} ${p.floor.name}`;
   if (r.tier === "estimate") {
-    return `${base}, rated ${r.level} for effectiveness.`;
+    return `${base}, graded ${r.grade} for effectiveness.`;
   }
-  return `${base} with a ${r.pct}% community success rate across ${votesText(
+  return `${base}, graded ${r.grade} for effectiveness from ${votesText(
     r.votes
-  )}.`;
+  )} of community feedback.`;
 }
 
 function buildVideoJsonLd(data: ArticleData) {
