@@ -32,14 +32,15 @@ export function grade(value: number): Grade {
 
 export type Rating =
   | { tier: "estimate"; grade: Grade }
-  | { tier: "measured"; grade: Grade; votes: number };
+  | { tier: "measured"; grade: Grade; pct: number; votes: number };
 
-// Single source of truth for how a peek's reliability renders. Both tiers show
-// a letter grade — never a raw percentage:
-//   • < MEASURED_MIN_VOTES votes → "estimate": grade from the admin seed.
-//   • ≥ MEASURED_MIN_VOTES votes → "measured": grade recomputed from the real
-//     worked/total ratio, shown alongside the vote count so it reads as
-//     community-backed.
+// Single source of truth for how a peek's reliability renders. The grade is
+// always the headline:
+//   • < MEASURED_MIN_VOTES votes → "estimate": grade from the admin seed, and
+//     `pct` is intentionally absent — a percentage must never show here.
+//   • ≥ MEASURED_MIN_VOTES votes → "measured": grade AND percentage recomputed
+//     from the real worked/total ratio, with the vote count, so the rate is
+//     only ever shown once it's vote-backed.
 export function rating(
   estimate: number,
   workedVotes: number,
@@ -48,7 +49,8 @@ export function rating(
   const total = Math.max(0, Math.floor(totalVotes || 0));
   if (total >= MEASURED_MIN_VOTES) {
     const worked = Math.max(0, Math.min(total, Math.floor(workedVotes || 0)));
-    return { tier: "measured", grade: grade((worked / total) * 100), votes: total };
+    const pct = Math.round((worked / total) * 100);
+    return { tier: "measured", grade: grade(pct), pct, votes: total };
   }
   return { tier: "estimate", grade: grade(estimate) };
 }

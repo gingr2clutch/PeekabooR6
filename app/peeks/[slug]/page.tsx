@@ -372,9 +372,9 @@ function buildBreadcrumbJsonLd(
   };
 }
 
-// Hero rating figure — the headline grade badge. Measured-tier peeks show the
-// vote count beneath so the grade reads as community-backed; estimate-tier
-// peeks show the grade alone. Never a percentage.
+// Hero rating figure — the headline grade badge. Once a peek is vote-backed
+// (measured tier) the real percentage and vote count show beneath the grade;
+// estimate-tier peeks show the grade alone, never a percentage.
 function SuccessStat({ peek }: { peek: Peek }) {
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   return (
@@ -382,7 +382,7 @@ function SuccessStat({ peek }: { peek: Peek }) {
       <GradeBadge grade={r.grade} size="lg" />
       {r.tier === "measured" && (
         <span className="text-[11px] font-medium text-muted md:text-xs">
-          {votesText(r.votes)}
+          {r.pct}% · {votesText(r.votes)}
         </span>
       )}
     </div>
