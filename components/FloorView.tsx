@@ -7,7 +7,8 @@ import { Link2, Share2, X } from "lucide-react";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PeekPin } from "@/components/PeekPin";
 import type { Floor, Map, Peek } from "@/lib/db";
-import { reliability, reportsText } from "@/lib/rate";
+import { rating, ratingLabel, votesText } from "@/lib/rate";
+import { EffectivenessBadge } from "@/components/EffectivenessBadge";
 import { isPeekNew } from "@/lib/peek-recency";
 
 type Positioned = Peek & { displayX: number; displayY: number };
@@ -184,6 +185,11 @@ export function FloorView({ map, floor, peeks }: Props) {
               number={i + 1}
               isNew={isPeekNew(peek.created_at)}
               hasTiktok={!!peek.tiktok_url}
+              ratingText={ratingLabel(
+                peek.base_success_rate,
+                peek.worked_votes,
+                peek.vote_count
+              )}
               isSelected={selectedId === peek.id}
               onSelect={() => toggleSelect(peek.id)}
             />
@@ -451,26 +457,22 @@ function AnimatedNumber({
   return <>{current}</>;
 }
 
-// Success tile for the mobile selected-pin card. Unrated peeks omit the
-// percentage; rated/early peeks surface the report count in the tile label
-// so the rate never stands alone.
+// Rating tile for the mobile selected-pin card. Estimate tier shows the
+// Effectiveness band; measured tier shows the real percentage with its
+// vote count in the tile label so the rate never stands alone.
 function SuccessTile({ peek }: { peek: Positioned }) {
-  const r = reliability(peek.success_rate, peek.vote_count);
-  if (r.kind === "unrated") {
+  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
+  if (r.tier === "estimate") {
     return (
-      <StatTile label="Success">
-        <span className="text-[11px] font-semibold text-muted">
-          Not yet rated
-        </span>
+      <StatTile label="Effectiveness">
+        <EffectivenessBadge level={r.level} />
       </StatTile>
     );
   }
   return (
-    <StatTile
-      label={`${reportsText(r.reports)}${r.kind === "early" ? " · early" : ""}`}
-    >
+    <StatTile label={votesText(r.votes)}>
       <span className="text-base font-bold text-brand">
-        <AnimatedNumber value={r.rate} />%
+        <AnimatedNumber value={r.pct} />%
       </span>
     </StatTile>
   );

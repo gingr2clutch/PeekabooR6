@@ -7,13 +7,16 @@ import { PeekMedia } from "@/components/PeekMedia";
 import { VoteButtons } from "@/components/VoteButtons";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
-import { displayRate, reliability, reportsText } from "@/lib/rate";
+import { MEASURED_MIN_VOTES, rating, votesText } from "@/lib/rate";
+import {
+  EffectivenessBadge,
+  effectivenessTextColor,
+} from "@/components/EffectivenessBadge";
 import { isUuid } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
 
 const SITE_URL = "https://peekaboor6.com";
-const MIN_VOTES_FOR_RATING = 10;
 
 type Joined = Peek & {
   created_at: string;
@@ -21,7 +24,7 @@ type Joined = Peek & {
 };
 
 const JOIN_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, success_rate, base_success_rate, published, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
 
 async function fetchBySlug(slug: string): Promise<Joined | null> {
   const { data, error } = await supabasePublic()
@@ -51,7 +54,8 @@ type NearbyPeek = {
   name: string;
   x_pct: number | null;
   y_pct: number | null;
-  success_rate: number;
+  base_success_rate: number;
+  worked_votes: number;
   vote_count: number;
 };
 
@@ -63,7 +67,9 @@ async function fetchSameFloorPeeks(
 ): Promise<NearbyPeek[]> {
   const { data, error } = await supabasePublic()
     .from("peeks")
-    .select("id, slug, name, x_pct, y_pct, success_rate, vote_count")
+    .select(
+      "id, slug, name, x_pct, y_pct, base_success_rate, worked_votes, vote_count"
+    )
     .eq("floor_id", floorId)
     .eq("published", true)
     .neq("id", excludeId);
@@ -175,7 +181,13 @@ export default async function PeekDetailPage({
         {/* Hero stats card — 32px below header */}
         <section className="mt-6 rounded-card border border-border bg-card p-4 md:mt-8 md:p-8">
           <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-            <StatCell label="Success rate">
+            <StatCell
+              label={
+                peek.vote_count >= MEASURED_MIN_VOTES
+                  ? "Success rate"
+                  : "Effectiveness"
+              }
+            >
               <SuccessStat peek={peek} />
             </StatCell>
             <StatCell label="Difficulty">
@@ -268,25 +280,27 @@ function jsonLdText(obj: unknown): string {
   return JSON.stringify(obj).replace(/</g, "\\u003c");
 }
 
-// Compact success figure for the "Peeks close by" list. Same rule as the
-// hero: no bare percentage for unrated angles.
+// Compact rating figure for the "Peeks close by" list. Estimate tier shows
+// the Effectiveness band; measured tier shows the real percentage.
 function NearbyStat({ peek }: { peek: NearbyPeek }) {
-  const r = reliability(peek.success_rate, peek.vote_count);
-  if (r.kind === "unrated") {
+  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
+  if (r.tier === "estimate") {
     return (
-      <div className="shrink-0 text-right text-xs font-semibold text-muted">
-        Not yet rated
+      <div className="shrink-0 text-right">
+        <EffectivenessBadge level={r.level} />
+        <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+          Effectiveness
+        </div>
       </div>
     );
   }
   return (
     <div className="shrink-0 text-right">
       <div className="text-xl font-bold leading-none tracking-tight text-brand">
-        {r.rate}%
+        {r.pct}%
       </div>
       <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-        {reportsText(r.reports)}
-        {r.kind === "early" ? " · early" : ""}
+        {votesText(r.votes)}
       </div>
     </div>
   );
@@ -297,14 +311,14 @@ function peekDescription(
   map: Map,
   floor: Floor
 ): string {
-  const r = reliability(peek.success_rate, peek.vote_count);
+  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   const base = `${peek.name} — a ${peek.risk}-risk spawn peek on ${map.name} ${floor.name} in Rainbow Six Siege`;
-  if (r.kind === "unrated") {
-    return `${base}. New angle — not yet rated by the community.`;
+  if (r.tier === "estimate") {
+    return `${base}, rated ${r.level} for effectiveness.`;
   }
-  return `${base} with a ${r.rate}% community-tested success rate across ${reportsText(
-    r.reports
-  )}${r.kind === "early" ? " (early data)" : ""}.`;
+  return `${base} with a ${r.pct}% community-tested success rate across ${votesText(
+    r.votes
+  )}.`;
 }
 
 function buildVideoJsonLd(
@@ -330,16 +344,17 @@ function buildVideoJsonLd(
     video.thumbnailUrl = [thumbnail];
   }
 
-  // Only annotate ratings when there's a meaningful sample. Thin rating
-  // data hurts more than helps — Google may flag it and competitors can
-  // gain SEO ground if it looks fake.
-  if (peek.vote_count >= MIN_VOTES_FOR_RATING) {
+  // Only emit aggregateRating for measured-tier peeks — a real worked/total
+  // percentage from actual votes. Admin estimates are never published as a
+  // numeric rating (Google may flag thin/fabricated rating data).
+  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
+  if (r.tier === "measured") {
     video.aggregateRating = {
       "@type": "AggregateRating",
-      ratingValue: String(displayRate(peek.success_rate)),
+      ratingValue: String(r.pct),
       bestRating: "100",
       worstRating: "0",
-      ratingCount: peek.vote_count,
+      ratingCount: r.votes,
     };
   }
 
@@ -376,26 +391,30 @@ function buildBreadcrumbJsonLd(
   };
 }
 
-// Hero success figure. Unrated peeks show "New — not yet rated" with no
-// percentage; rated/early peeks animate the rate and label its report count.
+// Hero rating figure. Estimate-tier peeks show their Effectiveness band in
+// the band's colour (no percentage); measured-tier peeks animate the real
+// percentage and label its vote count.
 function SuccessStat({ peek }: { peek: Peek }) {
-  const r = reliability(peek.success_rate, peek.vote_count);
-  if (r.kind === "unrated") {
+  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
+  if (r.tier === "estimate") {
     return (
-      <span className="text-2xl font-semibold leading-tight tracking-tight text-muted md:text-4xl">
-        New — not yet rated
+      <span
+        className={`text-4xl font-bold leading-none tracking-tight md:text-6xl ${effectivenessTextColor(
+          r.level
+        )}`}
+      >
+        {r.level}
       </span>
     );
   }
   return (
     <div className="flex flex-col items-center gap-1.5">
       <AnimatedRate
-        value={r.rate}
+        value={r.pct}
         className="text-4xl font-bold leading-none tracking-tight text-brand md:text-[72px]"
       />
       <span className="text-[11px] font-medium text-muted md:text-xs">
-        {reportsText(r.reports)}
-        {r.kind === "early" ? " · early data" : ""}
+        {votesText(r.votes)}
       </span>
     </div>
   );

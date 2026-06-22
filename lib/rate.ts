@@ -1,53 +1,73 @@
-// Single source of truth for the success-rate display floor/ceiling.
-// Voting and the DB still hold raw [0, 100] values; this helper clamps
-// what users see (and what admin inputs can produce) to [10, 92] so peeks
-// never read as fake-perfect or fake-terrible.
+// Display floor/ceiling for an admin-seeded rate estimate. Voting and the DB
+// hold raw [0, 100] values; this clamps what admin inputs can produce to
+// [10, 92] so a seed never reads as fake-perfect or fake-terrible. Measured
+// community percentages are NOT clamped — they're real.
 export const displayRate = (n: number) =>
   Math.max(10, Math.min(92, Math.round(n)));
 
-// Below this many community reports (votes) a peek's success rate is too
-// thin to present as ranked — or even as a bare percentage. Drives both the
-// reliability() copy below and the /popular + "leads the list" exclusions.
-export const MIN_REPORTS_FOR_RANKING = 3;
+// A peek graduates from its admin-seeded Effectiveness estimate to a measured
+// community success rate once it has collected this many real votes.
+export const MEASURED_MIN_VOTES = 5;
 
-export type Reliability =
-  | { kind: "unrated"; reports: 0 }
-  | { kind: "early"; rate: number; reports: number }
-  | { kind: "rated"; rate: number; reports: number };
+export type EffectivenessLevel = "High" | "Reliable" | "Situational" | "Risky";
 
-// Single source of truth for how a peek's reliability should render, keyed
-// off how many community reports (votes) back it:
-//   • 0 reports   → "unrated": callers must omit the percentage entirely.
-//   • 1–2 reports → "early": show the rate with its count + an early-data note.
-//   • 3+ reports  → "rated": show "X% success · N reports".
-// A bare percentage with no report count must never reach the user.
-export function reliability(
-  successRate: number,
-  reportCount: number
-): Reliability {
-  const reports = Math.max(0, Math.floor(reportCount || 0));
-  if (reports <= 0) return { kind: "unrated", reports: 0 };
-  const rate = displayRate(successRate);
-  if (reports < MIN_REPORTS_FOR_RANKING) return { kind: "early", rate, reports };
-  return { kind: "rated", rate, reports };
+export type Rating =
+  | { tier: "estimate"; level: EffectivenessLevel }
+  | { tier: "measured"; pct: number; votes: number };
+
+// Maps an admin-seeded estimate (base_success_rate, 0–100) to a qualitative
+// effectiveness band. This is the only thing shown for sub-threshold peeks,
+// and it is never rendered as a percentage.
+export function effectivenessLevel(estimate: number): EffectivenessLevel {
+  const n = Math.round(estimate || 0);
+  if (n >= 80) return "High";
+  if (n >= 70) return "Reliable";
+  if (n >= 60) return "Situational";
+  return "Risky";
 }
 
-export const reportsText = (n: number) =>
-  `${n} ${n === 1 ? "report" : "reports"}`;
-
-// Inline label for prose, stat captions, and structured-data text. Never
-// emits a bare percentage: unrated peeks read "New — not yet rated".
-export function reliabilityLabel(
-  successRate: number,
-  reportCount: number
-): string {
-  const r = reliability(successRate, reportCount);
-  switch (r.kind) {
-    case "unrated":
-      return "New — not yet rated";
-    case "early":
-      return `${r.rate}% success · ${reportsText(r.reports)} (early data)`;
-    case "rated":
-      return `${r.rate}% success · ${reportsText(r.reports)}`;
+// Single source of truth for how a peek's reliability renders:
+//   • < MEASURED_MIN_VOTES real votes → "estimate": qualitative band only,
+//     never a percentage.
+//   • ≥ MEASURED_MIN_VOTES real votes → "measured": the ONLY place a precise
+//     percentage appears, computed from worked / total and always paired with
+//     its vote count.
+export function rating(
+  estimate: number,
+  workedVotes: number,
+  totalVotes: number
+): Rating {
+  const total = Math.max(0, Math.floor(totalVotes || 0));
+  if (total >= MEASURED_MIN_VOTES) {
+    const worked = Math.max(0, Math.min(total, Math.floor(workedVotes || 0)));
+    return { tier: "measured", pct: Math.round((worked / total) * 100), votes: total };
   }
+  return { tier: "estimate", level: effectivenessLevel(estimate) };
+}
+
+export const votesText = (n: number) => `${n} ${n === 1 ? "vote" : "votes"}`;
+
+// Ranking score spanning both tiers: measured peeks rank by their real
+// percentage, estimate peeks by their seed. Measured peeks get a small nudge
+// so a community-proven peek edges out an equal-scoring estimate.
+export function ratingScore(
+  estimate: number,
+  workedVotes: number,
+  totalVotes: number
+): number {
+  const r = rating(estimate, workedVotes, totalVotes);
+  return r.tier === "measured" ? r.pct + 0.5 : Math.round(estimate || 0);
+}
+
+// Inline label for prose and structured-data text. Never emits a bare
+// percentage — estimate-tier peeks read as their effectiveness band.
+export function ratingLabel(
+  estimate: number,
+  workedVotes: number,
+  totalVotes: number
+): string {
+  const r = rating(estimate, workedVotes, totalVotes);
+  return r.tier === "measured"
+    ? `${r.pct}% success · ${votesText(r.votes)}`
+    : `${r.level} effectiveness`;
 }
