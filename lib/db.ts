@@ -1,4 +1,5 @@
 import { supabasePublic } from "./supabase";
+import { MIN_REPORTS_FOR_RANKING } from "./rate";
 
 export type Map = {
   id: string;
@@ -185,12 +186,15 @@ export type PeekWithContext = Peek & {
 export async function getTopPeeks(limit = 5): Promise<PeekWithContext[]> {
   // Overfetch then drop any whose map isn't published — supabase's filter
   // syntax can't reach maps.published through the nested join cleanly.
+  // Peeks below the report-count floor are excluded entirely: an unrated
+  // angle has no business being presented as ranked.
   const { data, error } = await supabasePublic()
     .from("peeks")
     .select(
       `${PEEK_COLUMNS}, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))`
     )
     .eq("published", true)
+    .gte("vote_count", MIN_REPORTS_FOR_RANKING)
     .order("success_rate", { ascending: false })
     .order("vote_count", { ascending: false })
     .limit(limit * 3);

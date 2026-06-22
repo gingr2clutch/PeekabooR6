@@ -7,7 +7,7 @@ import { Link2, Share2, X } from "lucide-react";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PeekPin } from "@/components/PeekPin";
 import type { Floor, Map, Peek } from "@/lib/db";
-import { displayRate } from "@/lib/rate";
+import { reliability, reportsText } from "@/lib/rate";
 import { isPeekNew } from "@/lib/peek-recency";
 
 type Positioned = Peek & { displayX: number; displayY: number };
@@ -272,11 +272,7 @@ function SelectedPeekCard({
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-        <StatTile label="Success">
-          <span className="text-base font-bold text-brand">
-            <AnimatedNumber value={displayRate(peek.success_rate)} />%
-          </span>
-        </StatTile>
+        <SuccessTile peek={peek} />
         <StatTile label="Difficulty">
           <DifficultyDots level={peek.difficulty} />
         </StatTile>
@@ -453,6 +449,31 @@ function AnimatedNumber({
   }, [value, durationMs]);
 
   return <>{current}</>;
+}
+
+// Success tile for the mobile selected-pin card. Unrated peeks omit the
+// percentage; rated/early peeks surface the report count in the tile label
+// so the rate never stands alone.
+function SuccessTile({ peek }: { peek: Positioned }) {
+  const r = reliability(peek.success_rate, peek.vote_count);
+  if (r.kind === "unrated") {
+    return (
+      <StatTile label="Success">
+        <span className="text-[11px] font-semibold text-muted">
+          Not yet rated
+        </span>
+      </StatTile>
+    );
+  }
+  return (
+    <StatTile
+      label={`${reportsText(r.reports)}${r.kind === "early" ? " · early" : ""}`}
+    >
+      <span className="text-base font-bold text-brand">
+        <AnimatedNumber value={r.rate} />%
+      </span>
+    </StatTile>
+  );
 }
 
 function StatTile({

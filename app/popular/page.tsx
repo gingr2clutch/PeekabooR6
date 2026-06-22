@@ -4,7 +4,7 @@ import Link from "next/link";
 import { NewBadge } from "@/components/NewBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { getTopPeeks, type PeekWithContext } from "@/lib/db";
-import { displayRate } from "@/lib/rate";
+import { reliability, reportsText } from "@/lib/rate";
 import { isPeekNew } from "@/lib/peek-recency";
 
 export const dynamic = "force-dynamic";
@@ -82,7 +82,9 @@ export default async function PopularPage() {
 function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
   const floor = peek.floors!;
   const map = floor.maps;
-  const rate = displayRate(peek.success_rate);
+  // getTopPeeks already filters out anything below the report floor, so a
+  // peek reaching this list is always rated; fall back defensively anyway.
+  const r = reliability(peek.success_rate, peek.vote_count);
   const medal = MEDALS[rank];
 
   const cardStyle: CSSProperties | undefined = medal
@@ -148,12 +150,21 @@ function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
         </div>
 
         <div className="shrink-0 text-right">
-          <div className="text-2xl font-bold leading-none tracking-tight text-brand sm:text-3xl">
-            {rate}%
-          </div>
-          <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-            Success
-          </div>
+          {r.kind === "unrated" ? (
+            <div className="text-sm font-semibold text-muted">
+              Not yet rated
+            </div>
+          ) : (
+            <>
+              <div className="text-2xl font-bold leading-none tracking-tight text-brand sm:text-3xl">
+                {r.rate}%
+              </div>
+              <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                {reportsText(r.reports)}
+                {r.kind === "early" ? " · early" : ""}
+              </div>
+            </>
+          )}
         </div>
       </Link>
     </li>
