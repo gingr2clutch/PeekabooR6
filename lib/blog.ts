@@ -1,6 +1,6 @@
 import { supabasePublic } from "./supabase";
 import type { Floor, Map, Peek } from "./db";
-import { MIN_REPORTS_FOR_RANKING, displayRate, reliability } from "./rate";
+import { MEASURED_MIN_VOTES, rating, votesText } from "./rate";
 
 export const MIN_PEEKS_FOR_ARTICLE = 3;
 export const BLOG_BASE_URL = "https://peekaboor6.com";
@@ -43,7 +43,7 @@ export type ArticleData = {
 };
 
 const PEEK_COLUMNS_WITH_TIME =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at, floors(id, slug, name)";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, success_rate, base_success_rate, published, created_at, floors(id, slug, name)";
 
 // --- queries ---
 
@@ -117,7 +117,7 @@ export async function loadArticleData(
     .select(PEEK_COLUMNS_WITH_TIME)
     .in("floor_id", floorIds)
     .eq("published", true)
-    .order("success_rate", { ascending: false });
+    .order("base_success_rate", { ascending: false });
   if (peeksErr) throw peeksErr;
 
   const peeks = ((peeksRaw ?? []) as unknown as Array<
@@ -207,15 +207,31 @@ function topPeekFloorName(peek: BlogPeek): string {
   return peek.floor.name;
 }
 
-// peeks arrive ordered by success_rate desc, so the first one clearing the
-// report-count floor is the highest-rated peek we're allowed to crown as a
-// leader. Returns null when nothing has enough reports yet.
-function topRatedPeek(peeks: BlogPeek[]): BlogPeek | null {
-  return peeks.find((p) => p.vote_count >= MIN_REPORTS_FOR_RANKING) ?? null;
+// "Top rated by the community" language is only honest for a peek that has
+// actually crossed the measured-vote threshold. Returns the measured peek
+// with the highest real success rate, or null when none has enough votes.
+function topMeasuredPeek(peeks: BlogPeek[]): BlogPeek | null {
+  const measured = peeks
+    .filter((p) => p.vote_count >= MEASURED_MIN_VOTES)
+    .map((p) => ({ p, r: rating(p.base_success_rate, p.worked_votes, p.vote_count) }))
+    .filter((x) => x.r.tier === "measured") as Array<{
+    p: BlogPeek;
+    r: { tier: "measured"; pct: number; votes: number };
+  }>;
+  if (measured.length === 0) return null;
+  measured.sort((a, b) => b.r.pct - a.r.pct);
+  return measured[0].p;
 }
 
-function communityReports(n: number): string {
-  return `${n} community ${n === 1 ? "report" : "reports"}`;
+// peeks arrive ordered by base_success_rate desc, so peeks[0] is the standout
+// estimate when no measured leader exists yet.
+function topEstimatePeek(peeks: BlogPeek[]): BlogPeek {
+  return peeks[0];
+}
+
+function effectivenessWord(peek: BlogPeek): string {
+  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
+  return r.tier === "measured" ? "measured" : r.level;
 }
 
 function renderIntro(
@@ -224,7 +240,8 @@ function renderIntro(
   floors: Floor[],
   countByRisk: Record<BlogPeek["risk"], number>
 ): string {
-  const topRated = topRatedPeek(peeks);
+  const topMeasured = topMeasuredPeek(peeks);
+  const topEstimate = topEstimatePeek(peeks);
   const peekCount = peeks.length;
   const floorCount = floors.length;
   const lowMed = countByRisk.low + countByRisk.medium;
@@ -237,12 +254,20 @@ function renderIntro(
 
   const riskTail = `${countByRisk.high} of the documented angles fall into the high-risk bracket and demand precise timing, while the remaining ${lowMed} are reliable round-one openers. Whether you're learning ${map.name} from the attacking side or refining your defender setup, the breakdown below maps every peek to its floor, its difficulty, and its risk.`;
 
-  // Only claim a "leader" when a peek actually has enough reports to rank.
-  // Otherwise we'd be presenting an unrated angle (and a fabricated-looking
-  // percentage) as the top pick.
-  const second = topRated
-    ? `This guide breaks down every viable spawn peek on ${map.name}, ranked by community success rate. ${topRated.name} leads the list at ${displayRate(topRated.success_rate)}% across ${communityReports(topRated.vote_count)} — a ${RISK_LABELS[topRated.risk]} play out of ${topPeekFloorName(topRated)} that has paid off consistently for players willing to hold the angle. ${riskTail}`
-    : `This guide breaks down every viable spawn peek on ${map.name}. These angles are still gathering community reports, so none is ranked as a clear leader yet — pick the ones that match your play style from the breakdown below. ${riskTail}`;
+  // "Leads the list at X%" / "ranked by community success rate" is only honest
+  // once a peek has real votes. Until then we highlight the standout estimate
+  // with its Effectiveness band and neutral framing — no percentage.
+  let second: string;
+  if (topMeasured) {
+    const r = rating(
+      topMeasured.base_success_rate,
+      topMeasured.worked_votes,
+      topMeasured.vote_count
+    ) as { tier: "measured"; pct: number; votes: number };
+    second = `This guide breaks down every viable spawn peek on ${map.name}, ranked by community success rate. ${topMeasured.name} leads the list at ${r.pct}% across ${votesText(r.votes)} — a ${RISK_LABELS[topMeasured.risk]} play out of ${topPeekFloorName(topMeasured)} that has paid off consistently for players willing to hold the angle. ${riskTail}`;
+  } else {
+    second = `This guide breaks down every viable spawn peek on ${map.name}, ordered by our effectiveness estimate while community voting gets going. ${topEstimate.name} stands out as a ${effectivenessWord(topEstimate)}-rated angle out of ${topPeekFloorName(topEstimate)} — a ${RISK_LABELS[topEstimate.risk]} play worth learning first. ${riskTail}`;
+  }
 
   return `${first}\n\n${second}`;
 }
@@ -272,7 +297,8 @@ function renderFaq(
   peeks: BlogPeek[],
   avgDifficulty: number
 ): Array<{ q: string; a: string }> {
-  const topRated = topRatedPeek(peeks);
+  const topMeasured = topMeasuredPeek(peeks);
+  const topEstimate = topEstimatePeek(peeks);
   const floorBuckets = new Map<string, number>();
   for (const p of peeks) {
     floorBuckets.set(p.floor.name, (floorBuckets.get(p.floor.name) ?? 0) + 1);
@@ -285,9 +311,17 @@ function renderFaq(
   return [
     {
       q: `What's the best spawn peek on ${map.name}?`,
-      a: topRated
-        ? `${topRated.name} on ${topPeekFloorName(topRated)} currently leads the community success-rate database at ${displayRate(topRated.success_rate)}% across ${communityReports(topRated.vote_count)}. It's a ${RISK_LABELS[topRated.risk]} play with a difficulty of ${topRated.difficulty}/5 — read the full breakdown below for the exact step-out and timing.`
-        : `No single angle on ${map.name} has enough community reports yet to crown a clear best peek. The breakdown below lists every documented angle with its difficulty and risk so you can choose — submit your own results to help rank them.`,
+      a: topMeasured
+        ? `${topMeasured.name} on ${topPeekFloorName(topMeasured)} currently leads the community success-rate database at ${
+            (
+              rating(
+                topMeasured.base_success_rate,
+                topMeasured.worked_votes,
+                topMeasured.vote_count
+              ) as { tier: "measured"; pct: number; votes: number }
+            ).pct
+          }% across ${votesText(topMeasured.vote_count)}. It's a ${RISK_LABELS[topMeasured.risk]} play with a difficulty of ${topMeasured.difficulty}/5 — read the full breakdown below for the exact step-out and timing.`
+        : `${topEstimate.name} on ${topPeekFloorName(topEstimate)} is the standout pick by our effectiveness estimate (rated ${effectivenessWord(topEstimate)}) — a ${RISK_LABELS[topEstimate.risk]} play with a difficulty of ${topEstimate.difficulty}/5. Community voting is just getting started; vote "Worked for me" or "Didn't work" on any peek to turn these estimates into measured success rates.`,
     },
     {
       q: `How many spawn peeks does ${map.name} have?`,
@@ -305,33 +339,29 @@ function renderFaq(
 }
 
 export function peekLeadIn(peek: BlogPeek): string {
-  const r = reliability(peek.success_rate, peek.vote_count);
+  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   const variant = simpleHash(peek.slug) % 4;
   const floorName = peek.floor.name;
   const tipOrRisk = peek.tip
     ? `Tip from the community: ${peek.tip}`
     : `It's a ${RISK_LABELS[peek.risk]} play that rewards players who learn the exact step-out timing.`;
 
-  // Unrated angles get prose with no percentage and no report-count claim —
-  // a rate computed from zero reports reads as fabricated.
-  if (r.kind === "unrated") {
+  // Estimate tier: qualitative effectiveness band, never a percentage.
+  if (r.tier === "estimate") {
     switch (variant) {
       case 0:
-        return `${peek.name} is a ${RISK_LABELS[peek.risk]} play that's new to the database and not yet rated by the community. It works best for defenders who can commit to the angle the moment they hear the round timer hit zero.`;
+        return `${peek.name} is a ${RISK_LABELS[peek.risk]} play rated ${r.level} for effectiveness by our current estimate. It works best for defenders who can commit to the angle the moment they hear the round timer hit zero.`;
       case 1:
-        return `If you're hunting round-one impact on ${floorName}, ${peek.name} is worth a look — it's a new angle that hasn't gathered community reports yet, with a difficulty of ${peek.difficulty}/5.`;
+        return `If you're hunting round-one impact on ${floorName}, ${peek.name} is rated ${r.level} for effectiveness, with a difficulty of ${peek.difficulty}/5. Community voting will refine that over time.`;
       case 2:
-        return `${peek.name} takes practice to execute cleanly. It's new and not yet rated, but the risk profile is ${RISK_LABELS[peek.risk]} and difficulty sits at ${peek.difficulty}/5.`;
+        return `${peek.name} takes practice to execute cleanly; it's rated ${r.level} for effectiveness. Difficulty sits at ${peek.difficulty}/5 and the risk profile is ${RISK_LABELS[peek.risk]}.`;
       default:
-        return `${peek.name} is a fresh ${RISK_LABELS[peek.risk]} angle out of ${floorName}, not yet rated by the community. ${tipOrRisk}`;
+        return `${peek.name} is a ${RISK_LABELS[peek.risk]} angle out of ${floorName}, rated ${r.level} for effectiveness. ${tipOrRisk}`;
     }
   }
 
-  // 1–2 reports note the thin sample; 3+ read as a settled rate. Either way
-  // the percentage always travels with its report count.
-  const frag = `${r.rate}% success rate across ${communityReports(r.reports)}${
-    r.kind === "early" ? " (early data)" : ""
-  }`;
+  // Measured tier: the percentage always travels with its vote count.
+  const frag = `${r.pct}% success rate across ${votesText(r.votes)}`;
   switch (variant) {
     case 0:
       return `${peek.name} is a ${RISK_LABELS[peek.risk]} play holding a ${frag}. It works best for defenders who can commit to the angle the moment they hear the round timer hit zero.`;

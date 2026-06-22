@@ -10,6 +10,7 @@ type Props = {
   number: number;
   isNew?: boolean;
   hasTiktok?: boolean;
+  ratingText?: string;
   isSelected?: boolean;
   onSelect?: () => void;
 };
@@ -72,6 +73,7 @@ export function PeekPin({
   number,
   isNew = false,
   hasTiktok = false,
+  ratingText,
   isSelected = false,
   onSelect,
 }: Props) {
@@ -150,6 +152,11 @@ export function PeekPin({
         {isNew && (
           <span className="ml-1 inline-flex items-center rounded-full bg-emerald-500 px-1 py-px align-middle text-[8px] font-semibold uppercase tracking-wider text-white">
             New
+          </span>
+        )}
+        {ratingText && (
+          <span className="mt-0.5 block text-[11px] font-normal text-white/75">
+            {ratingText}
           </span>
         )}
       </span>

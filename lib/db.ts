@@ -1,5 +1,5 @@
 import { supabasePublic } from "./supabase";
-import { MIN_REPORTS_FOR_RANKING } from "./rate";
+import { MEASURED_MIN_VOTES, ratingScore } from "./rate";
 
 export type Map = {
   id: string;
@@ -33,8 +33,10 @@ export type Peek = {
   risk: "low" | "medium" | "high";
   tip: string | null;
   useful_pct: number;
-  vote_count: number;
-  success_rate: number;
+  vote_count: number; // running total of community votes
+  worked_votes: number; // count of "Worked for me" votes
+  success_rate: number; // drifted legacy gauge — not shown to users anymore
+  base_success_rate: number; // admin-seeded estimate; drives Effectiveness
   published: boolean;
   created_at: string;
 };
@@ -61,7 +63,7 @@ export type Creator = {
 };
 
 const PEEK_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, success_rate, published, created_at";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, success_rate, base_success_rate, published, created_at";
 
 export async function getMaps(): Promise<Map[]> {
   const { data, error } = await supabasePublic()
@@ -184,23 +186,45 @@ export type PeekWithContext = Peek & {
 };
 
 export async function getTopPeeks(limit = 5): Promise<PeekWithContext[]> {
-  // Overfetch then drop any whose map isn't published — supabase's filter
-  // syntax can't reach maps.published through the nested join cleanly.
-  // Peeks below the report-count floor are excluded entirely: an unrated
-  // angle has no business being presented as ranked.
-  const { data, error } = await supabasePublic()
-    .from("peeks")
-    .select(
-      `${PEEK_COLUMNS}, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))`
+  const sb = supabasePublic();
+  const select = `${PEEK_COLUMNS}, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))`;
+
+  // Two pools, merged: the strongest admin estimates (so the board is never
+  // empty) plus every measured peek (≥ vote threshold) so a community-proven
+  // angle can't fall outside the estimate window. Final order is by a score
+  // that spans both tiers — measured % for rated peeks, seed for the rest.
+  const [byEstimate, measured] = await Promise.all([
+    sb
+      .from("peeks")
+      .select(select)
+      .eq("published", true)
+      .order("base_success_rate", { ascending: false })
+      .limit(limit * 4),
+    sb
+      .from("peeks")
+      .select(select)
+      .eq("published", true)
+      .gte("vote_count", MEASURED_MIN_VOTES)
+      .limit(limit * 4),
+  ]);
+  if (byEstimate.error) throw byEstimate.error;
+  if (measured.error) throw measured.error;
+
+  const merged = new Map<string, PeekWithContext>();
+  const candidates = ([] as PeekWithContext[])
+    .concat((byEstimate.data ?? []) as unknown as PeekWithContext[])
+    .concat((measured.data ?? []) as unknown as PeekWithContext[]);
+  for (const row of candidates) {
+    if (row.floors?.maps?.published) merged.set(row.id, row);
+  }
+
+  return Array.from(merged.values())
+    .sort(
+      (a, b) =>
+        ratingScore(b.base_success_rate, b.worked_votes, b.vote_count) -
+        ratingScore(a.base_success_rate, a.worked_votes, a.vote_count)
     )
-    .eq("published", true)
-    .gte("vote_count", MIN_REPORTS_FOR_RANKING)
-    .order("success_rate", { ascending: false })
-    .order("vote_count", { ascending: false })
-    .limit(limit * 3);
-  if (error) throw error;
-  const rows = (data ?? []) as unknown as PeekWithContext[];
-  return rows.filter((p) => p.floors?.maps?.published).slice(0, limit);
+    .slice(0, limit);
 }
 
 export async function getPublishedPeekById(id: string): Promise<Peek | null> {

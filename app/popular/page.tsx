@@ -4,7 +4,8 @@ import Link from "next/link";
 import { NewBadge } from "@/components/NewBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { getTopPeeks, type PeekWithContext } from "@/lib/db";
-import { reliability, reportsText } from "@/lib/rate";
+import { rating, votesText } from "@/lib/rate";
+import { EffectivenessBadge } from "@/components/EffectivenessBadge";
 import { isPeekNew } from "@/lib/peek-recency";
 
 export const dynamic = "force-dynamic";
@@ -59,8 +60,10 @@ export default async function PopularPage() {
             <FlameIcon className="h-7 w-7 text-brand" />
             <span>Popular peeks</span>
           </h1>
-          <p className="mt-2 text-muted">Top 5 by success rate</p>
-          <p className="mt-1 text-xs text-muted/70">Player voted</p>
+          <p className="mt-2 text-muted">Top picks</p>
+          <p className="mt-1 text-xs text-muted/70">
+            Ranked by effectiveness — vote to build measured success rates
+          </p>
         </div>
 
         {peeks.length === 0 ? (
@@ -82,9 +85,7 @@ export default async function PopularPage() {
 function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
   const floor = peek.floors!;
   const map = floor.maps;
-  // getTopPeeks already filters out anything below the report floor, so a
-  // peek reaching this list is always rated; fall back defensively anyway.
-  const r = reliability(peek.success_rate, peek.vote_count);
+  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   const medal = MEDALS[rank];
 
   const cardStyle: CSSProperties | undefined = medal
@@ -150,18 +151,20 @@ function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
         </div>
 
         <div className="shrink-0 text-right">
-          {r.kind === "unrated" ? (
-            <div className="text-sm font-semibold text-muted">
-              Not yet rated
-            </div>
+          {r.tier === "estimate" ? (
+            <>
+              <EffectivenessBadge level={r.level} />
+              <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                Effectiveness
+              </div>
+            </>
           ) : (
             <>
               <div className="text-2xl font-bold leading-none tracking-tight text-brand sm:text-3xl">
-                {r.rate}%
+                {r.pct}%
               </div>
               <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-                {reportsText(r.reports)}
-                {r.kind === "early" ? " · early" : ""}
+                {votesText(r.votes)} · rated
               </div>
             </>
           )}
