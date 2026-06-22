@@ -7,7 +7,7 @@ import { PeekMedia } from "@/components/PeekMedia";
 import { VoteButtons } from "@/components/VoteButtons";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
-import { displayRate } from "@/lib/rate";
+import { displayRate, reliability, reportsText } from "@/lib/rate";
 import { isUuid } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +52,7 @@ type NearbyPeek = {
   x_pct: number | null;
   y_pct: number | null;
   success_rate: number;
+  vote_count: number;
 };
 
 // One query, indexed by peeks_published_floor_idx. Returns every other
@@ -62,7 +63,7 @@ async function fetchSameFloorPeeks(
 ): Promise<NearbyPeek[]> {
   const { data, error } = await supabasePublic()
     .from("peeks")
-    .select("id, slug, name, x_pct, y_pct, success_rate")
+    .select("id, slug, name, x_pct, y_pct, success_rate, vote_count")
     .eq("floor_id", floorId)
     .eq("published", true)
     .neq("id", excludeId);
@@ -175,10 +176,7 @@ export default async function PeekDetailPage({
         <section className="mt-6 rounded-card border border-border bg-card p-4 md:mt-8 md:p-8">
           <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             <StatCell label="Success rate">
-              <AnimatedRate
-                value={displayRate(peek.success_rate)}
-                className="text-4xl font-bold leading-none tracking-tight text-brand md:text-[72px]"
-              />
+              <SuccessStat peek={peek} />
             </StatCell>
             <StatCell label="Difficulty">
               <DifficultyDots difficulty={peek.difficulty} />
@@ -232,14 +230,7 @@ export default async function PeekDetailPage({
                     <h3 className="min-w-0 flex-1 truncate text-base font-semibold text-ink group-hover:text-brand">
                       {p.name}
                     </h3>
-                    <div className="shrink-0 text-right">
-                      <div className="text-xl font-bold leading-none tracking-tight text-brand">
-                        {displayRate(p.success_rate)}%
-                      </div>
-                      <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-                        Success
-                      </div>
-                    </div>
+                    <NearbyStat peek={p} />
                   </Link>
                 </li>
               ))}
@@ -277,13 +268,43 @@ function jsonLdText(obj: unknown): string {
   return JSON.stringify(obj).replace(/</g, "\\u003c");
 }
 
+// Compact success figure for the "Peeks close by" list. Same rule as the
+// hero: no bare percentage for unrated angles.
+function NearbyStat({ peek }: { peek: NearbyPeek }) {
+  const r = reliability(peek.success_rate, peek.vote_count);
+  if (r.kind === "unrated") {
+    return (
+      <div className="shrink-0 text-right text-xs font-semibold text-muted">
+        Not yet rated
+      </div>
+    );
+  }
+  return (
+    <div className="shrink-0 text-right">
+      <div className="text-xl font-bold leading-none tracking-tight text-brand">
+        {r.rate}%
+      </div>
+      <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+        {reportsText(r.reports)}
+        {r.kind === "early" ? " · early" : ""}
+      </div>
+    </div>
+  );
+}
+
 function peekDescription(
   peek: Joined,
   map: Map,
   floor: Floor
 ): string {
-  const risk = peek.risk;
-  return `${peek.name} — a ${risk}-risk spawn peek on ${map.name} ${floor.name} with a ${displayRate(peek.success_rate)}% community-tested success rate in Rainbow Six Siege.`;
+  const r = reliability(peek.success_rate, peek.vote_count);
+  const base = `${peek.name} — a ${peek.risk}-risk spawn peek on ${map.name} ${floor.name} in Rainbow Six Siege`;
+  if (r.kind === "unrated") {
+    return `${base}. New angle — not yet rated by the community.`;
+  }
+  return `${base} with a ${r.rate}% community-tested success rate across ${reportsText(
+    r.reports
+  )}${r.kind === "early" ? " (early data)" : ""}.`;
 }
 
 function buildVideoJsonLd(
@@ -353,6 +374,31 @@ function buildBreadcrumbJsonLd(
       },
     ],
   };
+}
+
+// Hero success figure. Unrated peeks show "New — not yet rated" with no
+// percentage; rated/early peeks animate the rate and label its report count.
+function SuccessStat({ peek }: { peek: Peek }) {
+  const r = reliability(peek.success_rate, peek.vote_count);
+  if (r.kind === "unrated") {
+    return (
+      <span className="text-2xl font-semibold leading-tight tracking-tight text-muted md:text-4xl">
+        New — not yet rated
+      </span>
+    );
+  }
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <AnimatedRate
+        value={r.rate}
+        className="text-4xl font-bold leading-none tracking-tight text-brand md:text-[72px]"
+      />
+      <span className="text-[11px] font-medium text-muted md:text-xs">
+        {reportsText(r.reports)}
+        {r.kind === "early" ? " · early data" : ""}
+      </span>
+    </div>
+  );
 }
 
 function StatCell({

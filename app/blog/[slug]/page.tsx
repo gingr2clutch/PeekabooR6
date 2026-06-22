@@ -13,7 +13,7 @@ import {
   type ArticleData,
   type BlogPeek,
 } from "@/lib/blog";
-import { displayRate } from "@/lib/rate";
+import { reliability, reportsText } from "@/lib/rate";
 
 export const dynamic = "force-dynamic";
 
@@ -211,14 +211,7 @@ function PeekSection({ peek, rank }: { peek: BlogPeek; rank: number }) {
       <p className="mt-3 text-[16px] leading-[1.7]">{peekLeadIn(peek)}</p>
 
       <dl className="mt-4 grid grid-cols-3 gap-3 rounded-card border border-border bg-card p-4 text-sm">
-        <div>
-          <dt className="text-[11px] uppercase tracking-wide text-muted">
-            Success
-          </dt>
-          <dd className="mt-1 text-2xl font-bold leading-none tracking-tight text-brand">
-            {displayRate(peek.success_rate)}%
-          </dd>
-        </div>
+        <ReliabilityCell peek={peek} />
         <div>
           <dt className="text-[11px] uppercase tracking-wide text-muted">
             Difficulty
@@ -275,6 +268,34 @@ function PeekSection({ peek, rank }: { peek: BlogPeek; rank: number }) {
   );
 }
 
+// Success stat chip. Unrated peeks drop the percentage entirely; early/rated
+// peeks always show the rate alongside its report count.
+function ReliabilityCell({ peek }: { peek: BlogPeek }) {
+  const r = reliability(peek.success_rate, peek.vote_count);
+  return (
+    <div>
+      <dt className="text-[11px] uppercase tracking-wide text-muted">
+        Success
+      </dt>
+      {r.kind === "unrated" ? (
+        <dd className="mt-1 text-base font-semibold leading-tight text-muted">
+          New — not yet rated
+        </dd>
+      ) : (
+        <dd className="mt-1">
+          <span className="text-2xl font-bold leading-none tracking-tight text-brand">
+            {r.rate}%
+          </span>
+          <span className="mt-1 block text-[11px] font-medium normal-case text-muted">
+            {reportsText(r.reports)}
+            {r.kind === "early" ? " · early data" : ""}
+          </span>
+        </dd>
+      )}
+    </div>
+  );
+}
+
 function BackArrowIcon() {
   return (
     <svg
@@ -310,6 +331,19 @@ function buildArticleJsonLd(data: ArticleData, url: string) {
   };
 }
 
+// Structured-data description per peek video. Mirrors the on-page copy
+// rule: no percentage for unrated angles, rate-with-count otherwise.
+function videoPeekDescription(p: BlogPeek, mapName: string): string {
+  const r = reliability(p.success_rate, p.vote_count);
+  const base = `${p.name} is a ${p.risk}-risk spawn peek on ${mapName} ${p.floor.name}`;
+  if (r.kind === "unrated") {
+    return `${base}. New angle — not yet rated by the community.`;
+  }
+  return `${base} with a ${r.rate}% community success rate across ${reportsText(
+    r.reports
+  )}${r.kind === "early" ? " (early data)" : ""}.`;
+}
+
 function buildVideoJsonLd(data: ArticleData) {
   return data.peeks
     .filter((p) => !!p.video_url)
@@ -317,7 +351,7 @@ function buildVideoJsonLd(data: ArticleData) {
       "@context": "https://schema.org",
       "@type": "VideoObject",
       name: `${p.name} — spawn peek on ${data.map.name}`,
-      description: `${p.name} is a ${p.risk}-risk spawn peek on ${data.map.name} ${p.floor.name} with a ${displayRate(p.success_rate)}% community success rate.`,
+      description: videoPeekDescription(p, data.map.name),
       thumbnailUrl: p.poster_url ? [p.poster_url] : undefined,
       uploadDate: p.created_at,
       contentUrl: p.video_url ?? undefined,
