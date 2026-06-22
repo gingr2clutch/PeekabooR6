@@ -5,7 +5,7 @@ import { NewBadge } from "@/components/NewBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { getTopPeeks, type PeekWithContext } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
-import { EffectivenessBadge } from "@/components/EffectivenessBadge";
+import { GradeBadge } from "@/components/GradeBadge";
 import { isPeekNew } from "@/lib/peek-recency";
 
 export const dynamic = "force-dynamic";
@@ -62,7 +62,7 @@ export default async function PopularPage() {
           </h1>
           <p className="mt-2 text-muted">Top picks</p>
           <p className="mt-1 text-xs text-muted/70">
-            Ranked by effectiveness — vote to build measured success rates
+            Ranked by effectiveness grade — vote to make grades community-backed
           </p>
         </div>
 
@@ -151,23 +151,10 @@ function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
         </div>
 
         <div className="shrink-0 text-right">
-          {r.tier === "estimate" ? (
-            <>
-              <EffectivenessBadge level={r.level} />
-              <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-                Effectiveness
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-2xl font-bold leading-none tracking-tight text-brand sm:text-3xl">
-                {r.pct}%
-              </div>
-              <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-                {votesText(r.votes)} · rated
-              </div>
-            </>
-          )}
+          <GradeBadge grade={r.grade} />
+          <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+            {r.tier === "measured" ? votesText(r.votes) : "Effectiveness"}
+          </div>
         </div>
       </Link>
     </li>

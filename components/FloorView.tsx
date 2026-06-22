@@ -8,7 +8,7 @@ import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PeekPin } from "@/components/PeekPin";
 import type { Floor, Map, Peek } from "@/lib/db";
 import { rating, ratingLabel, votesText } from "@/lib/rate";
-import { EffectivenessBadge } from "@/components/EffectivenessBadge";
+import { GradeBadge } from "@/components/GradeBadge";
 import { isPeekNew } from "@/lib/peek-recency";
 
 type Positioned = Peek & { displayX: number; displayY: number };
@@ -419,61 +419,14 @@ async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-// Counts a number up from 0 to its real value on mount via requestAnimationFrame.
-// Reduced-motion users skip the animation and see the final value immediately.
-function AnimatedNumber({
-  value,
-  durationMs = 400,
-}: {
-  value: number;
-  durationMs?: number;
-}) {
-  const [current, setCurrent] = useState(() => {
-    if (typeof window === "undefined") return value;
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      ? value
-      : 0;
-  });
-
-  useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      setCurrent(value);
-      return;
-    }
-    let rafId = 0;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min((now - start) / durationMs, 1);
-      // ease-out quadratic — fast start, settles on the value
-      const eased = 1 - (1 - t) * (1 - t);
-      setCurrent(Math.round(eased * value));
-      if (t < 1) rafId = requestAnimationFrame(tick);
-    };
-    rafId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafId);
-  }, [value, durationMs]);
-
-  return <>{current}</>;
-}
-
-// Rating tile for the mobile selected-pin card. Estimate tier shows the
-// Effectiveness band; measured tier shows the real percentage with its
-// vote count in the tile label so the rate never stands alone.
+// Rating tile for the mobile selected-pin card — the effectiveness grade.
+// Measured tier puts the vote count in the tile label so the grade reads as
+// community-backed; estimate tier keeps the "Effectiveness" label.
 function SuccessTile({ peek }: { peek: Positioned }) {
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
-  if (r.tier === "estimate") {
-    return (
-      <StatTile label="Effectiveness">
-        <EffectivenessBadge level={r.level} />
-      </StatTile>
-    );
-  }
   return (
-    <StatTile label={votesText(r.votes)}>
-      <span className="text-base font-bold text-brand">
-        <AnimatedNumber value={r.pct} />%
-      </span>
+    <StatTile label={r.tier === "measured" ? votesText(r.votes) : "Effectiveness"}>
+      <GradeBadge grade={r.grade} />
     </StatTile>
   );
 }

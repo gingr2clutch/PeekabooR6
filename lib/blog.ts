@@ -1,6 +1,6 @@
 import { supabasePublic } from "./supabase";
 import type { Floor, Map, Peek } from "./db";
-import { MEASURED_MIN_VOTES, rating, votesText } from "./rate";
+import { MEASURED_MIN_VOTES, rating, ratingScore, votesText } from "./rate";
 
 export const MIN_PEEKS_FOR_ARTICLE = 3;
 export const BLOG_BASE_URL = "https://peekaboor6.com";
@@ -208,19 +208,16 @@ function topPeekFloorName(peek: BlogPeek): string {
 }
 
 // "Top rated by the community" language is only honest for a peek that has
-// actually crossed the measured-vote threshold. Returns the measured peek
-// with the highest real success rate, or null when none has enough votes.
+// actually crossed the measured-vote threshold. Returns the highest-scoring
+// measured peek, or null when none has enough votes.
 function topMeasuredPeek(peeks: BlogPeek[]): BlogPeek | null {
-  const measured = peeks
-    .filter((p) => p.vote_count >= MEASURED_MIN_VOTES)
-    .map((p) => ({ p, r: rating(p.base_success_rate, p.worked_votes, p.vote_count) }))
-    .filter((x) => x.r.tier === "measured") as Array<{
-    p: BlogPeek;
-    r: { tier: "measured"; pct: number; votes: number };
-  }>;
+  const measured = peeks.filter((p) => p.vote_count >= MEASURED_MIN_VOTES);
   if (measured.length === 0) return null;
-  measured.sort((a, b) => b.r.pct - a.r.pct);
-  return measured[0].p;
+  return [...measured].sort(
+    (a, b) =>
+      ratingScore(b.base_success_rate, b.worked_votes, b.vote_count) -
+      ratingScore(a.base_success_rate, a.worked_votes, a.vote_count)
+  )[0];
 }
 
 // peeks arrive ordered by base_success_rate desc, so peeks[0] is the standout
@@ -229,9 +226,8 @@ function topEstimatePeek(peeks: BlogPeek[]): BlogPeek {
   return peeks[0];
 }
 
-function effectivenessWord(peek: BlogPeek): string {
-  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
-  return r.tier === "measured" ? "measured" : r.level;
+function peekGrade(peek: BlogPeek) {
+  return rating(peek.base_success_rate, peek.worked_votes, peek.vote_count).grade;
 }
 
 function renderIntro(
@@ -254,19 +250,19 @@ function renderIntro(
 
   const riskTail = `${countByRisk.high} of the documented angles fall into the high-risk bracket and demand precise timing, while the remaining ${lowMed} are reliable round-one openers. Whether you're learning ${map.name} from the attacking side or refining your defender setup, the breakdown below maps every peek to its floor, its difficulty, and its risk.`;
 
-  // "Leads the list at X%" / "ranked by community success rate" is only honest
-  // once a peek has real votes. Until then we highlight the standout estimate
-  // with its Effectiveness band and neutral framing — no percentage.
+  // "Top rated by the community" language is only honest once a peek has real
+  // votes. Until then we highlight the standout estimate's grade with neutral
+  // framing. Either way the grade — never a percentage — is the figure shown.
   let second: string;
   if (topMeasured) {
     const r = rating(
       topMeasured.base_success_rate,
       topMeasured.worked_votes,
       topMeasured.vote_count
-    ) as { tier: "measured"; pct: number; votes: number };
-    second = `This guide breaks down every viable spawn peek on ${map.name}, ranked by community success rate. ${topMeasured.name} leads the list at ${r.pct}% across ${votesText(r.votes)} — a ${RISK_LABELS[topMeasured.risk]} play out of ${topPeekFloorName(topMeasured)} that has paid off consistently for players willing to hold the angle. ${riskTail}`;
+    ) as { tier: "measured"; grade: string; votes: number };
+    second = `This guide breaks down every viable spawn peek on ${map.name}, ranked by community effectiveness grade. ${topMeasured.name} leads the list at grade ${r.grade} across ${votesText(r.votes)} — a ${RISK_LABELS[topMeasured.risk]} play out of ${topPeekFloorName(topMeasured)} that has paid off consistently for players willing to hold the angle. ${riskTail}`;
   } else {
-    second = `This guide breaks down every viable spawn peek on ${map.name}, ordered by our effectiveness estimate while community voting gets going. ${topEstimate.name} stands out as a ${effectivenessWord(topEstimate)}-rated angle out of ${topPeekFloorName(topEstimate)} — a ${RISK_LABELS[topEstimate.risk]} play worth learning first. ${riskTail}`;
+    second = `This guide breaks down every viable spawn peek on ${map.name}, ordered by our effectiveness grade while community voting gets going. ${topEstimate.name} stands out at grade ${peekGrade(topEstimate)} out of ${topPeekFloorName(topEstimate)} — a ${RISK_LABELS[topEstimate.risk]} play worth learning first. ${riskTail}`;
   }
 
   return `${first}\n\n${second}`;
@@ -312,16 +308,8 @@ function renderFaq(
     {
       q: `What's the best spawn peek on ${map.name}?`,
       a: topMeasured
-        ? `${topMeasured.name} on ${topPeekFloorName(topMeasured)} currently leads the community success-rate database at ${
-            (
-              rating(
-                topMeasured.base_success_rate,
-                topMeasured.worked_votes,
-                topMeasured.vote_count
-              ) as { tier: "measured"; pct: number; votes: number }
-            ).pct
-          }% across ${votesText(topMeasured.vote_count)}. It's a ${RISK_LABELS[topMeasured.risk]} play with a difficulty of ${topMeasured.difficulty}/5 — read the full breakdown below for the exact step-out and timing.`
-        : `${topEstimate.name} on ${topPeekFloorName(topEstimate)} is the standout pick by our effectiveness estimate (rated ${effectivenessWord(topEstimate)}) — a ${RISK_LABELS[topEstimate.risk]} play with a difficulty of ${topEstimate.difficulty}/5. Community voting is just getting started; vote "Worked for me" or "Didn't work" on any peek to turn these estimates into measured success rates.`,
+        ? `${topMeasured.name} on ${topPeekFloorName(topMeasured)} currently leads the community effectiveness rankings at grade ${peekGrade(topMeasured)} across ${votesText(topMeasured.vote_count)}. It's a ${RISK_LABELS[topMeasured.risk]} play with a difficulty of ${topMeasured.difficulty}/5 — read the full breakdown below for the exact step-out and timing.`
+        : `${topEstimate.name} on ${topPeekFloorName(topEstimate)} is the standout pick by our effectiveness grade (graded ${peekGrade(topEstimate)}) — a ${RISK_LABELS[topEstimate.risk]} play with a difficulty of ${topEstimate.difficulty}/5. Community voting is just getting started; vote "Worked for me" or "Didn't work" on any peek to make these grades community-backed.`,
     },
     {
       q: `How many spawn peeks does ${map.name} have?`,
@@ -346,31 +334,31 @@ export function peekLeadIn(peek: BlogPeek): string {
     ? `Tip from the community: ${peek.tip}`
     : `It's a ${RISK_LABELS[peek.risk]} play that rewards players who learn the exact step-out timing.`;
 
-  // Estimate tier: qualitative effectiveness band, never a percentage.
+  // Estimate tier: grade from the admin seed, never a percentage.
   if (r.tier === "estimate") {
     switch (variant) {
       case 0:
-        return `${peek.name} is a ${RISK_LABELS[peek.risk]} play rated ${r.level} for effectiveness by our current estimate. It works best for defenders who can commit to the angle the moment they hear the round timer hit zero.`;
+        return `${peek.name} is a ${RISK_LABELS[peek.risk]} play graded ${r.grade} for effectiveness by our current estimate. It works best for defenders who can commit to the angle the moment they hear the round timer hit zero.`;
       case 1:
-        return `If you're hunting round-one impact on ${floorName}, ${peek.name} is rated ${r.level} for effectiveness, with a difficulty of ${peek.difficulty}/5. Community voting will refine that over time.`;
+        return `If you're hunting round-one impact on ${floorName}, ${peek.name} grades ${r.grade} for effectiveness, with a difficulty of ${peek.difficulty}/5. Community voting will refine that over time.`;
       case 2:
-        return `${peek.name} takes practice to execute cleanly; it's rated ${r.level} for effectiveness. Difficulty sits at ${peek.difficulty}/5 and the risk profile is ${RISK_LABELS[peek.risk]}.`;
+        return `${peek.name} takes practice to execute cleanly; it grades ${r.grade} for effectiveness. Difficulty sits at ${peek.difficulty}/5 and the risk profile is ${RISK_LABELS[peek.risk]}.`;
       default:
-        return `${peek.name} is a ${RISK_LABELS[peek.risk]} angle out of ${floorName}, rated ${r.level} for effectiveness. ${tipOrRisk}`;
+        return `${peek.name} is a ${RISK_LABELS[peek.risk]} angle out of ${floorName}, graded ${r.grade} for effectiveness. ${tipOrRisk}`;
     }
   }
 
-  // Measured tier: the percentage always travels with its vote count.
-  const frag = `${r.pct}% success rate across ${votesText(r.votes)}`;
+  // Measured tier: the community-backed grade always travels with its vote count.
+  const frag = `a community grade of ${r.grade} from ${votesText(r.votes)}`;
   switch (variant) {
     case 0:
-      return `${peek.name} is a ${RISK_LABELS[peek.risk]} play holding a ${frag}. It works best for defenders who can commit to the angle the moment they hear the round timer hit zero.`;
+      return `${peek.name} is a ${RISK_LABELS[peek.risk]} play holding ${frag}. It works best for defenders who can commit to the angle the moment they hear the round timer hit zero.`;
     case 1:
       return `If you're hunting round-one impact on ${floorName}, ${peek.name} is one of the more reliable options — ${frag}, with a difficulty of ${peek.difficulty}/5.`;
     case 2:
-      return `${peek.name} takes practice to execute cleanly, but its ${frag} explains why advanced players keep coming back to it. Difficulty sits at ${peek.difficulty}/5 and the risk profile is ${RISK_LABELS[peek.risk]}.`;
+      return `${peek.name} takes practice to execute cleanly, but ${frag} explains why advanced players keep coming back to it. Difficulty sits at ${peek.difficulty}/5 and the risk profile is ${RISK_LABELS[peek.risk]}.`;
     default:
-      return `${peek.name} pulls a ${frag} out of ${floorName}. ${tipOrRisk}`;
+      return `${peek.name} pulls ${frag} out of ${floorName}. ${tipOrRisk}`;
   }
 }
 

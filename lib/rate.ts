@@ -1,37 +1,45 @@
 // Display floor/ceiling for an admin-seeded rate estimate. Voting and the DB
 // hold raw [0, 100] values; this clamps what admin inputs can produce to
-// [10, 92] so a seed never reads as fake-perfect or fake-terrible. Measured
-// community percentages are NOT clamped — they're real.
+// [10, 92] so a seed never reads as fake-perfect or fake-terrible.
 export const displayRate = (n: number) =>
   Math.max(10, Math.min(92, Math.round(n)));
 
-// A peek graduates from its admin-seeded Effectiveness estimate to a measured
-// community success rate once it has collected this many real votes.
+// A peek graduates from its admin-seeded estimate to a community-backed grade
+// once it has collected this many real votes. Below the threshold the grade
+// comes from base_success_rate; at or above it the grade is recomputed from
+// the real worked/total vote ratio.
 export const MEASURED_MIN_VOTES = 5;
 
-export type EffectivenessLevel = "High" | "Reliable" | "Situational" | "Risky";
+export type Grade = "S" | "A" | "B" | "C";
 
-export type Rating =
-  | { tier: "estimate"; level: EffectivenessLevel }
-  | { tier: "measured"; pct: number; votes: number };
+// The one place grade cutoffs live — tune here. Ordered strongest-first; the
+// last entry is the floor. A 0–100 value (admin seed, or measured worked/total
+// percentage) maps to the first grade whose `min` it clears.
+export const GRADE_THRESHOLDS: ReadonlyArray<{ grade: Grade; min: number }> = [
+  { grade: "S", min: 85 },
+  { grade: "A", min: 70 },
+  { grade: "B", min: 55 },
+  { grade: "C", min: 0 },
+];
 
-// Maps an admin-seeded estimate (base_success_rate, 0–100) to a qualitative
-// effectiveness band. This is the only thing shown for sub-threshold peeks,
-// and it is never rendered as a percentage.
-export function effectivenessLevel(estimate: number): EffectivenessLevel {
-  const n = Math.round(estimate || 0);
-  if (n >= 80) return "High";
-  if (n >= 70) return "Reliable";
-  if (n >= 60) return "Situational";
-  return "Risky";
+export function grade(value: number): Grade {
+  const n = Math.round(value || 0);
+  for (const t of GRADE_THRESHOLDS) {
+    if (n >= t.min) return t.grade;
+  }
+  return "C";
 }
 
-// Single source of truth for how a peek's reliability renders:
-//   • < MEASURED_MIN_VOTES real votes → "estimate": qualitative band only,
-//     never a percentage.
-//   • ≥ MEASURED_MIN_VOTES real votes → "measured": the ONLY place a precise
-//     percentage appears, computed from worked / total and always paired with
-//     its vote count.
+export type Rating =
+  | { tier: "estimate"; grade: Grade }
+  | { tier: "measured"; grade: Grade; votes: number };
+
+// Single source of truth for how a peek's reliability renders. Both tiers show
+// a letter grade — never a raw percentage:
+//   • < MEASURED_MIN_VOTES votes → "estimate": grade from the admin seed.
+//   • ≥ MEASURED_MIN_VOTES votes → "measured": grade recomputed from the real
+//     worked/total ratio, shown alongside the vote count so it reads as
+//     community-backed.
 export function rating(
   estimate: number,
   workedVotes: number,
@@ -40,27 +48,31 @@ export function rating(
   const total = Math.max(0, Math.floor(totalVotes || 0));
   if (total >= MEASURED_MIN_VOTES) {
     const worked = Math.max(0, Math.min(total, Math.floor(workedVotes || 0)));
-    return { tier: "measured", pct: Math.round((worked / total) * 100), votes: total };
+    return { tier: "measured", grade: grade((worked / total) * 100), votes: total };
   }
-  return { tier: "estimate", level: effectivenessLevel(estimate) };
+  return { tier: "estimate", grade: grade(estimate) };
 }
 
 export const votesText = (n: number) => `${n} ${n === 1 ? "vote" : "votes"}`;
 
-// Ranking score spanning both tiers: measured peeks rank by their real
-// percentage, estimate peeks by their seed. Measured peeks get a small nudge
-// so a community-proven peek edges out an equal-scoring estimate.
+// Numeric ranking score spanning both tiers so /popular can order across them:
+// measured peeks rank by their real percentage (nudged so a community-proven
+// peek edges an equal-scoring estimate), estimate peeks by their seed.
 export function ratingScore(
   estimate: number,
   workedVotes: number,
   totalVotes: number
 ): number {
-  const r = rating(estimate, workedVotes, totalVotes);
-  return r.tier === "measured" ? r.pct + 0.5 : Math.round(estimate || 0);
+  const total = Math.max(0, Math.floor(totalVotes || 0));
+  if (total >= MEASURED_MIN_VOTES) {
+    const worked = Math.max(0, Math.min(total, Math.floor(workedVotes || 0)));
+    return Math.round((worked / total) * 100) + 0.5;
+  }
+  return Math.round(estimate || 0);
 }
 
-// Inline label for prose and structured-data text. Never emits a bare
-// percentage — estimate-tier peeks read as their effectiveness band.
+// Inline label for pin tooltips and prose. Estimate tier is the bare grade;
+// measured tier appends the vote count ("S · 47 votes").
 export function ratingLabel(
   estimate: number,
   workedVotes: number,
@@ -68,6 +80,6 @@ export function ratingLabel(
 ): string {
   const r = rating(estimate, workedVotes, totalVotes);
   return r.tier === "measured"
-    ? `${r.pct}% success · ${votesText(r.votes)}`
-    : `${r.level} effectiveness`;
+    ? `${r.grade} · ${votesText(r.votes)}`
+    : r.grade;
 }
