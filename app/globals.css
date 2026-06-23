@@ -380,3 +380,33 @@ h4 {
     animation: none;
   }
 }
+
+/* --- Scroll reveal (progressive enhancement) -------------------------------
+   The hidden initial state below ONLY applies once the inline reveal script
+   (see app/layout.tsx) confirms IntersectionObserver support and no
+   reduced-motion preference, then adds `.reveal-ready` to <html>. If JS is
+   disabled/blocked or the API is unsupported, that class is never added and
+   every [data-reveal] element renders fully visible — no content can get
+   stuck at opacity 0. Elements reveal once (the script unobserves them) and
+   are never re-hidden on scroll-up. Per-item --reveal-delay staggers grids. */
+.reveal-ready [data-reveal] {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.45s ease-out,
+    transform 0.45s ease-out;
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal-ready [data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+/* Belt-and-suspenders: even if .reveal-ready is present, never animate or
+   hide for reduced-motion users. */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-ready [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

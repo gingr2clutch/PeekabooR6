@@ -45,11 +45,13 @@ export default async function Home() {
     <>
       <PageHeader home />
       <main className="fade-in-up mx-auto max-w-6xl px-6 pb-20 pt-10">
-        <AnnouncementBanner />
-        <div className="mb-6">
+        <div data-reveal>
+          <AnnouncementBanner />
+        </div>
+        <div data-reveal className="mb-6">
           <DiscordBanner />
         </div>
-        <div className="mb-10 text-center">
+        <div data-reveal className="mb-10 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
           <p className="mt-2 text-muted">Click the map you're on</p>
           <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">
@@ -62,8 +64,13 @@ export default async function Home() {
         </div>
 
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {maps.map((map) => {
+          {maps.map((map, i) => {
             const hasCover = !!map.cover_image_url;
+            // Cascade within each row; modulo keeps the delay small so cards
+            // never sit waiting long after they've scrolled into view.
+            const revealStyle = {
+              ["--reveal-delay"]: `${(i % 5) * 70}ms`,
+            } as React.CSSProperties;
             const cardBase =
               "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium transition-all duration-200";
 
@@ -96,7 +103,7 @@ export default async function Home() {
               // TEMP: Calypso Casino new-map highlight branch.
               const isNewMap = map.name === NEW_MAP_NAME;
               return (
-                <li key={map.id}>
+                <li key={map.id} data-reveal style={revealStyle}>
                   <Link
                     href={`/maps/${map.slug}`}
                     className={`${cardBase} border ${
@@ -120,7 +127,7 @@ export default async function Home() {
             }
 
             return (
-              <li key={map.id}>
+              <li key={map.id} data-reveal style={revealStyle}>
                 <div
                   aria-disabled="true"
                   className={`${cardBase} !cursor-not-allowed border border-dashed border-border ${

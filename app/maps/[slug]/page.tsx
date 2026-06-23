@@ -59,7 +59,7 @@ export default async function MapPage({
     <>
       <PageHeader />
       <main className="fade-in-up mx-auto max-w-4xl px-6 pb-20 pt-6">
-        <div className="mb-8 text-center">
+        <div data-reveal className="mb-8 text-center">
           <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
             {map.name}
           </h1>
@@ -79,8 +79,14 @@ export default async function MapPage({
         </div>
 
         <ul className="space-y-7">
-          {floors.map((floor) => (
-            <li key={floor.id}>
+          {floors.map((floor, i) => (
+            <li
+              key={floor.id}
+              data-reveal
+              style={
+                { ["--reveal-delay"]: `${(i % 5) * 70}ms` } as React.CSSProperties
+              }
+            >
               <Link
                 href={`/maps/${map.slug}/${floor.slug}`}
                 className="group block overflow-hidden rounded-card border border-border bg-card transition-all duration-200 ease-out hover:scale-[1.015] hover:border-brand/30 hover:shadow-lg"

@@ -27,13 +27,44 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4078132076614384"
           crossOrigin="anonymous"
         ></script>
+        {/* Scroll reveal. Self-contained — does not depend on the app bundle,
+            so if React fails to hydrate, content is never left hidden. Bails
+            (leaving everything visible) when reduced-motion is set or
+            IntersectionObserver is unavailable. Runs in <head> so the hidden
+            state is set before first paint (no flash of visible content). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function(){
+  var d=document,r=d.documentElement;
+  try{if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;}catch(e){}
+  if(!('IntersectionObserver' in window))return;
+  r.classList.add('reveal-ready');
+  var io=new IntersectionObserver(function(es){
+    for(var i=0;i<es.length;i++){if(es[i].isIntersecting){es[i].target.classList.add('is-revealed');io.unobserve(es[i].target);}}
+  },{threshold:0.12,rootMargin:'0px 0px -8% 0px'});
+  function bind(n){if(n.nodeType===1&&n.hasAttribute('data-reveal')&&!n.hasAttribute('data-reveal-seen')){n.setAttribute('data-reveal-seen','');io.observe(n);}}
+  function scan(c){var ns=(c||d).querySelectorAll('[data-reveal]');for(var i=0;i<ns.length;i++)bind(ns[i]);}
+  function start(){
+    scan(d);
+    try{
+      var mo=new MutationObserver(function(ms){
+        for(var i=0;i<ms.length;i++){var a=ms[i].addedNodes;for(var j=0;j<a.length;j++){var n=a[j];if(n.nodeType===1){bind(n);if(n.querySelectorAll)scan(n);}}}
+      });
+      mo.observe(d.body,{childList:true,subtree:true});
+    }catch(e){}
+  }
+  if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',start);else start();
+})();`,
+          }}
+        />
       </head>
       <body className="flex min-h-screen flex-col bg-bg text-ink">
         <div className="flex-1">{children}</div>
