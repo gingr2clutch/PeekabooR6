@@ -7,7 +7,11 @@ type Props = {
   peekId: string;
 };
 
-const storageKey = (id: string) => `voted_peek_${id}`;
+// Bumped v1 → v2 at launch: the DB vote counts were reset, so test-era
+// "voted" flags in existing browsers must be invalidated too. Old
+// `voted_peek_<id>` keys no longer match and are simply ignored, letting
+// everyone vote again. Bump this version again for any future vote reset.
+const storageKey = (id: string) => `voted_peek_v2_${id}`;
 
 export function VoteButtons({ peekId }: Props) {
   const [hasVoted, setHasVoted] = useState(false);
