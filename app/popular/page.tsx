@@ -29,8 +29,8 @@ const MEDALS: Record<number, Medal> = {
     circleBg: "#FFD700",
     circleBorder: "#DAA520",
     iconColor: "#FFD700",
-    cardBorder: "rgba(218, 165, 32, 0.55)",
-    cardClass: "border-2 peek-glow-gold",
+    cardBorder: "rgba(255, 106, 0, 0.55)",
+    cardClass: "border-2 peek-fire",
   },
   2: {
     circleBg: "#C0C0C0",
@@ -114,7 +114,7 @@ function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
             >
               {rank === 1 ? (
                 <TrophyIcon
-                  className="peek-trophy-pulse h-20 w-20 sm:h-24 sm:w-24"
+                  className="peek-fire-icon h-20 w-20 sm:h-24 sm:w-24"
                   style={{ color: medal.iconColor, opacity: 0.18 }}
                 />
               ) : (

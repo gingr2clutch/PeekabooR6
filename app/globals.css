@@ -165,33 +165,95 @@ h4 {
   }
 }
 
-/* Soft gold glow for the rank-1 card on the Popular page. */
-.peek-glow-gold {
-  box-shadow: 0 4px 24px rgba(218, 165, 32, 0.16);
+/* Rank-1 "on fire" treatment on the Popular page — an animated warm glow
+   (orange -> red -> amber) that gently pulses and flickers like radiating
+   heat. Pure box-shadow/opacity animation: cheap, no JS, no image assets.
+   The glow sits entirely OUTSIDE the card border, so the card stays white
+   inside and text readability is untouched. Applied to ONLY the #1 card. */
+@keyframes peek-fire-glow {
+  0% {
+    box-shadow:
+      0 0 0 1.5px rgba(255, 106, 0, 0.42),
+      0 3px 18px rgba(255, 106, 0, 0.32),
+      0 8px 38px rgba(220, 38, 38, 0.16);
+  }
+  22% {
+    box-shadow:
+      0 0 0 1.5px rgba(245, 158, 11, 0.5),
+      0 4px 22px rgba(245, 158, 11, 0.38),
+      0 10px 44px rgba(255, 106, 0, 0.2);
+  }
+  /* brief flicker dip */
+  40% {
+    box-shadow:
+      0 0 0 1px rgba(255, 106, 0, 0.34),
+      0 3px 15px rgba(255, 106, 0, 0.27),
+      0 7px 32px rgba(220, 38, 38, 0.13);
+  }
+  58% {
+    box-shadow:
+      0 0 0 2px rgba(220, 38, 38, 0.48),
+      0 5px 26px rgba(255, 106, 0, 0.42),
+      0 12px 50px rgba(220, 38, 38, 0.2);
+  }
+  /* second, gentler flicker */
+  78% {
+    box-shadow:
+      0 0 0 1.5px rgba(255, 106, 0, 0.38),
+      0 4px 20px rgba(255, 140, 0, 0.34),
+      0 9px 40px rgba(245, 158, 11, 0.18);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1.5px rgba(255, 106, 0, 0.42),
+      0 3px 18px rgba(255, 106, 0, 0.32),
+      0 8px 38px rgba(220, 38, 38, 0.16);
+  }
 }
-.peek-glow-gold:hover {
-  box-shadow: 0 8px 32px rgba(218, 165, 32, 0.26);
+.peek-fire {
+  animation: peek-fire-glow 5s ease-in-out infinite;
 }
 
-/* Gentle pulse for the trophy watermark behind rank 1. */
-@keyframes peek-trophy-pulse {
+/* Trophy watermark behind rank 1 — flickers in sync (same 5s loop) so the
+   icon reads as the source of the heat. */
+@keyframes peek-fire-icon {
   0%,
   100% {
     opacity: 0.16;
     transform: scale(1);
   }
-  50% {
-    opacity: 0.24;
+  25% {
+    opacity: 0.27;
+    transform: scale(1.04);
+  }
+  42% {
+    opacity: 0.15;
+    transform: scale(1.01);
+  }
+  58% {
+    opacity: 0.3;
     transform: scale(1.05);
   }
+  78% {
+    opacity: 0.19;
+    transform: scale(1.02);
+  }
 }
-.peek-trophy-pulse {
-  animation: peek-trophy-pulse 3.6s ease-in-out infinite;
+.peek-fire-icon {
+  animation: peek-fire-icon 5s ease-in-out infinite;
   transform-origin: center;
 }
 
+/* Reduced motion: keep a static warm glow, drop all animation. */
 @media (prefers-reduced-motion: reduce) {
-  .peek-trophy-pulse {
+  .peek-fire {
+    animation: none;
+    box-shadow:
+      0 0 0 1.5px rgba(255, 106, 0, 0.42),
+      0 4px 22px rgba(255, 106, 0, 0.3),
+      0 9px 42px rgba(220, 38, 38, 0.16);
+  }
+  .peek-fire-icon {
     animation: none;
   }
 }
