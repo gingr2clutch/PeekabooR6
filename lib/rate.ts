@@ -80,9 +80,54 @@ export function gradeBarPercent(value: number): number {
   return 100;
 }
 
+// THE single worse→better colour scale, shared by the grade bar AND every
+// grade letter, so a letter's colour always equals the bar's colour at its
+// position and the two can never disagree. Input is a 0–100 score = the grade's
+// position on the bar (gradeBarPercent). Stops are placed by tier so C reads
+// red, B amber (peaks ~38%, the B centre), A amber→green, and all S read green
+// (green from 75%, the S floor).
+const GRADE_COLOR_STOPS: ReadonlyArray<readonly [number, readonly [number, number, number]]> = [
+  [0, [185, 28, 28]], // red-700
+  [25, [220, 38, 38]], // red-600   (C → red)
+  [38, [217, 119, 6]], // amber-600 (B → amber)
+  [75, [22, 163, 74]], // green-600 (A → green)
+  [100, [21, 128, 61]], // green-700 (S → green)
+];
+
+export function gradeColor(score: number): string {
+  const s = Math.max(0, Math.min(100, score || 0));
+  for (let i = 1; i < GRADE_COLOR_STOPS.length; i++) {
+    const [s2, c2] = GRADE_COLOR_STOPS[i];
+    if (s <= s2) {
+      const [s1, c1] = GRADE_COLOR_STOPS[i - 1];
+      const f = s2 === s1 ? 0 : (s - s1) / (s2 - s1);
+      const mix = (a: number, b: number) => Math.round(a + (b - a) * f);
+      return `rgb(${mix(c1[0], c2[0])}, ${mix(c1[1], c2[1])}, ${mix(c1[2], c2[2])})`;
+    }
+  }
+  const last = GRADE_COLOR_STOPS[GRADE_COLOR_STOPS.length - 1][1];
+  return `rgb(${last[0]}, ${last[1]}, ${last[2]})`;
+}
+
+// CSS gradient for the grade bar, built from the SAME stops as gradeColor so
+// the bar and the letter colours are guaranteed to be one scale.
+export function gradeBarGradientCss(): string {
+  const stops = GRADE_COLOR_STOPS.map(
+    ([pos, [r, g, b]]) => `rgb(${r}, ${g}, ${b}) ${pos}%`
+  ).join(", ");
+  return `linear-gradient(to right, ${stops})`;
+}
+
 export type Rating =
-  | { tier: "estimate"; grade: Grade; label: string }
-  | { tier: "measured"; grade: Grade; label: string; pct: number; votes: number };
+  | { tier: "estimate"; grade: Grade; label: string; score: number }
+  | {
+      tier: "measured";
+      grade: Grade;
+      label: string;
+      pct: number;
+      votes: number;
+      score: number;
+    };
 
 // Single source of truth for how a peek's reliability renders.
 //   • < MEASURED_MIN_VOTES votes → "estimate": plain letter from the admin
@@ -102,10 +147,17 @@ export function rating(
     const worked = Math.max(0, Math.min(total, Math.floor(workedVotes || 0)));
     const pct = Math.round((worked / total) * 100);
     const label = gradedLabel(pct);
-    return { tier: "measured", grade: label.charAt(0) as Grade, label, pct, votes: total };
+    return {
+      tier: "measured",
+      grade: label.charAt(0) as Grade,
+      label,
+      pct,
+      votes: total,
+      score: gradeBarPercent(pct),
+    };
   }
   const g = grade(estimate);
-  return { tier: "estimate", grade: g, label: g };
+  return { tier: "estimate", grade: g, label: g, score: gradeBarPercent(estimate) };
 }
 
 export const votesText = (n: number) => `${n} ${n === 1 ? "vote" : "votes"}`;

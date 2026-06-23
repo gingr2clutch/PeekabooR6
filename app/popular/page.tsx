@@ -151,7 +151,7 @@ function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
         </div>
 
         <div className="shrink-0 text-right">
-          <GradeBadge grade={r.grade} label={r.label} />
+          <GradeBadge label={r.label} score={r.score} />
           <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
             {r.tier === "measured" ? votesText(r.votes) : "Effectiveness"}
           </div>

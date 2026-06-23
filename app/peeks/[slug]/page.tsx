@@ -285,7 +285,7 @@ function NearbyStat({ peek }: { peek: NearbyPeek }) {
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   return (
     <div className="shrink-0 text-right">
-      <GradeBadge grade={r.grade} label={r.label} />
+      <GradeBadge label={r.label} score={r.score} />
       <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
         {r.tier === "measured" ? votesText(r.votes) : "Effectiveness"}
       </div>
@@ -385,7 +385,7 @@ function SuccessStat({ peek }: { peek: Peek }) {
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <GradeBadge grade={r.grade} label={r.label} size="lg" />
+      <GradeBadge label={r.label} score={r.score} size="lg" />
       {r.tier === "measured" && (
         <>
           <span className="text-[11px] font-medium text-muted md:text-xs">
