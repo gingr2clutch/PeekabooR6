@@ -472,3 +472,100 @@ h4 {
     transition: none;
   }
 }
+
+/* --- Living flame in the Popular header ------------------------------------
+   The flame icon flickers (gentle scale/skew + hue/brightness pulse anchored
+   at its base) on a smooth ~1.6s loop, and three ember particles rise, drift,
+   shrink and fade on long, desynced loops so sparks appear only occasionally
+   and feel random rather than mechanical. Pure CSS — no JS, canvas, or image
+   assets; cheap on mobile (one flicker + three tiny particles). Embers rise
+   straight up from the icon and drift only a few px sideways, so they stay
+   over the icon and never reach the "Popular peeks" text. */
+.peek-flame-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+@keyframes peek-flame-flicker {
+  0%,
+  100% {
+    transform: scale(1, 1) skewX(0deg) translateX(0);
+    filter: brightness(1) hue-rotate(0deg)
+      drop-shadow(0 0 2px rgba(255, 106, 0, 0.45));
+  }
+  25% {
+    transform: scale(1.05, 1.1) skewX(-3deg) translateX(-0.4px);
+    filter: brightness(1.08) hue-rotate(-8deg)
+      drop-shadow(0 0 3px rgba(255, 160, 0, 0.55));
+  }
+  50% {
+    transform: scale(0.98, 1.04) skewX(2deg) translateX(0.4px);
+    filter: brightness(0.96) hue-rotate(7deg)
+      drop-shadow(0 0 2px rgba(255, 80, 0, 0.5));
+  }
+  75% {
+    transform: scale(1.04, 1.08) skewX(-1.5deg) translateX(-0.2px);
+    filter: brightness(1.05) hue-rotate(-4deg)
+      drop-shadow(0 0 3px rgba(255, 120, 0, 0.55));
+  }
+}
+.peek-flame {
+  transform-origin: 50% 90%;
+  animation: peek-flame-flicker 1.6s ease-in-out infinite;
+  will-change: transform, filter;
+}
+/* One ember: fade in low, rise + drift sideways, shrink and fade. Only
+   "alive" for the first ~28% of its loop; invisible the rest, which is the
+   quiet gap between sparks. Per-ember duration/delay/drift (--ex) set inline
+   so the three desync into a natural, random-feeling cadence. */
+@keyframes peek-ember {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(1);
+  }
+  6% {
+    opacity: 0.85;
+    transform: translate(0, -3px) scale(0.95);
+  }
+  18% {
+    opacity: 0.7;
+  }
+  28% {
+    opacity: 0;
+    transform: translate(var(--ex, 4px), -20px) scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--ex, 4px), -22px) scale(0.2);
+  }
+}
+.peek-ember {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  margin-left: -1.5px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 214, 140, 0.95) 0%,
+    rgba(255, 120, 0, 0.65) 55%,
+    rgba(255, 106, 0, 0) 100%
+  );
+  opacity: 0;
+  pointer-events: none;
+  animation-name: peek-ember;
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+@media (prefers-reduced-motion: reduce) {
+  .peek-flame {
+    animation: none;
+  }
+  .peek-ember {
+    display: none;
+  }
+}

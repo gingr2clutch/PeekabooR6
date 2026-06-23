@@ -57,7 +57,7 @@ export default async function PopularPage() {
       <main className="fade-in-up mx-auto max-w-2xl px-4 pb-20 pt-10 sm:px-6">
         <div className="mb-10 text-center">
           <h1 className="inline-flex items-center gap-2.5 text-3xl font-semibold tracking-tight">
-            <FlameIcon className="h-7 w-7 text-brand" />
+            <LivingFlame />
             <span>Popular peeks</span>
           </h1>
           <p className="mt-2 text-muted">Top picks</p>
@@ -188,6 +188,50 @@ function RiskPill({ risk }: { risk: string }) {
       className={`inline-flex items-center rounded-btn border px-2 py-0.5 text-[11px] font-medium capitalize ${riskColor}`}
     >
       {risk}
+    </span>
+  );
+}
+
+// Header flame: a flickering icon with three occasional ember sparks. The
+// sparks are tiny absolutely-positioned spans rising out of the icon; their
+// duration/delay/drift are set inline so the three desync. aria-hidden — it's
+// decoration next to the "Popular peeks" label.
+function LivingFlame() {
+  return (
+    <span aria-hidden className="peek-flame-wrap">
+      <FlameIcon className="peek-flame h-7 w-7 text-brand" />
+      <span
+        className="peek-ember"
+        style={
+          {
+            ["--ex"]: "5px",
+            animationDuration: "5.5s",
+            animationDelay: "0.4s",
+          } as CSSProperties
+        }
+      />
+      <span
+        className="peek-ember"
+        style={
+          {
+            ["--ex"]: "-4px",
+            animationDuration: "6.8s",
+            animationDelay: "2.3s",
+            width: "2px",
+            height: "2px",
+          } as CSSProperties
+        }
+      />
+      <span
+        className="peek-ember"
+        style={
+          {
+            ["--ex"]: "2px",
+            animationDuration: "7.5s",
+            animationDelay: "4.1s",
+          } as CSSProperties
+        }
+      />
     </span>
   );
 }
