@@ -8,6 +8,7 @@ import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
 import { rating, votesText, type Grade } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
+import { EffectivenessInfo } from "@/components/EffectivenessInfo";
 import { isUuid } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
@@ -180,7 +181,7 @@ export default async function PeekDetailPage({
         {/* Hero stats card — 32px below header */}
         <section className="mt-6 rounded-card border border-border bg-card p-4 md:mt-8 md:p-8">
           <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-            <StatCell label="Effectiveness">
+            <StatCell label="Effectiveness" labelAccessory={<EffectivenessInfo />}>
               <SuccessStat peek={peek} />
             </StatCell>
             <StatCell label="Difficulty">
@@ -381,25 +382,53 @@ function SuccessStat({ peek }: { peek: Peek }) {
     <div className="flex flex-col items-center gap-1.5">
       <GradeBadge grade={r.grade} size="lg" />
       {r.tier === "measured" && (
-        <span className="text-[11px] font-medium text-muted md:text-xs">
-          {r.pct}% · {votesText(r.votes)}
-        </span>
+        <>
+          <span className="text-[11px] font-medium text-muted md:text-xs">
+            {r.pct}% · {votesText(r.votes)}
+          </span>
+          <PlayerVotedBadge />
+        </>
       )}
     </div>
+  );
+}
+
+// Shown only on measured-tier peeks so the grade reads as community-backed
+// rather than an estimate.
+function PlayerVotedBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+      <svg
+        viewBox="0 0 16 16"
+        width="10"
+        height="10"
+        aria-hidden
+        className="fill-none stroke-current"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 8.5l3.5 3.5L13 5" />
+      </svg>
+      Player voted
+    </span>
   );
 }
 
 function StatCell({
   label,
   children,
+  labelAccessory,
 }: {
   label: string;
   children: React.ReactNode;
+  labelAccessory?: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col items-center justify-start gap-2 px-2 py-4 md:gap-4 md:px-4 md:py-2">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted md:text-[11px]">
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted md:text-[11px]">
         {label}
+        {labelAccessory}
       </span>
       <div className="flex min-h-[44px] flex-1 items-center md:min-h-[72px]">
         {children}
