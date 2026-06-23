@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
-import { GearUpHomeCard } from "@/components/GearUp";
+import { DiscordBanner } from "@/components/DiscordButton";
 import { PageHeader } from "@/components/PageHeader";
 import { getMaps } from "@/lib/db";
 
@@ -47,7 +47,7 @@ export default async function Home() {
       <main className="fade-in-up mx-auto max-w-6xl px-6 pb-20 pt-10">
         <AnnouncementBanner />
         <div className="mb-8">
-          <GearUpHomeCard />
+          <DiscordBanner />
         </div>
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
