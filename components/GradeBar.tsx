@@ -1,10 +1,9 @@
 import { rating, gradeColor, gradeBarGradientCss } from "@/lib/rate";
 
-// Static horizontal grade scale (C·B·A·S, worse→better) with a marker at this
-// peek's position. Estimate peeks position from the admin seed; player-voted
-// peeks from the real worked/total percentage. The marker label carries the
-// +/- modifier in the voted tier. Replaces the old info popover by showing the
-// scale visually. Pure presentational — no client JS.
+// Horizontal worse→better grade scale (C·B·A·S) with a single marker — a grade
+// pill plus a caret pointing to where this peek sits. Estimate peeks position
+// from the admin seed; player-voted peeks from the real worked/total %. The
+// pill label carries the +/- modifier in the voted tier. Pure presentational.
 export function GradeBar({
   baseSuccessRate,
   workedVotes,
@@ -15,32 +14,33 @@ export function GradeBar({
   voteCount: number;
 }) {
   const r = rating(baseSuccessRate, workedVotes, voteCount);
-  const pos = r.score;
-  // The on-bar tick stays at the exact position; the floating label is clamped
-  // so it never spills past the card edge on a phone.
-  const labelPos = Math.max(12, Math.min(88, pos));
-  // Same scale as the badges, built from the shared colour stops.
-  const barGradient = gradeBarGradientCss();
+  // Clamp the marker so the pill + caret never spill past the card edge on a
+  // narrow phone. Grades cluster in B/A (well inside the range), so the clamp
+  // only nudges the rare C-bottom / S-top peeks.
+  const markerPos = Math.max(10, Math.min(90, r.score));
+  const color = gradeColor(r.score);
 
   return (
-    <div className="mt-6 border-t border-border pt-5">
-      <div className="relative pt-7">
-        <span
-          className="absolute top-0 -translate-x-1/2 whitespace-nowrap rounded-btn px-1.5 py-0.5 text-[11px] font-bold leading-none text-white shadow-sm"
-          style={{ left: `${labelPos}%`, backgroundColor: gradeColor(pos) }}
-        >
-          {r.label}
-        </span>
-
-        <div
-          className="relative h-2 rounded-full"
-          style={{ background: barGradient }}
-        >
-          <span
-            aria-hidden
-            className="absolute top-1/2 h-4 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink shadow ring-2 ring-card"
-            style={{ left: `${pos}%` }}
-          />
+    <div className="mt-6 border-t border-border pt-3">
+      {/* pt-9 reserves room for the marker sitting above the bar */}
+      <div className="relative pt-9">
+        <div className="relative h-2 rounded-full" style={{ background: gradeBarGradientCss() }}>
+          <div
+            className="pointer-events-none absolute bottom-full mb-1 flex -translate-x-1/2 flex-col items-center"
+            style={{ left: `${markerPos}%` }}
+          >
+            <span
+              className="rounded-btn px-1.5 py-0.5 text-[11px] font-bold leading-none text-white shadow-sm"
+              style={{ backgroundColor: color }}
+            >
+              {r.label}
+            </span>
+            <span
+              aria-hidden
+              className="h-0 w-0 border-x-4 border-t-4 border-x-transparent"
+              style={{ borderTopColor: color }}
+            />
+          </div>
         </div>
 
         <div className="mt-2 grid grid-cols-4 text-center text-[11px] font-semibold tracking-wide text-muted">
@@ -51,9 +51,11 @@ export function GradeBar({
         </div>
       </div>
 
-      <p className="mt-2 text-center text-[11px] leading-snug text-muted">
-        New peeks use our estimate; player-voted after 5 votes.
-      </p>
+      {r.tier === "estimate" && (
+        <p className="mt-1.5 whitespace-nowrap text-center text-[11px] text-muted">
+          Estimate until 5 votes.
+        </p>
+      )}
     </div>
   );
 }
