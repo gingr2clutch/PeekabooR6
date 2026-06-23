@@ -8,7 +8,7 @@ import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
 import { rating, votesText, type Grade } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
-import { EffectivenessInfo } from "@/components/EffectivenessInfo";
+import { GradeBar } from "@/components/GradeBar";
 import { isUuid } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
@@ -181,7 +181,7 @@ export default async function PeekDetailPage({
         {/* Hero stats card — 32px below header */}
         <section className="mt-6 rounded-card border border-border bg-card p-4 md:mt-8 md:p-8">
           <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-            <StatCell label="Effectiveness" labelAccessory={<EffectivenessInfo />}>
+            <StatCell label="Effectiveness">
               <SuccessStat peek={peek} />
             </StatCell>
             <StatCell label="Difficulty">
@@ -191,6 +191,11 @@ export default async function PeekDetailPage({
               <RiskPill risk={peek.risk} />
             </StatCell>
           </div>
+          <GradeBar
+            baseSuccessRate={peek.base_success_rate}
+            workedVotes={peek.worked_votes}
+            voteCount={peek.vote_count}
+          />
         </section>
 
         {/* Vote buttons — 16px below stats card */}
@@ -418,17 +423,14 @@ function PlayerVotedBadge() {
 function StatCell({
   label,
   children,
-  labelAccessory,
 }: {
   label: string;
   children: React.ReactNode;
-  labelAccessory?: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col items-center justify-start gap-2 px-2 py-4 md:gap-4 md:px-4 md:py-2">
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted md:text-[11px]">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted md:text-[11px]">
         {label}
-        {labelAccessory}
       </span>
       <div className="flex min-h-[44px] flex-1 items-center md:min-h-[72px]">
         {children}

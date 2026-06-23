@@ -49,6 +49,37 @@ export function grade(value: number): Grade {
   return gradedLabel(value).charAt(0) as Grade;
 }
 
+// Lowest percentage that earns each base letter, derived from the single
+// threshold table so the grade bar can't drift from the grades.
+function letterFloor(letter: Grade): number {
+  return Math.min(
+    ...GRADED_THRESHOLDS.filter((t) => t.label.charAt(0) === letter).map(
+      (t) => t.min
+    )
+  );
+}
+
+// Maps a 0–100 value to a 0–100 position on the four-tier grade bar (C·B·A·S,
+// left→right). Each tier fills an equal quarter regardless of its value-width,
+// so the marker always lands inside its own tier's segment.
+export function gradeBarPercent(value: number): number {
+  const v = Math.max(0, Math.min(100, value || 0));
+  const bounds = [
+    letterFloor("C"),
+    letterFloor("B"),
+    letterFloor("A"),
+    letterFloor("S"),
+    100,
+  ];
+  for (let i = 0; i < 4; i++) {
+    if (v < bounds[i + 1] || i === 3) {
+      const frac = (v - bounds[i]) / (bounds[i + 1] - bounds[i]);
+      return (i + Math.max(0, Math.min(1, frac))) * 25;
+    }
+  }
+  return 100;
+}
+
 export type Rating =
   | { tier: "estimate"; grade: Grade; label: string }
   | { tier: "measured"; grade: Grade; label: string; pct: number; votes: number };
