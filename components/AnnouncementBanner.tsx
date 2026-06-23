@@ -46,9 +46,14 @@ export function AnnouncementBanner() {
         <span className="peek-banner-badge inline-flex shrink-0 items-center rounded-btn bg-white px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-purple-700">
           New
         </span>
-        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold drop-shadow-sm sm:text-sm">
-          TikTok creator peeks are live — look for the purple pins.
-        </span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[11px] font-semibold leading-tight drop-shadow-sm sm:text-sm">
+            TikTok creator peeks are live
+          </div>
+          <div className="truncate text-[10px] font-normal leading-tight text-white/80 sm:text-[11px]">
+            Submit your own in menu
+          </div>
+        </div>
         <button
           type="button"
           onClick={dismiss}
