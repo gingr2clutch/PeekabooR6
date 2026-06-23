@@ -4,19 +4,18 @@ import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase";
 import { buildBasePeekSlug, ensureUniquePeekSlug } from "@/lib/slug";
 
-// Hostnames the public detail page treats as "watch on TikTok" — keeps
-// the approve flow in sync with what the front-end actually recognises.
-const TIKTOK_HOSTS = new Set([
-  "tiktok.com",
-  "www.tiktok.com",
-  "vt.tiktok.com",
-]);
-
+// Matches tiktok.com itself plus any subdomain (www, vt, vm, m, etc.).
+// Earlier version of this used a fixed allow-list of {tiktok.com,
+// www.tiktok.com, vt.tiktok.com}, which silently missed `vm.tiktok.com`
+// — the host TikTok's mobile app generates for share links. Easy to
+// confuse vt/vm by eye. Endswith-`.tiktok.com` catches them all and any
+// future short-link host without further edits.
 function isTikTokUrl(raw: string): boolean {
   try {
-    const u = new URL(raw);
+    const u = new URL(raw.trim());
     if (u.protocol !== "http:" && u.protocol !== "https:") return false;
-    return TIKTOK_HOSTS.has(u.hostname.toLowerCase());
+    const host = u.hostname.toLowerCase();
+    return host === "tiktok.com" || host.endsWith(".tiktok.com");
   } catch {
     return false;
   }

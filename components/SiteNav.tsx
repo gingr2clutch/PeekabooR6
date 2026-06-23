@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { Wordmark } from "./Wordmark";
+import { DiscordButton } from "./DiscordButton";
 
 const ICON_SIZE = 16;
 const ICON_STROKE = 2;
@@ -124,6 +125,7 @@ export function SiteNav() {
             <span>{label}</span>
           </Link>
         ))}
+        <DiscordButton />
       </nav>
 
       {/* Mobile hamburger. */}
@@ -185,6 +187,10 @@ export function SiteNav() {
                     <span>{label}</span>
                   </Link>
                 ))}
+                <DiscordButton
+                  onClick={closeDrawer}
+                  className="mt-3 w-full py-4 text-base"
+                />
               </div>
             </nav>
           </div>

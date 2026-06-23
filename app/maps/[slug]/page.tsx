@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
+import { DiscordButton } from "@/components/DiscordButton";
 import { PageHeader } from "@/components/PageHeader";
 import { RandomPeekButton } from "@/components/RandomPeekButton";
 import { getFloorsForMap, getMapBySlug } from "@/lib/db";
@@ -69,13 +70,12 @@ export default async function MapPage({
           <p className="mt-2 text-[15px] font-light italic text-muted">
             Choose your floor
           </p>
-          {totalPeeks >= 2 && (
-            <div className="mt-5">
-              <RandomPeekButton
-                href={`/api/maps/${map.slug}/random-peek`}
-              />
-            </div>
-          )}
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+            {totalPeeks >= 2 && (
+              <RandomPeekButton href={`/api/maps/${map.slug}/random-peek`} />
+            )}
+            <DiscordButton />
+          </div>
         </div>
 
         <ul className="space-y-7">
