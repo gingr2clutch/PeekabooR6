@@ -268,19 +268,33 @@ h4 {
 
 .peek-rp-btn-dice {
   transform-origin: center;
-  animation: peek-rp-idle-wobble 10s ease-in-out infinite;
+  /* Soft white glow — also the static reduced-motion state. */
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.45));
+  /* Slow continuous 3D rotation + a gently pulsing glow. */
+  animation:
+    peek-rp-dice-spin 7s linear infinite,
+    peek-rp-dice-glow 3.2s ease-in-out infinite;
 }
 
-/* Idle wobble — dice rests at 0° for ~5s, then a brief 600ms shake, then
-   ~4.4s of rest before the next cycle. Wobble lives mid-keyframe so when
-   the animation restarts (e.g. after un-hover) the user gets fresh rest
-   time, not an immediate shake. */
-@keyframes peek-rp-idle-wobble {
-  0%, 50% { transform: rotate(0deg); }
-  51% { transform: rotate(-10deg); }
-  53% { transform: rotate(10deg); }
-  55% { transform: rotate(-6deg); }
-  56%, 100% { transform: rotate(0deg); }
+/* Continuous 3D-style rotation: perspective() + rotateY with a fixed rotateX
+   tilt for depth, so the dice reads as turning in space rather than a flat
+   2D spin. Smooth linear loop. */
+@keyframes peek-rp-dice-spin {
+  from {
+    transform: perspective(400px) rotateX(12deg) rotateY(0deg);
+  }
+  to {
+    transform: perspective(400px) rotateX(12deg) rotateY(360deg);
+  }
+}
+@keyframes peek-rp-dice-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.78));
+  }
 }
 
 /* Hover only on devices with a real hover state. Desktop gets a smooth
@@ -295,8 +309,8 @@ h4 {
 }
 
 @keyframes peek-rp-hover-tumble {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from { transform: perspective(400px) rotateX(12deg) rotateY(0deg); }
+  to { transform: perspective(400px) rotateX(12deg) rotateY(360deg); }
 }
 
 /* Press feedback: button scales down briefly while pointer is down. */
@@ -311,8 +325,8 @@ h4 {
 }
 
 @keyframes peek-rp-tap-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(720deg); }
+  from { transform: perspective(400px) rotateX(12deg) rotateY(0deg); }
+  to { transform: perspective(400px) rotateX(12deg) rotateY(720deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
