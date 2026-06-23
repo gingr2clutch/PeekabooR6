@@ -42,10 +42,10 @@ export function DiscordBanner() {
         New
       </span>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[13px] font-semibold leading-tight sm:text-sm">
+        <div className="truncate text-[11px] font-semibold leading-tight sm:text-sm">
           Join the peekabooR6 Discord server
         </div>
-        <div className="truncate text-[11px] font-normal leading-tight text-white/75">
+        <div className="truncate text-[10px] font-normal leading-tight text-white/75 sm:text-[11px]">
           Be the first to see new peeks
         </div>
       </div>
