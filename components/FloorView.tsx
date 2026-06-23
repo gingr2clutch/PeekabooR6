@@ -426,7 +426,7 @@ function SuccessTile({ peek }: { peek: Positioned }) {
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   return (
     <StatTile label={r.tier === "measured" ? votesText(r.votes) : "Effectiveness"}>
-      <GradeBadge grade={r.grade} />
+      <GradeBadge grade={r.grade} label={r.label} />
     </StatTile>
   );
 }

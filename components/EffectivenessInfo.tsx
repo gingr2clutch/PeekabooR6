@@ -75,7 +75,7 @@ export function EffectivenessInfo() {
               New peeks show a grade based on our estimate. Once a peek gets 5+
               community votes (Worked / Didn&apos;t work), the grade becomes
               player-voted — recalculated from real player votes instead of our
-              estimate.
+              estimate, and refined with a +/- modifier (e.g. A+, B-).
             </span>
             <span className="mt-2 block font-medium">
               S = 85+ · A = 70–84 · B = 55–69 · C = below 55

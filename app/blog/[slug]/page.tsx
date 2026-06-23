@@ -279,7 +279,7 @@ function ReliabilityCell({ peek }: { peek: BlogPeek }) {
         Effectiveness
       </dt>
       <dd className="mt-1">
-        <GradeBadge grade={r.grade} />
+        <GradeBadge grade={r.grade} label={r.label} />
         {r.tier === "measured" && (
           <span className="mt-1 block text-[11px] font-medium normal-case text-muted">
             {votesText(r.votes)}
