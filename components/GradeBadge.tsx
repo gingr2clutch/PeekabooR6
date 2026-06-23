@@ -14,22 +14,27 @@ const SIZES = {
   lg: "h-12 min-w-12 px-3 text-3xl md:h-16 md:min-w-16 md:text-5xl",
 } as const;
 
-// Pure presentational — safe in both server and client components.
+// Pure presentational — safe in both server and client components. Colour is
+// keyed by the base letter `grade`; `label` is what's shown (e.g. "S+", "B-"),
+// defaulting to the plain letter when no +/- modifier applies.
 export function GradeBadge({
   grade,
+  label,
   size = "sm",
   className = "",
 }: {
   grade: Grade;
+  label?: string;
   size?: keyof typeof SIZES;
   className?: string;
 }) {
+  const text = label ?? grade;
   return (
     <span
-      aria-label={`Grade ${grade}`}
+      aria-label={`Grade ${text}`}
       className={`inline-flex items-center justify-center rounded-btn border font-bold leading-none tracking-tight ${STYLES[grade]} ${SIZES[size]} ${className}`}
     >
-      {grade}
+      {text}
     </span>
   );
 }
