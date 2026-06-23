@@ -1,4 +1,4 @@
-import { rating, gradeBarPercent } from "@/lib/rate";
+import { rating, gradeColor, gradeBarGradientCss } from "@/lib/rate";
 
 // Static horizontal grade scale (C·B·A·S, worse→better) with a marker at this
 // peek's position. Estimate peeks position from the admin seed; player-voted
@@ -15,23 +15,27 @@ export function GradeBar({
   voteCount: number;
 }) {
   const r = rating(baseSuccessRate, workedVotes, voteCount);
-  const value = r.tier === "measured" ? r.pct : baseSuccessRate;
-  const pos = gradeBarPercent(value);
+  const pos = r.score;
   // The on-bar tick stays at the exact position; the floating label is clamped
   // so it never spills past the card edge on a phone.
   const labelPos = Math.max(12, Math.min(88, pos));
+  // Same scale as the badges, built from the shared colour stops.
+  const barGradient = gradeBarGradientCss();
 
   return (
     <div className="mt-6 border-t border-border pt-5">
       <div className="relative pt-7">
         <span
-          className="absolute top-0 -translate-x-1/2 whitespace-nowrap rounded-btn bg-ink px-1.5 py-0.5 text-[11px] font-bold leading-none text-white shadow-sm"
-          style={{ left: `${labelPos}%` }}
+          className="absolute top-0 -translate-x-1/2 whitespace-nowrap rounded-btn px-1.5 py-0.5 text-[11px] font-bold leading-none text-white shadow-sm"
+          style={{ left: `${labelPos}%`, backgroundColor: gradeColor(pos) }}
         >
           {r.label}
         </span>
 
-        <div className="relative h-2 rounded-full bg-gradient-to-r from-rose-400 via-amber-300 to-emerald-400">
+        <div
+          className="relative h-2 rounded-full"
+          style={{ background: barGradient }}
+        >
           <span
             aria-hidden
             className="absolute top-1/2 h-4 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink shadow ring-2 ring-card"
