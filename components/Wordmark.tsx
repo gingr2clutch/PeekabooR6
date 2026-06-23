@@ -18,7 +18,7 @@ export function Wordmark({ href = "/", showText = false }: Props) {
         alt=""
         width={36}
         height={36}
-        className="h-8 w-8 md:h-9 md:w-9"
+        className="peek-dice h-8 w-8 md:h-9 md:w-9"
       />
       {showText && (
         <span>
