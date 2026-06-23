@@ -38,6 +38,9 @@ export function DiscordBanner() {
       className="group mx-auto flex max-w-2xl items-center gap-2.5 rounded-card bg-[#5865F2] px-3 py-2 text-white shadow-sm transition-colors duration-150 ease-out hover:bg-[#4752c4]"
     >
       <DiscordIcon size={18} />
+      <span className="peek-banner-badge inline-flex shrink-0 items-center rounded-btn bg-white px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#5865F2]">
+        New
+      </span>
       <div className="min-w-0 flex-1">
         <div className="truncate text-[13px] font-semibold leading-tight sm:text-sm">
           Join the peekabooR6 Discord server
