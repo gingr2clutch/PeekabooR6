@@ -17,7 +17,7 @@ export function DiscordButton({ className = "", onClick }: Props) {
       target="_blank"
       rel="noopener noreferrer"
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-btn bg-[#5865F2] px-3 py-1.5 text-xs font-semibold text-white transition-colors duration-150 ease-out hover:bg-[#4752c4] active:scale-[0.99] ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-btn bg-[#5865F2] px-3 py-1.5 text-xs font-semibold text-white transition-[background-color,box-shadow,transform] duration-150 ease-out hover:bg-[#4752c4] motion-safe:hover:scale-[1.04] motion-safe:hover:shadow-md motion-safe:active:scale-[0.98] ${className}`}
     >
       <DiscordIcon />
       <span>Join the Discord</span>
@@ -35,7 +35,7 @@ export function DiscordBanner() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Join the peekabooR6 Discord (opens in new tab)"
-      className="group mx-auto flex max-w-2xl items-center gap-2.5 rounded-card bg-[#5865F2] px-3 py-2 text-white shadow-sm transition-colors duration-150 ease-out hover:bg-[#4752c4]"
+      className="group mx-auto flex max-w-2xl items-center gap-2.5 rounded-card bg-[#5865F2] px-3 py-2 text-white shadow-sm transition-[background-color,box-shadow] duration-150 ease-out hover:bg-[#4752c4] hover:shadow-md"
     >
       <DiscordIcon size={18} />
       <span className="peek-banner-badge inline-flex shrink-0 items-center rounded-btn bg-white px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#5865F2]">

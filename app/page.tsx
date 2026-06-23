@@ -69,7 +69,7 @@ export default async function Home() {
             // Cascade within each row; modulo keeps the delay small so cards
             // never sit waiting long after they've scrolled into view.
             const revealStyle = {
-              ["--reveal-delay"]: `${(i % 5) * 70}ms`,
+              ["--reveal-delay"]: `${(i % 5) * 50}ms`,
             } as React.CSSProperties;
             const cardBase =
               "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium transition-all duration-200";
@@ -82,7 +82,7 @@ export default async function Home() {
                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                 className={`object-cover ${
                   map.published
-                    ? "transition-transform duration-150 group-hover:scale-105"
+                    ? "transition-transform duration-200 ease-out motion-safe:group-hover:scale-105"
                     : "grayscale"
                 }`}
               />
@@ -112,7 +112,7 @@ export default async function Home() {
                         : "border-border hover:border-brand"
                     } ${
                       hasCover ? "" : "bg-card text-ink"
-                    } hover:-translate-y-1 hover:shadow-lg`}
+                    } hover:shadow-lg motion-safe:hover:-translate-y-1 motion-safe:hover:scale-[1.03]`}
                   >
                     {cover}
                     {isNewMap && (
