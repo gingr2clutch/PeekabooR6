@@ -7,9 +7,9 @@ type Props = {
 
 const DISCORD_INVITE = "https://discord.gg/N6rv94BBE";
 
-// Filled orange CTA matching RandomPeekButton. Opens the permanent Discord
-// invite in a new tab. Used in the site nav (desktop + mobile drawer) and
-// near the top of the map page.
+// Filled Discord-blurple CTA. Opens the permanent Discord invite in a new
+// tab. Used in the site nav (desktop + mobile drawer) and near the top of
+// the map page.
 export function DiscordButton({ className = "", onClick }: Props) {
   return (
     <a
@@ -17,7 +17,7 @@ export function DiscordButton({ className = "", onClick }: Props) {
       target="_blank"
       rel="noopener noreferrer"
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-2 rounded-btn bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 ease-out hover:bg-brand/90 active:scale-[0.99] ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-btn bg-[#5865F2] px-3 py-1.5 text-xs font-semibold text-white transition-colors duration-150 ease-out hover:bg-[#4752c4] active:scale-[0.99] ${className}`}
     >
       <DiscordIcon />
       <span>Join the Discord</span>
@@ -25,9 +25,9 @@ export function DiscordButton({ className = "", onClick }: Props) {
   );
 }
 
-// Prominent full-width orange banner for the homepage, in the slot the
-// GearUP affiliate card used to occupy (above the maps grid). Stacks on
-// mobile, goes side-by-side on >=sm. The whole banner is the link.
+// Compact Discord-blurple banner for the homepage, in the slot the GearUP
+// affiliate card used to occupy (above the maps grid). Stacks on mobile,
+// goes side-by-side on >=sm. The whole banner is the link.
 export function DiscordBanner() {
   return (
     <a
@@ -35,25 +35,25 @@ export function DiscordBanner() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Join the peekabooR6 Discord (opens in new tab)"
-      className="group mx-auto flex max-w-2xl flex-col items-center gap-3 rounded-card bg-brand px-5 py-4 text-center text-white shadow-sm transition-all duration-150 ease-out hover:bg-brand/90 hover:shadow-md active:scale-[0.995] sm:flex-row sm:gap-4 sm:text-left"
+      className="group mx-auto flex max-w-md flex-col items-center gap-2 rounded-card bg-[#5865F2] px-4 py-2.5 text-center text-white shadow-sm transition-all duration-150 ease-out hover:bg-[#4752c4] hover:shadow-md active:scale-[0.995] sm:flex-row sm:gap-3 sm:text-left"
     >
-      <DiscordIcon size={30} />
+      <DiscordIcon size={20} />
       <div className="min-w-0 flex-1">
-        <div className="text-base font-bold sm:text-lg">
+        <div className="text-sm font-bold sm:text-base">
           Join the peekabooR6 Discord
         </div>
-        <div className="mt-0.5 text-sm text-white/85">
+        <div className="mt-0.5 text-xs text-white/85">
           New peeks, callouts, and squad up with the community
         </div>
       </div>
-      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-4 py-2 text-sm font-semibold text-brand transition-colors group-hover:bg-white/90">
+      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-3 py-1.5 text-xs font-semibold text-[#5865F2] transition-colors group-hover:bg-white/90">
         Join the Discord
       </span>
     </a>
   );
 }
 
-function DiscordIcon({ size = 18 }: { size?: number }) {
+function DiscordIcon({ size = 16 }: { size?: number }) {
   return (
     <svg
       viewBox="0 0 24 24"
