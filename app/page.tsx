@@ -46,7 +46,7 @@ export default async function Home() {
       <PageHeader home />
       <main className="fade-in-up mx-auto max-w-6xl px-6 pb-20 pt-10">
         <AnnouncementBanner />
-        <div className="mb-8">
+        <div className="mb-6">
           <DiscordBanner />
         </div>
         <div className="mb-10 text-center">

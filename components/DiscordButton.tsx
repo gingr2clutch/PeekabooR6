@@ -25,9 +25,9 @@ export function DiscordButton({ className = "", onClick }: Props) {
   );
 }
 
-// Compact Discord-blurple banner for the homepage, in the slot the GearUP
-// affiliate card used to occupy (above the maps grid). Stacks on mobile,
-// goes side-by-side on >=sm. The whole banner is the link.
+// Slim single-row Discord-blurple banner for the homepage, in the slot the
+// GearUP affiliate card used to occupy (above the maps grid). Logo + text +
+// a small Join button, all on one line. The whole banner is the link.
 export function DiscordBanner() {
   return (
     <a
@@ -35,19 +35,14 @@ export function DiscordBanner() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Join the peekabooR6 Discord (opens in new tab)"
-      className="group mx-auto flex max-w-md flex-col items-center gap-2 rounded-card bg-[#5865F2] px-4 py-2.5 text-center text-white shadow-sm transition-all duration-150 ease-out hover:bg-[#4752c4] hover:shadow-md active:scale-[0.995] sm:flex-row sm:gap-3 sm:text-left"
+      className="group mx-auto flex max-w-2xl items-center gap-2.5 rounded-card bg-[#5865F2] px-3 py-2 text-white shadow-sm transition-colors duration-150 ease-out hover:bg-[#4752c4]"
     >
-      <DiscordIcon size={20} />
-      <div className="min-w-0 flex-1">
-        <div className="text-sm font-bold sm:text-base">
-          Join the peekabooR6 Discord
-        </div>
-        <div className="mt-0.5 text-xs text-white/85">
-          New peeks, callouts, and squad up with the community
-        </div>
-      </div>
-      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-3 py-1.5 text-xs font-semibold text-[#5865F2] transition-colors group-hover:bg-white/90">
-        Join the Discord
+      <DiscordIcon size={18} />
+      <span className="min-w-0 flex-1 truncate text-[13px] font-semibold sm:text-sm">
+        Join the peekabooR6 Discord server
+      </span>
+      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-2.5 py-1 text-xs font-semibold text-[#5865F2] transition-colors group-hover:bg-white/90">
+        Join
       </span>
     </a>
   );
