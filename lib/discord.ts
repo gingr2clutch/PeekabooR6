@@ -203,7 +203,11 @@ export async function postPeekToDiscord(peekId: string): Promise<void> {
     }
 
     const ok = await sendDiscordEmbed(webhookUrl, buildPeekEmbed(data));
-    if (!ok) await releaseClaim(sb, peekId);
+    if (ok) {
+      console.log(`[discord] announced peek ${peekId} (${data.slug}) in #new-peeks`);
+    } else {
+      await releaseClaim(sb, peekId);
+    }
   } catch (err) {
     console.error("[discord] postPeekToDiscord error for", peekId, err);
     try {
