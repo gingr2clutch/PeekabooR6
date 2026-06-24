@@ -34,6 +34,14 @@ export default function RootLayout({
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4078132076614384"
           crossOrigin="anonymous"
         ></script>
+        {/* Grow by Mediavine (Journey) — site-wide ad loader. */}
+        <script
+          type="text/javascript"
+          async
+          data-noptimize="1"
+          data-cfasync="false"
+          src="https://scripts.scriptwrapper.com/tags/cf3a28fc-8c16-4c04-9940-96ae46697dfa.js"
+        ></script>
         {/* Scroll reveal. Self-contained — does not depend on the app bundle,
             so if React fails to hydrate, content is never left hidden. Bails
             (leaving everything visible) when reduced-motion is set or
