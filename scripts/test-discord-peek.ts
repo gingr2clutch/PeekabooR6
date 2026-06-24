@@ -73,8 +73,10 @@ async function main(): Promise<void> {
     data = {
       name: "Lounge Door",
       slug: "clubhouse-lounge-door-first-floor",
-      poster_url:
-        "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200",
+      // Real Clubhouse map cover so the sample matches the live behavior
+      // (each post shows that peek's map image).
+      mapCoverUrl:
+        "https://pub-c11cdf7d63734d52945843745d8e60a8.r2.dev/maps/a5875ddf-ad15-48e5-beca-7711049c3e96-cover-1777904244700.png",
       difficulty: 3,
       risk: "medium" as const,
       base_success_rate: 78,
