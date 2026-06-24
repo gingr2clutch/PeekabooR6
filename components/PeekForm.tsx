@@ -16,6 +16,11 @@ type Props = {
   floors: FloorOption[];
   action: (formData: FormData) => Promise<void>;
   submitLabel: string;
+  // When false, the form omits the Published checkbox entirely — publish status
+  // is then controlled by a separate, explicit toggle (so a content save can
+  // never accidentally revert a live peek to draft). Defaults to true so the
+  // "new peek" form can still create published.
+  showPublished?: boolean;
   initial?: {
     id?: string;
     floor_id?: string;
@@ -33,7 +38,13 @@ type Props = {
   };
 };
 
-export function PeekForm({ floors, action, submitLabel, initial }: Props) {
+export function PeekForm({
+  floors,
+  action,
+  submitLabel,
+  initial,
+  showPublished = true,
+}: Props) {
   const [floorId, setFloorId] = useState(
     initial?.floor_id ?? floors[0]?.id ?? ""
   );
@@ -172,15 +183,17 @@ export function PeekForm({ floors, action, submitLabel, initial }: Props) {
           </span>
         </label>
 
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            name="published"
-            defaultChecked={initial?.published ?? false}
-            className="h-4 w-4 rounded border-border accent-brand"
-          />
-          <span>Published (visible on the public site)</span>
-        </label>
+        {showPublished && (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="published"
+              defaultChecked={initial?.published ?? false}
+              className="h-4 w-4 rounded border-border accent-brand"
+            />
+            <span>Published (visible on the public site)</span>
+          </label>
+        )}
 
         <button
           type="submit"

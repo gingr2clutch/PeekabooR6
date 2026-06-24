@@ -142,7 +142,6 @@ export async function updatePeekAction(formData: FormData) {
   const risk = parseRisk(formData.get("risk"));
   const tip = parseTip(formData.get("tip"));
   const success_rate = parseSuccessRate(formData.get("success_rate"));
-  const published = formData.get("published") === "on";
   const instructions = parseInstructions(formData);
 
   if (!id || !floor_id || !name) return;
@@ -176,16 +175,14 @@ export async function updatePeekAction(formData: FormData) {
       // Votes resume drift from this new base afterwards.
       base_success_rate: success_rate,
       success_rate,
-      published,
+      // NOTE: `published` is intentionally NOT written here. Publish status is
+      // owned solely by the explicit toggles (togglePublishedAction / inline /
+      // bulk), so saving content can never accidentally revert a live peek to
+      // draft. Discord posting is likewise driven by those toggles.
       instructions: instructions.length ? instructions : null,
     })
     .eq("id", id);
   if (error) throw error;
-
-  // Covers the draft → published transition done via the edit form. The
-  // posted_to_discord flag means an edit to an already-announced peek is a
-  // no-op, so this never re-posts.
-  if (published) await postPeekToDiscord(id);
 
   revalidatePath("/admin/peeks");
   revalidatePath(`/admin/peeks/${id}/edit`);

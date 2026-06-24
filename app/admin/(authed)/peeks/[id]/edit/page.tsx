@@ -7,6 +7,7 @@ import { getFloorOptions } from "@/lib/admin-data";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   deletePeekAction,
+  togglePublishedAction,
   updatePeekAction,
   updatePeekTiktokUrlAction,
 } from "../../actions";
@@ -89,10 +90,52 @@ export default async function AdminEditPeekPage({
         </form>
       </div>
 
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-card p-5">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+            Status
+          </h2>
+          <p className="mt-1 text-sm">
+            {peek.published ? (
+              <span className="font-medium text-emerald-700">
+                Published — live on the public site
+              </span>
+            ) : (
+              <span className="font-medium text-muted">
+                Draft — not visible to the public
+              </span>
+            )}
+          </p>
+          <p className="mt-1 text-[11px] text-muted">
+            Saving the form below never changes this — use this button to
+            publish or unpublish.
+          </p>
+        </div>
+        <form action={togglePublishedAction}>
+          <input type="hidden" name="id" value={peek.id} />
+          <input
+            type="hidden"
+            name="next"
+            value={peek.published ? "off" : "on"}
+          />
+          <button
+            type="submit"
+            className={
+              peek.published
+                ? "rounded-btn border border-border bg-card px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-brand hover:text-brand"
+                : "rounded-btn bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand/90"
+            }
+          >
+            {peek.published ? "Unpublish" : "Publish"}
+          </button>
+        </form>
+      </section>
+
       <PeekForm
         floors={floors}
         action={updatePeekAction}
         submitLabel="Save changes"
+        showPublished={false}
         initial={{
           id: peek.id,
           floor_id: peek.floor_id,
