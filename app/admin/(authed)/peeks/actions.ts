@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
+import { postPeekToDiscord } from "@/lib/discord";
 import {
   buildBasePeekSlug,
   ensureUniquePeekSlug,
@@ -117,6 +118,11 @@ export async function createPeekAction(formData: FormData) {
   console.log("[createPeekAction] insert result:", { data, error });
   if (error) throw error;
 
+  // Announce in Discord if it was created already-published. Idempotent and
+  // never throws, so it can't break creation. (Awaited rather than fire-and-
+  // forget because Vercel may kill work that outlives the response.)
+  if (published) await postPeekToDiscord(data.id);
+
   revalidatePath("/admin/peeks");
   redirect(`/admin/peeks/${data.id}/edit`);
 }
@@ -175,6 +181,11 @@ export async function updatePeekAction(formData: FormData) {
     })
     .eq("id", id);
   if (error) throw error;
+
+  // Covers the draft → published transition done via the edit form. The
+  // posted_to_discord flag means an edit to an already-announced peek is a
+  // no-op, so this never re-posts.
+  if (published) await postPeekToDiscord(id);
 
   revalidatePath("/admin/peeks");
   revalidatePath(`/admin/peeks/${id}/edit`);
@@ -239,6 +250,8 @@ export async function togglePublishedAction(formData: FormData) {
     .update({ published: next })
     .eq("id", id);
   if (error) throw error;
+
+  if (next) await postPeekToDiscord(id);
 
   revalidatePath("/admin/peeks");
   const { data: row } = await supabaseAdmin()
@@ -314,6 +327,11 @@ export async function updatePeekFieldAction(
     .eq("id", id);
   if (error) return { ok: false, error: error.message };
 
+  // Inline publish toggle from the dashboard table.
+  if (field === "published" && normalized === true) {
+    await postPeekToDiscord(id);
+  }
+
   revalidatePath("/admin/peeks");
   const { data: row } = await supabaseAdmin()
     .from("peeks")
@@ -338,6 +356,12 @@ export async function bulkSetPublishedAction(
     .update({ published })
     .in("id", ids);
   if (error) return { ok: false, error: error.message };
+
+  // Announce each newly-published peek (sequential to stay under Discord's
+  // webhook rate limit). Already-posted peeks are skipped by the claim.
+  if (published) {
+    for (const id of ids) await postPeekToDiscord(id);
+  }
 
   revalidatePath("/admin/peeks");
   const { data: rows } = await sb

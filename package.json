@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "generate-favicons": "node scripts/generate-favicons.mjs"
+    "generate-favicons": "node scripts/generate-favicons.mjs",
+    "test-discord": "tsx scripts/test-discord-peek.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.658.0",

@@ -62,6 +62,10 @@ export type Creator = {
   created_at: string;
 };
 
+// NOTE: posted_to_discord is intentionally NOT selected here — public peek
+// queries don't need it, and leaving it out keeps these reads working even if
+// the code deploys before the 020 migration adds the column. lib/discord.ts
+// reads/writes the flag via its own targeted query.
 const PEEK_COLUMNS =
   "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, success_rate, base_success_rate, published, created_at";
 

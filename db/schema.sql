@@ -47,6 +47,9 @@ create table if not exists peeks (
   success_rate int not null default 50 check (success_rate between 0 and 100),
   base_success_rate int not null default 50 check (base_success_rate between 0 and 100),
   published boolean default false,
+  -- Set once the peek has been announced to the Discord #new-peeks channel,
+  -- so the webhook fires exactly once per peek (see lib/discord.ts).
+  posted_to_discord boolean not null default false,
   created_at timestamptz default now()
 );
 
