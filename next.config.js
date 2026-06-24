@@ -20,6 +20,20 @@ const nextConfig = {
     // Allow video clips up to 50MB through server actions.
     serverActions: { bodySizeLimit: "50mb" },
   },
+  // Serve ads.txt via Grow by Mediavine's hosted redirect so it stays
+  // auto-updated (no static file to maintain). redirects() run before the
+  // filesystem, and the static public/ads.txt has been removed, so /ads.txt
+  // always 301s to Grow's hosted file. ads.txt crawlers follow this redirect.
+  async redirects() {
+    return [
+      {
+        source: "/ads.txt",
+        destination:
+          "https://adstxt.journeymv.com/sites/cf3a28fc-8c16-4c04-9940-96ae46697dfa",
+        statusCode: 301,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
