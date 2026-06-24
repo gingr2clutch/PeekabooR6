@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { DiscordBanner } from "@/components/DiscordButton";
 import { PageHeader } from "@/components/PageHeader";
 import { getMaps } from "@/lib/db";
@@ -45,10 +44,7 @@ export default async function Home() {
     <>
       <PageHeader home />
       <main className="fade-in-up mx-auto max-w-6xl px-6 pb-20 pt-10">
-        <div data-reveal>
-          <AnnouncementBanner />
-        </div>
-        <div data-reveal className="mb-6">
+        <div data-reveal className="mb-10">
           <DiscordBanner />
         </div>
         <div data-reveal className="mb-10 text-center">
