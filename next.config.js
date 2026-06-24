@@ -28,8 +28,10 @@ const nextConfig = {
     return [
       {
         source: "/ads.txt",
+        // Grow's hosted file lives at .../sites/{id}/ads.txt — the bare
+        // /sites/{id} path returns a 403 from their API gateway.
         destination:
-          "https://adstxt.journeymv.com/sites/cf3a28fc-8c16-4c04-9940-96ae46697dfa",
+          "https://adstxt.journeymv.com/sites/cf3a28fc-8c16-4c04-9940-96ae46697dfa/ads.txt",
         statusCode: 301,
       },
     ];
