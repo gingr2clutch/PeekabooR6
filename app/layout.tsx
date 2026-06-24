@@ -29,11 +29,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4078132076614384"
-          crossOrigin="anonymous"
-        ></script>
         {/* Grow by Mediavine (Journey) — site-wide ad loader. */}
         <script
           type="text/javascript"

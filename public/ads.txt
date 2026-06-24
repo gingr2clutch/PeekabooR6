@@ -1,1 +1,2 @@
-google.com, pub-4078132076614384, DIRECT, f08c47fec0942fa0
+# Google AdSense entry removed — migrated to Grow by Mediavine.
+# Add the ads.txt records Mediavine/Grow provides in your dashboard here.
