@@ -11,7 +11,7 @@ import { isPeekNew } from "@/lib/peek-recency";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Popular peeks",
+  title: "Top peeks",
   description:
     "The top spawn peeks across every map in Rainbow Six Siege, ranked by community success rate.",
 };
@@ -58,9 +58,8 @@ export default async function PopularPage() {
         <div className="mb-10 text-center">
           <h1 className="inline-flex items-center gap-2.5 text-3xl font-semibold tracking-tight">
             <LivingFlame />
-            <span>Popular peeks</span>
+            <span>Top peeks</span>
           </h1>
-          <p className="mt-2 text-muted">Top picks</p>
           <p className="mt-1 text-xs text-muted/70">
             Ranked by effectiveness grade — vote to make grades community-backed
           </p>
