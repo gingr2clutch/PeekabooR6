@@ -28,7 +28,7 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Maps", Icon: Map },
-  { href: "/popular", label: "Top", Icon: Flame },
+  { href: "/top", label: "Top", Icon: Flame },
   { href: "/whats-new", label: "New", Icon: Sparkles },
   // Hidden from nav for now — /creators route still serves directly.
   // { href: "/creators", label: "Creators", Icon: Users },

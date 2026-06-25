@@ -32,6 +32,6 @@ export async function castVote(
   if (writeErr) return null;
 
   if (current.slug) revalidatePath(`/peeks/${current.slug}`);
-  revalidatePath("/popular");
+  revalidatePath("/top");
   return { vote_count, worked_votes };
 }

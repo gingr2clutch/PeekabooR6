@@ -27,6 +27,13 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        // The Top peeks page moved from /popular to /top; keep old links/index
+        // entries working.
+        source: "/popular",
+        destination: "/top",
+        permanent: true,
+      },
+      {
         source: "/ads.txt",
         // Grow's hosted file lives at .../sites/{id}/ads.txt — the bare
         // /sites/{id} path returns a 403 from their API gateway.
