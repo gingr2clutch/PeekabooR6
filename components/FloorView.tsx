@@ -199,7 +199,7 @@ export function FloorView({ map, floor, peeks }: Props) {
 
       {peeks.length > 0 && (
         <p className="mt-3 text-center text-[13px] text-muted">
-          Ranked by success rate
+          Ranked by grade
         </p>
       )}
 

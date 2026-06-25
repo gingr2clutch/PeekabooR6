@@ -179,10 +179,17 @@ export async function getPublishedPeeksForFloor(
     .select(PEEK_COLUMNS)
     .eq("floor_id", floorId)
     .eq("published", true)
-    .order("success_rate", { ascending: false })
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return data ?? [];
+  // Rank by the same Effectiveness score the /popular page uses, so pin
+  // numbers match the grades users see. created_at stays the DB fetch order,
+  // so a stable sort keeps it as the tiebreaker for equal scores.
+  const peeks = data ?? [];
+  return peeks.sort(
+    (a, b) =>
+      ratingScore(b.base_success_rate, b.worked_votes, b.vote_count) -
+      ratingScore(a.base_success_rate, a.worked_votes, a.vote_count)
+  );
 }
 
 export type PeekWithContext = Peek & {
