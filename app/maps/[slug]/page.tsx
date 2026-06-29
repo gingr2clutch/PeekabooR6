@@ -76,6 +76,15 @@ export default async function MapPage({
           )}
         </div>
 
+        <p className="mx-auto mb-8 max-w-2xl text-center text-[15px] leading-relaxed text-muted">
+          {map.name} is one of Rainbow Six Siege&rsquo;s most-played maps, and
+          winning the opening seconds of a round comes down to knowing which
+          angles the enemy can spawn-peek the instant the timer starts. Below is
+          every floor of {map.name} the community has mapped, each with its
+          graded spawn peeks — pick a floor to see the exact spots on the
+          bird&rsquo;s-eye view, watch the clips, and learn the setups.
+        </p>
+
         <ul className="space-y-7">
           {floors.map((floor, i) => (
             <li

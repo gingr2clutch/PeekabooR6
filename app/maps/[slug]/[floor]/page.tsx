@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FloorPeekList } from "@/components/FloorPeekList";
 import { FloorView } from "@/components/FloorView";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -133,6 +134,8 @@ export default async function FloorPage({
             No spawn peeks pinned to this floor yet.
           </p>
         )}
+
+        <FloorPeekList map={map} floor={floor} peeks={peeks} />
       </main>
     </>
   );
