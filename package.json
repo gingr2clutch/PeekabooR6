@@ -15,6 +15,7 @@
     "@aws-sdk/s3-request-presigner": "^3.658.0",
     "@next/third-parties": "^14.2.35",
     "@supabase/supabase-js": "^2.45.4",
+    "@vercel/analytics": "^2.0.1",
     "browser-image-compression": "^2.0.2",
     "lucide-react": "^1.16.0",
     "next": "14.2.15",

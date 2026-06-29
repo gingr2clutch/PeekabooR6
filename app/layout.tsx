@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { Analytics } from "@vercel/analytics/next";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 
@@ -81,6 +82,7 @@ export default function RootLayout({
         {process.env.NEXT_PUBLIC_GA_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
         )}
+        <Analytics />
       </body>
     </html>
   );
