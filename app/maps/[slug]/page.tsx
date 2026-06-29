@@ -36,20 +36,35 @@ export default async function MapPage({
   const floorIds = floors.map((f) => f.id);
   const peekCountByFloor = new Map<string, number>();
   let totalPeeks = 0;
+  let latestPeekAt: string | null = null;
   if (floorIds.length > 0) {
     const { data: peeks } = await supabasePublic()
       .from("peeks")
-      .select("floor_id")
+      .select("floor_id, created_at")
       .in("floor_id", floorIds)
       .eq("published", true);
-    for (const p of (peeks ?? []) as { floor_id: string }[]) {
+    for (const p of (peeks ?? []) as {
+      floor_id: string;
+      created_at: string;
+    }[]) {
       peekCountByFloor.set(
         p.floor_id,
         (peekCountByFloor.get(p.floor_id) ?? 0) + 1
       );
       totalPeeks += 1;
+      if (!latestPeekAt || p.created_at > latestPeekAt) {
+        latestPeekAt = p.created_at;
+      }
     }
   }
+
+  const lastUpdatedLabel = latestPeekAt
+    ? new Date(latestPeekAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null;
 
   const floorLabel = `${floors.length} ${floors.length === 1 ? "floor" : "floors"}`;
   const peekLabel = `${totalPeeks} total ${totalPeeks === 1 ? "peek" : "peeks"}`;
@@ -76,14 +91,17 @@ export default async function MapPage({
           )}
         </div>
 
-        <p className="mx-auto mb-8 max-w-2xl text-center text-[15px] leading-relaxed text-muted">
-          {map.name} is one of Rainbow Six Siege&rsquo;s most-played maps, and
-          winning the opening seconds of a round comes down to knowing which
-          angles the enemy can spawn-peek the instant the timer starts. Below is
-          every floor of {map.name} the community has mapped, each with its
-          graded spawn peeks — pick a floor to see the exact spots on the
-          bird&rsquo;s-eye view, watch the clips, and learn the setups.
-        </p>
+        {totalPeeks > 0 && (
+          <p className="mx-auto mb-8 max-w-2xl text-center text-[15px] leading-relaxed text-muted">
+            {map.name} has {totalPeeks} community-graded spawn{" "}
+            {totalPeeks === 1 ? "peek" : "peeks"} mapped across {floors.length}{" "}
+            {floors.length === 1 ? "floor" : "floors"}
+            {lastUpdatedLabel ? `, last updated ${lastUpdatedLabel}` : ""}. Each
+            peek is rated by how reliably it works in real Rainbow Six Siege
+            matches — pick a floor to see the exact spots on the
+            bird&rsquo;s-eye view, watch the clips, and learn the setups.
+          </p>
+        )}
 
         <ul className="space-y-7">
           {floors.map((floor, i) => (
