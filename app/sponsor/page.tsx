@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 const SPONSOR_MAILTO =
-  "mailto:sponsors@peekaboor6.com?subject=Media kit request";
+  "mailto:gingr2clutch@gmail.com?subject=Media kit request";
 
 const REASONS: { title: string; body: string }[] = [
   {
@@ -155,7 +155,7 @@ export default function SponsorPage() {
               href={SPONSOR_MAILTO}
               className="font-medium text-brand hover:underline"
             >
-              sponsors@peekaboor6.com
+              gingr2clutch@gmail.com
             </a>
           </p>
         </section>

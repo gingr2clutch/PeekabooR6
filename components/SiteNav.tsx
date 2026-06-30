@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   BookOpen,
   Flame,
+  Handshake,
   Map,
   Menu,
   Plus,
@@ -35,6 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/blog", label: "Guides", Icon: BookOpen },
   { href: "/submit", label: "Submit a peek", Icon: Plus },
   { href: "/gear", label: "Shop for gear", Icon: ShoppingBag },
+  { href: "/sponsor", label: "Partner", Icon: Handshake },
 ];
 
 const desktopLinkCls =
