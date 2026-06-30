@@ -19,6 +19,10 @@ export function SiteFooter() {
           About
         </Link>
         <span aria-hidden>·</span>
+        <Link href="/sponsor" className={linkCls}>
+          Partner With Us
+        </Link>
+        <span aria-hidden>·</span>
         <Link href="/contact" className={linkCls}>
           Contact
         </Link>
