@@ -1,10 +1,40 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 
+const SPONSOR_TITLE =
+  "Advertise on peekabooR6 — Rainbow Six Siege Audience";
+const SPONSOR_DESCRIPTION =
+  "Sponsor peekabooR6, the Rainbow Six Siege spawn-peek database. Reach a 100% endemic R6 / FPS audience with sitewide placements, gear features, and creator integration. Request the media kit.";
+const SPONSOR_URL = "https://peekaboor6.com/sponsor";
+const SPONSOR_OG_IMAGE = {
+  url: "https://peekaboor6.com/logo.png",
+  width: 512,
+  height: 128,
+  alt: "peekabooR6",
+};
+
 export const metadata: Metadata = {
-  title: "Partner With Us",
-  description:
-    "Reach a 100% endemic Rainbow Six Siege audience. Sponsorship and placement opportunities on peekabooR6 — request the media kit.",
+  // `absolute` bypasses the root layout's "%s — peekabooR6" template so the
+  // title is exactly the brand-search phrase.
+  title: { absolute: SPONSOR_TITLE },
+  description: SPONSOR_DESCRIPTION,
+  alternates: { canonical: SPONSOR_URL },
+  // Explicitly crawlable — this page must be discoverable by brands.
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: SPONSOR_TITLE,
+    description: SPONSOR_DESCRIPTION,
+    url: SPONSOR_URL,
+    siteName: "peekabooR6",
+    type: "website",
+    images: [SPONSOR_OG_IMAGE],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SPONSOR_TITLE,
+    description: SPONSOR_DESCRIPTION,
+    images: [SPONSOR_OG_IMAGE],
+  },
 };
 
 const SPONSOR_MAILTO =
