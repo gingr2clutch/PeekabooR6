@@ -594,7 +594,7 @@ h4 {
   width: 300px;
   background: radial-gradient(
     closest-side,
-    rgba(242, 100, 14, 0.196),
+    rgba(242, 100, 14, 0.30),
     rgba(242, 100, 14, 0) 100%
   );
   animation: peek-mesh-a 14s ease-in-out infinite alternate;
@@ -606,7 +606,7 @@ h4 {
   width: 320px;
   background: radial-gradient(
     closest-side,
-    rgba(255, 140, 60, 0.168),
+    rgba(255, 140, 60, 0.26),
     rgba(255, 140, 60, 0) 100%
   );
   animation: peek-mesh-b 17s ease-in-out infinite alternate;
@@ -618,7 +618,7 @@ h4 {
   width: 280px;
   background: radial-gradient(
     closest-side,
-    rgba(242, 100, 14, 0.14),
+    rgba(242, 100, 14, 0.22),
     rgba(242, 100, 14, 0) 100%
   );
   animation: peek-mesh-c 20s ease-in-out infinite alternate;
