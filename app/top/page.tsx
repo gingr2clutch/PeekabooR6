@@ -29,7 +29,7 @@ const MEDALS: Record<number, Medal> = {
     circleBg: "#FFD700",
     circleBorder: "#DAA520",
     iconColor: "#FFD700",
-    cardBorder: "rgba(255, 106, 0, 0.55)",
+    cardBorder: "rgba(242, 100, 14, 0.55)",
     cardClass: "border-2 peek-fire",
   },
   2: {
@@ -92,7 +92,7 @@ function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
     : undefined;
   const circleStyle: CSSProperties = medal
     ? { backgroundColor: medal.circleBg, borderColor: medal.circleBorder }
-    : { backgroundColor: "#ff6a00", borderColor: "transparent" };
+    : { backgroundColor: "#f2640e", borderColor: "transparent" };
 
   const cardCls = medal
     ? medal.cardClass

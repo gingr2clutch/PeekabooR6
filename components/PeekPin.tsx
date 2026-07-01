@@ -102,7 +102,7 @@ export function PeekPin({
   // Transitions animate via .peek-pin-pressable so it eases in smoothly.
   const ringCls = isSelected ? "ring-[3px] ring-brand" : "ring-2 ring-white";
   const selectedStyle = isSelected
-    ? "scale-[1.2] shadow-[0_0_16px_rgba(255,106,0,0.55)]"
+    ? "scale-[1.2] shadow-[0_0_16px_rgba(242,100,14,0.55)]"
     : "";
 
   return (
@@ -124,7 +124,7 @@ export function PeekPin({
             hasTiktok
               ? "bg-gradient-to-br from-purple-500 to-brand"
               : "bg-brand"
-          } text-[10px] font-bold text-white shadow-md ${ringCls} group-hover:scale-[1.2] group-hover:shadow-[0_0_12px_rgba(255,106,0,0.6)] group-active:scale-[0.92] md:h-7 md:w-7 md:text-[11px] ${selectedStyle}`}
+          } text-[10px] font-bold text-white shadow-md ${ringCls} group-hover:scale-[1.2] group-hover:shadow-[0_0_12px_rgba(242,100,14,0.6)] group-active:scale-[0.92] md:h-7 md:w-7 md:text-[11px] ${selectedStyle}`}
         >
           {number}
           {hasTiktok && (

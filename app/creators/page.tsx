@@ -112,7 +112,7 @@ function CreatorCard({
             href={tiktokUrl}
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: "#ff6a00" }}
+            style={{ color: "#f2640e" }}
             className="mt-0.5 inline-block text-xs font-medium hover:underline sm:text-sm"
           >
             @{handle}

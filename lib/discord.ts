@@ -6,8 +6,8 @@ import { rating } from "./rate";
 // hardcoded SITE_URL used elsewhere (app/peeks/[slug]/page.tsx, sitemap).
 const SITE_URL = "https://peekaboor6.com";
 
-// Site brand orange (#ff6a00) as a decimal int — Discord embed colors are ints.
-const BRAND_ORANGE = 0xff6a00;
+// Site brand orange (#f2640e) as a decimal int — Discord embed colors are ints.
+const BRAND_ORANGE = 0xf2640e;
 
 // Fallback embed image when a peek's map has no cover. Must be a raster format
 // (Discord doesn't render SVG embed images), so the PNG logo, not logo.svg.
