@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { DiscordBanner } from "@/components/DiscordButton";
 import { LiveStats } from "@/components/LiveStats";
-import { ContourBackdrop } from "@/components/ContourBackdrop";
+import { MeshBackdrop } from "@/components/MeshBackdrop";
 import { PageHeader } from "@/components/PageHeader";
 import { getHomeStats, getMaps } from "@/lib/db";
 
@@ -54,7 +54,7 @@ export default async function Home() {
             and the Maps title as one continuous layer, clipped to this wrapper
             so it never reaches the maps grid below. */}
         <div className="relative mb-10">
-          <ContourBackdrop />
+          <MeshBackdrop />
           <div className="relative z-10">
             <div className="mb-6">
               <LiveStats

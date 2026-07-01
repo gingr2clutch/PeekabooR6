@@ -572,51 +572,83 @@ h4 {
   }
 }
 
-/* --- Homepage top-block "contour drift" backdrop --------------------------
+/* --- Homepage top-block "morphing mesh" backdrop --------------------------
    Sits behind BOTH the live-stats counter and the "Maps" title as one
-   continuous, self-clipping layer (z-0). Two faint topographic ring patterns
-   in the accent orange drift slowly in different directions; a soft porcelain
-   radial veil over the center keeps the numbers and title text readable. The
-   backdrop is overflow-hidden, so nothing bleeds into the maps grid below.
-   Static (no drift) under prefers-reduced-motion. */
-.peek-contour {
+   continuous, self-clipping layer (z-0). Three soft warm-orange radial blooms
+   drift + scale on their own ease-in-out loops so the mesh gently morphs; a
+   soft porcelain radial veil over the center keeps numbers/title readable. The
+   backdrop is overflow-hidden and edge-masked, so nothing bleeds into the maps
+   grid below. Static soft glow (no motion) under prefers-reduced-motion. */
+.peek-mesh {
+  -webkit-mask-image: radial-gradient(130% 105% at 50% 50%, #000 55%, transparent 92%);
+  mask-image: radial-gradient(130% 105% at 50% 50%, #000 55%, transparent 92%);
+}
+.peek-mesh-bloom {
   position: absolute;
-  inset: -50%; /* oversized so the slow drift never reveals an edge */
+  border-radius: 9999px;
 }
-.peek-contour-a {
-  background: repeating-radial-gradient(
-    circle at 32% 38%,
-    rgba(242, 100, 14, 0.108) 0 1.5px,
-    transparent 1.5px 34px
+.peek-mesh-a {
+  left: 22%;
+  top: 40%;
+  height: 220px;
+  width: 300px;
+  background: radial-gradient(
+    closest-side,
+    rgba(242, 100, 14, 0.14),
+    rgba(242, 100, 14, 0) 100%
   );
-  animation: peek-contour-a 26s ease-in-out infinite alternate;
+  animation: peek-mesh-a 14s ease-in-out infinite alternate;
 }
-.peek-contour-b {
-  background: repeating-radial-gradient(
-    circle at 68% 62%,
-    rgba(242, 100, 14, 0.096) 0 1.5px,
-    transparent 1.5px 52px
+.peek-mesh-b {
+  left: 62%;
+  top: 55%;
+  height: 260px;
+  width: 320px;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 140, 60, 0.12),
+    rgba(255, 140, 60, 0) 100%
   );
-  animation: peek-contour-b 32s ease-in-out infinite alternate;
+  animation: peek-mesh-b 17s ease-in-out infinite alternate;
 }
-@keyframes peek-contour-a {
+.peek-mesh-c {
+  left: 45%;
+  top: 30%;
+  height: 200px;
+  width: 280px;
+  background: radial-gradient(
+    closest-side,
+    rgba(242, 100, 14, 0.1),
+    rgba(242, 100, 14, 0) 100%
+  );
+  animation: peek-mesh-c 20s ease-in-out infinite alternate;
+}
+@keyframes peek-mesh-a {
   from {
-    transform: translate(-14px, -9px);
+    transform: translate(-24px, -12px) scale(0.85);
   }
   to {
-    transform: translate(14px, 11px);
+    transform: translate(20px, 14px) scale(1.15);
   }
 }
-@keyframes peek-contour-b {
+@keyframes peek-mesh-b {
   from {
-    transform: translate(11px, 7px);
+    transform: translate(18px, 10px) scale(1.1);
   }
   to {
-    transform: translate(-13px, -10px);
+    transform: translate(-22px, -14px) scale(0.9);
+  }
+}
+@keyframes peek-mesh-c {
+  from {
+    transform: translate(-10px, 12px) scale(0.9);
+  }
+  to {
+    transform: translate(16px, -12px) scale(1.2);
   }
 }
 /* Soft porcelain veil over the center so the numbers + title stay crisp. */
-.peek-contour-veil {
+.peek-mesh-veil {
   background: radial-gradient(
     ellipse 74% 92% at 50% 50%,
     #f7f8f8 0%,
@@ -625,8 +657,9 @@ h4 {
   );
 }
 @media (prefers-reduced-motion: reduce) {
-  .peek-contour-a,
-  .peek-contour-b {
+  .peek-mesh-a,
+  .peek-mesh-b,
+  .peek-mesh-c {
     animation: none;
   }
 }
