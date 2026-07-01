@@ -117,11 +117,16 @@ export function LiveStats({
   communityVotes,
   sTierPeeks,
 }: Props) {
+  // DOM/source order stays Maps, Peeks, Votes, S-Tier (keeps the desktop
+  // single-row order). `cellClass` uses CSS `order` to rearrange the mobile 2x2
+  // into Peeks | Votes (top) / Maps | S-Tier (bottom), with per-cell dividers
+  // drawn for that visual layout; `sm:` resets order and dividers to the
+  // source-order single row. Peeks + Votes carry a live teal ping dot.
   const cells = [
-    { label: "Maps", value: mapsLive, live: false, plus: false },
-    { label: "Peeks", value: gradedPeeks, live: false, plus: false },
-    { label: "Votes", value: communityVotes, live: false, plus: false },
-    { label: "S-Tier", value: sTierPeeks, live: false, plus: false },
+    { label: "Maps", value: mapsLive, live: false, plus: false, cellClass: "order-3 border-t sm:order-none sm:border-t-0" },
+    { label: "Peeks", value: gradedPeeks, live: true, plus: false, cellClass: "order-1 sm:order-none sm:border-l" },
+    { label: "Votes", value: communityVotes, live: true, plus: false, cellClass: "order-2 border-l sm:order-none" },
+    { label: "S-Tier", value: sTierPeeks, live: false, plus: false, cellClass: "order-4 border-t border-l sm:order-none sm:border-t-0" },
   ];
 
   // SSR + first render show the real values (crawlable, no-JS safe). On mount,
@@ -150,10 +155,10 @@ export function LiveStats({
         {cells.map((c, i) => (
           <div
             key={c.label}
-            // Thin full-length dividers between cells in faint teal-grey.
-            // Mobile (2 cols): a full cross; desktop (4 cols): vertical lines
-            // between all four.
-            className="peek-stats-cell flex flex-col items-center justify-center gap-1 border-[#dfe4dd] px-4 py-4 text-center [&:nth-child(n+3)]:border-t sm:[&:not(:first-child)]:border-l sm:[&:nth-child(n+3)]:border-t-0 [&:nth-child(even)]:border-l"
+            // Thin full-length dividers in faint teal-grey. Order + borders are
+            // per-cell (see cells above): mobile draws a full cross for the
+            // Peeks|Votes / Maps|S-Tier 2x2; sm: resets to a single row.
+            className={`peek-stats-cell flex flex-col items-center justify-center gap-1 border-[#dfe4dd] px-4 py-4 text-center ${c.cellClass}`}
             style={{ animationDelay: `${i * CELL_STAGGER_MS}ms` }}
           >
             <div className="flex items-center gap-1.5">
@@ -169,8 +174,8 @@ export function LiveStats({
                   aria-label="Live"
                   title="Live"
                 >
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-brand opacity-75 motion-safe:animate-ping" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-brand" />
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-teal opacity-75 motion-safe:animate-ping" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-teal" />
                 </span>
               )}
             </div>
