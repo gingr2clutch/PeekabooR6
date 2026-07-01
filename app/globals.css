@@ -722,3 +722,74 @@ h4 {
     display: none;
   }
 }
+
+/* Grid backdrop — scanner "ping + explosion" targets. A dot is detected (ping
+   ring pulses out), holds briefly, then bursts (shockwave ring + bright flash)
+   "like it got shot", and vanishes. 60s loop with a per-target --d delay
+   (0s,10s,…50s) so one fires roughly every 10 seconds across scattered spots. */
+.peek-maps-target {
+  position: absolute;
+  height: 7px;
+  width: 7px;
+  margin: -3.5px 0 0 -3.5px; /* center on the top/left point */
+  border-radius: 9999px;
+  background: #ff6a00;
+  opacity: 0;
+  animation: peek-maps-target 60s linear infinite;
+  animation-delay: var(--d, 0s);
+}
+/* detection ping ring */
+.peek-maps-target::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 8px;
+  width: 8px;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(255, 106, 0, 0.55);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
+  animation: peek-maps-ping 60s linear infinite;
+  animation-delay: var(--d, 0s);
+}
+/* explosion shockwave ring */
+.peek-maps-target::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 8px;
+  width: 8px;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 106, 0, 0.8);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.6);
+  animation: peek-maps-shock 60s linear infinite;
+  animation-delay: var(--d, 0s);
+}
+@keyframes peek-maps-target {
+  0% { opacity: 0; box-shadow: 0 0 6px 1px rgba(255, 106, 0, 0); }
+  2% { opacity: 1; box-shadow: 0 0 8px 2px rgba(255, 106, 0, 0.6); }
+  8% { opacity: 1; box-shadow: 0 0 8px 2px rgba(255, 106, 0, 0.6); }
+  9% { opacity: 1; box-shadow: 0 0 20px 7px rgba(255, 106, 0, 0.95); } /* shot: flash */
+  12% { opacity: 0; box-shadow: 0 0 4px 1px rgba(255, 106, 0, 0); }    /* gone */
+  100% { opacity: 0; }
+}
+@keyframes peek-maps-ping {
+  0%, 1% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  2% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+  7% { opacity: 0; transform: translate(-50%, -50%) scale(2.4); }
+  100% { opacity: 0; }
+}
+@keyframes peek-maps-shock {
+  0%, 8% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+  9% { opacity: 0.9; transform: translate(-50%, -50%) scale(1); } /* explosion */
+  14% { opacity: 0; transform: translate(-50%, -50%) scale(5); }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .peek-maps-target {
+    display: none;
+  }
+}

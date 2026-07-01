@@ -24,6 +24,18 @@ export function MapsTitleBackdrop() {
   );
 }
 
+// Scanner targets: [top, left, animation-delay]. Each dot is detected (ping),
+// then explodes (shockwave) "like it got shot". Spaced 10s apart so one fires
+// roughly every 10 seconds, cycling through these scattered spots.
+const GRID_TARGETS: Array<[string, string, string]> = [
+  ["32%", "15%", "0s"],
+  ["62%", "27%", "10s"],
+  ["40%", "38%", "20s"],
+  ["68%", "70%", "30s"],
+  ["34%", "84%", "40s"],
+  ["58%", "62%", "50s"],
+];
+
 function GridField() {
   return (
     <>
@@ -31,6 +43,13 @@ function GridField() {
       <div className="peek-maps-grid peek-maps-grid-b absolute inset-[-25%]" />
       <div className="peek-maps-glow" />
       <div className="peek-maps-scan" />
+      {GRID_TARGETS.map(([top, left, delay], i) => (
+        <span
+          key={i}
+          className="peek-maps-target"
+          style={{ top, left, ["--d"]: delay } as CSSProperties}
+        />
+      ))}
       <span className="peek-maps-tick absolute left-3 top-1.5">GRID·046</span>
       <span className="peek-maps-tick absolute bottom-1.5 right-3">R6·SPAWN</span>
     </>
