@@ -586,7 +586,7 @@ h4 {
 .peek-contour-a {
   background: repeating-radial-gradient(
     circle at 32% 38%,
-    rgba(242, 100, 14, 0.09) 0 1.5px,
+    rgba(242, 100, 14, 0.108) 0 1.5px,
     transparent 1.5px 34px
   );
   animation: peek-contour-a 26s ease-in-out infinite alternate;
@@ -594,7 +594,7 @@ h4 {
 .peek-contour-b {
   background: repeating-radial-gradient(
     circle at 68% 62%,
-    rgba(242, 100, 14, 0.08) 0 1.5px,
+    rgba(242, 100, 14, 0.096) 0 1.5px,
     transparent 1.5px 52px
   );
   animation: peek-contour-b 32s ease-in-out infinite alternate;
