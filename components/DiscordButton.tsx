@@ -35,16 +35,16 @@ export function DiscordBanner() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Join the peekabooR6 Discord (opens in new tab)"
-      className="group mx-auto flex max-w-2xl items-center gap-2.5 rounded-card bg-gradient-to-r from-[#47a294] to-[#3a877c] px-3 py-1.5 shadow-sm transition-[filter] duration-150 ease-out hover:brightness-95"
+      className="group mx-auto flex max-w-md items-center gap-2.5 rounded-card bg-gradient-to-r from-[#47a294] to-[#3a877c] px-3 py-1.5 shadow-sm transition-[filter] duration-150 ease-out hover:brightness-95"
     >
       <span className="shrink-0 text-white">
         <DiscordIcon size={20} />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[13px] font-semibold leading-tight text-white">
+        <div className="truncate text-xs font-semibold leading-tight text-white">
           Join the peekabooR6 Discord server
         </div>
-        <div className="truncate text-[11px] font-normal leading-tight text-white/80">
+        <div className="truncate text-[10px] font-normal leading-tight text-white/80">
           Be the first to see new peeks
         </div>
       </div>
