@@ -119,8 +119,8 @@ export function LiveStats({
 }: Props) {
   const cells = [
     { label: "Maps live", value: mapsLive, live: false, plus: false },
-    { label: "Graded peeks", value: gradedPeeks, live: true, plus: false },
-    { label: "Community votes", value: communityVotes, live: true, plus: false },
+    { label: "Graded peeks", value: gradedPeeks, live: false, plus: false },
+    { label: "Community votes", value: communityVotes, live: false, plus: false },
     { label: "S-tier peeks", value: sTierPeeks, live: false, plus: false },
   ];
 
