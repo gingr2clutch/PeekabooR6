@@ -1,6 +1,10 @@
 /**
- * Renders /public/logo.svg to the favicon / app-icon PNGs the site needs,
- * then bundles the 16/32/48 PNGs into a multi-resolution favicon.ico.
+ * Renders /public/icon-source.svg to the favicon / app-icon PNGs the site
+ * needs, then bundles the 16/32/48 PNGs into a multi-resolution favicon.ico.
+ *
+ * icon-source.svg is the peekabooR6 mark in the theme accent (#f2640e), kept
+ * separate from logo.svg (the header logo, which stays #ff6a00) so favicons
+ * follow the theme while the header logo is fixed.
  *
  * Run: npm run generate-favicons
  */
@@ -13,7 +17,7 @@ import pngToIco from "png-to-ico";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicDir = resolve(__dirname, "..", "public");
-const svgPath = resolve(publicDir, "logo.svg");
+const svgPath = resolve(publicDir, "icon-source.svg");
 
 const SIZES = {
   "favicon-16x16.png": 16,

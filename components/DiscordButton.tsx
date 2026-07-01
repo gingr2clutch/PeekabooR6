@@ -25,9 +25,9 @@ export function DiscordButton({ className = "", onClick }: Props) {
   );
 }
 
-// Slim, low-profile homepage info bar above the maps grid. Understated soft
-// blurple tint (not a filled billboard) with a blurple logo accent, a two-line
-// label, and a small Join button. The whole bar is the link.
+// Homepage info bar above the maps grid: a solid, full-strength Discord-blurple
+// surface (kept at full opacity — not tinted by the site theme). White logo +
+// two-line label, and a white Join pill. The whole bar is the link.
 export function DiscordBanner() {
   return (
     <a
@@ -35,20 +35,20 @@ export function DiscordBanner() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Join the peekabooR6 Discord (opens in new tab)"
-      className="group mx-auto flex max-w-2xl items-center gap-2.5 rounded-card border border-[#5865F2]/20 bg-[#5865F2]/[0.06] px-3 py-1.5 transition-colors duration-150 ease-out hover:border-[#5865F2]/40 hover:bg-[#5865F2]/[0.09]"
+      className="group mx-auto flex max-w-2xl items-center gap-2.5 rounded-card bg-[#5865F2] px-3 py-1.5 shadow-sm transition-colors duration-150 ease-out hover:bg-[#4752c4]"
     >
-      <span className="shrink-0 text-[#5865F2]">
+      <span className="shrink-0 text-white">
         <DiscordIcon size={20} />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[13px] font-semibold leading-tight text-ink">
+        <div className="truncate text-[13px] font-semibold leading-tight text-white">
           Join the peekabooR6 Discord server
         </div>
-        <div className="truncate text-[11px] font-normal leading-tight text-muted">
+        <div className="truncate text-[11px] font-normal leading-tight text-white/80">
           Be the first to see new peeks
         </div>
       </div>
-      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-[#5865F2] px-3 py-1 text-xs font-semibold text-white transition-colors group-hover:bg-[#4752c4]">
+      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-3 py-1 text-xs font-semibold text-[#5865F2] transition-colors group-hover:bg-white/90">
         Join
       </span>
     </a>

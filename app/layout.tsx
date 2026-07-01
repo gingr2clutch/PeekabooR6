@@ -14,11 +14,11 @@ export const metadata: Metadata = {
     "Community library of spawn peek locations for Rainbow Six Siege. Pick a map, pick a floor, see every peek.",
   icons: {
     icon: [
-      { url: "/favicon-32x32.png?v=2", sizes: "32x32", type: "image/png" },
-      { url: "/favicon-16x16.png?v=2", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png?v=3", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png?v=3", sizes: "16x16", type: "image/png" },
     ],
-    apple: "/apple-touch-icon.png?v=2",
-    shortcut: "/favicon.ico?v=2",
+    apple: "/apple-touch-icon.png?v=3",
+    shortcut: "/favicon.ico?v=3",
   },
 };
 

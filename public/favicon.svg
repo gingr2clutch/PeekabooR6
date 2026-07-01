@@ -3,13 +3,13 @@
   <path d="M0 0 H16 V7 A9 9 0 0 0 16 25 V32 H0 Z" fill="#000000" />
 
   <!-- Right half of the crosshair circle (left half is hidden by the wall) -->
-  <path d="M16 7 A9 9 0 0 1 16 25" stroke="#ff6a00" stroke-width="3" stroke-linecap="round" fill="none" />
+  <path d="M16 7 A9 9 0 0 1 16 25" stroke="#f2640e" stroke-width="3" stroke-linecap="round" fill="none" />
 
   <!-- Three tick marks: top, bottom, right (no left tick — wall hides it) -->
-  <line x1="16" y1="1.5" x2="16" y2="4.5" stroke="#ff6a00" stroke-width="3" stroke-linecap="round" />
-  <line x1="16" y1="27.5" x2="16" y2="30.5" stroke="#ff6a00" stroke-width="3" stroke-linecap="round" />
-  <line x1="27.5" y1="16" x2="30.5" y2="16" stroke="#ff6a00" stroke-width="3" stroke-linecap="round" />
+  <line x1="16" y1="1.5" x2="16" y2="4.5" stroke="#f2640e" stroke-width="3" stroke-linecap="round" />
+  <line x1="16" y1="27.5" x2="16" y2="30.5" stroke="#f2640e" stroke-width="3" stroke-linecap="round" />
+  <line x1="27.5" y1="16" x2="30.5" y2="16" stroke="#f2640e" stroke-width="3" stroke-linecap="round" />
 
   <!-- Center dot -->
-  <circle cx="16" cy="16" r="2" fill="#ff6a00" />
+  <circle cx="16" cy="16" r="2" fill="#f2640e" />
 </svg>
