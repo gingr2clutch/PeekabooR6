@@ -22,8 +22,8 @@ export function Wordmark({ href = "/", showText = false }: Props) {
       />
       {showText && (
         <span>
-          <span className="text-brand">peekaboo</span>
-          <span className="text-ink">R6</span>
+          <span className="text-teal">peekaboo</span>
+          <span className="text-brand">R6</span>
         </span>
       )}
     </Link>

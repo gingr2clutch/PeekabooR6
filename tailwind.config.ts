@@ -8,12 +8,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: "#f7f8f8",
-        card: "#eef0f0",
-        border: "#e3e6e6",
-        ink: "#212527",
-        muted: "#7e8488",
+        bg: "#f6f3ea",
+        card: "#ffffff",
+        border: "#e2e0d5",
+        ink: "#1e211d",
+        muted: "#8b8d86",
         brand: "#f2640e",
+        teal: "#3f978b",
       },
       borderRadius: {
         card: "14px",

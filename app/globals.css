@@ -8,8 +8,8 @@
 
 html,
 body {
-  background-color: #f7f8f8;
-  color: #212527;
+  background-color: #f6f3ea;
+  color: #1e211d;
 }
 
 body {
@@ -33,10 +33,10 @@ h4 {
 .placeholder-stripes {
   background-image: repeating-linear-gradient(
     45deg,
-    #eef0f0,
-    #eef0f0 10px,
-    #e3e6e6 10px,
-    #e3e6e6 20px
+    #efeade,
+    #efeade 10px,
+    #e2e0d5 10px,
+    #e2e0d5 20px
   );
 }
 
@@ -358,9 +358,9 @@ h4 {
 .peek-shimmer {
   background-image: linear-gradient(
     90deg,
-    rgba(227, 230, 230, 0.35) 0%,
-    rgba(227, 230, 230, 0.65) 50%,
-    rgba(227, 230, 230, 0.35) 100%
+    rgba(226, 224, 213, 0.35) 0%,
+    rgba(226, 224, 213, 0.65) 50%,
+    rgba(226, 224, 213, 0.35) 100%
   );
   background-size: 200% 100%;
   animation: peek-shimmer 1.4s ease-in-out infinite;
@@ -369,7 +369,7 @@ h4 {
 @media (prefers-reduced-motion: reduce) {
   .peek-shimmer {
     animation: none;
-    background: rgba(227, 230, 230, 0.4);
+    background: rgba(226, 224, 213, 0.4);
   }
 }
 

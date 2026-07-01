@@ -122,7 +122,7 @@ export default async function Home() {
                   >
                     {cover}
                     {isNewMap && (
-                      <span className="absolute right-2 top-2 z-20 inline-flex items-center rounded-btn bg-purple-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                      <span className="absolute right-2 top-2 z-20 inline-flex items-center rounded-btn bg-brand px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
                         New map
                       </span>
                     )}
