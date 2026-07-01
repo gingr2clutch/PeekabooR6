@@ -121,12 +121,12 @@ export function LiveStats({
   // single-row order). `cellClass` uses CSS `order` to rearrange the mobile 2x2
   // into Peeks | Votes (top) / Maps | S-Tier (bottom), with per-cell dividers
   // drawn for that visual layout; `sm:` resets order and dividers to the
-  // source-order single row. Every cell carries a live teal ping dot.
+  // source-order single row.
   const cells = [
-    { label: "Maps", value: mapsLive, live: true, plus: false, cellClass: "order-3 border-t sm:order-none sm:border-t-0" },
-    { label: "Peeks", value: gradedPeeks, live: true, plus: false, cellClass: "order-1 sm:order-none sm:border-l" },
-    { label: "Votes", value: communityVotes, live: true, plus: false, cellClass: "order-2 border-l sm:order-none" },
-    { label: "S-Tier", value: sTierPeeks, live: true, plus: false, cellClass: "order-4 border-t border-l sm:order-none sm:border-t-0" },
+    { label: "Maps", value: mapsLive, plus: false, cellClass: "order-3 border-t sm:order-none sm:border-t-0" },
+    { label: "Peeks", value: gradedPeeks, plus: false, cellClass: "order-1 sm:order-none sm:border-l" },
+    { label: "Votes", value: communityVotes, plus: false, cellClass: "order-2 border-l sm:order-none" },
+    { label: "S-Tier", value: sTierPeeks, plus: false, cellClass: "order-4 border-t border-l sm:order-none sm:border-t-0" },
   ];
 
   // SSR + first render show the real values (crawlable, no-JS safe). On mount,
@@ -161,24 +161,12 @@ export function LiveStats({
             className={`peek-stats-cell flex flex-col items-center justify-center gap-1 border-[#dfe4dd] px-4 py-4 text-center ${c.cellClass}`}
             style={{ animationDelay: `${i * CELL_STAGGER_MS}ms` }}
           >
-            <div className="flex items-center gap-1.5">
-              <Odometer
-                value={c.value}
-                plus={c.plus}
-                phase={phase}
-                cellDelay={i * CELL_STAGGER_MS}
-              />
-              {c.live && (
-                <span
-                  className="relative flex h-2 w-2"
-                  aria-label="Live"
-                  title="Live"
-                >
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-teal opacity-75 motion-safe:animate-ping" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-teal" />
-                </span>
-              )}
-            </div>
+            <Odometer
+              value={c.value}
+              plus={c.plus}
+              phase={phase}
+              cellDelay={i * CELL_STAGGER_MS}
+            />
             <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
               {c.label}
             </span>
