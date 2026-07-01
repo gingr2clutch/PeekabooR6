@@ -3,6 +3,9 @@ type Props = {
   className?: string;
   // Lets the mobile drawer close itself when the link is tapped.
   onClick?: () => void;
+  // Color tone: "blurple" (default, desktop nav) or "teal" (mobile drawer, to
+  // match the teal homepage Discord bar).
+  variant?: "blurple" | "teal";
 };
 
 const DISCORD_INVITE = "https://discord.gg/N6rv94BBE";
@@ -10,14 +13,22 @@ const DISCORD_INVITE = "https://discord.gg/N6rv94BBE";
 // Filled Discord-blurple CTA. Opens the permanent Discord invite in a new
 // tab. Used in the site nav (desktop + mobile drawer) and near the top of
 // the map page.
-export function DiscordButton({ className = "", onClick }: Props) {
+export function DiscordButton({
+  className = "",
+  onClick,
+  variant = "blurple",
+}: Props) {
+  const tone =
+    variant === "teal"
+      ? "bg-teal hover:bg-[#357d70]"
+      : "bg-[#5865F2] hover:bg-[#4752c4]";
   return (
     <a
       href={DISCORD_INVITE}
       target="_blank"
       rel="noopener noreferrer"
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-btn bg-[#5865F2] px-3 py-1.5 text-xs font-semibold text-white transition-[background-color,box-shadow,transform] duration-150 ease-out hover:bg-[#4752c4] motion-safe:hover:scale-[1.04] motion-safe:hover:shadow-md motion-safe:active:scale-[0.98] ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-btn ${tone} px-3 py-1.5 text-xs font-semibold text-white transition-[background-color,box-shadow,transform] duration-150 ease-out motion-safe:hover:scale-[1.04] motion-safe:hover:shadow-md motion-safe:active:scale-[0.98] ${className}`}
     >
       <DiscordIcon />
       <span>Join the Discord</span>

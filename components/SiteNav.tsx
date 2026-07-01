@@ -190,6 +190,7 @@ export function SiteNav() {
                   </Link>
                 ))}
                 <DiscordButton
+                  variant="teal"
                   onClick={closeDrawer}
                   className="mt-3 w-full py-4 text-base"
                 />
