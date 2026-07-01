@@ -167,7 +167,7 @@ export function LiveStats({
               phase={phase}
               cellDelay={i * CELL_STAGGER_MS}
             />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand">
               {c.label}
             </span>
           </div>
