@@ -49,7 +49,7 @@ const MEDALS: Record<number, Medal> = {
 };
 
 export default async function PopularPage() {
-  const peeks = await getTopPeeks(5);
+  const peeks = await getTopPeeks(8);
 
   return (
     <>

@@ -1,5 +1,5 @@
 import { supabasePublic } from "./supabase";
-import { MEASURED_MIN_VOTES, rating, ratingScore } from "./rate";
+import { GRADED_THRESHOLDS, rating, ratingScore } from "./rate";
 
 export type Map = {
   id: string;
@@ -196,45 +196,51 @@ export type PeekWithContext = Peek & {
   floors: (Floor & { maps: Map }) | null;
 };
 
+// Best-to-worst rank for every grade label (S+, S, S-, A+, … C-). Covers both
+// tiers: measured peeks carry a +/- label, estimate peeks carry the plain
+// letter, and GRADED_THRESHOLDS already lists both.
+const GRADE_LABEL_RANK: ReadonlyMap<string, number> = new Map(
+  GRADED_THRESHOLDS.map((t, i) => [t.label, i])
+);
+
+function gradeRankFor(p: {
+  base_success_rate: number;
+  worked_votes: number;
+  vote_count: number;
+}): number {
+  const label = rating(p.base_success_rate, p.worked_votes, p.vote_count).label;
+  return GRADE_LABEL_RANK.get(label) ?? Number.MAX_SAFE_INTEGER;
+}
+
 export async function getTopPeeks(limit = 5): Promise<PeekWithContext[]> {
   const sb = supabasePublic();
   const select = `${PEEK_COLUMNS}, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))`;
 
-  // Two pools, merged: the strongest admin estimates (so the board is never
-  // empty) plus every measured peek (≥ vote threshold) so a community-proven
-  // angle can't fall outside the estimate window. Final order is by a score
-  // that spans both tiers — measured % for rated peeks, seed for the rest.
-  const [byEstimate, measured] = await Promise.all([
-    sb
-      .from("peeks")
-      .select(select)
-      .eq("published", true)
-      .order("base_success_rate", { ascending: false })
-      .limit(limit * 4),
-    sb
-      .from("peeks")
-      .select(select)
-      .eq("published", true)
-      .gte("vote_count", MEASURED_MIN_VOTES)
-      .limit(limit * 4),
-  ]);
-  if (byEstimate.error) throw byEstimate.error;
-  if (measured.error) throw measured.error;
+  // Fetch every published peek (with its floor + map) and rank in JS. Fetching
+  // all of them — not two capped pools — avoids dropping a legitimately
+  // top-ranked peek (e.g. a low-seed angle that voted its way to S+). ~140 rows
+  // today, well under PostgREST's 1000-row cap; the page is force-dynamic so
+  // this runs per request.
+  const { data, error } = await sb
+    .from("peeks")
+    .select(select)
+    .eq("published", true);
+  if (error) throw error;
 
-  const merged = new Map<string, PeekWithContext>();
-  const candidates = ([] as PeekWithContext[])
-    .concat((byEstimate.data ?? []) as unknown as PeekWithContext[])
-    .concat((measured.data ?? []) as unknown as PeekWithContext[]);
-  for (const row of candidates) {
-    if (row.floors?.maps?.published) merged.set(row.id, row);
-  }
+  // Only peeks whose map is also published are actually viewable.
+  const candidates = ((data ?? []) as unknown as PeekWithContext[]).filter(
+    (row) => row.floors?.maps?.published
+  );
 
-  return Array.from(merged.values())
-    .sort(
-      (a, b) =>
-        ratingScore(b.base_success_rate, b.worked_votes, b.vote_count) -
-        ratingScore(a.base_success_rate, a.worked_votes, a.vote_count)
-    )
+  // Grade first (best label wins), then more total votes ranks higher within
+  // the same grade — so a 20-vote S- edges a 14-vote S-.
+  return candidates
+    .sort((a, b) => {
+      const ra = gradeRankFor(a);
+      const rb = gradeRankFor(b);
+      if (ra !== rb) return ra - rb;
+      return (b.vote_count ?? 0) - (a.vote_count ?? 0);
+    })
     .slice(0, limit);
 }
 
@@ -308,7 +314,7 @@ export type HomeStats = {
   mapsLive: number; // published maps
   gradedPeeks: number; // published peeks
   communityVotes: number; // sum of vote_count across published peeks
-  sTierPeeks: number; // published peeks whose computed grade is "S"
+  sTierPeeks: number; // published S-tier peeks: grade letter "S" == S+, S, or S-
 };
 
 // Real, request-time stats for the homepage "live stats" strip. All peek
