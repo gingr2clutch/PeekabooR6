@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { DiscordBanner } from "@/components/DiscordButton";
 import { LiveStats } from "@/components/LiveStats";
+import { MapsTitleBackdrop } from "@/components/MapsTitleBackdrop";
 import { PageHeader } from "@/components/PageHeader";
 import { getHomeStats, getMaps } from "@/lib/db";
 
@@ -57,15 +58,18 @@ export default async function Home() {
             sTierPeeks={stats.sTierPeeks}
           />
         </div>
-        <div data-reveal className="mb-10 text-center">
-          <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
-          <p className="mt-2 text-muted">Click the map you're on</p>
-          <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">
-            <span className="relative flex h-2 w-2" aria-hidden>
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-brand" />
-            </span>
-            <span>New peeks daily</span>
+        <div className="relative mb-10">
+          <MapsTitleBackdrop />
+          <div data-reveal className="relative z-10 text-center">
+            <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
+            <p className="mt-2 text-muted">Click the map you're on</p>
+            <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">
+              <span className="relative flex h-2 w-2" aria-hidden>
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-brand" />
+              </span>
+              <span>New peeks daily</span>
+            </div>
           </div>
         </div>
 

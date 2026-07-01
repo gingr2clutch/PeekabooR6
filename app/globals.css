@@ -571,3 +571,154 @@ h4 {
     display: none;
   }
 }
+
+/* --- Homepage "Maps" title-block animated backdrop -------------------------
+   Sits behind the title text (z-0) inside a self-clipping, edge-masked band so
+   it never touches the live-stats strip above or the maps grid below. A white
+   radial vignette keeps the center clean for readable text. Two variants
+   (grid | radar) selected by MAPS_BG in components/MapsTitleBackdrop.tsx.
+   CSS-only; static (no motion) under prefers-reduced-motion. */
+.peek-maps-bg {
+  -webkit-mask-image: radial-gradient(120% 100% at 50% 50%, #000 45%, transparent 82%);
+  mask-image: radial-gradient(120% 100% at 50% 50%, #000 45%, transparent 82%);
+}
+.peek-maps-vignette {
+  background: radial-gradient(
+    60% 82% at 50% 50%,
+    #fafaf7 0%,
+    rgba(250, 250, 247, 0.86) 40%,
+    rgba(250, 250, 247, 0) 78%
+  );
+}
+
+/* GRID variant — two parallax grid layers, breathing glow, scan bar, ticks. */
+.peek-maps-grid-a {
+  background-image:
+    linear-gradient(to right, rgba(26, 26, 26, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(26, 26, 26, 0.05) 1px, transparent 1px);
+  background-size: 46px 46px;
+  animation: peek-maps-grid-a 24s linear infinite;
+}
+.peek-maps-grid-b {
+  background-image:
+    linear-gradient(to right, rgba(255, 106, 0, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 106, 0, 0.07) 1px, transparent 1px);
+  background-size: 118px 118px;
+  animation: peek-maps-grid-b 38s linear infinite;
+}
+@keyframes peek-maps-grid-a {
+  from { background-position: 0 0; }
+  to { background-position: 46px 46px; }
+}
+@keyframes peek-maps-grid-b {
+  from { background-position: 0 0; }
+  to { background-position: -118px 118px; }
+}
+.peek-maps-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 260px;
+  width: 340px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 106, 0, 0.16),
+    rgba(255, 106, 0, 0) 70%
+  );
+  animation: peek-maps-breathe 6s ease-in-out infinite;
+}
+@keyframes peek-maps-breathe {
+  0%, 100% { opacity: 0.45; transform: translate(-50%, -50%) scale(0.92); }
+  50% { opacity: 0.85; transform: translate(-50%, -50%) scale(1.08); }
+}
+.peek-maps-scan {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 106, 0, 0.45),
+    transparent
+  );
+  box-shadow: 0 0 14px 2px rgba(255, 106, 0, 0.22);
+  animation: peek-maps-scan 7.5s linear infinite;
+}
+@keyframes peek-maps-scan {
+  0% { left: 0; opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+.peek-maps-tick {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(26, 26, 26, 0.22);
+}
+
+/* RADAR variant — concentric rings, rotating conic sweep, pulsing blips. */
+.peek-maps-rings {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 320px;
+  width: 320px;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: repeating-radial-gradient(
+    circle at center,
+    rgba(255, 106, 0, 0.09) 0 1px,
+    transparent 1px 42px
+  );
+}
+.peek-maps-sweep {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 320px;
+  width: 320px;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 106, 0, 0.28),
+    rgba(255, 106, 0, 0) 70deg,
+    transparent 360deg
+  );
+  animation: peek-maps-sweep 5s linear infinite;
+}
+@keyframes peek-maps-sweep {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+.peek-maps-blip {
+  position: absolute;
+  height: 6px;
+  width: 6px;
+  border-radius: 9999px;
+  background: #ff6a00;
+  box-shadow: 0 0 8px 2px rgba(255, 106, 0, 0.5);
+  opacity: 0;
+  animation: peek-maps-blip 5s ease-out infinite;
+}
+@keyframes peek-maps-blip {
+  0%, 12%, 100% { opacity: 0; transform: scale(0.5); }
+  3% { opacity: 0.9; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .peek-maps-grid-a,
+  .peek-maps-grid-b,
+  .peek-maps-glow,
+  .peek-maps-sweep {
+    animation: none;
+  }
+  /* A frozen scan bar / blips read as stray marks, so hide them when static. */
+  .peek-maps-scan,
+  .peek-maps-blip {
+    display: none;
+  }
+}
