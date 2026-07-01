@@ -78,7 +78,7 @@ export default async function Home() {
               ["--reveal-delay"]: `${(i % 5) * 50}ms`,
             } as React.CSSProperties;
             const cardBase =
-              "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium transition-all duration-200";
+              "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-all duration-200";
 
             const cover = hasCover ? (
               <Image
@@ -112,10 +112,10 @@ export default async function Home() {
                 <li key={map.id} data-reveal style={revealStyle}>
                   <Link
                     href={`/maps/${map.slug}`}
-                    className={`${cardBase} border ${
+                    className={`${cardBase} border-[3px] ${
                       isNewMap
-                        ? "new-map-pulse border-purple-400/60 hover:border-purple-500"
-                        : "border-border hover:border-brand"
+                        ? "new-map-pulse border-white hover:border-purple-500"
+                        : "border-white hover:border-brand"
                     } ${
                       hasCover ? "" : "bg-card text-ink"
                     } hover:shadow-lg motion-safe:hover:-translate-y-1 motion-safe:hover:scale-[1.03]`}
@@ -136,7 +136,7 @@ export default async function Home() {
               <li key={map.id} data-reveal style={revealStyle}>
                 <div
                   aria-disabled="true"
-                  className={`${cardBase} !cursor-not-allowed border border-dashed border-border ${
+                  className={`${cardBase} !cursor-not-allowed border-[3px] border-white ${
                     hasCover ? "opacity-60" : "bg-card/60 text-muted"
                   }`}
                 >
