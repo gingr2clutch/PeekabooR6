@@ -38,13 +38,13 @@ type Ember = {
 };
 
 const EMBERS: Ember[] = [
-  { left: 16, bottom: 12, size: 4, peak: 0.55, drift: 6, dur: 11, delay: -2 },
-  { left: 30, bottom: 34, size: 3, peak: 0.45, drift: -5, dur: 13, delay: -7 },
-  { left: 44, bottom: 6, size: 5, peak: 0.5, drift: 5, dur: 10, delay: -9.5 },
-  { left: 57, bottom: 40, size: 3, peak: 0.5, drift: -7, dur: 14, delay: -1 },
-  { left: 69, bottom: 16, size: 4, peak: 0.5, drift: 6, dur: 12, delay: -4.5 },
-  { left: 81, bottom: 28, size: 3, peak: 0.45, drift: -4, dur: 12.5, delay: -8 },
-  { left: 89, bottom: 9, size: 4, peak: 0.5, drift: 5, dur: 13.5, delay: -11 },
+  { left: 16, bottom: 12, size: 6, peak: 0.75, drift: 6, dur: 11, delay: -2 },
+  { left: 30, bottom: 34, size: 5, peak: 0.65, drift: -5, dur: 13, delay: -7 },
+  { left: 44, bottom: 6, size: 8, peak: 0.7, drift: 5, dur: 10, delay: -9.5 },
+  { left: 57, bottom: 40, size: 5, peak: 0.7, drift: -7, dur: 14, delay: -1 },
+  { left: 69, bottom: 16, size: 6, peak: 0.7, drift: 6, dur: 12, delay: -4.5 },
+  { left: 81, bottom: 28, size: 5, peak: 0.65, drift: -4, dur: 12.5, delay: -8 },
+  { left: 89, bottom: 9, size: 6, peak: 0.7, drift: 5, dur: 13.5, delay: -11 },
 ];
 
 function EmberField() {
