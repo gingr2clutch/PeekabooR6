@@ -191,12 +191,8 @@ export function LiveStats({
           Decorative: the per-cell dots already announce "Live" to a11y. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full border border-teal/40 bg-card px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-teal shadow-sm"
+        className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal/40 bg-card px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-teal shadow-sm"
       >
-        <span className="relative flex h-1.5 w-1.5">
-          <span className="absolute inline-flex h-full w-full rounded-full bg-teal opacity-75 motion-safe:animate-ping" />
-          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-teal" />
-        </span>
         Live
       </span>
     </div>
