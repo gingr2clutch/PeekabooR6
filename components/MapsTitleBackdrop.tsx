@@ -1,57 +1,74 @@
 import type { CSSProperties } from "react";
 
 // ── Change this one value to switch the backdrop, then redeploy. ──
-// 'grid'  = parallax tactical grid
+// 'ember' = warm embers drifting up over a soft glow
 // 'radar' = radar sweep field
-export const MAPS_BG: "grid" | "radar" = "grid";
+export const MAPS_BG: "ember" | "radar" = "ember";
 
 // Purely decorative, CSS-animated backdrop that sits BEHIND the homepage
 // "Maps" title block (lower z-index). Self-clipping + edge-masked band with a
 // white radial vignette so the title text stays crisp and nothing bleeds onto
 // the live-stats strip above or the maps grid below. No JS, no client hooks —
 // all motion is CSS (see .peek-maps-* in globals.css) and stops under
-// prefers-reduced-motion.
+// prefers-reduced-motion (embers hidden, only the static glow remains).
 export function MapsTitleBackdrop() {
   return (
     <div
       aria-hidden
       className="peek-maps-bg pointer-events-none absolute inset-x-0 top-1/2 z-0 h-[150px] -translate-y-1/2 overflow-hidden"
     >
-      {MAPS_BG === "grid" ? <GridField /> : <RadarField />}
+      {MAPS_BG === "ember" ? <EmberField /> : <RadarField />}
       {/* White radial vignette keeps the center clean for the title text. */}
       <div className="peek-maps-vignette absolute inset-0" />
     </div>
   );
 }
 
-// Scanner targets: [top, left, animation-delay]. Each dot is detected (ping),
-// then explodes (shockwave) "like it got shot". Spaced 10s apart so one fires
-// roughly every 10 seconds, cycling through these scattered spots.
-const GRID_TARGETS: Array<[string, string, string]> = [
-  ["32%", "15%", "0s"],
-  ["62%", "27%", "10s"],
-  ["40%", "38%", "20s"],
-  ["68%", "70%", "30s"],
-  ["34%", "84%", "40s"],
-  ["58%", "62%", "50s"],
+// Tiny embers. left/bottom/size position them; dur/delay vary the speed and
+// keep them out of sync (negative delay → already mid-rise on load); peak is
+// the fade-in opacity; drift is a small sideways sway.
+type Ember = {
+  left: number;
+  bottom: number;
+  size: number;
+  peak: number;
+  drift: number;
+  dur: number;
+  delay: number;
+};
+
+const EMBERS: Ember[] = [
+  { left: 16, bottom: 12, size: 4, peak: 0.55, drift: 6, dur: 11, delay: -2 },
+  { left: 30, bottom: 34, size: 3, peak: 0.45, drift: -5, dur: 13, delay: -7 },
+  { left: 44, bottom: 6, size: 5, peak: 0.5, drift: 5, dur: 10, delay: -9.5 },
+  { left: 57, bottom: 40, size: 3, peak: 0.5, drift: -7, dur: 14, delay: -1 },
+  { left: 69, bottom: 16, size: 4, peak: 0.5, drift: 6, dur: 12, delay: -4.5 },
+  { left: 81, bottom: 28, size: 3, peak: 0.45, drift: -4, dur: 12.5, delay: -8 },
+  { left: 89, bottom: 9, size: 4, peak: 0.5, drift: 5, dur: 13.5, delay: -11 },
 ];
 
-function GridField() {
+function EmberField() {
   return (
     <>
-      <div className="peek-maps-grid peek-maps-grid-a absolute inset-[-25%]" />
-      <div className="peek-maps-grid peek-maps-grid-b absolute inset-[-25%]" />
-      <div className="peek-maps-glow" />
-      <div className="peek-maps-scan" />
-      {GRID_TARGETS.map(([top, left, delay], i) => (
+      <div className="peek-maps-ember-glow" />
+      {EMBERS.map((e, i) => (
         <span
           key={i}
-          className="peek-maps-target"
-          style={{ top, left, ["--d"]: delay } as CSSProperties}
+          className="peek-maps-ember"
+          style={
+            {
+              left: `${e.left}%`,
+              bottom: `${e.bottom}px`,
+              height: `${e.size}px`,
+              width: `${e.size}px`,
+              animationDuration: `${e.dur}s`,
+              animationDelay: `${e.delay}s`,
+              ["--peak"]: e.peak,
+              ["--drift"]: `${e.drift}px`,
+            } as CSSProperties
+          }
         />
       ))}
-      <span className="peek-maps-tick absolute left-3 top-1.5">GRID·046</span>
-      <span className="peek-maps-tick absolute bottom-1.5 right-3">R6·SPAWN</span>
     </>
   );
 }

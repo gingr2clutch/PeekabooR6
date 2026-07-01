@@ -575,9 +575,10 @@ h4 {
 /* --- Homepage "Maps" title-block animated backdrop -------------------------
    Sits behind the title text (z-0) inside a self-clipping, edge-masked band so
    it never touches the live-stats strip above or the maps grid below. A white
-   radial vignette keeps the center clean for readable text. Two variants
-   (grid | radar) selected by MAPS_BG in components/MapsTitleBackdrop.tsx.
-   CSS-only; static (no motion) under prefers-reduced-motion. */
+   radial vignette keeps the center clean for readable text. Variants
+   (ember | radar) selected by MAPS_BG in components/MapsTitleBackdrop.tsx.
+   CSS-only; under reduced motion the embers/sweep stop and only the static
+   glow remains. */
 .peek-maps-bg {
   -webkit-mask-image: radial-gradient(120% 100% at 50% 50%, #000 45%, transparent 82%);
   mask-image: radial-gradient(120% 100% at 50% 50%, #000 45%, transparent 82%);
@@ -591,73 +592,54 @@ h4 {
   );
 }
 
-/* GRID variant — two parallax grid layers, breathing glow, scan bar, ticks. */
-.peek-maps-grid-a {
-  background-image:
-    linear-gradient(to right, rgba(26, 26, 26, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(26, 26, 26, 0.05) 1px, transparent 1px);
-  background-size: 46px 46px;
-  animation: peek-maps-grid-a 24s linear infinite;
-}
-.peek-maps-grid-b {
-  background-image:
-    linear-gradient(to right, rgba(255, 106, 0, 0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 106, 0, 0.07) 1px, transparent 1px);
-  background-size: 118px 118px;
-  animation: peek-maps-grid-b 38s linear infinite;
-}
-@keyframes peek-maps-grid-a {
-  from { background-position: 0 0; }
-  to { background-position: 46px 46px; }
-}
-@keyframes peek-maps-grid-b {
-  from { background-position: 0 0; }
-  to { background-position: -118px 118px; }
-}
-.peek-maps-glow {
+/* EMBER variant — a soft static orange glow for warmth, plus tiny embers that
+   drift slowly upward and fade in/out. Size/position/speed/delay are set inline
+   per ember (see EMBERS in MapsTitleBackdrop.tsx) so they never move in sync. */
+.peek-maps-ember-glow {
   position: absolute;
   left: 50%;
   top: 50%;
-  height: 260px;
-  width: 340px;
+  height: 200px;
+  width: 380px;
   transform: translate(-50%, -50%);
   background: radial-gradient(
     ellipse at center,
-    rgba(255, 106, 0, 0.16),
+    rgba(255, 106, 0, 0.1),
     rgba(255, 106, 0, 0) 70%
   );
-  animation: peek-maps-breathe 6s ease-in-out infinite;
 }
-@keyframes peek-maps-breathe {
-  0%, 100% { opacity: 0.45; transform: translate(-50%, -50%) scale(0.92); }
-  50% { opacity: 0.85; transform: translate(-50%, -50%) scale(1.08); }
-}
-.peek-maps-scan {
+.peek-maps-ember {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 2px;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    rgba(255, 106, 0, 0.45),
-    transparent
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 150, 60, 0.95),
+    rgba(255, 106, 0, 0.55) 55%,
+    rgba(255, 106, 0, 0) 100%
   );
-  box-shadow: 0 0 14px 2px rgba(255, 106, 0, 0.22);
-  animation: peek-maps-scan 7.5s linear infinite;
+  opacity: 0;
+  animation-name: peek-maps-ember-rise;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
 }
-@keyframes peek-maps-scan {
-  0% { left: 0; opacity: 0; }
-  8% { opacity: 1; }
-  92% { opacity: 1; }
-  100% { left: 100%; opacity: 0; }
-}
-.peek-maps-tick {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  color: rgba(26, 26, 26, 0.22);
+@keyframes peek-maps-ember-rise {
+  0% {
+    transform: translate(0, 24px);
+    opacity: 0;
+  }
+  20% {
+    opacity: var(--peak, 0.55);
+  }
+  55% {
+    transform: translate(var(--drift, 6px), -70px);
+  }
+  82% {
+    opacity: var(--peak, 0.55);
+  }
+  100% {
+    transform: translate(0, -150px);
+    opacity: 0;
+  }
 }
 
 /* RADAR variant — concentric rings, rotating conic sweep, pulsing blips. */
@@ -692,7 +674,9 @@ h4 {
   animation: peek-maps-sweep 5s linear infinite;
 }
 @keyframes peek-maps-sweep {
-  to { transform: translate(-50%, -50%) rotate(360deg); }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 .peek-maps-blip {
   position: absolute;
@@ -709,87 +693,13 @@ h4 {
   3% { opacity: 0.9; transform: scale(1); }
 }
 
+/* Reduced motion: stop all movement — keep only the static ember glow. */
 @media (prefers-reduced-motion: reduce) {
-  .peek-maps-grid-a,
-  .peek-maps-grid-b,
-  .peek-maps-glow,
-  .peek-maps-sweep {
-    animation: none;
-  }
-  /* A frozen scan bar / blips read as stray marks, so hide them when static. */
-  .peek-maps-scan,
+  .peek-maps-ember,
   .peek-maps-blip {
     display: none;
   }
-}
-
-/* Grid backdrop — scanner "ping + explosion" targets. A dot is detected (ping
-   ring pulses out), holds briefly, then bursts (shockwave ring + bright flash)
-   "like it got shot", and vanishes. 60s loop with a per-target --d delay
-   (0s,10s,…50s) so one fires roughly every 10 seconds across scattered spots. */
-.peek-maps-target {
-  position: absolute;
-  height: 7px;
-  width: 7px;
-  margin: -3.5px 0 0 -3.5px; /* center on the top/left point */
-  border-radius: 9999px;
-  background: #ff6a00;
-  opacity: 0;
-  animation: peek-maps-target 60s linear infinite;
-  animation-delay: var(--d, 0s);
-}
-/* detection ping ring */
-.peek-maps-target::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  height: 8px;
-  width: 8px;
-  border-radius: 9999px;
-  border: 1.5px solid rgba(255, 106, 0, 0.55);
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.5);
-  animation: peek-maps-ping 60s linear infinite;
-  animation-delay: var(--d, 0s);
-}
-/* explosion shockwave ring */
-.peek-maps-target::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  height: 8px;
-  width: 8px;
-  border-radius: 9999px;
-  border: 2px solid rgba(255, 106, 0, 0.8);
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.6);
-  animation: peek-maps-shock 60s linear infinite;
-  animation-delay: var(--d, 0s);
-}
-@keyframes peek-maps-target {
-  0% { opacity: 0; box-shadow: 0 0 6px 1px rgba(255, 106, 0, 0); }
-  2% { opacity: 1; box-shadow: 0 0 8px 2px rgba(255, 106, 0, 0.6); }
-  8% { opacity: 1; box-shadow: 0 0 8px 2px rgba(255, 106, 0, 0.6); }
-  9% { opacity: 1; box-shadow: 0 0 20px 7px rgba(255, 106, 0, 0.95); } /* shot: flash */
-  12% { opacity: 0; box-shadow: 0 0 4px 1px rgba(255, 106, 0, 0); }    /* gone */
-  100% { opacity: 0; }
-}
-@keyframes peek-maps-ping {
-  0%, 1% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-  2% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
-  7% { opacity: 0; transform: translate(-50%, -50%) scale(2.4); }
-  100% { opacity: 0; }
-}
-@keyframes peek-maps-shock {
-  0%, 8% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
-  9% { opacity: 0.9; transform: translate(-50%, -50%) scale(1); } /* explosion */
-  14% { opacity: 0; transform: translate(-50%, -50%) scale(5); }
-  100% { opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .peek-maps-target {
-    display: none;
+  .peek-maps-sweep {
+    animation: none;
   }
 }
