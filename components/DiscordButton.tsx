@@ -25,9 +25,9 @@ export function DiscordButton({ className = "", onClick }: Props) {
   );
 }
 
-// Homepage info bar above the maps grid: a soft orange gradient surface (a
-// touch lighter than the brand orange). White logo + two-line label, and a
-// translucent white Join pill with white text. The whole bar is the link.
+// Homepage info bar above the maps grid: a solid, full-strength Discord-blurple
+// surface (kept at full opacity — not tinted by the site theme). White logo +
+// two-line label, and a white Join pill. The whole bar is the link.
 export function DiscordBanner() {
   return (
     <a
@@ -35,7 +35,7 @@ export function DiscordBanner() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Join the peekabooR6 Discord (opens in new tab)"
-      className="group mx-auto flex max-w-2xl items-center gap-2.5 rounded-card bg-gradient-to-r from-[#f68b46] to-[#f4772b] px-3 py-1.5 shadow-sm transition-[filter] duration-150 ease-out hover:brightness-95"
+      className="group mx-auto flex max-w-2xl items-center gap-2.5 rounded-card bg-gradient-to-r from-[#47a294] to-[#3a877c] px-3 py-1.5 shadow-sm transition-[filter] duration-150 ease-out hover:brightness-95"
     >
       <span className="shrink-0 text-white">
         <DiscordIcon size={20} />
@@ -48,7 +48,7 @@ export function DiscordBanner() {
           Be the first to see new peeks
         </div>
       </div>
-      <span className="inline-flex shrink-0 items-center justify-center rounded-btn border border-white/40 bg-white/20 px-3 py-1 text-xs font-semibold text-white transition-colors group-hover:bg-white/30">
+      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-3 py-1 text-xs font-semibold text-[#3f978b] transition-colors group-hover:bg-white/90">
         Join
       </span>
     </a>
