@@ -572,135 +572,61 @@ h4 {
   }
 }
 
-/* --- Homepage "Maps" title-block animated backdrop -------------------------
-   Sits behind the title text (z-0) inside a self-clipping, edge-masked band so
-   it never touches the live-stats strip above or the maps grid below. A white
-   radial vignette keeps the center clean for readable text. Variants
-   (ember | radar) selected by MAPS_BG in components/MapsTitleBackdrop.tsx.
-   CSS-only; under reduced motion the embers/sweep stop and only the static
-   glow remains. */
-.peek-maps-bg {
-  -webkit-mask-image: radial-gradient(120% 100% at 50% 50%, #000 45%, transparent 82%);
-  mask-image: radial-gradient(120% 100% at 50% 50%, #000 45%, transparent 82%);
-}
-.peek-maps-vignette {
-  background: radial-gradient(
-    60% 82% at 50% 50%,
-    #f7f8f8 0%,
-    rgba(247, 248, 248, 0.86) 40%,
-    rgba(247, 248, 248, 0) 78%
-  );
-}
-
-/* EMBER variant — a soft static orange glow for warmth, plus tiny embers that
-   drift slowly upward and fade in/out. Size/position/speed/delay are set inline
-   per ember (see EMBERS in MapsTitleBackdrop.tsx) so they never move in sync. */
-.peek-maps-ember-glow {
+/* --- Homepage top-block "contour drift" backdrop --------------------------
+   Sits behind BOTH the live-stats counter and the "Maps" title as one
+   continuous, self-clipping layer (z-0). Two faint topographic ring patterns
+   in the accent orange drift slowly in different directions; a soft porcelain
+   radial veil over the center keeps the numbers and title text readable. The
+   backdrop is overflow-hidden, so nothing bleeds into the maps grid below.
+   Static (no drift) under prefers-reduced-motion. */
+.peek-contour {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  height: 200px;
-  width: 380px;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(
-    ellipse at center,
-    rgba(242, 100, 14, 0.1),
-    rgba(242, 100, 14, 0) 70%
-  );
+  inset: -50%; /* oversized so the slow drift never reveals an edge */
 }
-.peek-maps-ember {
-  position: absolute;
-  border-radius: 9999px;
-  background: radial-gradient(
-    circle,
-    rgba(255, 150, 60, 0.95),
-    rgba(242, 100, 14, 0.6) 55%,
-    rgba(242, 100, 14, 0) 100%
-  );
-  box-shadow: 0 0 6px 1px rgba(242, 100, 14, 0.45);
-  opacity: 0;
-  animation-name: peek-maps-ember-rise;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-}
-@keyframes peek-maps-ember-rise {
-  0% {
-    transform: translate(0, 24px);
-    opacity: 0;
-  }
-  20% {
-    opacity: var(--peak, 0.55);
-  }
-  55% {
-    transform: translate(var(--drift, 6px), -70px);
-  }
-  82% {
-    opacity: var(--peak, 0.55);
-  }
-  100% {
-    transform: translate(0, -150px);
-    opacity: 0;
-  }
-}
-
-/* RADAR variant — concentric rings, rotating conic sweep, pulsing blips. */
-.peek-maps-rings {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  height: 320px;
-  width: 320px;
-  transform: translate(-50%, -50%);
-  border-radius: 9999px;
+.peek-contour-a {
   background: repeating-radial-gradient(
-    circle at center,
-    rgba(242, 100, 14, 0.09) 0 1px,
-    transparent 1px 42px
+    circle at 32% 38%,
+    rgba(242, 100, 14, 0.09) 0 1.5px,
+    transparent 1.5px 34px
   );
+  animation: peek-contour-a 26s ease-in-out infinite alternate;
 }
-.peek-maps-sweep {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  height: 320px;
-  width: 320px;
-  border-radius: 9999px;
-  transform: translate(-50%, -50%);
-  background: conic-gradient(
-    from 0deg,
-    rgba(242, 100, 14, 0.28),
-    rgba(242, 100, 14, 0) 70deg,
-    transparent 360deg
+.peek-contour-b {
+  background: repeating-radial-gradient(
+    circle at 68% 62%,
+    rgba(242, 100, 14, 0.08) 0 1.5px,
+    transparent 1.5px 52px
   );
-  animation: peek-maps-sweep 5s linear infinite;
+  animation: peek-contour-b 32s ease-in-out infinite alternate;
 }
-@keyframes peek-maps-sweep {
+@keyframes peek-contour-a {
+  from {
+    transform: translate(-14px, -9px);
+  }
   to {
-    transform: translate(-50%, -50%) rotate(360deg);
+    transform: translate(14px, 11px);
   }
 }
-.peek-maps-blip {
-  position: absolute;
-  height: 6px;
-  width: 6px;
-  border-radius: 9999px;
-  background: #f2640e;
-  box-shadow: 0 0 8px 2px rgba(242, 100, 14, 0.5);
-  opacity: 0;
-  animation: peek-maps-blip 5s ease-out infinite;
+@keyframes peek-contour-b {
+  from {
+    transform: translate(11px, 7px);
+  }
+  to {
+    transform: translate(-13px, -10px);
+  }
 }
-@keyframes peek-maps-blip {
-  0%, 12%, 100% { opacity: 0; transform: scale(0.5); }
-  3% { opacity: 0.9; transform: scale(1); }
+/* Soft porcelain veil over the center so the numbers + title stay crisp. */
+.peek-contour-veil {
+  background: radial-gradient(
+    ellipse 74% 92% at 50% 50%,
+    #f7f8f8 0%,
+    rgba(247, 248, 248, 0.85) 45%,
+    rgba(247, 248, 248, 0) 80%
+  );
 }
-
-/* Reduced motion: stop all movement — keep only the static ember glow. */
 @media (prefers-reduced-motion: reduce) {
-  .peek-maps-ember,
-  .peek-maps-blip {
-    display: none;
-  }
-  .peek-maps-sweep {
+  .peek-contour-a,
+  .peek-contour-b {
     animation: none;
   }
 }
