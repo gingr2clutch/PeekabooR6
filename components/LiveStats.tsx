@@ -121,12 +121,12 @@ export function LiveStats({
   // single-row order). `cellClass` uses CSS `order` to rearrange the mobile 2x2
   // into Peeks | Votes (top) / Maps | S-Tier (bottom), with per-cell dividers
   // drawn for that visual layout; `sm:` resets order and dividers to the
-  // source-order single row. Peeks + Votes carry a live teal ping dot.
+  // source-order single row. Every cell carries a live teal ping dot.
   const cells = [
-    { label: "Maps", value: mapsLive, live: false, plus: false, cellClass: "order-3 border-t sm:order-none sm:border-t-0" },
+    { label: "Maps", value: mapsLive, live: true, plus: false, cellClass: "order-3 border-t sm:order-none sm:border-t-0" },
     { label: "Peeks", value: gradedPeeks, live: true, plus: false, cellClass: "order-1 sm:order-none sm:border-l" },
     { label: "Votes", value: communityVotes, live: true, plus: false, cellClass: "order-2 border-l sm:order-none" },
-    { label: "S-Tier", value: sTierPeeks, live: false, plus: false, cellClass: "order-4 border-t border-l sm:order-none sm:border-t-0" },
+    { label: "S-Tier", value: sTierPeeks, live: true, plus: false, cellClass: "order-4 border-t border-l sm:order-none sm:border-t-0" },
   ];
 
   // SSR + first render show the real values (crawlable, no-JS safe). On mount,
