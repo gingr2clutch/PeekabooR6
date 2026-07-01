@@ -118,10 +118,10 @@ export function LiveStats({
   sTierPeeks,
 }: Props) {
   const cells = [
-    { label: "Maps live", value: mapsLive, live: false, plus: false },
-    { label: "Graded peeks", value: gradedPeeks, live: false, plus: false },
-    { label: "Community votes", value: communityVotes, live: false, plus: false },
-    { label: "S-tier peeks", value: sTierPeeks, live: false, plus: false },
+    { label: "Maps", value: mapsLive, live: false, plus: false },
+    { label: "Peeks", value: gradedPeeks, live: true, plus: false },
+    { label: "Votes", value: communityVotes, live: true, plus: false },
+    { label: "S-Tier", value: sTierPeeks, live: false, plus: false },
   ];
 
   // SSR + first render show the real values (crawlable, no-JS safe). On mount,
@@ -140,7 +140,7 @@ export function LiveStats({
   }, []);
 
   return (
-    <div className="peek-stats relative w-full overflow-hidden rounded-card border border-border bg-card">
+    <div className="peek-stats relative w-full overflow-hidden">
       {/* One-time orange scan-line sweep on load (CSS; off for reduced-motion). */}
       <span
         aria-hidden
@@ -150,7 +150,10 @@ export function LiveStats({
         {cells.map((c, i) => (
           <div
             key={c.label}
-            className="peek-stats-cell flex flex-col items-center justify-center gap-1 border-border px-4 py-5 text-center [&:nth-child(n+3)]:border-t sm:[&:not(:first-child)]:border-l sm:[&:nth-child(n+3)]:border-t-0 [&:nth-child(even)]:border-l"
+            // Short, low-opacity divider (centered, ~44% tall) on the left of
+            // every cell except the first in its row — none after the last.
+            // Mobile (2 cols): even cells; desktop (4 cols): all but the first.
+            className="peek-stats-cell relative flex flex-col items-center justify-center gap-1 px-4 py-4 text-center before:pointer-events-none before:absolute before:left-0 before:top-1/2 before:hidden before:h-[44%] before:w-px before:-translate-y-1/2 before:bg-ink/10 before:content-[''] [&:nth-child(even)]:before:block sm:[&:not(:first-child)]:before:block"
             style={{ animationDelay: `${i * CELL_STAGGER_MS}ms` }}
           >
             <div className="flex items-center gap-1.5">

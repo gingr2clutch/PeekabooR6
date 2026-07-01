@@ -50,7 +50,7 @@ export default async function Home() {
         <div data-reveal className="mb-10">
           <DiscordBanner />
         </div>
-        <div className="mb-10">
+        <div className="mb-6">
           <LiveStats
             mapsLive={stats.mapsLive}
             gradedPeeks={stats.gradedPeeks}
