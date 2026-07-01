@@ -35,20 +35,20 @@ export function DiscordBanner() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Join the peekabooR6 Discord (opens in new tab)"
-      className="group mx-auto flex max-w-2xl items-center gap-2 rounded-card bg-gradient-to-r from-[#47a294] to-[#3a877c] px-2.5 py-1 shadow-sm transition-[filter] duration-150 ease-out hover:brightness-95 sm:gap-2.5 sm:px-3 sm:py-1.5"
+      className="group mx-auto flex max-w-2xl items-center gap-2.5 rounded-card bg-gradient-to-r from-[#47a294] to-[#3a877c] px-3 py-1.5 shadow-sm transition-[filter] duration-150 ease-out hover:brightness-95"
     >
       <span className="shrink-0 text-white">
         <DiscordIcon size={20} />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-xs font-semibold leading-tight text-white sm:text-[13px]">
+        <div className="truncate text-[13px] font-semibold leading-tight text-white">
           Join the peekabooR6 Discord server
         </div>
-        <div className="truncate text-[10px] font-normal leading-tight text-white/80 sm:text-[11px]">
+        <div className="truncate text-[11px] font-normal leading-tight text-white/80">
           Be the first to see new peeks
         </div>
       </div>
-      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-2.5 py-0.5 text-[11px] font-semibold text-[#3f978b] transition-colors group-hover:bg-white/90 sm:px-3 sm:py-1 sm:text-xs">
+      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-3 py-1 text-xs font-semibold text-[#3f978b] transition-colors group-hover:bg-white/90">
         Join
       </span>
     </a>
