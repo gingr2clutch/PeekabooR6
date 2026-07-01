@@ -1,5 +1,5 @@
 import { supabasePublic } from "./supabase";
-import { MEASURED_MIN_VOTES, ratingScore } from "./rate";
+import { MEASURED_MIN_VOTES, rating, ratingScore } from "./rate";
 
 export type Map = {
   id: string;
@@ -302,4 +302,54 @@ export async function getPublishedPeekCount(): Promise<number> {
     .eq("published", true);
   if (error) throw error;
   return count ?? 0;
+}
+
+export type HomeStats = {
+  mapsLive: number; // published maps
+  gradedPeeks: number; // published peeks
+  communityVotes: number; // sum of vote_count across published peeks
+  sTierPeeks: number; // published peeks whose computed grade is "S"
+};
+
+// Real, request-time stats for the homepage "live stats" strip. All peek
+// figures are over PUBLISHED peeks (consistent with mapsLive). There is no
+// stored grade column, so S-tier is computed with rating() — the same grade
+// shown on the site. Votes come from vote_count (the running vote total).
+export async function getHomeStats(): Promise<HomeStats> {
+  const sb = supabasePublic();
+
+  const { count: mapsLive } = await sb
+    .from("maps")
+    .select("id", { count: "exact", head: true })
+    .eq("published", true);
+
+  const { data, error } = await sb
+    .from("peeks")
+    .select("vote_count, worked_votes, base_success_rate")
+    .eq("published", true);
+  if (error) throw error;
+
+  const rows = (data ?? []) as {
+    vote_count: number;
+    worked_votes: number;
+    base_success_rate: number;
+  }[];
+
+  let communityVotes = 0;
+  let sTierPeeks = 0;
+  for (const p of rows) {
+    communityVotes += p.vote_count ?? 0;
+    if (
+      rating(p.base_success_rate, p.worked_votes, p.vote_count).grade === "S"
+    ) {
+      sTierPeeks += 1;
+    }
+  }
+
+  return {
+    mapsLive: mapsLive ?? 0,
+    gradedPeeks: rows.length,
+    communityVotes,
+    sTierPeeks,
+  };
 }

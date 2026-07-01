@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { DiscordBanner } from "@/components/DiscordButton";
+import { LiveStats } from "@/components/LiveStats";
 import { PageHeader } from "@/components/PageHeader";
-import { getMaps } from "@/lib/db";
+import { getHomeStats, getMaps } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ const NEW_MAP_NAME = "Calypso Casino";
 
 export default async function Home() {
   const all = await getMaps();
+  const stats = await getHomeStats();
   const maps = [...all].sort((a, b) => {
     if (a.published !== b.published) return a.published ? -1 : 1;
     if (!a.published) return a.name.localeCompare(b.name);
@@ -46,6 +48,14 @@ export default async function Home() {
       <main className="fade-in-up mx-auto max-w-6xl px-6 pb-20 pt-10">
         <div data-reveal className="mb-10">
           <DiscordBanner />
+        </div>
+        <div className="mb-10">
+          <LiveStats
+            mapsLive={stats.mapsLive}
+            gradedPeeks={stats.gradedPeeks}
+            communityVotes={stats.communityVotes}
+            sTierPeeks={stats.sTierPeeks}
+          />
         </div>
         <div data-reveal className="mb-10 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>

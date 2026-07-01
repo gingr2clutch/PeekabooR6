@@ -533,3 +533,41 @@ h4 {
     display: none;
   }
 }
+
+/* --- Homepage live-stats strip ---------------------------------------------
+   Cells rise/fade in one after another (per-cell animation-delay set inline),
+   and a single orange scan-line sweeps across once on load. Pure CSS so it
+   runs without JS; the count-up itself is JS (components/LiveStats.tsx) and
+   SSR renders the real numbers, so no-JS/crawlers still see accurate values. */
+@keyframes peek-stats-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.peek-stats-cell {
+  animation: peek-stats-rise 0.5s ease-out both;
+}
+@keyframes peek-stats-scan {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+.peek-stats-scan {
+  animation: peek-stats-scan 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .peek-stats-cell {
+    animation: none;
+  }
+  .peek-stats-scan {
+    display: none;
+  }
+}
