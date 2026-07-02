@@ -244,6 +244,57 @@ export async function getTopPeeks(limit = 5): Promise<PeekWithContext[]> {
     .slice(0, limit);
 }
 
+// Full select (peek + floor + map) shared by the "best peek" pickers below.
+const PEEK_WITH_CONTEXT_SELECT = `${PEEK_COLUMNS}, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))`;
+
+// Single "best" peek from a candidate set, ranked MOST VOTES first, then (tie)
+// highest grade, then (tie) most recently created. Used for the homepage
+// "Peek of the Day" and each map's "Top Peek".
+function pickTopByVotes(
+  candidates: PeekWithContext[]
+): PeekWithContext | null {
+  if (candidates.length === 0) return null;
+  return candidates.slice().sort((a, b) => {
+    const va = a.vote_count ?? 0;
+    const vb = b.vote_count ?? 0;
+    if (va !== vb) return vb - va; // most votes
+    const ra = gradeRankFor(a);
+    const rb = gradeRankFor(b);
+    if (ra !== rb) return ra - rb; // best grade
+    return (b.created_at ?? "").localeCompare(a.created_at ?? ""); // most recent
+  })[0];
+}
+
+// Site-wide #1 peek by votes (only peeks whose map is also published).
+export async function getPeekOfTheDay(): Promise<PeekWithContext | null> {
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select(PEEK_WITH_CONTEXT_SELECT)
+    .eq("published", true);
+  if (error) throw error;
+  const candidates = ((data ?? []) as unknown as PeekWithContext[]).filter(
+    (row) => row.floors?.maps?.published
+  );
+  return pickTopByVotes(candidates);
+}
+
+// This map's #1 peek by votes, scoped to its floors.
+export async function getTopPeekForMap(
+  floorIds: string[]
+): Promise<PeekWithContext | null> {
+  if (floorIds.length === 0) return null;
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select(PEEK_WITH_CONTEXT_SELECT)
+    .in("floor_id", floorIds)
+    .eq("published", true);
+  if (error) throw error;
+  const candidates = ((data ?? []) as unknown as PeekWithContext[]).filter(
+    (row) => row.floors?.maps?.published
+  );
+  return pickTopByVotes(candidates);
+}
+
 export async function getPublishedPeekById(id: string): Promise<Peek | null> {
   const { data, error } = await supabasePublic()
     .from("peeks")

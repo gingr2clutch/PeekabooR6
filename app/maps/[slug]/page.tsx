@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BestPeek } from "@/components/BestPeek";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { MapIntel } from "@/components/MapIntel";
 import { PageHeader } from "@/components/PageHeader";
 import { RandomPeekButton } from "@/components/RandomPeekButton";
-import { getFloorsForMap, getMapBySlug } from "@/lib/db";
+import { getFloorsForMap, getMapBySlug, getTopPeekForMap } from "@/lib/db";
 import { rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
 
@@ -83,6 +84,8 @@ export default async function MapPage({
     }
   }
 
+  const topPeek = await getTopPeekForMap(floorIds);
+
   const lastUpdatedLabel = latestPeekAt
     ? new Date(latestPeekAt).toLocaleDateString("en-US", {
         year: "numeric",
@@ -119,6 +122,12 @@ export default async function MapPage({
               votes={mapVotes}
               grades={{ S: mapSTier, A: mapATier, B: mapBTier, C: mapCTier }}
             />
+          </div>
+        )}
+
+        {topPeek && (
+          <div data-reveal className="mb-8">
+            <BestPeek peek={topPeek} eyebrow="Top Peek" />
           </div>
         )}
 
