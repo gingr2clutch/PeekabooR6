@@ -1,4 +1,4 @@
-import { ArrowUp, Building2, MapPin, Star } from "lucide-react";
+import { ArrowUp, MapPin, Star } from "lucide-react";
 
 export type MapGrades = { S: number; A: number; B: number; C: number };
 
@@ -23,11 +23,12 @@ const GRADE_TIERS: { key: keyof MapGrades; color: string }[] = [
 // (motion-safe:), so prefers-reduced-motion is respected without any JS.
 export function MapIntel({ peeks, votes, grades }: Props) {
   const total = peeks || 1; // guard against divide-by-zero on empty maps
+  // A-Tier is intentionally omitted here — the grade-mix bar below already
+  // shows the A count (alongside S/B/C).
   const stats = [
     { label: "Peeks", value: peeks, Icon: MapPin, tile: "bg-teal/10 text-teal", live: false },
     { label: "Votes", value: votes, Icon: ArrowUp, tile: "bg-teal/10 text-teal", live: true },
     { label: "S-Tier", value: grades.S, Icon: Star, tile: "bg-brand/10 text-brand", live: false },
-    { label: "A-Tier", value: grades.A, Icon: Building2, tile: "bg-brand/10 text-brand", live: false },
   ];
 
   return (
@@ -42,8 +43,8 @@ export function MapIntel({ peeks, votes, grades }: Props) {
         Map Intel
       </div>
 
-      {/* 4 icon-stats: one row on desktop, 2x2 on mobile. */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      {/* 3 icon-stats, evenly distributed and centered. */}
+      <div className="grid grid-cols-3 gap-4">
         {stats.map((s) => (
           <div key={s.label} className="flex flex-col items-center gap-1.5">
             <span
