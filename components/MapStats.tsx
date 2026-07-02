@@ -17,37 +17,26 @@ const GRADE_TIERS: { key: keyof MapGrades; color: string }[] = [
   { key: "C", color: GRADE_TIER_COLORS.C },
 ];
 
-// Slim, borderless map stats: a centered inline stat line (Peeks / Votes /
-// S-Tier) with a live dot on Votes, above the full grade-mix bar + legend. No
-// card, icons, or header — clean and airy. Real per-map data, computed
-// server-side by the caller. The Votes dot pulses only when motion is allowed.
+// Map stats card: a white rounded card with a centered inline stat line
+// (Peeks / Votes / S-Tier), a divider, then the grade-mix bar + legend. Real
+// per-map data, computed server-side by the caller.
 export function MapStats({ peeks, votes, grades }: Props) {
   const total = peeks || 1; // guard against divide-by-zero on empty maps
   const stats = [
-    { label: "Peeks", value: peeks, live: false },
-    { label: "Votes", value: votes, live: true },
-    { label: "S-Tier", value: grades.S, live: false },
+    { label: "Peeks", value: peeks },
+    { label: "Votes", value: votes },
+    { label: "S-Tier", value: grades.S },
   ];
 
   return (
-    <div>
-      {/* Slim stat line — no box, no icons. */}
+    <div className="rounded-card border border-border bg-card px-4 py-5 shadow-sm sm:px-6">
+      {/* Stat line — bold black numbers + muted mono labels. */}
       <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-2 sm:gap-x-10">
         {stats.map((s) => (
           <div key={s.label} className="inline-flex items-baseline gap-1.5">
             <span className="text-xl font-bold tabular-nums tracking-tight text-ink sm:text-2xl">
               {s.value.toLocaleString("en-US")}
             </span>
-            {s.live && (
-              <span
-                className="relative flex h-1.5 w-1.5 self-center"
-                aria-label="Live"
-                title="Live"
-              >
-                <span className="absolute inline-flex h-full w-full rounded-full bg-teal opacity-75 motion-safe:animate-ping" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-teal" />
-              </span>
-            )}
             <span className="font-mono text-[10px] uppercase tracking-wider text-muted">
               {s.label}
             </span>
@@ -55,8 +44,11 @@ export function MapStats({ peeks, votes, grades }: Props) {
         ))}
       </div>
 
+      {/* Thin divider. */}
+      <div className="my-4 border-t border-border" />
+
       {/* Grade mix bar — stacked share of S/A/B/C across this map's peeks. */}
-      <div className="mt-4">
+      <div>
         <div
           className="flex h-2 w-full overflow-hidden rounded-full bg-border"
           role="img"

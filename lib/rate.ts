@@ -123,10 +123,10 @@ export function gradeBarGradientCss(): string {
 // red→green direction as the effectiveness meter above (C red-orange → S
 // green). Non-grade UI keeps the brand teal/orange — this is grades only.
 export const GRADE_TIER_COLORS: Record<Grade, string> = {
-  S: "#16a34a", // green
-  A: "#84cc16", // lime
-  B: "#eab308", // amber
-  C: "#e0532e", // red-orange
+  S: "#1f9d55", // green
+  A: "#7cb342", // lime-green
+  B: "#e0a92e", // amber
+  C: "#d1573a", // red-orange
 };
 
 // Tier color for a grade letter OR a full label (S+, A-, … → its tier color).
