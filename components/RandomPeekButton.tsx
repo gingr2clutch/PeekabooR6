@@ -4,30 +4,13 @@ import { useRef } from "react";
 
 type Props = {
   href: string;
-  // Optional per-map accent color. When set, it becomes the button background
-  // (with auto-picked readable text); otherwise the default brand orange.
-  accentColor?: string;
 };
 
-// Readable text color (white or dark ink) for a given background hex, chosen
-// by the background's relative luminance so labels stay legible either way.
-function readableOn(bg: string): string {
-  const h = bg.replace("#", "");
-  const [r, g, b] = [0, 2, 4].map(
-    (i) => parseInt(h.slice(i, i + 2), 16) / 255
-  );
-  const lin = (c: number) =>
-    c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-  return L > 0.4 ? "#1e211d" : "#ffffff";
-}
-
-// Filled CTA on the map landing page — brand orange by default, or the map's
-// accent color when provided. The dice idles with a subtle periodic wobble,
-// tumbles on hover (desktop), and spins on tap. Navigation is the anchor's
-// default behavior — the spin starts in parallel and is cut off by the page
-// transition, which is exactly what we want.
-export function RandomPeekButton({ href, accentColor }: Props) {
+// Filled orange CTA on the map landing page. The dice idles with a subtle
+// periodic wobble, tumbles on hover (desktop), and spins on tap. Navigation
+// is the anchor's default behavior — the spin starts in parallel and is
+// cut off by the page transition, which is exactly what we want.
+export function RandomPeekButton({ href }: Props) {
   const diceRef = useRef<HTMLSpanElement>(null);
 
   function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
@@ -58,16 +41,7 @@ export function RandomPeekButton({ href, accentColor }: Props) {
       href={href}
       onClick={handleClick}
       rel="nofollow"
-      className={`peek-rp-btn inline-flex items-center gap-2 rounded-btn px-4 py-2 text-sm font-semibold ${
-        accentColor
-          ? "hover:brightness-95"
-          : "bg-brand text-white hover:bg-brand/90"
-      }`}
-      style={
-        accentColor
-          ? { backgroundColor: accentColor, color: readableOn(accentColor) }
-          : undefined
-      }
+      className="peek-rp-btn inline-flex items-center gap-2 rounded-btn bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand/90"
     >
       <span ref={diceRef} aria-hidden className="peek-rp-btn-dice inline-flex">
         <DiceIcon />

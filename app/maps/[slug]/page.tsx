@@ -7,7 +7,6 @@ import { LiveStats } from "@/components/LiveStats";
 import { PageHeader } from "@/components/PageHeader";
 import { RandomPeekButton } from "@/components/RandomPeekButton";
 import { getFloorsForMap, getMapBySlug } from "@/lib/db";
-import { mapAccentColor } from "@/lib/mapAccents";
 import { rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
 
@@ -106,10 +105,7 @@ export default async function MapPage({
           </p>
           {totalPeeks >= 2 && (
             <div className="mt-5">
-              <RandomPeekButton
-                href={`/api/maps/${map.slug}/random-peek`}
-                accentColor={mapAccentColor(map.slug)}
-              />
+              <RandomPeekButton href={`/api/maps/${map.slug}/random-peek`} />
             </div>
           )}
         </div>
@@ -120,7 +116,6 @@ export default async function MapPage({
                 Natural cell order (Peeks, Votes, S-Tier, A-Tier): the mobile
                 2x2 puts Peeks/Votes on top. */}
             <LiveStats
-              accentColor={mapAccentColor(map.slug)}
               cells={[
                 { label: "Peeks", value: totalPeeks, cellClass: "" },
                 { label: "Votes", value: mapVotes, cellClass: "border-l" },

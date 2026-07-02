@@ -17,9 +17,6 @@ export type StatCell = {
 
 type Props = {
   cells: StatCell[];
-  // Optional per-map accent color for the stat LABELS and the "LIVE" badge
-  // (never the numbers). When omitted, labels/badge use their default colors.
-  accentColor?: string;
 };
 
 const ROLL_MS = 1100; // roll duration per digit
@@ -124,7 +121,7 @@ function Odometer({
   );
 }
 
-export function LiveStats({ cells, accentColor }: Props) {
+export function LiveStats({ cells }: Props) {
   // SSR + first render show the real values (crawlable, no-JS safe). On mount,
   // drop to 0 pre-paint (no transition) then roll each odometer up to target.
   const [phase, setPhase] = useState<Phase>("final");
@@ -174,10 +171,7 @@ export function LiveStats({ cells, accentColor }: Props) {
                 </span>
               )}
             </div>
-            <span
-              className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand"
-              style={accentColor ? { color: accentColor } : undefined}
-            >
+            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand">
               {c.label}
             </span>
           </div>
@@ -190,9 +184,6 @@ export function LiveStats({ cells, accentColor }: Props) {
       <span
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal/40 bg-card px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-teal shadow-sm"
-        style={
-          accentColor ? { color: accentColor, borderColor: accentColor } : undefined
-        }
       >
         Live
       </span>
