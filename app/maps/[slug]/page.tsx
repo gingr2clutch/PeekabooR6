@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BestPeek } from "@/components/BestPeek";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { MapStats } from "@/components/MapStats";
 import { PageHeader } from "@/components/PageHeader";
 import { RandomPeekButton } from "@/components/RandomPeekButton";
-import { getFloorsForMap, getMapBySlug, getTopPeekForMap } from "@/lib/db";
+import { getFloorsForMap, getMapBySlug } from "@/lib/db";
 import { rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
 
@@ -83,8 +82,6 @@ export default async function MapPage({
       }
     }
   }
-
-  const topPeek = await getTopPeekForMap(floorIds);
 
   const lastUpdatedLabel = latestPeekAt
     ? new Date(latestPeekAt).toLocaleDateString("en-US", {
@@ -222,12 +219,6 @@ export default async function MapPage({
 
         {floors.length === 0 && (
           <p className="text-center text-muted">No floors yet for this map.</p>
-        )}
-
-        {topPeek && (
-          <div data-reveal className="mt-8">
-            <BestPeek peek={topPeek} eyebrow="Top Peek" />
-          </div>
         )}
       </main>
     </>
