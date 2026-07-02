@@ -265,7 +265,8 @@ function pickTopByVotes(
   })[0];
 }
 
-// Site-wide #1 peek by votes (only peeks whose map is also published).
+// Site-wide #1 peek by votes, restricted to peeks graded A- or above (grade
+// letter A or S). Only peeks whose map is also published are eligible.
 export async function getPeekOfTheDay(): Promise<PeekWithContext | null> {
   const { data, error } = await supabasePublic()
     .from("peeks")
@@ -273,7 +274,15 @@ export async function getPeekOfTheDay(): Promise<PeekWithContext | null> {
     .eq("published", true);
   if (error) throw error;
   const candidates = ((data ?? []) as unknown as PeekWithContext[]).filter(
-    (row) => row.floors?.maps?.published
+    (row) => {
+      if (!row.floors?.maps?.published) return false;
+      const g = rating(
+        row.base_success_rate,
+        row.worked_votes,
+        row.vote_count
+      ).grade;
+      return g === "S" || g === "A"; // A- or above
+    }
   );
   return pickTopByVotes(candidates);
 }
