@@ -1,10 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BestPeek } from "@/components/BestPeek";
 import { DiscordBanner } from "@/components/DiscordButton";
 import { LiveStats } from "@/components/LiveStats";
 import { PageHeader } from "@/components/PageHeader";
-import { getHomeStats, getMaps, getPeekOfTheDay } from "@/lib/db";
+import { getHomeStats, getMaps } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +21,6 @@ const NEW_MAP_NAME = "Calypso Casino";
 export default async function Home() {
   const all = await getMaps();
   const stats = await getHomeStats();
-  const peekOfDay = await getPeekOfTheDay();
   const maps = [...all].sort((a, b) => {
     if (a.published !== b.published) return a.published ? -1 : 1;
     if (!a.published) return a.name.localeCompare(b.name);
@@ -65,11 +63,6 @@ export default async function Home() {
             ]}
           />
         </div>
-        {peekOfDay && (
-          <div data-reveal className="mb-10">
-            <BestPeek peek={peekOfDay} eyebrow="Peek of the Day" showMap />
-          </div>
-        )}
         <div data-reveal className="mb-10 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
           <p className="mt-2 text-muted">Click the map you're on</p>
