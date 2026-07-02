@@ -47,10 +47,11 @@ export function FloorPeekList({
             peek.worked_votes,
             peek.vote_count
           );
+          const steps = (peek.instructions ?? []).filter((s) => s && s.trim());
           return (
             <li
               key={peek.id}
-              className="rounded-card border border-border bg-card p-4"
+              className="rounded-card border border-border bg-card p-5 sm:p-6"
             >
               <div className="flex items-start gap-3">
                 <span
@@ -63,7 +64,7 @@ export function FloorPeekList({
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <Link
                       href={`/peeks/${peek.slug}`}
-                      className="text-[15px] font-semibold text-ink underline-offset-2 hover:text-brand hover:underline"
+                      className="text-base font-semibold text-ink underline-offset-2 hover:text-brand hover:underline"
                     >
                       {peek.name}
                     </Link>
@@ -75,10 +76,39 @@ export function FloorPeekList({
                       ? ` · ${votesText(r.votes)}`
                       : " · community estimate"}
                   </p>
+
+                  {/* The setup — the peek's step-by-step instructions. */}
+                  {steps.length > 0 && (
+                    <div className="mt-4">
+                      <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+                        The setup
+                      </h3>
+                      <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-[17px] leading-[1.7] text-ink/85">
+                        {steps.map((step, si) => (
+                          <li key={si}>{step}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
                   {peek.tip ? (
-                    <p className="mt-2 text-[14px] leading-relaxed text-ink/80">
-                      {peek.tip}
-                    </p>
+                    <div className="mt-4">
+                      <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+                        Tip
+                      </h3>
+                      <p className="mt-2 text-[17px] leading-[1.7] text-ink/85">
+                        {peek.tip}
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {peek.video_url ? (
+                    <Link
+                      href={`/peeks/${peek.slug}`}
+                      className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline"
+                    >
+                      Watch the clip →
+                    </Link>
                   ) : null}
                 </div>
               </div>

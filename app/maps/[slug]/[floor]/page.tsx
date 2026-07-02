@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FloorPeekList } from "@/components/FloorPeekList";
@@ -72,6 +73,13 @@ export default async function FloorPage({
   // Same query path /maps/[slug]/page.tsx uses — one extra round trip,
   // ordered by display_order ascending.
   const allFloors = await getFloorsForMap(map.id);
+  const floorIdx = allFloors.findIndex((f) => f.id === floor.id);
+  const prevFloor = floorIdx > 0 ? allFloors[floorIdx - 1] : null;
+  const nextFloor =
+    floorIdx >= 0 && floorIdx < allFloors.length - 1
+      ? allFloors[floorIdx + 1]
+      : null;
+  const otherFloors = allFloors.filter((f) => f.id !== floor.id);
 
   return (
     <>
@@ -136,6 +144,74 @@ export default async function FloorPage({
         )}
 
         <FloorPeekList map={map} floor={floor} peeks={peeks} />
+
+        {/* Other floors + prev/next navigation to keep users browsing. */}
+        {allFloors.length > 1 && (
+          <nav
+            aria-label="More floors on this map"
+            className="mx-auto mt-16 max-w-3xl"
+          >
+            <h2 className="text-xl font-semibold tracking-tight text-ink">
+              Other floors on {map.name}
+            </h2>
+            <ul className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {otherFloors.map((f) => (
+                <li key={f.id}>
+                  <Link
+                    href={`/maps/${map.slug}/${f.slug}`}
+                    className="group block overflow-hidden rounded-card border-[3px] border-white bg-card shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-all duration-200 ease-out hover:scale-[1.015] hover:border-brand/30 hover:shadow-lg"
+                  >
+                    <div className="relative aspect-video w-full overflow-hidden bg-card">
+                      {f.birds_eye_url ? (
+                        <Image
+                          src={f.birds_eye_url}
+                          alt=""
+                          fill
+                          sizes="(max-width: 640px) 50vw, 300px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="placeholder-stripes h-full w-full" />
+                      )}
+                    </div>
+                    <div className="px-4 py-3 text-sm font-semibold text-ink group-hover:text-brand">
+                      {f.name}
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8 flex items-center justify-between gap-3 border-t border-border pt-6 text-sm font-medium">
+              {prevFloor ? (
+                <Link
+                  href={`/maps/${map.slug}/${prevFloor.slug}`}
+                  className="inline-flex items-center gap-1.5 text-muted transition-colors hover:text-brand"
+                >
+                  ← {prevFloor.name}
+                </Link>
+              ) : (
+                <span />
+              )}
+              <Link
+                href={`/maps/${map.slug}`}
+                className="inline-flex items-center gap-1.5 text-muted transition-colors hover:text-brand"
+              >
+                All floors
+              </Link>
+              {nextFloor ? (
+                <Link
+                  href={`/maps/${map.slug}/${nextFloor.slug}`}
+                  className="inline-flex items-center gap-1.5 text-muted transition-colors hover:text-brand"
+                >
+                  {nextFloor.name} →
+                </Link>
+              ) : (
+                <span />
+              )}
+            </div>
+          </nav>
+        )}
       </main>
     </>
   );
