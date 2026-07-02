@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Fragment } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -134,21 +133,21 @@ export default async function MapPage({
           </p>
         )}
 
+        {topPeek && (
+          <div data-reveal className="mb-8">
+            <BestPeek peek={topPeek} eyebrow="Top Peek" />
+          </div>
+        )}
+
         <ul className="space-y-7">
           {floors.map((floor, i) => (
-            <Fragment key={floor.id}>
-              {/* This map's Top Peek, injected right above the second floor. */}
-              {topPeek && i === 1 && (
-                <li data-reveal>
-                  <BestPeek peek={topPeek} eyebrow="Top Peek" />
-                </li>
-              )}
-              <li
-                data-reveal
-                style={
-                  { ["--reveal-delay"]: `${(i % 5) * 70}ms` } as React.CSSProperties
-                }
-              >
+            <li
+              key={floor.id}
+              data-reveal
+              style={
+                { ["--reveal-delay"]: `${(i % 5) * 70}ms` } as React.CSSProperties
+              }
+            >
               <Link
                 href={`/maps/${map.slug}/${floor.slug}`}
                 className="group block overflow-hidden rounded-card border border-border bg-card transition-all duration-200 ease-out hover:scale-[1.015] hover:border-brand/30 hover:shadow-lg"
@@ -219,20 +218,12 @@ export default async function MapPage({
                   </span>
                 </div>
               </Link>
-              </li>
-            </Fragment>
+            </li>
           ))}
         </ul>
 
         {floors.length === 0 && (
           <p className="text-center text-muted">No floors yet for this map.</p>
-        )}
-
-        {/* Fallback for maps with fewer than 2 floors (no "second floor" slot). */}
-        {topPeek && floors.length < 2 && (
-          <div data-reveal className="mt-7">
-            <BestPeek peek={topPeek} eyebrow="Top Peek" />
-          </div>
         )}
       </main>
     </>
