@@ -17,6 +17,9 @@ export type StatCell = {
 
 type Props = {
   cells: StatCell[];
+  // Optional accent color for the stat NUMBERS only (e.g. a per-map color).
+  // When omitted, numbers use the default dark ink.
+  numberColor?: string;
 };
 
 const ROLL_MS = 1100; // roll duration per digit
@@ -76,18 +79,23 @@ function Odometer({
   plus,
   phase,
   cellDelay,
+  color,
 }: {
   value: number;
   plus: boolean;
   phase: Phase;
   cellDelay: number;
+  color?: string;
 }) {
   const chars = value.toLocaleString("en-US").split("");
   const atZero = phase === "reset";
   const animate = phase === "roll";
   let d = 0;
   return (
-    <span className="text-2xl font-bold tabular-nums tracking-tight text-ink sm:text-3xl">
+    <span
+      className="text-2xl font-bold tabular-nums tracking-tight text-ink sm:text-3xl"
+      style={color ? { color } : undefined}
+    >
       {/* Real value for screen readers + crawlers; the rolling glyphs below are
           decorative. */}
       <span className="sr-only">
@@ -121,7 +129,7 @@ function Odometer({
   );
 }
 
-export function LiveStats({ cells }: Props) {
+export function LiveStats({ cells, numberColor }: Props) {
   // SSR + first render show the real values (crawlable, no-JS safe). On mount,
   // drop to 0 pre-paint (no transition) then roll each odometer up to target.
   const [phase, setPhase] = useState<Phase>("final");
@@ -159,6 +167,7 @@ export function LiveStats({ cells }: Props) {
                 plus={c.plus ?? false}
                 phase={phase}
                 cellDelay={i * CELL_STAGGER_MS}
+                color={numberColor}
               />
               {c.live && (
                 <span
