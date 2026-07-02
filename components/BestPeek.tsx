@@ -10,13 +10,16 @@ type Props = {
   eyebrow: string;
   // Homepage shows "Map · Floor"; a map page shows just the floor.
   showMap?: boolean;
+  // `bare` drops the card chrome (border/shadow/bg/padding) so the row can sit
+  // inside another card; still a link, just no bubble of its own.
+  bare?: boolean;
 };
 
 // Compact featured "best peek" card — preview thumbnail, name, location, grade
 // badge, and vote count. The whole card links to the peek. Server component:
 // no client hooks; the thumbnail is the video's first frame (the same #t=0.1
 // trick used elsewhere), non-interactive so taps hit the card link.
-export function BestPeek({ peek, eyebrow, showMap = false }: Props) {
+export function BestPeek({ peek, eyebrow, showMap = false, bare = false }: Props) {
   const floor = peek.floors;
   const map = floor?.maps ?? null;
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
@@ -25,7 +28,11 @@ export function BestPeek({ peek, eyebrow, showMap = false }: Props) {
   return (
     <Link
       href={`/peeks/${peek.slug}`}
-      className="group flex items-center gap-3 rounded-card border border-border bg-card p-3 transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-brand hover:shadow-lg sm:gap-4 sm:p-4"
+      className={
+        bare
+          ? "group flex items-center gap-3 transition-colors duration-150 ease-out sm:gap-4"
+          : "group flex items-center gap-3 rounded-card border border-border bg-card p-3 transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-brand hover:shadow-lg sm:gap-4 sm:p-4"
+      }
     >
       <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-btn border border-border bg-black sm:w-32">
         {peek.video_url ? (

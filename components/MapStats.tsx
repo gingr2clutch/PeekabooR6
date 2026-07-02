@@ -1,3 +1,5 @@
+import { BestPeek } from "@/components/BestPeek";
+import type { PeekWithContext } from "@/lib/db";
 import { GRADE_TIER_COLORS } from "@/lib/rate";
 
 export type MapGrades = { S: number; A: number; B: number; C: number };
@@ -6,6 +8,8 @@ type Props = {
   peeks: number;
   votes: number;
   grades: MapGrades;
+  // This map's top peek, rendered as a row inside the same card (optional).
+  topPeek?: PeekWithContext | null;
 };
 
 // Grade-mix bar tiers, strongest → weakest, using the shared site-wide grade
@@ -18,9 +22,10 @@ const GRADE_TIERS: { key: keyof MapGrades; color: string }[] = [
 ];
 
 // Map stats card: a white rounded card with a centered inline stat line
-// (Peeks / Votes / S-Tier), a divider, then the grade-mix bar + legend. Real
+// (Peeks / Votes / S-Tier), a divider, the grade-mix bar + legend, and — when
+// provided — a divider + the map's Top Peek row, all in one bubble. Real
 // per-map data, computed server-side by the caller.
-export function MapStats({ peeks, votes, grades }: Props) {
+export function MapStats({ peeks, votes, grades, topPeek }: Props) {
   const total = peeks || 1; // guard against divide-by-zero on empty maps
   const stats = [
     { label: "Peeks", value: peeks },
@@ -87,6 +92,14 @@ export function MapStats({ peeks, votes, grades }: Props) {
           )}
         </div>
       </div>
+
+      {/* Top Peek row — same card, below a divider. */}
+      {topPeek && (
+        <>
+          <div className="my-4 border-t border-border" />
+          <BestPeek peek={topPeek} eyebrow="Top Peek" bare />
+        </>
+      )}
     </div>
   );
 }

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BestPeek } from "@/components/BestPeek";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { MapStats } from "@/components/MapStats";
 import { PageHeader } from "@/components/PageHeader";
@@ -129,13 +128,8 @@ export default async function MapPage({
               peeks={totalPeeks}
               votes={mapVotes}
               grades={{ S: mapSTier, A: mapATier, B: mapBTier, C: mapCTier }}
+              topPeek={topPeek}
             />
-          </div>
-        )}
-
-        {topPeek && (
-          <div data-reveal className="mb-8">
-            <BestPeek peek={topPeek} eyebrow="Top Peek" />
           </div>
         )}
 
