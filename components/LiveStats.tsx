@@ -17,9 +17,9 @@ export type StatCell = {
 
 type Props = {
   cells: StatCell[];
-  // Optional accent color for the stat NUMBERS only (e.g. a per-map color).
-  // When omitted, numbers use the default dark ink.
-  numberColor?: string;
+  // Optional per-map accent color for the stat LABELS and the "LIVE" badge
+  // (never the numbers). When omitted, labels/badge use their default colors.
+  accentColor?: string;
 };
 
 const ROLL_MS = 1100; // roll duration per digit
@@ -79,23 +79,18 @@ function Odometer({
   plus,
   phase,
   cellDelay,
-  color,
 }: {
   value: number;
   plus: boolean;
   phase: Phase;
   cellDelay: number;
-  color?: string;
 }) {
   const chars = value.toLocaleString("en-US").split("");
   const atZero = phase === "reset";
   const animate = phase === "roll";
   let d = 0;
   return (
-    <span
-      className="text-2xl font-bold tabular-nums tracking-tight text-ink sm:text-3xl"
-      style={color ? { color } : undefined}
-    >
+    <span className="text-2xl font-bold tabular-nums tracking-tight text-ink sm:text-3xl">
       {/* Real value for screen readers + crawlers; the rolling glyphs below are
           decorative. */}
       <span className="sr-only">
@@ -129,7 +124,7 @@ function Odometer({
   );
 }
 
-export function LiveStats({ cells, numberColor }: Props) {
+export function LiveStats({ cells, accentColor }: Props) {
   // SSR + first render show the real values (crawlable, no-JS safe). On mount,
   // drop to 0 pre-paint (no transition) then roll each odometer up to target.
   const [phase, setPhase] = useState<Phase>("final");
@@ -167,7 +162,6 @@ export function LiveStats({ cells, numberColor }: Props) {
                 plus={c.plus ?? false}
                 phase={phase}
                 cellDelay={i * CELL_STAGGER_MS}
-                color={numberColor}
               />
               {c.live && (
                 <span
@@ -180,7 +174,10 @@ export function LiveStats({ cells, numberColor }: Props) {
                 </span>
               )}
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand">
+            <span
+              className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand"
+              style={accentColor ? { color: accentColor } : undefined}
+            >
               {c.label}
             </span>
           </div>
@@ -193,6 +190,9 @@ export function LiveStats({ cells, numberColor }: Props) {
       <span
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal/40 bg-card px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-teal shadow-sm"
+        style={
+          accentColor ? { color: accentColor, borderColor: accentColor } : undefined
+        }
       >
         Live
       </span>

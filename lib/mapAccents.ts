@@ -1,25 +1,27 @@
 // Per-map accent color for the map-page stats counter — applied to the stat
-// NUMBERS only (labels, dividers, LIVE badge, card, etc. are untouched). Keyed
-// by map slug. Maps not listed here fall back to the default dark ink.
+// LABELS (PEEKS/VOTES/S-TIER/A-TIER) and the "LIVE" badge only. The big stat
+// numbers stay the default dark ink. Keyed by map slug; maps not listed fall
+// back to the default label/badge colors.
 //
-// Some colors were darkened from the design source so the numbers stay legible
-// (≥ ~3.2:1 contrast) on the white counter card; the original is noted inline.
+// Labels and the badge are small text, so colors are darkened where needed to
+// keep ~4.5:1 contrast (WCAG AA) on the white card; the design source is noted
+// inline where adjusted.
 export const MAP_ACCENT_COLORS: Record<string, string> = {
-  "calypso-casino": "#c3810e", // adjusted for contrast (source #f0a92e)
+  "calypso-casino": "#7c3aed", // purple (neon casino signage)
   oregon: "#b0543a",
   clubhouse: "#3f6d86",
-  "nighthaven-labs": "#2f9d8f",
-  bank: "#ad873f", // adjusted for contrast (source #c9a86a)
-  border: "#bb8547", // adjusted for contrast (source #c2915a)
-  chalet: "#6d8fa8",
-  coastline: "#e0507a",
-  consulate: "#848f9b", // adjusted for contrast (source #8a94a0)
-  "kafe-dostoyevsky": "#c46a3d",
-  outback: "#c76a34",
-  skyscraper: "#da7329", // adjusted for contrast (source #e08a4c)
+  "nighthaven-labs": "#278378", // darkened for contrast (source #2f9d8f)
+  bank: "#917134", // darkened for contrast (source #c9a86a)
+  border: "#9b6d39", // darkened for contrast (source #c2915a)
+  chalet: "#577992", // darkened for contrast (source #6d8fa8)
+  coastline: "#db3263", // darkened for contrast (source #e0507a)
+  consulate: "#6b7784", // darkened for contrast (source #8a94a0)
+  "kafe-dostoyevsky": "#b36037", // darkened for contrast (source #c46a3d)
+  outback: "#b35f2f", // darkened for contrast (source #c76a34)
+  skyscraper: "#b65e1f", // darkened for contrast (source #e08a4c)
 };
 
-// The accent hex for a map slug, or undefined to use the default number color.
+// The accent hex for a map slug, or undefined to use the default colors.
 export function mapAccentColor(slug: string): string | undefined {
   return MAP_ACCENT_COLORS[slug];
 }

@@ -118,7 +118,7 @@ export default async function MapPage({
                 Natural cell order (Peeks, Votes, S-Tier, A-Tier): the mobile
                 2x2 puts Peeks/Votes on top. */}
             <LiveStats
-              numberColor={mapAccentColor(map.slug)}
+              accentColor={mapAccentColor(map.slug)}
               cells={[
                 { label: "Peeks", value: totalPeeks, cellClass: "" },
                 { label: "Votes", value: mapVotes, cellClass: "border-l" },
