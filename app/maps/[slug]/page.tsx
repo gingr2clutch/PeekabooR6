@@ -98,8 +98,7 @@ export default async function MapPage({
           <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
             {map.name}
           </h1>
-          <p className="mt-3 inline-flex items-center gap-2 text-sm text-muted">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand" />
+          <p className="mt-3 text-sm text-muted">
             {floorLabel} · {peekLabel}
           </p>
           <p className="mt-2 text-[15px] font-light italic text-muted">
@@ -107,7 +106,10 @@ export default async function MapPage({
           </p>
           {totalPeeks >= 2 && (
             <div className="mt-5">
-              <RandomPeekButton href={`/api/maps/${map.slug}/random-peek`} />
+              <RandomPeekButton
+                href={`/api/maps/${map.slug}/random-peek`}
+                accentColor={mapAccentColor(map.slug)}
+              />
             </div>
           )}
         </div>
