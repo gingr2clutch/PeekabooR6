@@ -116,6 +116,14 @@ export default async function MapPage({
         </div>
 
         {totalPeeks > 0 && (
+          <p className="mx-auto mb-8 max-w-2xl text-center text-[15px] leading-relaxed text-muted">
+            Community-graded spawn peeks for {map.name} — pick a floor to see
+            exact spots, watch clips, and learn the setups.
+            {lastUpdatedLabel ? ` Updated ${lastUpdatedLabel}.` : ""}
+          </p>
+        )}
+
+        {totalPeeks > 0 && (
           <div data-reveal className="mb-8">
             <MapStats
               peeks={totalPeeks}
@@ -123,14 +131,6 @@ export default async function MapPage({
               grades={{ S: mapSTier, A: mapATier, B: mapBTier, C: mapCTier }}
             />
           </div>
-        )}
-
-        {totalPeeks > 0 && (
-          <p className="mx-auto mb-8 max-w-2xl text-center text-[15px] leading-relaxed text-muted">
-            Community-graded spawn peeks for {map.name} — pick a floor to see
-            exact spots, watch clips, and learn the setups.
-            {lastUpdatedLabel ? ` Updated ${lastUpdatedLabel}.` : ""}
-          </p>
         )}
 
         {topPeek && (
