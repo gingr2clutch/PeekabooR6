@@ -1,25 +1,26 @@
-import { gradeColor } from "@/lib/rate";
+import { gradeTierColor } from "@/lib/rate";
 
 const SIZES = {
   sm: "h-6 min-w-6 px-1.5 text-sm",
   lg: "h-12 min-w-12 px-3 text-3xl md:h-16 md:min-w-16 md:text-5xl",
 } as const;
 
-// Solid grade badge coloured from the shared worse→better scale by the grade's
-// position on the bar (`score`), so the letter colour always matches the bar.
+// Solid grade badge coloured by its GRADE TIER (S/A/B/C) via the shared
+// gradeTierColor, so every +/base/- within a tier shares one color site-wide.
 // Pure presentational — safe in both server and client components.
 export function GradeBadge({
   label,
-  score,
   size = "sm",
   className = "",
 }: {
   label: string;
-  score: number;
+  // Accepted for back-compat with existing call sites; the color now derives
+  // from the grade tier (label), not the score.
+  score?: number;
   size?: keyof typeof SIZES;
   className?: string;
 }) {
-  const color = gradeColor(score);
+  const color = gradeTierColor(label);
   return (
     <span
       aria-label={`Grade ${label}`}

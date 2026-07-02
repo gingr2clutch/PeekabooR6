@@ -118,6 +118,23 @@ export function gradeBarGradientCss(): string {
   return `linear-gradient(to right, ${stops})`;
 }
 
+// THE single per-tier grade color, shared site-wide. Each grade's +/base/-
+// share their tier's color (e.g. A+, A, A- all lime). Follows the same
+// red→green direction as the effectiveness meter above (C red-orange → S
+// green). Non-grade UI keeps the brand teal/orange — this is grades only.
+export const GRADE_TIER_COLORS: Record<Grade, string> = {
+  S: "#16a34a", // green
+  A: "#84cc16", // lime
+  B: "#eab308", // amber
+  C: "#e0532e", // red-orange
+};
+
+// Tier color for a grade letter OR a full label (S+, A-, … → its tier color).
+export function gradeTierColor(gradeOrLabel: string): string {
+  const letter = (gradeOrLabel || "").charAt(0) as Grade;
+  return GRADE_TIER_COLORS[letter] ?? GRADE_TIER_COLORS.C;
+}
+
 export type Rating =
   | { tier: "estimate"; grade: Grade; label: string; score: number }
   | {

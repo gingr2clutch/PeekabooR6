@@ -1,4 +1,4 @@
-import { rating, gradeColor, gradeBarGradientCss } from "@/lib/rate";
+import { rating, gradeTierColor, gradeBarGradientCss } from "@/lib/rate";
 
 // Horizontal worse→better grade scale (C·B·A·S) with a single marker — a grade
 // pill plus a caret pointing to where this peek sits. Estimate peeks position
@@ -18,7 +18,7 @@ export function GradeBar({
   // narrow phone. Grades cluster in B/A (well inside the range), so the clamp
   // only nudges the rare C-bottom / S-top peeks.
   const markerPos = Math.max(10, Math.min(90, r.score));
-  const color = gradeColor(r.score);
+  const color = gradeTierColor(r.label);
 
   return (
     <div className="mt-6 border-t border-border pt-3">

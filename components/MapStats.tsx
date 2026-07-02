@@ -1,3 +1,5 @@
+import { GRADE_TIER_COLORS } from "@/lib/rate";
+
 export type MapGrades = { S: number; A: number; B: number; C: number };
 
 type Props = {
@@ -6,12 +8,13 @@ type Props = {
   grades: MapGrades;
 };
 
-// Grade-mix bar tiers, strongest → weakest: S teal, A orange, B sand, C tan.
+// Grade-mix bar tiers, strongest → weakest, using the shared site-wide grade
+// colors (S green, A lime, B amber, C red-orange).
 const GRADE_TIERS: { key: keyof MapGrades; color: string }[] = [
-  { key: "S", color: "#3f978b" },
-  { key: "A", color: "#f2640e" },
-  { key: "B", color: "#d8a24a" },
-  { key: "C", color: "#b8a888" },
+  { key: "S", color: GRADE_TIER_COLORS.S },
+  { key: "A", color: GRADE_TIER_COLORS.A },
+  { key: "B", color: GRADE_TIER_COLORS.B },
+  { key: "C", color: GRADE_TIER_COLORS.C },
 ];
 
 // Slim, borderless map stats: a centered inline stat line (Peeks / Votes /
