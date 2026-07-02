@@ -124,13 +124,9 @@ export default async function MapPage({
 
         {totalPeeks > 0 && (
           <p className="mx-auto mb-8 max-w-2xl text-center text-[15px] leading-relaxed text-muted">
-            {map.name} has {totalPeeks} community-graded spawn{" "}
-            {totalPeeks === 1 ? "peek" : "peeks"} mapped across {floors.length}{" "}
-            {floors.length === 1 ? "floor" : "floors"}
-            {lastUpdatedLabel ? `, last updated ${lastUpdatedLabel}` : ""}. Each
-            peek is rated by how reliably it works in real Rainbow Six Siege
-            matches — pick a floor to see the exact spots on the
-            bird&rsquo;s-eye view, watch the clips, and learn the setups.
+            Community-graded spawn peeks for {map.name} — pick a floor to see
+            exact spots, watch clips, and learn the setups.
+            {lastUpdatedLabel ? ` Updated ${lastUpdatedLabel}.` : ""}
           </p>
         )}
 
