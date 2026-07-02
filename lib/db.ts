@@ -247,26 +247,26 @@ export async function getTopPeeks(limit = 5): Promise<PeekWithContext[]> {
 // Full select (peek + floor + map) shared by the "best peek" pickers below.
 const PEEK_WITH_CONTEXT_SELECT = `${PEEK_COLUMNS}, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))`;
 
-// Single "best" peek from a candidate set, ranked MOST VOTES first, then (tie)
-// highest grade, then (tie) most recently created. Used for the homepage
+// Single "best" peek from a candidate set, ranked HIGHEST GRADE first, then
+// (tie) most votes, then (tie) most recently created. Used for the homepage
 // "Peek of the Day" and each map's "Top Peek".
-function pickTopByVotes(
+function pickBestPeek(
   candidates: PeekWithContext[]
 ): PeekWithContext | null {
   if (candidates.length === 0) return null;
   return candidates.slice().sort((a, b) => {
+    const ra = gradeRankFor(a);
+    const rb = gradeRankFor(b);
+    if (ra !== rb) return ra - rb; // best grade (lower rank = better)
     const va = a.vote_count ?? 0;
     const vb = b.vote_count ?? 0;
     if (va !== vb) return vb - va; // most votes
-    const ra = gradeRankFor(a);
-    const rb = gradeRankFor(b);
-    if (ra !== rb) return ra - rb; // best grade
     return (b.created_at ?? "").localeCompare(a.created_at ?? ""); // most recent
   })[0];
 }
 
-// Site-wide #1 peek by votes, restricted to peeks graded A- or above (grade
-// letter A or S). Only peeks whose map is also published are eligible.
+// Site-wide highest-graded peek (ties → most votes → most recent). Only peeks
+// whose map is also published are eligible.
 export async function getPeekOfTheDay(): Promise<PeekWithContext | null> {
   const { data, error } = await supabasePublic()
     .from("peeks")
@@ -274,20 +274,13 @@ export async function getPeekOfTheDay(): Promise<PeekWithContext | null> {
     .eq("published", true);
   if (error) throw error;
   const candidates = ((data ?? []) as unknown as PeekWithContext[]).filter(
-    (row) => {
-      if (!row.floors?.maps?.published) return false;
-      const g = rating(
-        row.base_success_rate,
-        row.worked_votes,
-        row.vote_count
-      ).grade;
-      return g === "S" || g === "A"; // A- or above
-    }
+    (row) => row.floors?.maps?.published
   );
-  return pickTopByVotes(candidates);
+  return pickBestPeek(candidates);
 }
 
-// This map's #1 peek by votes, scoped to its floors.
+// This map's highest-graded peek (ties → most votes → most recent), scoped to
+// its floors.
 export async function getTopPeekForMap(
   floorIds: string[]
 ): Promise<PeekWithContext | null> {
@@ -301,7 +294,7 @@ export async function getTopPeekForMap(
   const candidates = ((data ?? []) as unknown as PeekWithContext[]).filter(
     (row) => row.floors?.maps?.published
   );
-  return pickTopByVotes(candidates);
+  return pickBestPeek(candidates);
 }
 
 export async function getPublishedPeekById(id: string): Promise<Peek | null> {
