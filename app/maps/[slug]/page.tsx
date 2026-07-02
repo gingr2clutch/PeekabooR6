@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
-import { LiveStats } from "@/components/LiveStats";
+import { MapIntel } from "@/components/MapIntel";
 import { PageHeader } from "@/components/PageHeader";
 import { RandomPeekButton } from "@/components/RandomPeekButton";
 import { getFloorsForMap, getMapBySlug } from "@/lib/db";
@@ -39,8 +39,11 @@ export default async function MapPage({
   const peekCountByFloor = new Map<string, number>();
   let totalPeeks = 0;
   let mapVotes = 0; // sum of vote_count across this map's published peeks
-  let mapSTier = 0; // peeks whose computed grade letter is "S" (S+, S, S-)
-  let mapATier = 0; // peeks whose computed grade letter is "A" (A+, A, A-)
+  // Peek counts by computed grade leading letter (each spans +/base/-).
+  let mapSTier = 0; // S+, S, S-
+  let mapATier = 0; // A+, A, A-
+  let mapBTier = 0; // B+, B, B-
+  let mapCTier = 0; // C+, C, C-
   let latestPeekAt: string | null = null;
   if (floorIds.length > 0) {
     const { data: peeks } = await supabasePublic()
@@ -64,7 +67,7 @@ export default async function MapPage({
       totalPeeks += 1;
       mapVotes += p.vote_count ?? 0;
       // Grade is computed (no stored column) — the same rating() the rest of
-      // the site uses. Count by leading letter: S = S+/S/S-, A = A+/A/A-.
+      // the site uses. Bucket by leading letter (S/A/B/C).
       const g = rating(
         p.base_success_rate,
         p.worked_votes,
@@ -72,6 +75,8 @@ export default async function MapPage({
       ).grade;
       if (g === "S") mapSTier += 1;
       else if (g === "A") mapATier += 1;
+      else if (g === "B") mapBTier += 1;
+      else mapCTier += 1;
       if (!latestPeekAt || p.created_at > latestPeekAt) {
         latestPeekAt = p.created_at;
       }
@@ -87,7 +92,6 @@ export default async function MapPage({
     : null;
 
   const floorLabel = `${floors.length} ${floors.length === 1 ? "floor" : "floors"}`;
-  const peekLabel = `${totalPeeks} total ${totalPeeks === 1 ? "peek" : "peeks"}`;
 
   return (
     <>
@@ -97,9 +101,7 @@ export default async function MapPage({
           <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
             {map.name}
           </h1>
-          <p className="mt-3 text-sm text-muted">
-            {floorLabel} · {peekLabel}
-          </p>
+          <p className="mt-3 text-sm text-muted">{floorLabel}</p>
           <p className="mt-2 text-[15px] font-light italic text-muted">
             Choose your floor
           </p>
@@ -112,16 +114,10 @@ export default async function MapPage({
 
         {totalPeeks > 0 && (
           <div data-reveal className="mb-8">
-            {/* Per-map stats — the same counter component as the homepage.
-                Natural cell order (Peeks, Votes, S-Tier, A-Tier): the mobile
-                2x2 puts Peeks/Votes on top. */}
-            <LiveStats
-              cells={[
-                { label: "Peeks", value: totalPeeks, cellClass: "" },
-                { label: "Votes", value: mapVotes, cellClass: "border-l" },
-                { label: "S-Tier", value: mapSTier, cellClass: "border-t sm:border-t-0 sm:border-l" },
-                { label: "A-Tier", value: mapATier, cellClass: "border-t border-l sm:border-t-0" },
-              ]}
+            <MapIntel
+              peeks={totalPeeks}
+              votes={mapVotes}
+              grades={{ S: mapSTier, A: mapATier, B: mapBTier, C: mapCTier }}
             />
           </div>
         )}
