@@ -2,11 +2,21 @@
 
 import { useEffect, useLayoutEffect, useState } from "react";
 
+export type StatCell = {
+  label: string;
+  value: number;
+  // Teal ping dot after the number (for figures that change, e.g. Peeks/Votes).
+  live?: boolean;
+  plus?: boolean;
+  // Positional order + divider classes for this cell's slot in the 2x2 / row.
+  // Kept per-cell so a caller can lay out either the homepage counter (which
+  // reshuffles the mobile order via CSS `order`) or the map counter (natural
+  // order) without the component knowing which stats it shows.
+  cellClass: string;
+};
+
 type Props = {
-  mapsLive: number;
-  gradedPeeks: number;
-  communityVotes: number;
-  sTierPeeks: number;
+  cells: StatCell[];
 };
 
 const ROLL_MS = 1100; // roll duration per digit
@@ -111,24 +121,7 @@ function Odometer({
   );
 }
 
-export function LiveStats({
-  mapsLive,
-  gradedPeeks,
-  communityVotes,
-  sTierPeeks,
-}: Props) {
-  // DOM/source order stays Maps, Peeks, Votes, S-Tier (keeps the desktop
-  // single-row order). `cellClass` uses CSS `order` to rearrange the mobile 2x2
-  // into Peeks | Votes (top) / Maps | S-Tier (bottom), with per-cell dividers
-  // drawn for that visual layout; `sm:` resets order and dividers to the
-  // source-order single row.
-  const cells = [
-    { label: "Maps", value: mapsLive, plus: false, cellClass: "order-3 border-t sm:order-none sm:border-t-0" },
-    { label: "Peeks", value: gradedPeeks, plus: false, cellClass: "order-1 sm:order-none sm:border-l" },
-    { label: "Votes", value: communityVotes, plus: false, cellClass: "order-2 border-l sm:order-none" },
-    { label: "S-Tier", value: sTierPeeks, plus: false, cellClass: "order-4 border-t border-l sm:order-none sm:border-t-0" },
-  ];
-
+export function LiveStats({ cells }: Props) {
   // SSR + first render show the real values (crawlable, no-JS safe). On mount,
   // drop to 0 pre-paint (no transition) then roll each odometer up to target.
   const [phase, setPhase] = useState<Phase>("final");
@@ -155,18 +148,29 @@ export function LiveStats({
         {cells.map((c, i) => (
           <div
             key={c.label}
-            // Thin full-length dividers in faint teal-grey. Order + borders are
-            // per-cell (see cells above): mobile draws a full cross for the
-            // Peeks|Votes / Maps|S-Tier 2x2; sm: resets to a single row.
+            // Thin full-length dividers in faint teal-grey; each cell's
+            // order + border classes (c.cellClass) lay out the 2x2 / row.
             className={`peek-stats-cell flex flex-col items-center justify-center gap-1 border-[#dfe4dd] px-4 py-4 text-center ${c.cellClass}`}
             style={{ animationDelay: `${i * CELL_STAGGER_MS}ms` }}
           >
-            <Odometer
-              value={c.value}
-              plus={c.plus}
-              phase={phase}
-              cellDelay={i * CELL_STAGGER_MS}
-            />
+            <div className="flex items-center gap-1.5">
+              <Odometer
+                value={c.value}
+                plus={c.plus ?? false}
+                phase={phase}
+                cellDelay={i * CELL_STAGGER_MS}
+              />
+              {c.live && (
+                <span
+                  className="relative flex h-2 w-2"
+                  aria-label="Live"
+                  title="Live"
+                >
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-teal opacity-75 motion-safe:animate-ping" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-teal" />
+                </span>
+              )}
+            </div>
             <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand">
               {c.label}
             </span>

@@ -3,9 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
+import { LiveStats } from "@/components/LiveStats";
 import { PageHeader } from "@/components/PageHeader";
 import { RandomPeekButton } from "@/components/RandomPeekButton";
 import { getFloorsForMap, getMapBySlug } from "@/lib/db";
+import { rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -36,22 +38,40 @@ export default async function MapPage({
   const floorIds = floors.map((f) => f.id);
   const peekCountByFloor = new Map<string, number>();
   let totalPeeks = 0;
+  let mapVotes = 0; // sum of vote_count across this map's published peeks
+  let mapSTier = 0; // peeks whose computed grade letter is "S" (S+, S, S-)
+  let mapATier = 0; // peeks whose computed grade letter is "A" (A+, A, A-)
   let latestPeekAt: string | null = null;
   if (floorIds.length > 0) {
     const { data: peeks } = await supabasePublic()
       .from("peeks")
-      .select("floor_id, created_at")
+      .select(
+        "floor_id, created_at, vote_count, worked_votes, base_success_rate"
+      )
       .in("floor_id", floorIds)
       .eq("published", true);
     for (const p of (peeks ?? []) as {
       floor_id: string;
       created_at: string;
+      vote_count: number;
+      worked_votes: number;
+      base_success_rate: number;
     }[]) {
       peekCountByFloor.set(
         p.floor_id,
         (peekCountByFloor.get(p.floor_id) ?? 0) + 1
       );
       totalPeeks += 1;
+      mapVotes += p.vote_count ?? 0;
+      // Grade is computed (no stored column) — the same rating() the rest of
+      // the site uses. Count by leading letter: S = S+/S/S-, A = A+/A/A-.
+      const g = rating(
+        p.base_success_rate,
+        p.worked_votes,
+        p.vote_count
+      ).grade;
+      if (g === "S") mapSTier += 1;
+      else if (g === "A") mapATier += 1;
       if (!latestPeekAt || p.created_at > latestPeekAt) {
         latestPeekAt = p.created_at;
       }
@@ -90,6 +110,23 @@ export default async function MapPage({
             </div>
           )}
         </div>
+
+        {totalPeeks > 0 && (
+          <div data-reveal className="mb-8">
+            {/* Per-map stats — the same counter component as the homepage.
+                Natural cell order (Peeks, Votes, S-Tier, A-Tier): the mobile
+                2x2 puts the two live figures on top; teal live dots on Peeks
+                and Votes only. */}
+            <LiveStats
+              cells={[
+                { label: "Peeks", value: totalPeeks, live: true, cellClass: "" },
+                { label: "Votes", value: mapVotes, live: true, cellClass: "border-l" },
+                { label: "S-Tier", value: mapSTier, cellClass: "border-t sm:border-t-0 sm:border-l" },
+                { label: "A-Tier", value: mapATier, cellClass: "border-t border-l sm:border-t-0" },
+              ]}
+            />
+          </div>
+        )}
 
         {totalPeeks > 0 && (
           <p className="mx-auto mb-8 max-w-2xl text-center text-[15px] leading-relaxed text-muted">
