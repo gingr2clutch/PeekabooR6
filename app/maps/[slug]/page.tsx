@@ -115,12 +115,11 @@ export default async function MapPage({
           <div data-reveal className="mb-8">
             {/* Per-map stats — the same counter component as the homepage.
                 Natural cell order (Peeks, Votes, S-Tier, A-Tier): the mobile
-                2x2 puts the two live figures on top; teal live dots on Peeks
-                and Votes only. */}
+                2x2 puts Peeks/Votes on top. */}
             <LiveStats
               cells={[
-                { label: "Peeks", value: totalPeeks, live: true, cellClass: "" },
-                { label: "Votes", value: mapVotes, live: true, cellClass: "border-l" },
+                { label: "Peeks", value: totalPeeks, cellClass: "" },
+                { label: "Votes", value: mapVotes, cellClass: "border-l" },
                 { label: "S-Tier", value: mapSTier, cellClass: "border-t sm:border-t-0 sm:border-l" },
                 { label: "A-Tier", value: mapATier, cellClass: "border-t border-l sm:border-t-0" },
               ]}
