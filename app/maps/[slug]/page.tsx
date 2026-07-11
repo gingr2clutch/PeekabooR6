@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { MapStats } from "@/components/MapStats";
 import { PageHeader } from "@/components/PageHeader";
 import { RandomPeekButton } from "@/components/RandomPeekButton";
@@ -133,87 +131,33 @@ export default async function MapPage({
           </div>
         )}
 
-        <ul className="space-y-7">
-          {floors.map((floor, i) => (
-            <li
-              key={floor.id}
-              data-reveal
-              style={
-                { ["--reveal-delay"]: `${(i % 5) * 70}ms` } as React.CSSProperties
-              }
-            >
-              <Link
-                href={`/maps/${map.slug}/${floor.slug}`}
-                className="group block overflow-hidden rounded-card border-[3px] border-white bg-card shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-all duration-200 ease-out hover:scale-[1.015] hover:border-brand/30 hover:shadow-lg"
+        <ul className="space-y-3">
+          {floors.map((floor, i) => {
+            const n = peekCountByFloor.get(floor.id) ?? 0;
+            return (
+              <li
+                key={floor.id}
+                data-reveal
+                style={
+                  {
+                    ["--reveal-delay"]: `${(i % 5) * 70}ms`,
+                  } as React.CSSProperties
+                }
               >
-                <div className="relative aspect-video w-full overflow-hidden bg-card">
-                  {floor.birds_eye_url ? (
-                    <>
-                      {/* Blurred copy underneath — fills the corners that
-                          the sharp top layer fades out of. */}
-                      <Image
-                        src={floor.birds_eye_url}
-                        alt=""
-                        aria-hidden
-                        fill
-                        sizes="(max-width: 768px) 100vw, 768px"
-                        className="scale-110 object-cover blur-[12px]"
-                      />
-                      {/* Sharp top layer with radial mask: centre stays
-                          crisp, edges fade into the blurred copy below. */}
-                      <Image
-                        src={floor.birds_eye_url}
-                        alt={`${map.name} ${floor.name} bird's-eye view`}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 768px"
-                        className="object-cover transition-transform duration-200 ease-out group-hover:scale-105"
-                        style={{
-                          WebkitMaskImage:
-                            "radial-gradient(ellipse at center, black 70%, transparent 100%)",
-                          maskImage:
-                            "radial-gradient(ellipse at center, black 70%, transparent 100%)",
-                        }}
-                      />
-                      <BirdsEyeWatermark
-                        placement="flush"
-                        size="compact"
-                        corner="left"
-                      />
-                    </>
-                  ) : (
-                    <div className="placeholder-stripes flex h-full w-full items-center justify-center">
-                      <span className="rounded-btn bg-card/80 px-3 py-1 text-sm text-muted backdrop-blur-sm">
-                        Bird's-eye view coming soon
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between gap-4 px-5 py-4">
-                  <div className="flex items-stretch gap-3 min-w-0">
-                    <span aria-hidden className="w-[3px] rounded-full bg-brand" />
-                    <div className="flex flex-col justify-center">
-                      <div className="text-xl font-bold tracking-tight">
-                        {floor.name}
-                      </div>
-                      <div className="mt-0.5 text-sm text-muted">
-                        {(() => {
-                          const n = peekCountByFloor.get(floor.id) ?? 0;
-                          return `${n} ${n === 1 ? "peek" : "peeks"}`;
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                  <span
-                    aria-hidden
-                    className="text-xl text-muted transition-all duration-200 ease-out group-hover:translate-x-1 group-hover:text-brand"
-                  >
-                    →
+                <Link
+                  href={`/maps/${map.slug}/${floor.slug}`}
+                  className="group flex items-center justify-between gap-4 rounded-card border-[3px] border-white bg-card px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-brand hover:shadow-lg sm:px-6 sm:py-5"
+                >
+                  <span className="text-xl font-bold tracking-tight text-ink transition-colors group-hover:text-brand sm:text-2xl">
+                    {floor.name}
                   </span>
-                </div>
-              </Link>
-            </li>
-          ))}
+                  <span className="shrink-0 font-mono text-sm font-semibold uppercase tracking-wider text-brand">
+                    {n} {n === 1 ? "peek" : "peeks"}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
 
         {floors.length === 0 && (
