@@ -247,22 +247,24 @@ export async function getTopPeeks(limit = 5): Promise<PeekWithContext[]> {
 // Full select (peek + floor + map) shared by the "best peek" pickers below.
 const PEEK_WITH_CONTEXT_SELECT = `${PEEK_COLUMNS}, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))`;
 
-// Single "best" peek from a candidate set, ranked HIGHEST GRADE first, then
-// (tie) most votes, then (tie) most recently created. Used for the homepage
-// "Peek of the Day" and each map's "Top Peek".
+// Best→worst ordering: HIGHEST GRADE first, then (tie) most votes, then (tie)
+// most recently created. The single source of truth for "Peek of the Day",
+// each map's "Top Peek", and the map ranked-list view.
+function compareBestPeek(a: PeekWithContext, b: PeekWithContext): number {
+  const ra = gradeRankFor(a);
+  const rb = gradeRankFor(b);
+  if (ra !== rb) return ra - rb; // best grade (lower rank = better)
+  const va = a.vote_count ?? 0;
+  const vb = b.vote_count ?? 0;
+  if (va !== vb) return vb - va; // most votes
+  return (b.created_at ?? "").localeCompare(a.created_at ?? ""); // most recent
+}
+
 function pickBestPeek(
   candidates: PeekWithContext[]
 ): PeekWithContext | null {
   if (candidates.length === 0) return null;
-  return candidates.slice().sort((a, b) => {
-    const ra = gradeRankFor(a);
-    const rb = gradeRankFor(b);
-    if (ra !== rb) return ra - rb; // best grade (lower rank = better)
-    const va = a.vote_count ?? 0;
-    const vb = b.vote_count ?? 0;
-    if (va !== vb) return vb - va; // most votes
-    return (b.created_at ?? "").localeCompare(a.created_at ?? ""); // most recent
-  })[0];
+  return candidates.slice().sort(compareBestPeek)[0];
 }
 
 // Site-wide highest-graded peek (ties → most votes → most recent). Only peeks
@@ -295,6 +297,23 @@ export async function getTopPeekForMap(
     (row) => row.floors?.maps?.published
   );
   return pickBestPeek(candidates);
+}
+
+// All of a map's published peeks (with floor context), sorted best→worst by the
+// same rule as Top Peek — for the map ranked-list view.
+export async function getRankedPeeksForMap(
+  floorIds: string[]
+): Promise<PeekWithContext[]> {
+  if (floorIds.length === 0) return [];
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select(PEEK_WITH_CONTEXT_SELECT)
+    .in("floor_id", floorIds)
+    .eq("published", true);
+  if (error) throw error;
+  return ((data ?? []) as unknown as PeekWithContext[])
+    .filter((row) => row.floors?.maps?.published)
+    .sort(compareBestPeek);
 }
 
 export async function getPublishedPeekById(id: string): Promise<Peek | null> {

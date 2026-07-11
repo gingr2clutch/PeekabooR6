@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { GradeBadge } from "@/components/GradeBadge";
 import { MapStats } from "@/components/MapStats";
+import { MapViewToggle } from "@/components/MapViewToggle";
 import { PageHeader } from "@/components/PageHeader";
 import { RandomPeekButton } from "@/components/RandomPeekButton";
-import { getFloorsForMap, getMapBySlug, getTopPeekForMap } from "@/lib/db";
+import {
+  getFloorsForMap,
+  getMapBySlug,
+  getRankedPeeksForMap,
+  getTopPeekForMap,
+} from "@/lib/db";
 import { rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
 
@@ -82,6 +89,7 @@ export default async function MapPage({
   }
 
   const topPeek = await getTopPeekForMap(floorIds);
+  const rankedPeeks = await getRankedPeeksForMap(floorIds);
 
   const lastUpdatedLabel = latestPeekAt
     ? new Date(latestPeekAt).toLocaleDateString("en-US", {
@@ -131,34 +139,85 @@ export default async function MapPage({
           </div>
         )}
 
-        <ul className="space-y-3">
-          {floors.map((floor, i) => {
-            const n = peekCountByFloor.get(floor.id) ?? 0;
-            return (
-              <li
-                key={floor.id}
-                data-reveal
-                style={
-                  {
-                    ["--reveal-delay"]: `${(i % 5) * 70}ms`,
-                  } as React.CSSProperties
-                }
-              >
-                <Link
-                  href={`/maps/${map.slug}/${floor.slug}`}
-                  className="group flex items-center justify-between gap-4 rounded-card border-[3px] border-white bg-card px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-brand hover:shadow-lg sm:px-6 sm:py-5"
-                >
-                  <span className="text-xl font-bold tracking-tight text-ink transition-colors group-hover:text-brand sm:text-2xl">
-                    {floor.name}
-                  </span>
-                  <span className="shrink-0 font-mono text-sm font-semibold uppercase tracking-wider text-brand">
-                    {n} {n === 1 ? "peek" : "peeks"}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        {floors.length > 0 && (
+          <MapViewToggle
+            floorsView={
+              <ul className="space-y-3">
+                {floors.map((floor, i) => {
+                  const n = peekCountByFloor.get(floor.id) ?? 0;
+                  return (
+                    <li
+                      key={floor.id}
+                      data-reveal
+                      style={
+                        {
+                          ["--reveal-delay"]: `${(i % 5) * 70}ms`,
+                        } as React.CSSProperties
+                      }
+                    >
+                      <Link
+                        href={`/maps/${map.slug}/${floor.slug}`}
+                        className="group flex items-center justify-between gap-4 rounded-card border-[3px] border-white bg-card px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-brand hover:shadow-lg sm:px-6 sm:py-5"
+                      >
+                        <span className="text-xl font-bold tracking-tight text-ink transition-colors group-hover:text-brand sm:text-2xl">
+                          {floor.name}
+                        </span>
+                        <span className="shrink-0 font-mono text-sm font-semibold uppercase tracking-wider text-brand">
+                          {n} {n === 1 ? "peek" : "peeks"}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            }
+            rankedView={
+              rankedPeeks.length === 0 ? (
+                <p className="text-center text-sm text-muted">
+                  No spawn peeks on this map yet.
+                </p>
+              ) : (
+                <ol className="space-y-2">
+                  {rankedPeeks.map((peek, i) => {
+                    const r = rating(
+                      peek.base_success_rate,
+                      peek.worked_votes,
+                      peek.vote_count
+                    );
+                    return (
+                      <li key={peek.id}>
+                        <Link
+                          href={`/peeks/${peek.slug}`}
+                          className="group flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 shadow-sm transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-brand hover:shadow-lg"
+                        >
+                          <span
+                            aria-hidden
+                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand/10 text-sm font-bold text-brand"
+                          >
+                            {i + 1}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[15px] font-semibold text-ink group-hover:text-brand">
+                              {peek.name}
+                            </div>
+                            <div className="truncate text-[12px] text-muted">
+                              {peek.floors?.name}
+                            </div>
+                          </div>
+                          <GradeBadge label={r.label} score={r.score} />
+                          <span className="shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted tabular-nums">
+                            {peek.vote_count}{" "}
+                            {peek.vote_count === 1 ? "vote" : "votes"}
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )
+            }
+          />
+        )}
 
         {floors.length === 0 && (
           <p className="text-center text-muted">No floors yet for this map.</p>
