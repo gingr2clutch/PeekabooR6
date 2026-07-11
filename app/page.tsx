@@ -46,8 +46,18 @@ export default async function Home() {
     <>
       <PageHeader home />
       <main className="fade-in-up mx-auto max-w-6xl px-6 pb-20 pt-10">
-        <div data-reveal className="mb-10">
-          <DiscordBanner />
+        {/* Homepage hero — a faint drifting blueprint grid sits behind the
+            stats/heading area only. `isolate` keeps the -z-10 layer scoped to
+            this region; it never overlaps the map grid below. */}
+        <div className="relative isolate">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+          >
+            <div className="hero-grid-inner" />
+          </div>
+          <div data-reveal className="mb-10">
+            <DiscordBanner />
         </div>
         <div className="mb-6">
           {/* DOM/source order stays Maps, Peeks, Votes, S-Tier (keeps the
@@ -73,6 +83,7 @@ export default async function Home() {
             </span>
             <span>New peeks daily</span>
           </div>
+        </div>
         </div>
 
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">

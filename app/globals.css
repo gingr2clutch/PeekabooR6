@@ -516,6 +516,47 @@ h4 {
   }
 }
 
+/* --- Homepage hero ambient grid (homepage only) ---------------------------
+   A faint tactical/blueprint grid drifting slowly on the diagonal behind the
+   hero. The layer is oversized and translated by exactly one 40px tile, so the
+   40s loop is seamless. Transform-only (GPU, no repaint); ~4.5% ink lines so
+   it's felt more than seen and never hurts readability. Sits behind content
+   via the wrapper's isolate/-z-10 and has no effect on layout. */
+.hero-grid-inner {
+  position: absolute;
+  inset: -80px;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(30, 33, 29, 0.045) 0,
+      rgba(30, 33, 29, 0.045) 1px,
+      transparent 1px,
+      transparent 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(30, 33, 29, 0.045) 0,
+      rgba(30, 33, 29, 0.045) 1px,
+      transparent 1px,
+      transparent 40px
+    );
+  animation: hero-grid-drift 40s linear infinite;
+  will-change: transform;
+}
+@keyframes hero-grid-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(40px, 40px, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-grid-inner {
+    animation: none;
+  }
+}
+
 /* --- Living flame in the Popular header ------------------------------------
    The flame icon flickers (gentle scale/skew + hue/brightness pulse anchored
    at its base) on a smooth ~1.6s loop, and three ember particles rise, drift,
