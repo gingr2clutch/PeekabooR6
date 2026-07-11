@@ -30,7 +30,7 @@ const MEDALS: Record<number, Medal> = {
     circleBorder: "#DAA520",
     iconColor: "#FFD700",
     cardBorder: "rgba(242, 100, 14, 0.55)",
-    cardClass: "border-2 peek-fire",
+    cardClass: "border-2",
   },
   2: {
     circleBg: "#C0C0C0",
@@ -98,6 +98,81 @@ function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
     ? medal.cardClass
     : "border border-border hover:border-brand hover:shadow-lg";
 
+  const content = (
+    <>
+      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center sm:h-12 sm:w-12">
+        {medal && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          >
+            {rank === 1 ? (
+              <TrophyIcon
+                className="h-20 w-20 sm:h-24 sm:w-24"
+                style={{ color: medal.iconColor, opacity: 0.18 }}
+              />
+            ) : (
+              <MedalIcon
+                className="h-20 w-20 sm:h-24 sm:w-24"
+                style={{ color: medal.iconColor, opacity: 0.18 }}
+              />
+            )}
+          </span>
+        )}
+        <span
+          aria-label={`Rank ${rank}`}
+          style={circleStyle}
+          className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 text-base font-semibold text-white sm:h-12 sm:w-12 sm:text-lg ${
+            rank === 1 ? "top1-medal-gleam overflow-hidden" : ""
+          }`}
+        >
+          {rank}
+        </span>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <h2 className="truncate text-base font-semibold tracking-tight text-ink group-hover:text-brand sm:text-lg">
+            {peek.name}
+          </h2>
+          {isPeekNew(peek.created_at) && <NewBadge size="xs" />}
+        </div>
+        <p className="mt-0.5 truncate text-xs text-muted sm:text-sm">
+          {map.name} · {floor.name}
+        </p>
+        <div className="mt-2 flex items-center gap-3">
+          <DifficultyDots difficulty={peek.difficulty} />
+          <RiskPill risk={peek.risk} />
+        </div>
+      </div>
+
+      <div className="shrink-0 text-right">
+        <GradeBadge label={r.label} score={r.score} />
+        <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+          {r.tier === "measured" ? votesText(r.votes) : "Effectiveness"}
+        </div>
+      </div>
+    </>
+  );
+
+  // #1 gets the shimmer-border comet; its content sits on solid white above
+  // the animated ring. #2/#3/rest keep the normal static card.
+  if (rank === 1) {
+    return (
+      <li>
+        <div className="top1-shimmer rounded-card">
+          <span aria-hidden className="top1-comet" />
+          <Link
+            href={`/peeks/${peek.slug}`}
+            className="group relative z-[1] m-[2px] flex items-center gap-4 rounded-[12px] bg-card p-4 sm:gap-5 sm:p-5"
+          >
+            {content}
+          </Link>
+        </div>
+      </li>
+    );
+  }
+
   return (
     <li>
       <Link
@@ -105,56 +180,7 @@ function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
         style={cardStyle}
         className={`peek-lift group flex items-center gap-4 rounded-card bg-card p-4 sm:gap-5 sm:p-5 ${cardCls}`}
       >
-        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center sm:h-12 sm:w-12">
-          {medal && (
-            <span
-              aria-hidden
-              className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-            >
-              {rank === 1 ? (
-                <TrophyIcon
-                  className="peek-fire-icon h-20 w-20 sm:h-24 sm:w-24"
-                  style={{ color: medal.iconColor, opacity: 0.18 }}
-                />
-              ) : (
-                <MedalIcon
-                  className="h-20 w-20 sm:h-24 sm:w-24"
-                  style={{ color: medal.iconColor, opacity: 0.18 }}
-                />
-              )}
-            </span>
-          )}
-          <span
-            aria-label={`Rank ${rank}`}
-            style={circleStyle}
-            className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 text-base font-semibold text-white sm:h-12 sm:w-12 sm:text-lg"
-          >
-            {rank}
-          </span>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h2 className="truncate text-base font-semibold tracking-tight text-ink group-hover:text-brand sm:text-lg">
-              {peek.name}
-            </h2>
-            {isPeekNew(peek.created_at) && <NewBadge size="xs" />}
-          </div>
-          <p className="mt-0.5 truncate text-xs text-muted sm:text-sm">
-            {map.name} · {floor.name}
-          </p>
-          <div className="mt-2 flex items-center gap-3">
-            <DifficultyDots difficulty={peek.difficulty} />
-            <RiskPill risk={peek.risk} />
-          </div>
-        </div>
-
-        <div className="shrink-0 text-right">
-          <GradeBadge label={r.label} score={r.score} />
-          <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-            {r.tier === "measured" ? votesText(r.votes) : "Effectiveness"}
-          </div>
-        </div>
+        {content}
       </Link>
     </li>
   );
