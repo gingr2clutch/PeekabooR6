@@ -103,7 +103,7 @@ function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
       <Link
         href={`/peeks/${peek.slug}`}
         style={cardStyle}
-        className={`group flex items-center gap-4 rounded-card bg-card p-4 transition-all duration-150 ease-out hover:-translate-y-0.5 sm:gap-5 sm:p-5 ${cardCls}`}
+        className={`peek-lift group flex items-center gap-4 rounded-card bg-card p-4 sm:gap-5 sm:p-5 ${cardCls}`}
       >
         <div className="relative flex h-10 w-10 shrink-0 items-center justify-center sm:h-12 sm:w-12">
           {medal && (

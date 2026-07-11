@@ -159,7 +159,7 @@ export default async function FloorPage({
                 <li key={f.id}>
                   <Link
                     href={`/maps/${map.slug}/${f.slug}`}
-                    className="group block overflow-hidden rounded-card border-[3px] border-white bg-card shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-all duration-200 ease-out hover:scale-[1.015] hover:border-brand/30 hover:shadow-lg"
+                    className="peek-lift group block overflow-hidden rounded-card border-[3px] border-white bg-card shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:border-brand/30"
                   >
                     <div className="relative aspect-video w-full overflow-hidden bg-card">
                       {f.birds_eye_url ? (

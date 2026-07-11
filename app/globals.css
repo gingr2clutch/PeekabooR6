@@ -437,6 +437,85 @@ h4 {
   }
 }
 
+/* --- Grade mix bar (map stats card) ---------------------------------------
+   Segments grow left→right to their real widths on load (staggered by tier),
+   then the legend fades in. Transform/opacity only, so no layout shift. */
+@keyframes peek-grade-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.peek-grade-seg {
+  transform-origin: left center;
+  animation: peek-grade-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--seg-delay, 0ms);
+}
+@keyframes peek-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.peek-grade-legend {
+  animation: peek-fade 0.4s ease-out 0.5s both;
+}
+
+/* --- Ranked list rows cascade in on load ----------------------------------
+   Each row fades up shortly after the previous; the caller caps --cascade-delay
+   (~0.8s max) so long lists don't drag. Transform/opacity only. */
+@keyframes peek-cascade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.peek-cascade {
+  animation: peek-cascade-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--cascade-delay, 0ms);
+}
+
+/* --- Interactive card lift/press (peek + floor cards site-wide) ------------
+   Soft lift + deeper shadow on hover; a small press-down on tap. Transforms
+   only — never reflows surrounding content (ads stay put). */
+.peek-lift {
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease-out,
+    border-color 0.15s ease-out;
+}
+@media (hover: hover) {
+  .peek-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 28px -12px rgba(30, 33, 29, 0.22);
+  }
+}
+.peek-lift:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .peek-grade-seg,
+  .peek-grade-legend,
+  .peek-cascade {
+    animation: none;
+  }
+  .peek-lift,
+  .peek-lift:hover,
+  .peek-lift:active {
+    transition: none;
+    transform: none;
+  }
+}
+
 /* --- Living flame in the Popular header ------------------------------------
    The flame icon flickers (gentle scale/skew + hue/brightness pulse anchored
    at its base) on a smooth ~1.6s loop, and three ember particles rise, drift,

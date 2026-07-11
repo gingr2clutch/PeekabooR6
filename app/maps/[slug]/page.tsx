@@ -157,7 +157,7 @@ export default async function MapPage({
                     >
                       <Link
                         href={`/maps/${map.slug}/${floor.slug}`}
-                        className="group flex items-center justify-between gap-4 rounded-card border-[3px] border-white bg-card px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-brand hover:shadow-lg sm:px-6 sm:py-5"
+                        className="peek-lift group flex items-center justify-between gap-4 rounded-card border-[3px] border-white bg-card px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:border-brand sm:px-6 sm:py-5"
                       >
                         <span className="text-xl font-bold tracking-tight text-ink transition-colors group-hover:text-brand sm:text-2xl">
                           {floor.name}
@@ -185,10 +185,18 @@ export default async function MapPage({
                       peek.vote_count
                     );
                     return (
-                      <li key={peek.id}>
+                      <li
+                        key={peek.id}
+                        className="peek-cascade"
+                        style={
+                          {
+                            ["--cascade-delay"]: `${Math.min(i, 20) * 40}ms`,
+                          } as React.CSSProperties
+                        }
+                      >
                         <Link
                           href={`/peeks/${peek.slug}`}
-                          className="group flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 shadow-sm transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-brand hover:shadow-lg"
+                          className="peek-lift group flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 shadow-sm hover:border-brand"
                         >
                           <span
                             aria-hidden

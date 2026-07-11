@@ -31,7 +31,7 @@ export function BestPeek({ peek, eyebrow, showMap = false, bare = false }: Props
       className={
         bare
           ? "group flex items-center gap-3 transition-colors duration-150 ease-out sm:gap-4"
-          : "group flex items-center gap-3 rounded-card border border-border bg-card p-3 transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-brand hover:shadow-lg sm:gap-4 sm:p-4"
+          : "peek-lift group flex items-center gap-3 rounded-card border border-border bg-card p-3 hover:border-brand sm:gap-4 sm:p-4"
       }
     >
       <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-btn border border-border bg-black sm:w-32">
