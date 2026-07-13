@@ -267,20 +267,6 @@ function pickBestPeek(
   return candidates.slice().sort(compareBestPeek)[0];
 }
 
-// Site-wide highest-graded peek (ties → most votes → most recent). Only peeks
-// whose map is also published are eligible.
-export async function getPeekOfTheDay(): Promise<PeekWithContext | null> {
-  const { data, error } = await supabasePublic()
-    .from("peeks")
-    .select(PEEK_WITH_CONTEXT_SELECT)
-    .eq("published", true);
-  if (error) throw error;
-  const candidates = ((data ?? []) as unknown as PeekWithContext[]).filter(
-    (row) => row.floors?.maps?.published
-  );
-  return pickBestPeek(candidates);
-}
-
 // This map's highest-graded peek (ties → most votes → most recent), scoped to
 // its floors.
 export async function getTopPeekForMap(

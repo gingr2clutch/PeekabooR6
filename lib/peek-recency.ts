@@ -38,23 +38,3 @@ export function weeklyBucket(
   const years = Math.floor(days / 365);
   return years === 1 ? "1 year ago" : `${years} years ago`;
 }
-
-// Compact relative-time string ("just now", "3h ago", "5d ago", "2w ago", ...)
-// suitable for badges where space is tight.
-export function relativeAgo(createdAt: string, now: Date = new Date()): string {
-  const created = new Date(createdAt).getTime();
-  if (Number.isNaN(created)) return "";
-  const diffMs = Math.max(0, now.getTime() - created);
-  const minutes = diffMs / 60000;
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${Math.floor(minutes)}m ago`;
-  const hours = minutes / 60;
-  if (hours < 24) return `${Math.floor(hours)}h ago`;
-  const days = hours / 24;
-  if (days < 7) return `${Math.floor(days)}d ago`;
-  const weeks = days / 7;
-  if (weeks < 4.34) return `${Math.floor(weeks)}w ago`;
-  const months = days / 30.44;
-  if (months < 12) return `${Math.floor(months)}mo ago`;
-  return `${Math.floor(days / 365.25)}y ago`;
-}

@@ -94,23 +94,7 @@ const GRADE_COLOR_STOPS: ReadonlyArray<readonly [number, readonly [number, numbe
   [100, [21, 128, 61]], // green-700 (S → green)
 ];
 
-export function gradeColor(score: number): string {
-  const s = Math.max(0, Math.min(100, score || 0));
-  for (let i = 1; i < GRADE_COLOR_STOPS.length; i++) {
-    const [s2, c2] = GRADE_COLOR_STOPS[i];
-    if (s <= s2) {
-      const [s1, c1] = GRADE_COLOR_STOPS[i - 1];
-      const f = s2 === s1 ? 0 : (s - s1) / (s2 - s1);
-      const mix = (a: number, b: number) => Math.round(a + (b - a) * f);
-      return `rgb(${mix(c1[0], c2[0])}, ${mix(c1[1], c2[1])}, ${mix(c1[2], c2[2])})`;
-    }
-  }
-  const last = GRADE_COLOR_STOPS[GRADE_COLOR_STOPS.length - 1][1];
-  return `rgb(${last[0]}, ${last[1]}, ${last[2]})`;
-}
-
-// CSS gradient for the grade bar, built from the SAME stops as gradeColor so
-// the bar and the letter colours are guaranteed to be one scale.
+// CSS gradient for the grade bar, built from the GRADE_COLOR_STOPS scale.
 export function gradeBarGradientCss(): string {
   const stops = GRADE_COLOR_STOPS.map(
     ([pos, [r, g, b]]) => `rgb(${r}, ${g}, ${b}) ${pos}%`
