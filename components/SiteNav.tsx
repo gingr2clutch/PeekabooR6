@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Wordmark } from "./Wordmark";
 import { DiscordButton } from "./DiscordButton";
+import { AuthNavLink } from "./AuthNavLink";
 
 const ICON_SIZE = 16;
 const ICON_STROKE = 2;
@@ -127,6 +128,7 @@ export function SiteNav() {
             <span>{label}</span>
           </Link>
         ))}
+        <AuthNavLink className={desktopLinkCls} iconSize={ICON_SIZE} />
         <DiscordButton />
       </nav>
 
@@ -189,6 +191,11 @@ export function SiteNav() {
                     <span>{label}</span>
                   </Link>
                 ))}
+                <AuthNavLink
+                  className={mobileLinkCls}
+                  iconSize={22}
+                  onClick={closeDrawer}
+                />
                 <DiscordButton
                   variant="teal"
                   onClick={closeDrawer}
