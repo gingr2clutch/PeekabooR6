@@ -666,3 +666,24 @@ h4 {
     display: none;
   }
 }
+
+/* --- Favorite heart pop ---------------------------------------------------- */
+@keyframes peek-heart-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.peek-heart-pop {
+  animation: peek-heart-pop 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .peek-heart-pop {
+    animation: none;
+  }
+}

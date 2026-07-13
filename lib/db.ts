@@ -1,4 +1,5 @@
 import { supabasePublic } from "./supabase";
+import { createSupabaseServerClient } from "./supabase/server";
 import { GRADED_THRESHOLDS, rating, ratingScore } from "./rate";
 
 export type Map = {
@@ -300,6 +301,25 @@ export async function getRankedPeeksForMap(
   return ((data ?? []) as unknown as PeekWithContext[])
     .filter((row) => row.floors?.maps?.published)
     .sort(compareBestPeek);
+}
+
+// The logged-in user's favorited peeks (with floor + map context), newest
+// first. Uses the cookie-authed server client so RLS returns only their rows;
+// returns [] when signed out or before the favorites table exists.
+export async function getFavoritePeeks(): Promise<PeekWithContext[]> {
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("favorites")
+    .select(`peek:peeks(${PEEK_WITH_CONTEXT_SELECT})`)
+    .order("created_at", { ascending: false });
+  if (error) return [];
+  const rows = (data ?? []) as unknown as { peek: PeekWithContext | null }[];
+  return rows
+    .map((r) => r.peek)
+    .filter(
+      (p): p is PeekWithContext =>
+        !!p && p.published && !!p.floors?.maps?.published
+    );
 }
 
 export async function getPublishedPeekById(id: string): Promise<Peek | null> {

@@ -6,8 +6,8 @@ import { rating, votesText } from "@/lib/rate";
 
 type Props = {
   peek: PeekWithContext;
-  // Small mono eyebrow, e.g. "Peek of the Day" or "Top Peek".
-  eyebrow: string;
+  // Small mono eyebrow, e.g. "Peek of the Day" or "Top Peek". Omit for none.
+  eyebrow?: string;
   // Homepage shows "Map · Floor"; a map page shows just the floor.
   showMap?: boolean;
   // `bare` drops the card chrome (border/shadow/bg/padding) so the row can sit
@@ -59,9 +59,11 @@ export function BestPeek({ peek, eyebrow, showMap = false, bare = false }: Props
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal">
-          {eyebrow}
-        </div>
+        {eyebrow && (
+          <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal">
+            {eyebrow}
+          </div>
+        )}
         <h3 className="mt-0.5 truncate text-sm font-semibold tracking-tight text-ink group-hover:text-brand sm:text-base">
           {peek.name}
         </h3>

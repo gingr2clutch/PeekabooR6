@@ -3,6 +3,7 @@ import Script from "next/script";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SiteFooter } from "@/components/SiteFooter";
+import { FavoritesProvider } from "@/components/FavoritesProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -71,7 +72,9 @@ export default function RootLayout({
         />
       </head>
       <body className="flex min-h-screen flex-col bg-bg text-ink">
-        <div className="flex-1">{children}</div>
+        <FavoritesProvider>
+          <div className="flex-1">{children}</div>
+        </FavoritesProvider>
         <SiteFooter />
         <Script
           defer

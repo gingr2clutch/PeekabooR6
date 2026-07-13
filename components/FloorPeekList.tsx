@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Floor, Map, Peek } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 export function FloorPeekList({
   map,
@@ -84,6 +85,7 @@ export function FloorPeekList({
                     See video
                   </Link>
                 ) : null}
+                <FavoriteButton peekId={peek.id} />
               </div>
             </li>
           );

@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { PeekMedia } from "@/components/PeekMedia";
 import { VoteButtons } from "@/components/VoteButtons";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
 import { rating, votesText, type Grade } from "@/lib/rate";
@@ -163,9 +164,16 @@ export default async function PeekDetailPage({
               </span>
             </Link>
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
-            {peek.name}
-          </h1>
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
+              {peek.name}
+            </h1>
+            <FavoriteButton
+              peekId={peek.id}
+              size={24}
+              className="mt-1 h-11 w-11"
+            />
+          </div>
           <p className="mt-3 text-sm text-muted">
             <Link href={`/maps/${map.slug}`} className="hover:text-brand">
               {map.name}

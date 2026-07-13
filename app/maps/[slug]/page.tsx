@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { GradeBadge } from "@/components/GradeBadge";
 import { MapStats } from "@/components/MapStats";
 import { MapViewToggle } from "@/components/MapViewToggle";
@@ -194,10 +195,12 @@ export default async function MapPage({
                           } as React.CSSProperties
                         }
                       >
-                        <Link
-                          href={`/peeks/${peek.slug}`}
-                          className="peek-lift group flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 shadow-sm hover:border-brand"
-                        >
+                        <div className="peek-lift group relative flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 shadow-sm hover:border-brand">
+                          <Link
+                            href={`/peeks/${peek.slug}`}
+                            aria-label={peek.name}
+                            className="absolute inset-0 rounded-card"
+                          />
                           <span
                             aria-hidden
                             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand/10 text-sm font-bold text-brand"
@@ -217,7 +220,11 @@ export default async function MapPage({
                             {peek.vote_count}{" "}
                             {peek.vote_count === 1 ? "vote" : "votes"}
                           </span>
-                        </Link>
+                          <FavoriteButton
+                            peekId={peek.id}
+                            className="relative z-10"
+                          />
+                        </div>
                       </li>
                     );
                   })}
