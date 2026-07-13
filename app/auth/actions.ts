@@ -53,26 +53,30 @@ export async function signUpAction(
   if (password !== confirm) return { error: "Those passwords don't match." };
 
   const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email,
     password,
     options: { emailRedirectTo: `${siteOrigin()}/auth/callback` },
   });
   if (error) {
     const m = error.message.toLowerCase();
+    if (m.includes("rate limit") || m.includes("over_email")) {
+      return {
+        error:
+          "Too many verification emails were just sent from the site. Please wait a few minutes and try again.",
+      };
+    }
     if (m.includes("already") || m.includes("registered")) {
       return { error: "That email is already registered. Try logging in." };
     }
     return { error: error.message };
   }
-  // Supabase returns a user with no identities (instead of an error) when the
-  // email is already registered — surface that as "already registered".
-  if (data.user && (data.user.identities?.length ?? 0) === 0) {
-    return {
-      error:
-        "That email is already registered. Try logging in or resetting your password.",
-    };
-  }
+  // Any non-error signup shows the confirmation screen. We deliberately do NOT
+  // try to detect "already registered" via data.user.identities: with email
+  // confirmation enabled, GoTrue returns an EMPTY identities array for brand-new
+  // signups too, which previously made this wrongly return an error instead of
+  // the "check your email" screen. Always showing it also preserves
+  // anti-enumeration (an existing address just silently gets no new email).
   return {
     message: "Check your email to confirm your account, then log in.",
     email,
