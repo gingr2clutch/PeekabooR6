@@ -39,6 +39,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
 
   const favRef = useRef(favorites);
   favRef.current = favorites;
+  const userIdRef = useRef<string | null>(null);
   const supabaseRef = useRef<ReturnType<
     typeof createSupabaseBrowserClient
   > | null>(null);
@@ -68,6 +69,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         data: { user },
       } = await supabase.auth.getUser();
       if (!active) return;
+      userIdRef.current = user?.id ?? null;
       setLoggedIn(!!user);
       await loadFavorites(!!user);
       if (active) setReady(true);
@@ -75,6 +77,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       const present = !!session?.user;
+      userIdRef.current = session?.user?.id ?? null;
       setLoggedIn(present);
       loadFavorites(present);
     });
@@ -87,7 +90,8 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
 
   const toggle = useCallback((peekId: string) => {
     const supabase = supabaseRef.current;
-    if (!supabase) return;
+    const userId = userIdRef.current;
+    if (!supabase || !userId) return;
     const wasFav = favRef.current.has(peekId);
 
     // Optimistic update.
@@ -99,11 +103,26 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     });
 
     (async () => {
+      // Set user_id explicitly (rather than leaning on the column default) so
+      // the RLS `with check (auth.uid() = user_id)` insert policy always
+      // passes. Plain insert (not upsert) — the favorites table only grants
+      // insert/select/delete, no update — and a unique-violation (already
+      // favorited) is treated as success so a double-tap never reverts.
       const { error } = wasFav
-        ? await supabase.from("favorites").delete().eq("peek_id", peekId)
-        : await supabase.from("favorites").insert({ peek_id: peekId });
-      if (error) {
-        // Revert on failure.
+        ? await supabase
+            .from("favorites")
+            .delete()
+            .eq("peek_id", peekId)
+            .eq("user_id", userId)
+        : await supabase
+            .from("favorites")
+            .insert({ peek_id: peekId, user_id: userId });
+
+      const ok = !error || (!wasFav && error.code === "23505");
+      if (!ok) {
+        // Revert on real failure (e.g. table not migrated yet, network blip).
+        // eslint-disable-next-line no-console
+        console.error("[favorites] save failed:", error?.message, error?.code);
         setFavorites((prev) => {
           const next = new Set(prev);
           if (wasFav) next.add(peekId);

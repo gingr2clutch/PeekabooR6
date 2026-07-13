@@ -152,7 +152,12 @@ export default async function PeekDetailPage({
       <PageHeader />
       <main className="fade-in-up mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">
         {/* Page header */}
-        <div className="text-center">
+        <div className="relative text-center">
+          {/* Favorite heart — absolutely pinned to the top-right so it never
+              displaces the centered title. */}
+          <div className="absolute right-0 top-0">
+            <FavoriteButton peekId={peek.id} size={24} className="h-11 w-11" />
+          </div>
           <div className="mb-3">
             <Link
               href={floorHref}
@@ -164,16 +169,9 @@ export default async function PeekDetailPage({
               </span>
             </Link>
           </div>
-          <div className="flex items-start justify-between gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
-              {peek.name}
-            </h1>
-            <FavoriteButton
-              peekId={peek.id}
-              size={24}
-              className="mt-1 h-11 w-11"
-            />
-          </div>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
+            {peek.name}
+          </h1>
           <p className="mt-3 text-sm text-muted">
             <Link href={`/maps/${map.slug}`} className="hover:text-brand">
               {map.name}
