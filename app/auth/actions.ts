@@ -29,7 +29,9 @@ export async function signInAction(
     if (m.includes("not confirmed") || m.includes("not been confirmed")) {
       return {
         error:
-          "Please verify your email first — check your inbox for the confirmation link.",
+          "Please verify your email first — check your inbox for the verification link.",
+        needsVerification: true,
+        email,
       };
     }
     if (m.includes("invalid")) return { error: "Wrong email or password." };
@@ -73,7 +75,34 @@ export async function signUpAction(
   }
   return {
     message: "Check your email to confirm your account, then log in.",
+    email,
   };
+}
+
+// Re-send the signup verification email (Supabase supports resending until the
+// address is confirmed). Used by the post-signup screen and the "unverified"
+// login state.
+export async function resendVerificationAction(
+  _prev: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { error: "Enter your email." };
+
+  const supabase = createSupabaseServerClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo: `${siteOrigin()}/auth/callback` },
+  });
+  if (error) {
+    const m = error.message.toLowerCase();
+    if (m.includes("already") || m.includes("confirmed")) {
+      return { error: "That email is already verified — just log in.", email };
+    }
+    return { error: error.message, email };
+  }
+  return { message: "Verification email sent — check your inbox.", email };
 }
 
 export async function signOutAction() {

@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Wordmark } from "./Wordmark";
 import { DiscordButton } from "./DiscordButton";
-import { AuthNavLink } from "./AuthNavLink";
+import { AuthNavIcon } from "./AuthNavIcon";
 
 const ICON_SIZE = 16;
 const ICON_STROKE = 2;
@@ -128,21 +128,24 @@ export function SiteNav() {
             <span>{label}</span>
           </Link>
         ))}
-        <AuthNavLink className={desktopLinkCls} iconSize={ICON_SIZE} />
         <DiscordButton />
+        <AuthNavIcon iconSize={20} />
       </nav>
 
-      {/* Mobile hamburger. */}
-      <button
-        type="button"
-        onClick={openDrawer}
-        aria-label="Open navigation menu"
-        aria-expanded={open}
-        aria-controls="mobile-nav"
-        className="inline-flex h-11 w-11 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand md:hidden"
-      >
-        <Menu size={22} strokeWidth={2} aria-hidden />
-      </button>
+      {/* Mobile: profile icon + hamburger, top-right. */}
+      <div className="flex items-center gap-0.5 md:hidden">
+        <AuthNavIcon />
+        <button
+          type="button"
+          onClick={openDrawer}
+          aria-label="Open navigation menu"
+          aria-expanded={open}
+          aria-controls="mobile-nav"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
+        >
+          <Menu size={22} strokeWidth={2} aria-hidden />
+        </button>
+      </div>
 
       {/* Mobile drawer. Full-screen overlay matches the brand's minimal
           aesthetic better than a side-slide. */}
@@ -191,11 +194,6 @@ export function SiteNav() {
                     <span>{label}</span>
                   </Link>
                 ))}
-                <AuthNavLink
-                  className={mobileLinkCls}
-                  iconSize={22}
-                  onClick={closeDrawer}
-                />
                 <DiscordButton
                   variant="teal"
                   onClick={closeDrawer}
