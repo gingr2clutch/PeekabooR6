@@ -160,17 +160,17 @@ export function SiteNav() {
             if (e.target === e.currentTarget) closeDrawer();
           }}
           style={{ transitionDuration: `${DRAWER_DURATION_MS}ms` }}
-          className={`fixed inset-0 z-50 bg-bg/95 backdrop-blur-sm transition-opacity ease-out md:hidden ${
+          className={`fixed inset-0 z-50 overflow-hidden bg-bg/95 backdrop-blur-sm transition-opacity ease-out md:hidden ${
             show ? "opacity-100" : "opacity-0"
           }`}
         >
           <div
             style={{ transitionDuration: `${DRAWER_DURATION_MS}ms` }}
-            className={`flex h-full flex-col transition-transform ease-out ${
+            className={`flex h-[100dvh] flex-col transition-transform ease-out ${
               show ? "translate-y-0" : "-translate-y-2"
             }`}
           >
-            <div className="flex items-center justify-between px-4 pt-4 sm:px-6 sm:pt-6">
+            <div className="flex shrink-0 items-center justify-between px-4 pt-4 sm:px-6 sm:pt-6">
               <Wordmark />
               <button
                 type="button"
@@ -181,7 +181,7 @@ export function SiteNav() {
                 <X size={22} strokeWidth={2} aria-hidden />
               </button>
             </div>
-            <nav className="mt-6 px-4 sm:px-6">
+            <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-6 sm:px-6">
               <div className="mx-auto w-full max-w-sm space-y-1">
                 {NAV_ITEMS.map(({ href, label, Icon }) => (
                   <Link
