@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getFavoritePeeks } from "@/lib/db";
 import { signOutAction } from "@/app/auth/actions";
+import { createCheckoutSession, createPortalSession } from "@/app/account/actions";
 import { PageHeader } from "@/components/PageHeader";
 import { BestPeek } from "@/components/BestPeek";
 
@@ -53,7 +54,29 @@ export default async function AccountPage() {
               </div>
             </div>
           </div>
-          <form action={signOutAction} className="mt-5">
+          {/* Subscription CTA: Pro (or anyone with a Stripe customer) manages
+              via the billing portal; Free users get a plain upgrade button. */}
+          {user.isPro || user.stripeCustomerId ? (
+            <form action={createPortalSession} className="mt-5">
+              <button
+                type="submit"
+                className="w-full rounded-btn border border-border px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-brand hover:text-brand sm:w-auto sm:px-6"
+              >
+                Manage subscription
+              </button>
+            </form>
+          ) : (
+            <form action={createCheckoutSession} className="mt-5">
+              <button
+                type="submit"
+                className="w-full rounded-btn bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand/90 sm:w-auto sm:px-6"
+              >
+                Upgrade to Pro — $2.99/mo
+              </button>
+            </form>
+          )}
+
+          <form action={signOutAction} className="mt-3">
             <button
               type="submit"
               className="w-full rounded-btn border border-border px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-brand hover:text-brand sm:w-auto sm:px-6"
