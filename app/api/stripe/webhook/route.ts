@@ -10,12 +10,14 @@ export const dynamic = "force-dynamic";
 // A subscription is "active" (Pro) when Stripe reports these statuses.
 const PRO_STATUSES = new Set(["active", "trialing"]);
 
-// Flip is_pro for the profile that owns this Stripe customer.
+// Flip is_pro for the profile that owns this Stripe customer. Throws on a DB
+// error so the caller returns 500 and Stripe retries (never leave is_pro wrong).
 async function setProByCustomer(customerId: string, isPro: boolean) {
-  await supabaseAdmin()
+  const { error } = await supabaseAdmin()
     .from("profiles")
     .update({ is_pro: isPro })
     .eq("stripe_customer_id", customerId);
+  if (error) throw new Error(error.message);
 }
 
 export async function POST(req: Request) {
@@ -46,10 +48,11 @@ export async function POST(req: Request) {
         // linked to the customer even if the customer was created out-of-band.
         const userId = session.client_reference_id;
         if (customerId && userId) {
-          await supabaseAdmin()
+          const { error } = await supabaseAdmin()
             .from("profiles")
             .update({ stripe_customer_id: customerId, is_pro: true })
             .eq("id", userId);
+          if (error) throw new Error(error.message);
         } else if (customerId) {
           await setProByCustomer(customerId, true);
         }
