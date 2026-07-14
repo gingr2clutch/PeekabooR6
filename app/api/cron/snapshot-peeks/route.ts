@@ -3,8 +3,6 @@ import { captureDailySnapshots } from "@/lib/snapshots";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-// Snapshotting every peek can take a few seconds; give it room.
-export const maxDuration = 60;
 
 // Daily snapshot job, triggered by Vercel Cron (see vercel.json). Protected by
 // CRON_SECRET: Vercel Cron automatically sends `Authorization: Bearer
