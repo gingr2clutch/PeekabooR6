@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { BadgeCheck, Clock, Lock } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { DiscordButton } from "@/components/DiscordButton";
+import { WaitlistForm } from "@/components/WaitlistForm";
 import { getCurrentUser } from "@/lib/auth";
-import {
-  createCheckoutSession,
-  createPortalSession,
-} from "@/app/account/actions";
+import { createPortalSession } from "@/app/account/actions";
 
 export const metadata: Metadata = {
   title: "Pro",
@@ -75,7 +73,9 @@ export default async function ProPage() {
           </p>
         </div>
 
-        {/* State-dependent CTA */}
+        {/* State-dependent CTA. Pro isn't launched yet: instead of checkout,
+            non-Pro visitors get a disabled "Coming soon" + an email waitlist.
+            (Anyone already Pro still gets the manage-subscription portal.) */}
         <div className="mx-auto mt-8 max-w-sm">
           {user?.isPro ? (
             <div className="rounded-card border border-teal/40 bg-teal/10 p-5 text-center">
@@ -95,32 +95,24 @@ export default async function ProPage() {
                 </button>
               </form>
             </div>
-          ) : user ? (
-            <form action={createCheckoutSession}>
-              <button
-                type="submit"
-                className="w-full rounded-btn bg-brand px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand/90"
-              >
-                Go Pro — $2.99/mo
-              </button>
-              <p className="mt-2 text-center text-xs text-muted">
-                Cancel anytime.
-              </p>
-            </form>
           ) : (
-            <div className="text-center">
-              <Link
-                href="/signup"
-                className="block w-full rounded-btn bg-brand px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand/90"
+            <div className="space-y-4">
+              <button
+                type="button"
+                disabled
+                aria-disabled="true"
+                className="w-full cursor-not-allowed rounded-btn bg-ink/[0.06] px-4 py-3 text-sm font-semibold text-muted"
               >
-                Create an account to go Pro
-              </Link>
-              <p className="mt-2 text-xs text-muted">
-                Already have one?{" "}
-                <Link href="/login" className="font-medium text-brand hover:underline">
-                  Log in
-                </Link>
+                Coming soon
+              </button>
+              <p className="text-center text-xs text-muted">
+                Pro isn&rsquo;t live yet — join the waitlist and we&rsquo;ll
+                email you the moment it launches.
               </p>
+              <WaitlistForm defaultEmail={user?.email ?? ""} />
+              <div className="pt-1">
+                <DiscordButton variant="teal" className="w-full py-2.5" />
+              </div>
             </div>
           )}
         </div>

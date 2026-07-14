@@ -9,7 +9,6 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { createCheckoutSession } from "@/app/account/actions";
 import { rating, votesText, type Grade } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
 import { GradeBar } from "@/components/GradeBar";
@@ -311,8 +310,8 @@ export default async function PeekDetailPage({
 
 // Locked teaser shown in place of the video/instructions for a Pro-only peek
 // when the viewer isn't Pro. The header + stats card above stay visible (map,
-// floor, grade). The button posts the checkout action (which sends logged-out
-// users to /login first).
+// floor, grade). Pre-launch: the CTA points to /pro ("Pro coming soon") rather
+// than checkout — swap back to the checkout action at launch.
 function ProLockCard() {
   return (
     <section className="mx-auto max-w-md rounded-card border border-border bg-card p-6 text-center shadow-sm">
@@ -325,16 +324,14 @@ function ProLockCard() {
       <p className="mt-1.5 text-sm leading-relaxed text-muted">
         The clip, exact position, and setup for this peek are unlocked with Pro.
       </p>
-      <form action={createCheckoutSession} className="mt-5">
-        <button
-          type="submit"
-          className="w-full rounded-btn bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand/90"
-        >
-          Unlock with Pro — $2.99/mo
-        </button>
-      </form>
+      <Link
+        href="/pro"
+        className="mt-5 block w-full rounded-btn bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand/90"
+      >
+        Pro coming soon
+      </Link>
       <p className="mt-2 text-xs text-muted">
-        Cancel anytime. Unlocks every Pro peek.
+        Join the waitlist to get it at launch.
       </p>
     </section>
   );
