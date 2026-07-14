@@ -1,26 +1,26 @@
- name: Daily peek snapshots
-  
-  on:
-    schedule:
-      - cron: "0 6 * * *" # daily at 06:00 UTC
-    workflow_dispatch: {} # manual "Run workflow" button
+name: Daily peek snapshots
 
-  jobs:
-    snapshot:
-      runs-on: ubuntu-latest                     
-      steps:
-        - name: Capture daily peek snapshots
-          env:
-            CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          run: |
-            if [ -z "$CRON_SECRET" ]; then
-              echo "::error::CRON_SECRET repo secret is not set."
-              exit 1
-            fi                                   
-            code=$(curl -sS -o /tmp/out.json -w "%{http_code}" \
-              "https://peekaboor6.com/api/cron/snapshot-peeks" \
-              -H "Authorization: Bearer $CRON_SECRET")
-            echo "HTTP $code"
-            cat /tmp/out.json || true
-            echo
-            test "$code" = "200"     
+on:
+  schedule:
+    - cron: "0 6 * * *" # daily at 06:00 UTC
+  workflow_dispatch: {} # manual "Run workflow" button
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Capture daily peek snapshots
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET repo secret is not set."
+            exit 1
+          fi
+          code=$(curl -sS -o /tmp/out.json -w "%{http_code}" \
+            "https://peekaboor6.com/api/cron/snapshot-peeks" \
+            -H "Authorization: Bearer $CRON_SECRET")
+          echo "HTTP $code"
+          cat /tmp/out.json || true
+          echo
+          test "$code" = "200"
