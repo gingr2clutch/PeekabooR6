@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   BookOpen,
+  Crown,
   Flame,
   Handshake,
   Map,
@@ -32,6 +33,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Maps", Icon: Map },
   { href: "/top", label: "Top", Icon: Flame },
   { href: "/whats-new", label: "New", Icon: Sparkles },
+  { href: "/pro", label: "Pro", Icon: Crown },
   // Hidden from nav for now — /creators route still serves directly.
   // { href: "/creators", label: "Creators", Icon: Users },
   { href: "/blog", label: "Guides", Icon: BookOpen },
