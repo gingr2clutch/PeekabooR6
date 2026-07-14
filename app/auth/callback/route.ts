@@ -1,50 +1,59 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { redirect } from "next/navigation";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-// Exchanges the one-time code from a verification / password-reset email link
-// for a session (setting the auth cookies), then forwards to `next`. Used by
-// both the signup confirmation link and the password-reset link.
+// Verifies an email link and establishes a session, then forwards to `next`.
+// Preferred flow: token_hash + type via verifyOtp — stateless, no PKCE code
+// verifier, so it works across devices/browsers (the reset/confirm link is
+// often opened somewhere other than where it was requested). Falls back to the
+// PKCE ?code exchange for any legacy links that still carry a code.
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
+  const tokenHash = searchParams.get("token_hash");
+  const type = searchParams.get("type") as EmailOtpType | null;
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/account";
 
   // TEMP DEBUG: surface the real failure reason. Remove after diagnosing.
-  // `debug` = underlying Supabase error message (or a marker for the
-  // no-code case), `debug_code` = its error_code, `debug_params` = the query
-  // params Supabase actually sent to this callback (helps spot token_hash /
-  // otp-style links that this code-exchange flow doesn't handle).
   const failParams = new URLSearchParams();
 
-  if (code) {
+  const recordError = (error: {
+    message: string;
+    name?: string;
+    status?: number;
+    code?: string;
+  }) => {
+    failParams.set("debug", error.message);
+    failParams.set("debug_code", error.code ?? error.name ?? "unknown");
+    failParams.set("debug_status", String(error.status ?? ""));
+  };
+
+  if (tokenHash && type) {
+    const supabase = createSupabaseServerClient();
+    const { error } = await supabase.auth.verifyOtp({
+      type,
+      token_hash: tokenHash,
+    });
+    if (!error) redirect(next); // cookie-safe redirect (flushes the session)
+    recordError(error);
+  } else if (code) {
     const supabase = createSupabaseServerClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
-    }
-    failParams.set("debug", error.message);
-    // AuthError exposes `code` (string) on recent supabase-js; fall back to name.
-    failParams.set(
-      "debug_code",
-      (error as { code?: string }).code ?? error.name ?? "unknown"
-    );
-    failParams.set("debug_status", String(error.status ?? ""));
+    if (!error) redirect(next);
+    recordError(error);
   } else {
     failParams.set(
       "debug",
-      "no_code_param — link did not include ?code (likely a token_hash/otp or hash-fragment flow this route doesn't handle)"
+      "no_token_hash_or_code — link had neither ?token_hash+type nor ?code (check the Supabase email template)"
     );
-    failParams.set("debug_code", "missing_code");
+    failParams.set("debug_code", "missing_params");
   }
-  // Echo back which query keys Supabase sent (values omitted — they're secret).
+
   failParams.set(
     "debug_params",
     Array.from(searchParams.keys()).join(",") || "none"
   );
-
-  failParams.set(
-    "error",
-    "We couldn't verify that link. It may have expired."
-  );
+  failParams.set("error", "We couldn't verify that link. It may have expired.");
   return NextResponse.redirect(`${origin}/login?${failParams.toString()}`);
 }

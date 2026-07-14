@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { ADMIN_COOKIE, cookieIsValid } from "@/lib/admin-auth";
+import { updateSession } from "@/lib/supabase/middleware";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -55,27 +56,45 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // /admin/:path+ — existing auth gate, unchanged.
-  const password = process.env.ADMIN_PASSWORD;
-  const cookie = req.cookies.get(ADMIN_COOKIE)?.value;
+  // /admin/* auth gate — subpaths only (the /admin login page stays open).
+  if (path.startsWith("/admin/")) {
+    const password = process.env.ADMIN_PASSWORD;
+    const cookie = req.cookies.get(ADMIN_COOKIE)?.value;
 
-  if (!password) {
-    const url = new URL("/admin", req.url);
-    url.searchParams.set("error", "missing-config");
-    return NextResponse.redirect(url);
+    if (!password) {
+      const url = new URL("/admin", req.url);
+      url.searchParams.set("error", "missing-config");
+      return NextResponse.redirect(url);
+    }
+
+    if (!(await cookieIsValid(cookie, password))) {
+      const url = new URL("/admin", req.url);
+      url.searchParams.set("next", req.nextUrl.pathname);
+      return NextResponse.redirect(url);
+    }
+
+    // Admin area uses its own cookie; no Supabase session refresh needed.
+    return NextResponse.next();
   }
 
-  if (!(await cookieIsValid(cookie, password))) {
-    const url = new URL("/admin", req.url);
-    url.searchParams.set("next", req.nextUrl.pathname);
-    return NextResponse.redirect(url);
+  // Refresh the Supabase auth cookies, but ONLY when a session cookie is
+  // present — anonymous pageviews (most of the traffic) skip the auth call and
+  // stay fast.
+  const hasSupabaseCookie = req.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-"));
+  if (hasSupabaseCookie) {
+    return updateSession(req);
   }
 
   return NextResponse.next();
 }
 
-// Protect every /admin/* path except /admin itself (the login page), and
-// 308-redirect /peeks/<uuid> URLs to /peeks/<slug>.
+// Runs on every page except Next internals and static assets. The peek-uuid
+// redirect and /admin gate are guarded by path checks inside; every other path
+// falls through to the (cookie-gated) Supabase session refresh.
 export const config = {
-  matcher: ["/admin/:path+", "/peeks/:slug*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml)$).*)",
+  ],
 };
