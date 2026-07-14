@@ -139,7 +139,16 @@ export default async function PeekDetailPage({
   // Pro gate: a Pro-only peek shows only a teaser (name, map, floor, grade) to
   // anyone who isn't Pro. The video/instructions/position are conditionally
   // rendered below, so they never reach a locked visitor's HTML.
-  const user = await getCurrentUser();
+  //
+  // A public peek page must never 500 over an auth hiccup, so failures fall
+  // back to the logged-out view — which keeps Pro-only peeks LOCKED (the safe
+  // default) rather than exposing gated content.
+  let user: Awaited<ReturnType<typeof getCurrentUser>> = null;
+  try {
+    user = await getCurrentUser();
+  } catch {
+    user = null;
+  }
   const locked = peek.is_pro_only && !user?.isPro;
 
   // Don't emit VideoObject JSON-LD for locked content (would expose the clip).
