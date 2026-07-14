@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { NewBadge } from "@/components/NewBadge";
+import { ProLockBadge } from "@/components/ProLockBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { getTopPeeks, type PeekWithContext } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
@@ -136,6 +137,7 @@ function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
             {peek.name}
           </h2>
           {isPeekNew(peek.created_at) && <NewBadge size="xs" />}
+          {peek.is_pro_only && <ProLockBadge />}
         </div>
         <p className="mt-0.5 truncate text-xs text-muted sm:text-sm">
           {map.name} · {floor.name}

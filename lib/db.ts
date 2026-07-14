@@ -39,6 +39,7 @@ export type Peek = {
   success_rate: number; // drifted legacy gauge — not shown to users anymore
   base_success_rate: number; // admin-seeded estimate; drives Effectiveness
   published: boolean;
+  is_pro_only: boolean; // detail gated behind Pro; still listed to everyone
   created_at: string;
 };
 
@@ -68,7 +69,7 @@ export type Creator = {
 // the code deploys before the 020 migration adds the column. lib/discord.ts
 // reads/writes the flag via its own targeted query.
 const PEEK_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, success_rate, base_success_rate, published, created_at";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, success_rate, base_success_rate, published, is_pro_only, created_at";
 
 export async function getMaps(): Promise<Map[]> {
   const { data, error } = await supabasePublic()

@@ -3,6 +3,7 @@ import type { Floor, Map, Peek } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { ProLockBadge } from "@/components/ProLockBadge";
 
 export function FloorPeekList({
   map,
@@ -69,6 +70,7 @@ export function FloorPeekList({
                       {peek.name}
                     </Link>
                     <GradeBadge label={r.label} score={r.score} />
+                    {peek.is_pro_only && <ProLockBadge />}
                   </div>
                   <p className="mt-1 text-[13px] text-muted">
                     {riskLabel[peek.risk]} · Difficulty {peek.difficulty}/5

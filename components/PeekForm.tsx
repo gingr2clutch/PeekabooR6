@@ -31,6 +31,7 @@ type Props = {
     difficulty?: number;
     risk?: "low" | "medium" | "high";
     published?: boolean;
+    is_pro_only?: boolean;
     instructions?: string[];
     tip?: string | null;
     success_rate?: number;
@@ -194,6 +195,16 @@ export function PeekForm({
             <span>Published (visible on the public site)</span>
           </label>
         )}
+
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="is_pro_only"
+            defaultChecked={initial?.is_pro_only ?? false}
+            className="h-4 w-4 rounded border-border accent-brand"
+          />
+          <span>Pro-only (listed to all; detail locked behind Pro)</span>
+        </label>
 
         <button
           type="submit"

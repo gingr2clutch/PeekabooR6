@@ -69,6 +69,7 @@ export async function createPeekAction(formData: FormData) {
   const tip = parseTip(formData.get("tip"));
   const success_rate = parseSuccessRate(formData.get("success_rate"));
   const published = formData.get("published") === "on";
+  const is_pro_only = formData.get("is_pro_only") === "on";
   const instructions = parseInstructions(formData);
 
   console.log("[createPeekAction] parsed payload:", {
@@ -111,6 +112,7 @@ export async function createPeekAction(formData: FormData) {
       // start identical so the slider value is the visible rate.
       base_success_rate: success_rate,
       published,
+      is_pro_only,
       instructions: instructions.length ? instructions : null,
     })
     .select("id")
@@ -142,6 +144,7 @@ export async function updatePeekAction(formData: FormData) {
   const risk = parseRisk(formData.get("risk"));
   const tip = parseTip(formData.get("tip"));
   const success_rate = parseSuccessRate(formData.get("success_rate"));
+  const is_pro_only = formData.get("is_pro_only") === "on";
   const instructions = parseInstructions(formData);
 
   if (!id || !floor_id || !name) return;
@@ -175,6 +178,9 @@ export async function updatePeekAction(formData: FormData) {
       // Votes resume drift from this new base afterwards.
       base_success_rate: success_rate,
       success_rate,
+      // `is_pro_only` IS a content attribute, so (unlike `published`) it's
+      // saved here from the edit form.
+      is_pro_only,
       // NOTE: `published` is intentionally NOT written here. Publish status is
       // owned solely by the explicit toggles (togglePublishedAction / inline /
       // bulk), so saving content can never accidentally revert a live peek to

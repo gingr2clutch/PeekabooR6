@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
+import { Lock } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PeekMedia } from "@/components/PeekMedia";
 import { VoteButtons } from "@/components/VoteButtons";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
+import { createCheckoutSession } from "@/app/account/actions";
 import { rating, votesText, type Grade } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
 import { GradeBar } from "@/components/GradeBar";
@@ -25,7 +28,7 @@ type Joined = Peek & {
 };
 
 const JOIN_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, success_rate, base_success_rate, published, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, success_rate, base_success_rate, published, is_pro_only, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
 
 async function fetchBySlug(slug: string): Promise<Joined | null> {
   const { data, error } = await supabasePublic()
@@ -96,6 +99,9 @@ export async function generateMetadata({
   return {
     title: `${map.name} · ${floor.name} · ${peek.name}`,
     description: `${peek.name} — spawn peek on ${map.name} ${floor.name}.`,
+    // Pro-only peeks are gated content — keep them out of Google's index
+    // (paired with their exclusion from the sitemap).
+    ...(peek.is_pro_only ? { robots: { index: false, follow: false } } : {}),
   };
 }
 
@@ -130,12 +136,21 @@ export default async function PeekDetailPage({
   const steps = Array.isArray(peek.instructions) ? peek.instructions : [];
   const hasInstructionsContent = steps.length > 0 || !!peek.tip;
 
-  const videoJsonLd = buildVideoJsonLd(peek, map, floor);
+  // Pro gate: a Pro-only peek shows only a teaser (name, map, floor, grade) to
+  // anyone who isn't Pro. The video/instructions/position are conditionally
+  // rendered below, so they never reach a locked visitor's HTML.
+  const user = await getCurrentUser();
+  const locked = peek.is_pro_only && !user?.isPro;
+
+  // Don't emit VideoObject JSON-LD for locked content (would expose the clip).
+  const videoJsonLd = locked ? null : buildVideoJsonLd(peek, map, floor);
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(peek, map);
 
   // Closest 4 peeks on this floor by Euclidean distance over (x_pct, y_pct).
-  // Peeks missing either coord sort last (Infinity). If none, section hides.
-  const sameFloor = await fetchSameFloorPeeks(peek.floor_id, peek.id);
+  // Skipped when locked — nearby positions are part of the gated detail.
+  const sameFloor = locked
+    ? []
+    : await fetchSameFloorPeeks(peek.floor_id, peek.id);
   const nearby = sameFloor
     .map((p) => {
       const ok = Number.isFinite(p.x_pct) && Number.isFinite(p.y_pct);
@@ -204,32 +219,40 @@ export default async function PeekDetailPage({
           />
         </section>
 
-        {/* Vote buttons — 16px below stats card */}
-        <div className="mt-4 flex justify-center">
-          <VoteButtons peekId={peek.id} />
-        </div>
-
-        {/* Content section — when there are no steps and no pro tip the
-            instructions column would be empty and the media column would
-            render at half width with dead space beside it. Drop to a
-            single column in that case so the media spans the row. */}
-        {hasInstructionsContent ? (
-          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
-            {peek.tiktok_url ? (
-              <TikTokLinkCard url={peek.tiktok_url} />
-            ) : (
-              <PeekMedia videoUrl={peek.video_url} name={peek.name} />
-            )}
-            <Instructions steps={steps} tip={peek.tip} />
+        {locked ? (
+          <div className="mt-8">
+            <ProLockCard />
           </div>
         ) : (
-          <div className="mt-16">
-            {peek.tiktok_url ? (
-              <TikTokLinkCard url={peek.tiktok_url} />
+          <>
+            {/* Vote buttons — 16px below stats card */}
+            <div className="mt-4 flex justify-center">
+              <VoteButtons peekId={peek.id} />
+            </div>
+
+            {/* Content section — when there are no steps and no pro tip the
+                instructions column would be empty and the media column would
+                render at half width with dead space beside it. Drop to a
+                single column in that case so the media spans the row. */}
+            {hasInstructionsContent ? (
+              <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
+                {peek.tiktok_url ? (
+                  <TikTokLinkCard url={peek.tiktok_url} />
+                ) : (
+                  <PeekMedia videoUrl={peek.video_url} name={peek.name} />
+                )}
+                <Instructions steps={steps} tip={peek.tip} />
+              </div>
             ) : (
-              <PeekMedia videoUrl={peek.video_url} name={peek.name} />
+              <div className="mt-16">
+                {peek.tiktok_url ? (
+                  <TikTokLinkCard url={peek.tiktok_url} />
+                ) : (
+                  <PeekMedia videoUrl={peek.video_url} name={peek.name} />
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
 
         {nearby.length > 0 && (
@@ -274,6 +297,37 @@ export default async function PeekDetailPage({
         dangerouslySetInnerHTML={{ __html: jsonLdText(breadcrumbJsonLd) }}
       />
     </>
+  );
+}
+
+// Locked teaser shown in place of the video/instructions for a Pro-only peek
+// when the viewer isn't Pro. The header + stats card above stay visible (map,
+// floor, grade). The button posts the checkout action (which sends logged-out
+// users to /login first).
+function ProLockCard() {
+  return (
+    <section className="mx-auto max-w-md rounded-card border border-border bg-card p-6 text-center shadow-sm">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand/10 text-brand">
+        <Lock size={22} strokeWidth={2.25} aria-hidden />
+      </div>
+      <h2 className="mt-4 text-lg font-semibold tracking-tight text-ink">
+        This is a Pro peek
+      </h2>
+      <p className="mt-1.5 text-sm leading-relaxed text-muted">
+        The clip, exact position, and setup for this peek are unlocked with Pro.
+      </p>
+      <form action={createCheckoutSession} className="mt-5">
+        <button
+          type="submit"
+          className="w-full rounded-btn bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand/90"
+        >
+          Unlock with Pro — $2.99/mo
+        </button>
+      </form>
+      <p className="mt-2 text-xs text-muted">
+        Cancel anytime. Unlocks every Pro peek.
+      </p>
+    </section>
   );
 }
 
