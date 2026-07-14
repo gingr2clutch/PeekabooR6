@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Eye, EyeOff, MailCheck } from "lucide-react";
@@ -107,41 +107,83 @@ function Alert({
   );
 }
 
-// Small "resend verification email" form — a hidden email + a link-style
-// submit that shows its own pending/result state.
-function ResendVerification({
-  email,
-  label,
-}: {
-  email: string;
-  label: string;
-}) {
-  const [state, action] = useFormState(resendVerificationAction, EMPTY);
-  return (
-    <form action={action} className="space-y-2">
-      <input type="hidden" name="email" value={email} />
-      {state.error && <Alert tone="error">{state.error}</Alert>}
-      {state.message && <Alert tone="success">{state.message}</Alert>}
-      <ResendButton>{label}</ResendButton>
-    </form>
-  );
-}
+// How long the resend button stays disabled — Supabase rate-limits to one
+// email per address per minute.
+const RESEND_COOLDOWN_SECONDS = 60;
 
-function ResendButton({ children }: { children: React.ReactNode }) {
+function ResendButton({
+  children,
+  disabled,
+}: {
+  children: React.ReactNode;
+  disabled?: boolean;
+}) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
-      disabled={pending}
-      className="text-sm font-medium text-brand hover:underline disabled:opacity-60"
+      disabled={pending || disabled}
+      className="text-sm font-medium text-brand hover:underline disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
     >
       {pending ? "Sending…" : children}
     </button>
   );
 }
 
-// Post-signup confirmation screen.
-function CheckEmailPanel({ email }: { email: string }) {
+// "Resend" form with a 60s cooldown countdown. The countdown starts on mount
+// (the first email was just sent) and resets after each successful resend.
+function ResendWithCountdown({
+  email,
+  action,
+  label,
+}: {
+  email: string;
+  action: typeof resendVerificationAction;
+  label: string;
+}) {
+  const [state, formAction] = useFormState(action, EMPTY);
+  const [left, setLeft] = useState(RESEND_COOLDOWN_SECONDS);
+
+  // One ticking timer for the component's life; decrements to 0 and holds.
+  useEffect(() => {
+    const t = setInterval(
+      () => setLeft((l) => (l <= 0 ? 0 : l - 1)),
+      1000
+    );
+    return () => clearInterval(t);
+  }, []);
+
+  // Restart the cooldown whenever a resend completes (message or error back).
+  useEffect(() => {
+    if (state.message || state.error) setLeft(RESEND_COOLDOWN_SECONDS);
+  }, [state]);
+
+  return (
+    <form action={formAction} className="space-y-2">
+      <input type="hidden" name="email" value={email} />
+      {state.error && <Alert tone="error">{state.error}</Alert>}
+      {state.message && <Alert tone="success">{state.message}</Alert>}
+      <ResendButton disabled={left > 0}>
+        {left > 0 ? `Resend in ${left}s` : label}
+      </ResendButton>
+    </form>
+  );
+}
+
+// Confirmation screen shown after an email is sent (signup verification or
+// password reset). Replaces the form so the user can read it while they go
+// check their inbox.
+function CheckEmailPanel({
+  email,
+  sentDescription,
+  resendAction,
+  resendLabel,
+}: {
+  email: string;
+  sentDescription: string;
+  resendAction: typeof resendVerificationAction;
+  resendLabel: string;
+}) {
   return (
     <div className="space-y-4 text-center">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-teal/10 text-teal">
@@ -150,14 +192,23 @@ function CheckEmailPanel({ email }: { email: string }) {
       <div>
         <h2 className="text-base font-semibold text-ink">Check your email</h2>
         <p className="mt-1 text-sm leading-relaxed text-muted">
-          We sent a verification link to{" "}
-          <span className="font-medium text-ink">{email}</span>. Click it to
-          activate your account.
+          {sentDescription}{" "}
+          <span className="font-medium text-ink">{email}</span>.
         </p>
       </div>
+      <p className="text-sm leading-relaxed text-muted">
+        Can&rsquo;t find it? Check your{" "}
+        <span className="font-medium text-ink">spam</span> folder for an email
+        from <span className="font-semibold text-brand">peekabooR6</span> — it
+        can take a minute to arrive.
+      </p>
       <div className="rounded-card border border-border bg-bg/60 p-3">
         <p className="mb-1 text-xs text-muted">Didn&rsquo;t get it?</p>
-        <ResendVerification email={email} label="Resend verification email" />
+        <ResendWithCountdown
+          email={email}
+          action={resendAction}
+          label={resendLabel}
+        />
       </div>
       <p className="text-sm text-muted">
         <Link href="/login" className="hover:text-brand">
@@ -177,8 +228,9 @@ export function LoginForm({ initialError }: { initialError?: string }) {
     <form action={action} className="space-y-4">
       {state.error && <Alert tone="error">{state.error}</Alert>}
       {state.needsVerification && state.email && (
-        <ResendVerification
+        <ResendWithCountdown
           email={state.email}
+          action={resendVerificationAction}
           label="Resend verification email"
         />
       )}
@@ -206,7 +258,14 @@ export function SignupForm() {
 
   // Success → swap the form for the "check your email" screen.
   if (state.message && state.email) {
-    return <CheckEmailPanel email={state.email} />;
+    return (
+      <CheckEmailPanel
+        email={state.email}
+        sentDescription="We sent a verification link to"
+        resendAction={resendVerificationAction}
+        resendLabel="Resend verification email"
+      />
+    );
   }
 
   return (
@@ -236,10 +295,22 @@ export function SignupForm() {
 
 export function ForgotPasswordForm() {
   const [state, action] = useFormState(requestPasswordResetAction, EMPTY);
+
+  // Success → swap the form for the "check your email" screen.
+  if (state.message && state.email) {
+    return (
+      <CheckEmailPanel
+        email={state.email}
+        sentDescription="If that email has an account, we sent a password reset link to"
+        resendAction={requestPasswordResetAction}
+        resendLabel="Resend reset link"
+      />
+    );
+  }
+
   return (
     <form action={action} className="space-y-4">
       {state.error && <Alert tone="error">{state.error}</Alert>}
-      {state.message && <Alert tone="success">{state.message}</Alert>}
       <Field label="Email" name="email" type="email" autoComplete="email" />
       <SubmitButton>Send reset link</SubmitButton>
       <p className="pt-1 text-center text-sm text-muted">

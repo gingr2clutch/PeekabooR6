@@ -127,8 +127,12 @@ export async function requestPasswordResetAction(
   await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${siteOrigin()}/auth/callback?next=/reset-password`,
   });
+  // Echo the email back so the confirmation screen can show the address. This
+  // does NOT leak account existence — the same "sent" screen shows for any
+  // address, registered or not.
   return {
     message: "If that email has an account, we've sent a password reset link.",
+    email,
   };
 }
 
