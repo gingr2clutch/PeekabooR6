@@ -27,6 +27,10 @@ export function SiteFooter() {
           Contact
         </Link>
         <span aria-hidden>·</span>
+        <Link href="/compare" className={linkCls}>
+          Compare Maps
+        </Link>
+        <span aria-hidden>·</span>
         <span>© 2026 peekabooR6</span>
       </div>
     </footer>

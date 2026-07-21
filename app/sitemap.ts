@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { supabasePublic } from "@/lib/supabase";
 import { articleSlugFor, listEligibleMaps } from "@/lib/blog";
+import { allPairings, getComparisonMaps } from "@/lib/compare";
 
 // Supabase reads use no-store under the hood, which Next 14's static
 // renderer treats as a dynamic data source. Mark this route dynamic so
@@ -76,6 +77,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.3,
     },
+    {
+      url: `${BASE_URL}/compare`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
   ];
 
   const { data: maps } = await supabase
@@ -118,10 +125,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // One canonical URL per unordered pairing of comparison-eligible maps.
+  const comparisonMaps = await getComparisonMaps();
+  const compareEntries: MetadataRoute.Sitemap = allPairings(
+    comparisonMaps.map((m) => m.map.slug)
+  ).map((pair) => ({
+    url: `${BASE_URL}/compare/${pair}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.6,
+  }));
+
   return [
     ...staticEntries,
     ...mapEntries,
     ...peekEntries,
     ...blogEntries,
+    ...compareEntries,
   ];
 }
