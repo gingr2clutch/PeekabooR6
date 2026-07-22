@@ -185,21 +185,17 @@ export default async function MapTrendsPage({
     30
   );
 
-  // Chart series: the map's top 5 peeks by grade. Built once per window (7 and
-  // 30 days), keeping only peeks with >= 2 points in that window so a line
-  // always has a real slope to draw.
-  const topPeeks = rankedPeeks.slice(0, 5);
-  const seriesFor = (windowDays: number): TrendSeries[] =>
-    topPeeks
-      .map((peek, i) => ({
-        label: peek.name,
-        href: `/peeks/${peek.slug}`,
-        color: TREND_LINE_COLORS[i % TREND_LINE_COLORS.length],
-        points: pointsWithinDays(snaps.get(peek.id) ?? [], windowDays),
-      }))
-      .filter((s) => s.points.length >= 2);
-  const series7 = seriesFor(7);
-  const series30 = seriesFor(30);
+  // Chart series: the map's top 5 peeks by grade over the last 30 days (the
+  // 7-day view lives on the map page). Only peeks with >= 2 points are plotted.
+  const series30: TrendSeries[] = rankedPeeks
+    .slice(0, 5)
+    .map((peek, i) => ({
+      label: peek.name,
+      href: `/peeks/${peek.slug}`,
+      color: TREND_LINE_COLORS[i % TREND_LINE_COLORS.length],
+      points: pointsWithinDays(snaps.get(peek.id) ?? [], 30),
+    }))
+    .filter((s) => s.points.length >= 2);
 
   const sevenDay = moversFor(rankedPeeks, snaps, 7);
   const thirtyDay = moversFor(rankedPeeks, snaps, 30);
@@ -262,24 +258,17 @@ export default async function MapTrendsPage({
           </div>
         </div>
 
-        {series7.length === 0 && series30.length === 0 ? (
+        {series30.length === 0 ? (
           <p className="rounded-card border border-border bg-card p-6 text-center text-sm text-muted">
             Trends will appear here as we collect more daily snapshots.
             {trackingSince ? ` ${trackingSince}.` : ""}
           </p>
         ) : (
-          <div className="space-y-6">
-            <TrendChartBlock
-              title="Last 7 days"
-              series={series7}
-              emptyNote="Not enough data in the last 7 days yet — check back soon."
-            />
-            <TrendChartBlock
-              title="Last 30 days"
-              series={series30}
-              emptyNote="Not enough data yet."
-            />
-          </div>
+          <TrendChartBlock
+            title="Last 30 days — Top 5 peeks"
+            series={series30}
+            emptyNote="Not enough data yet."
+          />
         )}
 
         {hasMovers && (

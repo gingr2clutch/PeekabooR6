@@ -17,7 +17,13 @@ import {
 import { rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
 import { TrendArrow } from "@/components/TrendArrow";
-import { computeDirection, getSnapshotsForPeeks } from "@/lib/trends";
+import { MultiTrendChart, type TrendSeries } from "@/components/MultiTrendChart";
+import {
+  computeDirection,
+  getSnapshotsForPeeks,
+  pointsWithinDays,
+  TREND_LINE_COLORS,
+} from "@/lib/trends";
 
 export const dynamic = "force-dynamic";
 
@@ -101,6 +107,19 @@ export default async function MapPage({
     14
   );
 
+  // Always-visible "Last 7 days" chart: top 5 peeks, reusing the 14-day
+  // snapshots above (filtered to the last 7 days). Only series with a real
+  // slope (>= 2 points in the window) are plotted.
+  const mapSeries7: TrendSeries[] = rankedPeeks
+    .slice(0, 5)
+    .map((peek, i) => ({
+      label: peek.name,
+      href: `/peeks/${peek.slug}`,
+      color: TREND_LINE_COLORS[i % TREND_LINE_COLORS.length],
+      points: pointsWithinDays(rankedTrends.get(peek.id) ?? [], 7),
+    }))
+    .filter((s) => s.points.length >= 2);
+
   const lastUpdatedLabel = latestPeekAt
     ? new Date(latestPeekAt).toLocaleDateString("en-US", {
         year: "numeric",
@@ -149,14 +168,31 @@ export default async function MapPage({
           </div>
         )}
 
+        {/* Effectiveness trend — always visible, no click. The 7-day chart lives
+            here; the full 30-day chart + Movers are one tap away. */}
         {totalPeeks >= 2 && (
-          <div data-reveal className="mb-6 flex justify-center">
-            <Link
-              href={`/maps/${map.slug}/trends`}
-              className="peek-lift inline-flex items-center gap-2 rounded-btn border border-border bg-card px-4 py-2 text-sm font-semibold text-ink shadow-sm transition-colors hover:border-brand hover:text-brand"
-            >
-              📈 Effectiveness trends
-            </Link>
+          <div data-reveal className="mb-8">
+            <div className="rounded-card border border-border bg-card p-4 shadow-sm sm:p-6">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">
+                Last 7 days — Top 5 peeks
+              </h2>
+              {mapSeries7.length === 0 ? (
+                <p className="text-center text-sm text-muted">
+                  Trend data is still being collected — snapshots are captured
+                  daily.
+                </p>
+              ) : (
+                <MultiTrendChart series={mapSeries7} />
+              )}
+              <div className="mt-4 text-center">
+                <Link
+                  href={`/maps/${map.slug}/trends`}
+                  className="text-sm font-semibold text-brand hover:underline"
+                >
+                  See full trends →
+                </Link>
+              </div>
+            </div>
           </div>
         )}
 
