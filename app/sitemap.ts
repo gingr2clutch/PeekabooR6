@@ -83,12 +83,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.6,
     },
-    {
-      url: `${BASE_URL}/roulette`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.5,
-    },
   ];
 
   const { data: maps } = await supabase
@@ -102,16 +96,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.8,
-    })
-  );
-
-  // One Peek Roulette page per published map.
-  const rouletteEntries: MetadataRoute.Sitemap = (maps ?? []).map(
-    (m: { slug: string }) => ({
-      url: `${BASE_URL}/roulette/${m.slug}`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.4,
     })
   );
 
@@ -155,7 +139,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticEntries,
     ...mapEntries,
-    ...rouletteEntries,
     ...peekEntries,
     ...blogEntries,
     ...compareEntries,

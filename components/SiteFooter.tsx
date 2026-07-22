@@ -31,10 +31,6 @@ export function SiteFooter() {
           Compare Maps
         </Link>
         <span aria-hidden>·</span>
-        <Link href="/roulette" className={linkCls}>
-          Peek Roulette
-        </Link>
-        <span aria-hidden>·</span>
         <span>© 2026 peekabooR6</span>
       </div>
     </footer>
