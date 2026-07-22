@@ -183,6 +183,46 @@ export type ChartBox = {
   padB: number;
 };
 
+// Y-axis value range. Auto-scaled charts pass a tight data-driven domain so
+// small real moves read as real slopes; the default is the full 0–100.
+export type YDomain = { min: number; max: number };
+
+// Only the points within the last `days` (used to split the 7- and 30-day
+// charts). Keeps the ascending order.
+export function pointsWithinDays(
+  points: SnapshotPoint[],
+  days: number
+): SnapshotPoint[] {
+  return points.filter((p) => daysAgoOf(p.date) <= days);
+}
+
+// Tight y-domain around the plotted values: [min − pad, max + pad], clamped to
+// [0, 100], with a floor on the span so a nearly-flat series still gets a
+// readable, clearly-labelled band (never a zoomed 2-point move masquerading as
+// the whole axis). Empty input falls back to the full 0–100.
+export function autoYDomain(points: SnapshotPoint[], pad = 4): YDomain {
+  if (points.length === 0) return { min: 0, max: 100 };
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const p of points) {
+    lo = Math.min(lo, p.pct);
+    hi = Math.max(hi, p.pct);
+  }
+  let min = Math.max(0, Math.floor(lo - pad));
+  let max = Math.min(100, Math.ceil(hi + pad));
+  const MIN_SPAN = 8;
+  if (max - min < MIN_SPAN) {
+    const mid = (max + min) / 2;
+    min = Math.max(0, Math.floor(mid - MIN_SPAN / 2));
+    max = Math.min(100, Math.ceil(mid + MIN_SPAN / 2));
+    if (max - min < MIN_SPAN) {
+      if (min === 0) max = Math.min(100, min + MIN_SPAN);
+      else min = Math.max(0, max - MIN_SPAN);
+    }
+  }
+  return { min, max };
+}
+
 export type LaidPoint = {
   x: number;
   y: number;
@@ -201,17 +241,20 @@ export function domainDaysFor(points: SnapshotPoint[], cap = 30): number {
 export function layoutSeries(
   points: SnapshotPoint[],
   box: ChartBox,
-  domainDays: number
+  domainDays: number,
+  yDomain: YDomain = { min: 0, max: 100 }
 ): LaidPoint[] {
   const innerW = box.width - box.padL - box.padR;
   const innerH = box.height - box.padT - box.padB;
   const dd = domainDays <= 0 ? 1 : domainDays;
+  const ySpan = Math.max(1, yDomain.max - yDomain.min);
   const out: LaidPoint[] = [];
   let prevAgo: number | null = null;
   for (const p of points) {
     const ago = daysAgoOf(p.date);
     const x = box.padL + (1 - Math.min(ago, dd) / dd) * innerW;
-    const y = box.padT + (1 - clamp(p.pct, 0, 100) / 100) * innerH;
+    const frac = (clamp(p.pct, yDomain.min, yDomain.max) - yDomain.min) / ySpan;
+    const y = box.padT + (1 - frac) * innerH;
     out.push({ x, y, gapBefore: prevAgo !== null && prevAgo - ago > 1, point: p });
     prevAgo = ago;
   }

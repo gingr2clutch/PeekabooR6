@@ -14,6 +14,7 @@ import { rating } from "@/lib/rate";
 import {
   computeMover,
   getSnapshotsForPeeks,
+  pointsWithinDays,
   trackingSinceLabel,
   TREND_LINE_COLORS,
   type SnapshotPoint,
@@ -38,6 +39,31 @@ export async function generateMetadata({
     alternates: { canonical: `${SITE_URL}/maps/${map.slug}/trends` },
     openGraph: { title, description, type: "website", siteName: "peekabooR6" },
   };
+}
+
+// One labelled chart panel (a "Last 7 days" / "Last 30 days" section). Its
+// y-axis auto-scales to the window's own data range inside MultiTrendChart.
+function TrendChartBlock({
+  title,
+  series,
+  emptyNote,
+}: {
+  title: string;
+  series: TrendSeries[];
+  emptyNote: string;
+}) {
+  return (
+    <section className="rounded-card border border-border bg-card p-4 shadow-sm sm:p-6">
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">
+        {title}
+      </h2>
+      {series.length === 0 ? (
+        <p className="text-center text-sm text-muted">{emptyNote}</p>
+      ) : (
+        <MultiTrendChart series={series} />
+      )}
+    </section>
+  );
 }
 
 type MoverRow = { peek: PeekWithContext; changePct: number };
@@ -159,16 +185,21 @@ export default async function MapTrendsPage({
     30
   );
 
-  // Chart series: the map's top peeks by grade, only those with >= 2 points.
-  const series: TrendSeries[] = rankedPeeks
-    .slice(0, 6)
-    .map((peek, i) => ({
-      label: peek.name,
-      href: `/peeks/${peek.slug}`,
-      color: TREND_LINE_COLORS[i % TREND_LINE_COLORS.length],
-      points: snaps.get(peek.id) ?? [],
-    }))
-    .filter((s) => s.points.length >= 2);
+  // Chart series: the map's top 5 peeks by grade. Built once per window (7 and
+  // 30 days), keeping only peeks with >= 2 points in that window so a line
+  // always has a real slope to draw.
+  const topPeeks = rankedPeeks.slice(0, 5);
+  const seriesFor = (windowDays: number): TrendSeries[] =>
+    topPeeks
+      .map((peek, i) => ({
+        label: peek.name,
+        href: `/peeks/${peek.slug}`,
+        color: TREND_LINE_COLORS[i % TREND_LINE_COLORS.length],
+        points: pointsWithinDays(snaps.get(peek.id) ?? [], windowDays),
+      }))
+      .filter((s) => s.points.length >= 2);
+  const series7 = seriesFor(7);
+  const series30 = seriesFor(30);
 
   const sevenDay = moversFor(rankedPeeks, snaps, 7);
   const thirtyDay = moversFor(rankedPeeks, snaps, 30);
@@ -231,18 +262,24 @@ export default async function MapTrendsPage({
           </div>
         </div>
 
-        {series.length === 0 ? (
+        {series7.length === 0 && series30.length === 0 ? (
           <p className="rounded-card border border-border bg-card p-6 text-center text-sm text-muted">
             Trends will appear here as we collect more daily snapshots.
             {trackingSince ? ` ${trackingSince}.` : ""}
           </p>
         ) : (
-          <section className="rounded-card border border-border bg-card p-4 shadow-sm sm:p-6">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">
-              Top peeks over time
-            </h2>
-            <MultiTrendChart series={series} />
-          </section>
+          <div className="space-y-6">
+            <TrendChartBlock
+              title="Last 7 days"
+              series={series7}
+              emptyNote="Not enough data in the last 7 days yet — check back soon."
+            />
+            <TrendChartBlock
+              title="Last 30 days"
+              series={series30}
+              emptyNote="Not enough data yet."
+            />
+          </div>
         )}
 
         {hasMovers && (

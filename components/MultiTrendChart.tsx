@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  autoYDomain,
   domainDaysFor,
   layoutSeries,
   pathFromLayout,
@@ -10,6 +11,10 @@ import {
 // Multi-line effectiveness chart for a map's top peeks — pure server-rendered
 // SVG + a compact legend. Each series is one peek in a distinct color. The
 // caller filters to series with >= 2 points.
+//
+// The y-axis auto-scales to the plotted data range (see autoYDomain), so a
+// peek moving 78% → 81% shows a real slope instead of a flat line near the top
+// of a 0–100 axis. Tick values are labelled so the zoom level is unambiguous.
 export type TrendSeries = {
   label: string;
   href: string;
@@ -19,23 +24,30 @@ export type TrendSeries = {
 
 const BOX: ChartBox = {
   width: 360,
-  height: 180,
-  padL: 30,
+  height: 170,
+  padL: 34,
   padR: 12,
   padT: 12,
   padB: 22,
 };
 
-const GRID = [0, 25, 50, 75, 100];
+const TICK_COUNT = 4;
 
 export function MultiTrendChart({ series }: { series: TrendSeries[] }) {
-  // Shared X domain across every series so lines are comparable.
   const allPoints = series.flatMap((s) => s.points);
   const domainDays = domainDaysFor(allPoints);
+  const yDomain = autoYDomain(allPoints);
   const innerW = BOX.width - BOX.padL - BOX.padR;
 
   const yFor = (v: number) =>
-    BOX.padT + (1 - v / 100) * (BOX.height - BOX.padT - BOX.padB);
+    BOX.padT +
+    (1 - (v - yDomain.min) / Math.max(1, yDomain.max - yDomain.min)) *
+      (BOX.height - BOX.padT - BOX.padB);
+
+  // Evenly spaced, integer-labelled ticks across the auto-scaled domain.
+  const ticks = Array.from({ length: TICK_COUNT }, (_, i) =>
+    Math.round(yDomain.min + ((yDomain.max - yDomain.min) * i) / (TICK_COUNT - 1))
+  );
 
   return (
     <div>
@@ -43,10 +55,10 @@ export function MultiTrendChart({ series }: { series: TrendSeries[] }) {
         viewBox={`0 0 ${BOX.width} ${BOX.height}`}
         className="h-auto w-full"
         role="img"
-        aria-label="Effectiveness over time for this map's top peeks"
+        aria-label={`Effectiveness over time (${yDomain.min}% to ${yDomain.max}%) for this map's top peeks`}
         preserveAspectRatio="xMidYMid meet"
       >
-        {GRID.map((v) => (
+        {ticks.map((v) => (
           <g key={v}>
             <line
               x1={BOX.padL}
@@ -56,22 +68,20 @@ export function MultiTrendChart({ series }: { series: TrendSeries[] }) {
               stroke="#e2e0d5"
               strokeWidth={1}
             />
-            {(v === 0 || v === 50 || v === 100) && (
-              <text
-                x={BOX.padL - 6}
-                y={yFor(v) + 3}
-                textAnchor="end"
-                fontSize={9}
-                fill="#8b8d86"
-              >
-                {v}
-              </text>
-            )}
+            <text
+              x={BOX.padL - 6}
+              y={yFor(v) + 3}
+              textAnchor="end"
+              fontSize={9}
+              fill="#8b8d86"
+            >
+              {v}%
+            </text>
           </g>
         ))}
 
         {series.map((s) => {
-          const laid = layoutSeries(s.points, BOX, domainDays);
+          const laid = layoutSeries(s.points, BOX, domainDays, yDomain);
           const last = laid[laid.length - 1];
           return (
             <g key={s.label}>
