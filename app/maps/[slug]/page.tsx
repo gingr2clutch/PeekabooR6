@@ -16,6 +16,8 @@ import {
 } from "@/lib/db";
 import { rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
+import { TrendArrow } from "@/components/TrendArrow";
+import { computeDirection, getSnapshotsForPeeks } from "@/lib/trends";
 
 export const dynamic = "force-dynamic";
 
@@ -93,6 +95,12 @@ export default async function MapPage({
   const topPeek = await getTopPeekForMap(floorIds);
   const rankedPeeks = await getRankedPeeksForMap(floorIds);
 
+  // Batched 7-vs-7 trend direction for the ranked-list arrows (one query).
+  const rankedTrends = await getSnapshotsForPeeks(
+    rankedPeeks.map((p) => p.id),
+    14
+  );
+
   const lastUpdatedLabel = latestPeekAt
     ? new Date(latestPeekAt).toLocaleDateString("en-US", {
         year: "numeric",
@@ -138,6 +146,17 @@ export default async function MapPage({
               grades={{ S: mapSTier, A: mapATier, B: mapBTier, C: mapCTier }}
               topPeek={topPeek}
             />
+          </div>
+        )}
+
+        {totalPeeks >= 2 && (
+          <div data-reveal className="mb-6 flex justify-center">
+            <Link
+              href={`/maps/${map.slug}/trends`}
+              className="peek-lift inline-flex items-center gap-2 rounded-btn border border-border bg-card px-4 py-2 text-sm font-semibold text-ink shadow-sm transition-colors hover:border-brand hover:text-brand"
+            >
+              📈 Effectiveness trends
+            </Link>
           </div>
         )}
 
@@ -216,7 +235,14 @@ export default async function MapPage({
                               {peek.floors?.name}
                             </div>
                           </div>
-                          <GradeBadge label={r.label} score={r.score} />
+                          <span className="inline-flex items-center gap-1">
+                            <GradeBadge label={r.label} score={r.score} />
+                            <TrendArrow
+                              direction={computeDirection(
+                                rankedTrends.get(peek.id) ?? []
+                              )}
+                            />
+                          </span>
                           {peek.is_pro_only && <ProLockBadge />}
                           <span className="shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted tabular-nums">
                             {peek.vote_count}{" "}

@@ -12,6 +12,15 @@ import { getCurrentUser } from "@/lib/auth";
 import { rating, votesText, type Grade } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
 import { GradeBar } from "@/components/GradeBar";
+import { TrendArrow } from "@/components/TrendArrow";
+import { TrendChart } from "@/components/TrendChart";
+import {
+  computeDirection,
+  getSnapshotsForPeek,
+  getSnapshotsForPeeks,
+  trackingSinceLabel,
+  type TrendDirection,
+} from "@/lib/trends";
 import { isUuid } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
@@ -170,6 +179,17 @@ export default async function PeekDetailPage({
     .slice(0, 4)
     .map((x) => x.p);
 
+  // Effectiveness history (server-side; peek_snapshots is RLS-locked to the
+  // service role). 30 days for the chart, plus a 7-vs-7 direction for the arrow.
+  const trendPoints = await getSnapshotsForPeek(peek.id, 30);
+  const trendDirection = computeDirection(trendPoints);
+  const trackingSince = trackingSinceLabel(trendPoints);
+  // Batched arrows for the "close by" list — one query, direction per peek.
+  const nearbyTrends = await getSnapshotsForPeeks(
+    nearby.map((p) => p.id),
+    14
+  );
+
   return (
     <>
       <PageHeader />
@@ -211,7 +231,7 @@ export default async function PeekDetailPage({
         <section className="mt-6 rounded-card border border-border bg-card p-4 md:mt-8 md:p-8">
           <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             <StatCell label="Effectiveness">
-              <SuccessStat peek={peek} />
+              <SuccessStat peek={peek} trend={trendDirection} />
             </StatCell>
             <StatCell label="Difficulty">
               <DifficultyDots difficulty={peek.difficulty} />
@@ -225,6 +245,28 @@ export default async function PeekDetailPage({
             workedVotes={peek.worked_votes}
             voteCount={peek.vote_count}
           />
+        </section>
+
+        {/* Effectiveness trend — daily snapshots. Cold-start grace: < 2 points
+            shows a "coming soon" note instead of an empty chart. */}
+        <section className="mt-8">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+              Trend
+            </h2>
+            {trackingSince && (
+              <span className="text-[11px] text-muted">{trackingSince}</span>
+            )}
+          </div>
+          {trendPoints.length < 2 ? (
+            <p className="mt-4 rounded-card border border-border bg-card p-4 text-center text-sm text-muted">
+              Trend data coming soon — effectiveness is snapshotted daily.
+            </p>
+          ) : (
+            <div className="mt-4 rounded-card border border-border bg-card p-4">
+              <TrendChart points={trendPoints} />
+            </div>
+          )}
         </section>
 
         {locked ? (
@@ -278,7 +320,10 @@ export default async function PeekDetailPage({
                     <h3 className="min-w-0 flex-1 truncate text-base font-semibold text-ink group-hover:text-brand">
                       {p.name}
                     </h3>
-                    <NearbyStat peek={p} />
+                    <NearbyStat
+                      peek={p}
+                      trend={computeDirection(nearbyTrends.get(p.id) ?? [])}
+                    />
                   </Link>
                 </li>
               ))}
@@ -347,11 +392,20 @@ function jsonLdText(obj: unknown): string {
 
 // Compact rating figure for the "Peeks close by" list — grade badge with a
 // caption of the vote count (measured) or "Effectiveness" (estimate).
-function NearbyStat({ peek }: { peek: NearbyPeek }) {
+function NearbyStat({
+  peek,
+  trend,
+}: {
+  peek: NearbyPeek;
+  trend: TrendDirection | null;
+}) {
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   return (
     <div className="shrink-0 text-right">
-      <GradeBadge label={r.label} score={r.score} />
+      <span className="inline-flex items-center gap-1">
+        <GradeBadge label={r.label} score={r.score} />
+        <TrendArrow direction={trend} />
+      </span>
       <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
         {r.tier === "measured" ? votesText(r.votes) : "Effectiveness"}
       </div>
@@ -447,11 +501,20 @@ function buildBreadcrumbJsonLd(
 // Hero rating figure — the headline grade badge. Once a peek is vote-backed
 // (measured tier) the real percentage and vote count show beneath the grade;
 // estimate-tier peeks show the grade alone, never a percentage.
-function SuccessStat({ peek }: { peek: Peek }) {
+function SuccessStat({
+  peek,
+  trend,
+}: {
+  peek: Peek;
+  trend: TrendDirection | null;
+}) {
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <GradeBadge label={r.label} score={r.score} size="lg" />
+      <span className="inline-flex items-center gap-1.5">
+        <GradeBadge label={r.label} score={r.score} size="lg" />
+        <TrendArrow direction={trend} className="text-lg" />
+      </span>
       {r.tier === "measured" && (
         <>
           <span className="text-[11px] font-medium text-muted md:text-xs">

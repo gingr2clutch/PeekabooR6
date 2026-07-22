@@ -99,6 +99,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   );
 
+  // Per-map effectiveness trends page.
+  const trendsEntries: MetadataRoute.Sitemap = (maps ?? []).map(
+    (m: { slug: string }) => ({
+      url: `${BASE_URL}/maps/${m.slug}/trends`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.5,
+    })
+  );
+
   // Only include peeks whose parent map is also published. Pro-only peeks are
   // gated content, so they're excluded here (and marked noindex on their page).
   const { data: peeks } = await supabase
@@ -139,6 +149,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticEntries,
     ...mapEntries,
+    ...trendsEntries,
     ...peekEntries,
     ...blogEntries,
     ...compareEntries,

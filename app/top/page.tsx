@@ -7,6 +7,12 @@ import { PageHeader } from "@/components/PageHeader";
 import { getTopPeeks, type PeekWithContext } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
+import { TrendArrow } from "@/components/TrendArrow";
+import {
+  computeDirection,
+  getSnapshotsForPeeks,
+  type TrendDirection,
+} from "@/lib/trends";
 import { isPeekNew } from "@/lib/peek-recency";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +58,12 @@ const MEDALS: Record<number, Medal> = {
 export default async function PopularPage() {
   const peeks = await getTopPeeks(8);
 
+  // Batched 7-vs-7 trend direction for every ranked peek (one query).
+  const trends = await getSnapshotsForPeeks(
+    peeks.map((p) => p.id),
+    14
+  );
+
   return (
     <>
       <PageHeader />
@@ -73,7 +85,12 @@ export default async function PopularPage() {
         ) : (
           <ol className="space-y-4">
             {peeks.map((peek, i) => (
-              <PeekRow key={peek.id} peek={peek} rank={i + 1} />
+              <PeekRow
+                key={peek.id}
+                peek={peek}
+                rank={i + 1}
+                trend={computeDirection(trends.get(peek.id) ?? [])}
+              />
             ))}
           </ol>
         )}
@@ -82,7 +99,15 @@ export default async function PopularPage() {
   );
 }
 
-function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
+function PeekRow({
+  peek,
+  rank,
+  trend,
+}: {
+  peek: PeekWithContext;
+  rank: number;
+  trend: TrendDirection | null;
+}) {
   const floor = peek.floors!;
   const map = floor.maps;
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
@@ -149,7 +174,10 @@ function PeekRow({ peek, rank }: { peek: PeekWithContext; rank: number }) {
       </div>
 
       <div className="shrink-0 text-right">
-        <GradeBadge label={r.label} score={r.score} />
+        <span className="inline-flex items-center gap-1">
+          <GradeBadge label={r.label} score={r.score} />
+          <TrendArrow direction={trend} />
+        </span>
         <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
           {r.tier === "measured" ? votesText(r.votes) : "Effectiveness"}
         </div>

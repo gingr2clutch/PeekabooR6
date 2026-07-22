@@ -1,0 +1,231 @@
+import { supabaseAdmin } from "@/lib/supabase";
+
+// A single day's snapshot of a peek, shaped for charting/trend math.
+export type SnapshotPoint = {
+  date: string; // YYYY-MM-DD (UTC), the captured_at day
+  pct: number; // effectiveness_pct, 0–100
+  grade: string; // grade label that day (e.g. "A+", "B")
+  votes: number; // vote_count that day
+};
+
+export type TrendDirection = "up" | "down" | "stable";
+
+// Distinct line colors for the multi-line map chart (not grade colors — these
+// just need to be tellable apart against cream). Brand orange leads.
+export const TREND_LINE_COLORS = [
+  "#f2640e", // brand orange
+  "#3f978b", // teal
+  "#4f7cc4", // blue
+  "#9b5de5", // purple
+  "#e0a92e", // amber
+  "#1f9d55", // green
+] as const;
+
+// A recent-vs-prior 7-day average within this band (percentage points) reads as
+// "stable" rather than up/down. THE knob for how twitchy the arrows are.
+const STABLE_THRESHOLD = 1.5;
+
+// ---------------------------------------------------------------------------
+// Reads. peek_snapshots has RLS enabled with NO public policies, so anon can't
+// read it — every query here goes through the service-role client and MUST stay
+// server-side. A missing table or transient error returns empty (cold-start
+// grace: the UI shows "coming soon" rather than crashing).
+// ---------------------------------------------------------------------------
+
+function isoDaysAgo(days: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
+function mapRow(r: {
+  captured_at: string;
+  effectiveness_pct: number;
+  grade: string;
+  vote_count: number;
+}): SnapshotPoint {
+  return {
+    date: r.captured_at,
+    pct: r.effectiveness_pct,
+    grade: r.grade,
+    votes: r.vote_count,
+  };
+}
+
+// Ascending-by-date snapshots for one peek over the last `days`.
+export async function getSnapshotsForPeek(
+  peekId: string,
+  days = 30
+): Promise<SnapshotPoint[]> {
+  const { data, error } = await supabaseAdmin()
+    .from("peek_snapshots")
+    .select("captured_at, effectiveness_pct, grade, vote_count")
+    .eq("peek_id", peekId)
+    .gte("captured_at", isoDaysAgo(days))
+    .order("captured_at", { ascending: true });
+  if (error || !data) return [];
+  return (data as Parameters<typeof mapRow>[0][]).map(mapRow);
+}
+
+// Batched: one query for many peeks, grouped by peek_id (each list ascending by
+// date). Avoids N+1 on list views.
+export async function getSnapshotsForPeeks(
+  peekIds: string[],
+  days = 30
+): Promise<Map<string, SnapshotPoint[]>> {
+  const out = new Map<string, SnapshotPoint[]>();
+  if (peekIds.length === 0) return out;
+  const { data, error } = await supabaseAdmin()
+    .from("peek_snapshots")
+    .select("peek_id, captured_at, effectiveness_pct, grade, vote_count")
+    .in("peek_id", peekIds)
+    .gte("captured_at", isoDaysAgo(days))
+    .order("captured_at", { ascending: true });
+  if (error || !data) return out;
+  for (const row of data as (Parameters<typeof mapRow>[0] & {
+    peek_id: string;
+  })[]) {
+    const arr = out.get(row.peek_id) ?? [];
+    arr.push(mapRow(row));
+    out.set(row.peek_id, arr);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Pure trend math.
+// ---------------------------------------------------------------------------
+
+const clamp = (n: number, lo: number, hi: number) =>
+  Math.max(lo, Math.min(hi, n));
+
+// Whole days between a snapshot date and today (UTC). 0 = today.
+function daysAgoOf(dateStr: string): number {
+  const now = new Date();
+  const todayUtc = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate()
+  );
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return Math.round((todayUtc - Date.UTC(y, m - 1, d)) / 86400000);
+}
+
+function avgInWindow(
+  points: SnapshotPoint[],
+  minAgo: number,
+  maxAgo: number
+): number | null {
+  const vals = points
+    .filter((p) => {
+      const a = daysAgoOf(p.date);
+      return a >= minAgo && a <= maxAgo;
+    })
+    .map((p) => p.pct);
+  if (vals.length === 0) return null;
+  return vals.reduce((s, v) => s + v, 0) / vals.length;
+}
+
+// Direction of the last 7 days vs the prior 7. Returns null when either window
+// has no data (not enough history yet → caller renders no arrow).
+export function computeDirection(
+  points: SnapshotPoint[]
+): TrendDirection | null {
+  if (points.length < 2) return null;
+  const recent = avgInWindow(points, 0, 6);
+  const prior = avgInWindow(points, 7, 13);
+  if (recent === null || prior === null) return null;
+  const diff = recent - prior;
+  if (Math.abs(diff) < STABLE_THRESHOLD) return "stable";
+  return diff > 0 ? "up" : "down";
+}
+
+export type Mover = { from: number; to: number; changePct: number };
+
+// Change over the last `windowDays`: latest point minus the earliest point
+// still inside the window. Null if fewer than 2 points land in the window.
+export function computeMover(
+  points: SnapshotPoint[],
+  windowDays: number
+): Mover | null {
+  const within = points.filter((p) => daysAgoOf(p.date) <= windowDays);
+  if (within.length < 2) return null;
+  const from = within[0].pct;
+  const to = within[within.length - 1].pct;
+  return { from, to, changePct: to - from };
+}
+
+// "Tracking since July 2026", from the earliest point present.
+export function trackingSinceLabel(points: SnapshotPoint[]): string | null {
+  if (points.length === 0) return null;
+  const [y, m] = points[0].date.split("-").map(Number);
+  const month = new Date(Date.UTC(y, m - 1, 1)).toLocaleString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return `Tracking since ${month}`;
+}
+
+// ---------------------------------------------------------------------------
+// SVG layout (shared by the single- and multi-line charts). X is date-scaled by
+// days-ago (right edge = today); Y is 0–100 effectiveness. A gap of more than
+// one day between consecutive points breaks the line (no phantom connection
+// across missing snapshot days).
+// ---------------------------------------------------------------------------
+
+export type ChartBox = {
+  width: number;
+  height: number;
+  padL: number;
+  padR: number;
+  padT: number;
+  padB: number;
+};
+
+export type LaidPoint = {
+  x: number;
+  y: number;
+  gapBefore: boolean;
+  point: SnapshotPoint;
+};
+
+// Widest span (in days) present across the given points, capped at `cap`. Used
+// as the X domain so sparse cold-start data still spreads across the chart.
+export function domainDaysFor(points: SnapshotPoint[], cap = 30): number {
+  let maxAgo = 0;
+  for (const p of points) maxAgo = Math.max(maxAgo, daysAgoOf(p.date));
+  return Math.min(cap, Math.max(1, maxAgo));
+}
+
+export function layoutSeries(
+  points: SnapshotPoint[],
+  box: ChartBox,
+  domainDays: number
+): LaidPoint[] {
+  const innerW = box.width - box.padL - box.padR;
+  const innerH = box.height - box.padT - box.padB;
+  const dd = domainDays <= 0 ? 1 : domainDays;
+  const out: LaidPoint[] = [];
+  let prevAgo: number | null = null;
+  for (const p of points) {
+    const ago = daysAgoOf(p.date);
+    const x = box.padL + (1 - Math.min(ago, dd) / dd) * innerW;
+    const y = box.padT + (1 - clamp(p.pct, 0, 100) / 100) * innerH;
+    out.push({ x, y, gapBefore: prevAgo !== null && prevAgo - ago > 1, point: p });
+    prevAgo = ago;
+  }
+  return out;
+}
+
+// SVG path `d` from laid-out points, starting a fresh subpath after any gap.
+export function pathFromLayout(laid: LaidPoint[]): string {
+  return laid
+    .map(
+      (pt, i) =>
+        `${i === 0 || pt.gapBefore ? "M" : "L"} ${pt.x.toFixed(1)} ${pt.y.toFixed(
+          1
+        )}`
+    )
+    .join(" ");
+}
