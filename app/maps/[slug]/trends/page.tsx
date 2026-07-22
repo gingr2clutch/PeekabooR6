@@ -217,10 +217,6 @@ export default async function MapTrendsPage({
           <h1 className="mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">
             {map.name}
           </h1>
-          <p className="mt-3 text-[15px] text-muted">
-            How this map&apos;s spawn peeks are trending over time.
-            {trackingSince ? ` ${trackingSince}.` : ""}
-          </p>
           <div className="mt-3">
             <Link
               href={`/maps/${map.slug}`}

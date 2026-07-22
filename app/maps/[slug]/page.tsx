@@ -292,7 +292,7 @@ export default async function MapPage({
         {totalPeeks >= 2 && (
           <div data-reveal className="mt-8">
             <div className="rounded-card border border-border bg-card px-4 py-5 shadow-sm sm:px-6">
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">
+              <h2 className="mb-4 text-center text-lg font-bold tracking-tight text-ink">
                 Last 7 days — Top 5 peeks
               </h2>
               {mapSeries7.length === 0 ? (

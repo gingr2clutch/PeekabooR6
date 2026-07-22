@@ -26,7 +26,7 @@ export function MapStats({ peeks, votes, grades, topPeek }: Props) {
   return (
     <div className="rounded-card border border-border bg-card px-4 py-5 shadow-sm sm:px-6">
       {/* Small card header. */}
-      <div className="mb-3 text-center font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-teal">
+      <div className="mb-3 text-center text-lg font-bold tracking-tight text-ink">
         Map Stats
       </div>
 
