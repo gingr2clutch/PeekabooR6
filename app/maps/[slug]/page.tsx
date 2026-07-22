@@ -150,14 +150,6 @@ export default async function MapPage({
         </div>
 
         {totalPeeks > 0 && (
-          <p className="mx-auto mb-8 max-w-2xl text-center text-[15px] leading-relaxed text-muted">
-            Community-graded spawn peeks for {map.name} — pick a floor to see
-            exact spots, watch clips, and learn the setups.
-            {lastUpdatedLabel ? ` Updated ${lastUpdatedLabel}.` : ""}
-          </p>
-        )}
-
-        {totalPeeks > 0 && (
           <div data-reveal className="mb-8">
             <MapStats
               peeks={totalPeeks}
@@ -301,6 +293,16 @@ export default async function MapPage({
               </div>
             </div>
           </div>
+        )}
+
+        {/* Descriptive blurb — moved to the very bottom as small, secondary
+            text (max 2 sentences: the intro + optional "Updated" line). */}
+        {totalPeeks > 0 && (
+          <p className="mx-auto mt-12 max-w-2xl text-center text-sm leading-relaxed text-muted">
+            Community-graded spawn peeks for {map.name} — pick a floor to see
+            exact spots, watch clips, and learn the setups.
+            {lastUpdatedLabel ? ` Updated ${lastUpdatedLabel}.` : ""}
+          </p>
         )}
       </main>
     </>
