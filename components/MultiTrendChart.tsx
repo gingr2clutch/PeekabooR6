@@ -22,11 +22,13 @@ export type TrendSeries = {
   points: SnapshotPoint[];
 };
 
+// Wide/short aspect so the chart reads as a compact banner at full card width
+// (not a tall graph that dwarfs the stats box next to it).
 const BOX: ChartBox = {
-  width: 360,
-  height: 170,
+  width: 480,
+  height: 150,
   padL: 34,
-  padR: 12,
+  padR: 14,
   padT: 12,
   padB: 22,
 };
@@ -109,20 +111,21 @@ export function MultiTrendChart({ series }: { series: TrendSeries[] }) {
         </text>
       </svg>
 
-      {/* Legend — color swatch + peek name, each linking to the peek. */}
-      <ul className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5">
+      {/* Legend — small color swatch + (truncated) peek name, each linking to
+          the peek. Kept compact so all top-5 names fit cleanly inside the card. */}
+      <ul className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1">
         {series.map((s) => (
-          <li key={s.label}>
+          <li key={s.label} className="min-w-0">
             <Link
               href={s.href}
-              className="inline-flex items-center gap-1.5 text-[13px] text-ink transition-colors hover:text-brand"
+              className="inline-flex max-w-full items-center gap-1.5 text-[11px] text-ink transition-colors hover:text-brand"
             >
               <span
                 aria-hidden
-                className="inline-block h-2.5 w-2.5 rounded-[3px]"
+                className="inline-block h-2 w-2 shrink-0 rounded-[2px]"
                 style={{ backgroundColor: s.color }}
               />
-              <span className="max-w-[10rem] truncate">{s.label}</span>
+              <span className="max-w-[6.5rem] truncate">{s.label}</span>
             </Link>
           </li>
         ))}

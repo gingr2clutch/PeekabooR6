@@ -168,34 +168,6 @@ export default async function MapPage({
           </div>
         )}
 
-        {/* Effectiveness trend — always visible, no click. The 7-day chart lives
-            here; the full 30-day chart + Movers are one tap away. */}
-        {totalPeeks >= 2 && (
-          <div data-reveal className="mb-8">
-            <div className="rounded-card border border-border bg-card p-4 shadow-sm sm:p-6">
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">
-                Last 7 days — Top 5 peeks
-              </h2>
-              {mapSeries7.length === 0 ? (
-                <p className="text-center text-sm text-muted">
-                  Trend data is still being collected — snapshots are captured
-                  daily.
-                </p>
-              ) : (
-                <MultiTrendChart series={mapSeries7} />
-              )}
-              <div className="mt-4 text-center">
-                <Link
-                  href={`/maps/${map.slug}/trends`}
-                  className="text-sm font-semibold text-brand hover:underline"
-                >
-                  See full trends →
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
         {floors.length > 0 && (
           <MapViewToggle
             floorsView={
@@ -300,6 +272,35 @@ export default async function MapPage({
 
         {floors.length === 0 && (
           <p className="text-center text-muted">No floors yet for this map.</p>
+        )}
+
+        {/* Effectiveness trend — always visible, below the floor picker. The
+            7-day chart lives here; the full 30-day chart + Movers are one tap
+            away. Card matches the stats box width/styling. */}
+        {totalPeeks >= 2 && (
+          <div data-reveal className="mt-8">
+            <div className="rounded-card border border-border bg-card px-4 py-5 shadow-sm sm:px-6">
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">
+                Last 7 days — Top 5 peeks
+              </h2>
+              {mapSeries7.length === 0 ? (
+                <p className="text-center text-sm text-muted">
+                  Trend data is still being collected — snapshots are captured
+                  daily.
+                </p>
+              ) : (
+                <MultiTrendChart series={mapSeries7} />
+              )}
+              <div className="mt-4 text-center">
+                <Link
+                  href={`/maps/${map.slug}/trends`}
+                  className="text-sm font-semibold text-brand hover:underline"
+                >
+                  See full trends →
+                </Link>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </>
