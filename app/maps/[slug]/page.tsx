@@ -147,7 +147,7 @@ export default async function MapPage({
                 alt=""
                 fill
                 sizes="(max-width: 896px) 100vw, 848px"
-                className="object-cover object-center opacity-[0.12]"
+                className="object-cover object-center opacity-[0.22]"
               />
               {/* Soft fade to the page background at the bottom edge. */}
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-bg" />
