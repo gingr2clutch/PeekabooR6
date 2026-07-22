@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FavoriteButton } from "@/components/FavoriteButton";
@@ -134,19 +135,38 @@ export default async function MapPage({
     <>
       <PageHeader />
       <main className="fade-in-up mx-auto max-w-4xl px-6 pb-20 pt-6">
-        <div data-reveal className="mb-8 text-center">
-          <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
-            {map.name}
-          </h1>
-          <p className="mt-3 text-sm text-muted">{floorLabel}</p>
-          <p className="mt-2 text-[15px] font-light italic text-muted">
-            Choose your floor
-          </p>
-          {totalPeeks >= 2 && (
-            <div className="mt-5">
-              <RandomPeekButton href={`/api/maps/${map.slug}/random-peek`} />
+        {/* Header with a subtle backdrop of the map's own cover image — faint,
+            cover-cropped, fading into the page background at the bottom so it
+            blends into the stats section. Decorative (empty alt) and absolutely
+            positioned, so it adds no layout shift. */}
+        <div className="relative mb-8 overflow-hidden rounded-card">
+          {map.cover_image_url && (
+            <div aria-hidden className="pointer-events-none absolute inset-0">
+              <Image
+                src={map.cover_image_url}
+                alt=""
+                fill
+                sizes="(max-width: 896px) 100vw, 848px"
+                className="object-cover object-center opacity-[0.12]"
+              />
+              {/* Soft fade to the page background at the bottom edge. */}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-bg" />
             </div>
           )}
+          <div data-reveal className="relative z-10 px-4 py-8 text-center">
+            <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
+              {map.name}
+            </h1>
+            <p className="mt-3 text-sm text-muted">{floorLabel}</p>
+            <p className="mt-2 text-[15px] font-light italic text-muted">
+              Choose your floor
+            </p>
+            {totalPeeks >= 2 && (
+              <div className="mt-5">
+                <RandomPeekButton href={`/api/maps/${map.slug}/random-peek`} />
+              </div>
+            )}
+          </div>
         </div>
 
         {totalPeeks > 0 && (
