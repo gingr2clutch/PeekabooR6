@@ -48,7 +48,12 @@ export function MapViewToggle({
   ];
 
   return (
-    <>
+    // Floors-section "bubble": a barely-there orange tint sits behind the
+    // toggle + the active view (floors or ranked list), so the whole section
+    // reads as one unit between the stats box and the trends chart. The cards
+    // inside keep their white styling; modest padding on mobile so the tint
+    // doesn't steal card width.
+    <div className="rounded-card border border-brand/10 bg-brand/[0.06] px-3 py-4 sm:p-6">
       <div className="mb-8 flex justify-center">
         <div
           role="tablist"
@@ -78,6 +83,6 @@ export function MapViewToggle({
       </div>
 
       {view === "floors" ? floorsView : rankedView}
-    </>
+    </div>
   );
 }
