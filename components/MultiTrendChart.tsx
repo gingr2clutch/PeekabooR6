@@ -33,7 +33,23 @@ const BOX: ChartBox = {
   padB: 22,
 };
 
-const TICK_COUNT = 4;
+// Axis ticks for a tight domain: always the min and max (so the exact zoomed
+// range is labelled, e.g. 71%–84%), plus nice interior multiples (1/2/5/10…
+// steps sized to the range) — dropping any that would crowd an endpoint. Narrow
+// ranges get 1% or 2% steps.
+function axisTicks(min: number, max: number): number[] {
+  const range = Math.max(1, max - min);
+  const step = [1, 2, 5, 10, 20, 25, 50].find((s) => range / s <= 5) ?? 100;
+  const ticks: number[] = [min];
+  const first = Math.ceil(min / step) * step;
+  for (let v = first; v < max; v += step) {
+    if (v - min >= step / 2 && max - v >= step / 2 && !ticks.includes(v)) {
+      ticks.push(v);
+    }
+  }
+  if (!ticks.includes(max)) ticks.push(max);
+  return ticks.sort((a, b) => a - b);
+}
 
 export function MultiTrendChart({ series }: { series: TrendSeries[] }) {
   const allPoints = series.flatMap((s) => s.points);
@@ -46,10 +62,7 @@ export function MultiTrendChart({ series }: { series: TrendSeries[] }) {
     (1 - (v - yDomain.min) / Math.max(1, yDomain.max - yDomain.min)) *
       (BOX.height - BOX.padT - BOX.padB);
 
-  // Evenly spaced, integer-labelled ticks across the auto-scaled domain.
-  const ticks = Array.from({ length: TICK_COUNT }, (_, i) =>
-    Math.round(yDomain.min + ((yDomain.max - yDomain.min) * i) / (TICK_COUNT - 1))
-  );
+  const ticks = axisTicks(yDomain.min, yDomain.max);
 
   return (
     <div>

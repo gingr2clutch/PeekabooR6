@@ -196,11 +196,11 @@ export function pointsWithinDays(
   return points.filter((p) => daysAgoOf(p.date) <= days);
 }
 
-// Tight y-domain around the plotted values: [min − pad, max + pad], clamped to
-// [0, 100], with a floor on the span so a nearly-flat series still gets a
-// readable, clearly-labelled band (never a zoomed 2-point move masquerading as
-// the whole axis). Empty input falls back to the full 0–100.
-export function autoYDomain(points: SnapshotPoint[], pad = 4): YDomain {
+// Tightest y-domain that hugs the plotted values: [min − pad, max + pad] with a
+// small padding (default 2 points) so lines never touch the edges, clamped to
+// [0, 100]. No minimum span and no anchoring to 0 or any preset — a 71–84 spread
+// yields ~69–86, which makes the zoom obvious. Empty input falls back to 0–100.
+export function autoYDomain(points: SnapshotPoint[], pad = 2): YDomain {
   if (points.length === 0) return { min: 0, max: 100 };
   let lo = Infinity;
   let hi = -Infinity;
@@ -208,19 +208,10 @@ export function autoYDomain(points: SnapshotPoint[], pad = 4): YDomain {
     lo = Math.min(lo, p.pct);
     hi = Math.max(hi, p.pct);
   }
-  let min = Math.max(0, Math.floor(lo - pad));
-  let max = Math.min(100, Math.ceil(hi + pad));
-  const MIN_SPAN = 8;
-  if (max - min < MIN_SPAN) {
-    const mid = (max + min) / 2;
-    min = Math.max(0, Math.floor(mid - MIN_SPAN / 2));
-    max = Math.min(100, Math.ceil(mid + MIN_SPAN / 2));
-    if (max - min < MIN_SPAN) {
-      if (min === 0) max = Math.min(100, min + MIN_SPAN);
-      else min = Math.max(0, max - MIN_SPAN);
-    }
-  }
-  return { min, max };
+  const min = Math.max(0, Math.floor(lo - pad));
+  const max = Math.min(100, Math.ceil(hi + pad));
+  // Guarantee a non-zero span even if clamping collapses it (e.g. all 0s).
+  return max > min ? { min, max } : { min, max: Math.min(100, min + 1) };
 }
 
 export type LaidPoint = {
