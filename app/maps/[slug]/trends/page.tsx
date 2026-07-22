@@ -24,7 +24,6 @@ import {
 export const dynamic = "force-dynamic";
 
 const SITE_URL = "https://peekaboor6.com";
-const MOVERS_WINDOW_DAYS = 14;
 const RISER_COLOR = "#1f9d55";
 const FALLER_COLOR = "#d1573a";
 
@@ -94,14 +93,14 @@ function MoverItem({ row }: { row: MoverRow }) {
     <li>
       <Link
         href={`/peeks/${peek.slug}`}
-        className="peek-lift group flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 shadow-sm transition-colors hover:border-brand"
+        className="peek-lift group flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3.5 shadow-sm transition-colors hover:border-brand"
       >
         <GradeBadge label={r.label} score={r.score} />
-        <span className="min-w-0 flex-1 truncate text-center text-[15px] font-semibold text-ink group-hover:text-brand">
+        <span className="min-w-0 flex-1 truncate text-center text-lg font-semibold text-ink group-hover:text-brand">
           {peek.name}
         </span>
         <span
-          className="shrink-0 text-sm font-bold tabular-nums"
+          className="shrink-0 text-base font-bold tabular-nums"
           style={{ color: up ? RISER_COLOR : FALLER_COLOR }}
         >
           {up ? "+" : "−"}
@@ -124,7 +123,7 @@ function MoverGroup({
 }) {
   return (
     <div>
-      <h3 className="mb-3 text-center text-sm font-semibold uppercase tracking-wide text-muted">
+      <h3 className="mb-3 text-center text-lg font-bold tracking-tight text-ink">
         {title}
       </h3>
       {rows.length > 0 ? (
@@ -137,6 +136,54 @@ function MoverGroup({
         <p className="text-center text-sm text-muted">{emptyNote}</p>
       )}
     </div>
+  );
+}
+
+// The full range-specific view — chart card + movers — for the selected window.
+// Rendered server-side for both 7d and 14d; the shared toggle swaps between them
+// so one control drives both the chart and the movers.
+function RangeView({
+  chartSeries,
+  movers,
+  windowDays,
+}: {
+  chartSeries: TrendSeries[];
+  movers: { risers: MoverRow[]; fallers: MoverRow[] };
+  windowDays: number;
+}) {
+  const hasMovers = movers.risers.length + movers.fallers.length > 0;
+  return (
+    <>
+      <section className="rounded-card border border-border bg-card p-4 shadow-sm sm:p-6">
+        <h2 className="mb-4 text-center text-sm font-semibold uppercase tracking-wide text-muted">
+          Top 5 peeks over time
+        </h2>
+        <ChartOrEmpty series={chartSeries} />
+      </section>
+
+      {hasMovers && (
+        <section className="mt-12">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-ink">
+            Movers
+          </h2>
+          <p className="mt-1 text-center text-xs text-muted">
+            Last {windowDays} days
+          </p>
+          <div className="mt-6 space-y-8">
+            <MoverGroup
+              title="📈 Risers"
+              rows={movers.risers}
+              emptyNote="No risers yet."
+            />
+            <MoverGroup
+              title="📉 Fallers"
+              rows={movers.fallers}
+              emptyNote="No fallers yet."
+            />
+          </div>
+        </section>
+      )}
+    </>
   );
 }
 
@@ -173,8 +220,14 @@ export default async function MapTrendsPage({
   const series14 = seriesFor(14);
   const series7 = seriesFor(7);
 
-  const movers = moversFor(rankedPeeks, snaps, MOVERS_WINDOW_DAYS);
-  const hasMovers = movers.risers.length + movers.fallers.length > 0;
+  // Movers per window; the toggle picks which set shows (recalculated per range).
+  const movers7 = moversFor(rankedPeeks, snaps, 7);
+  const movers14 = moversFor(rankedPeeks, snaps, 14);
+  const anyData =
+    series7.length > 0 ||
+    series14.length > 0 ||
+    movers7.risers.length + movers7.fallers.length > 0 ||
+    movers14.risers.length + movers14.fallers.length > 0;
 
   const allPoints = rankedPeeks.flatMap((p) => snaps.get(p.id) ?? []);
   const trackingSince = trackingSinceLabel(
@@ -227,42 +280,25 @@ export default async function MapTrendsPage({
           </div>
         </div>
 
-        {series14.length === 0 && series7.length === 0 ? (
+        {!anyData ? (
           <p className="rounded-card border border-border bg-card p-6 text-center text-sm text-muted">
             Trends will appear here as we collect more daily snapshots.
             {trackingSince ? ` ${trackingSince}.` : ""}
           </p>
         ) : (
-          <section className="rounded-card border border-border bg-card p-4 shadow-sm sm:p-6">
-            <h2 className="mb-4 text-center text-sm font-semibold uppercase tracking-wide text-muted">
-              Top 5 peeks over time
-            </h2>
-            <TrendRangeToggle
-              sevenDay={<ChartOrEmpty series={series7} />}
-              fourteenDay={<ChartOrEmpty series={series14} />}
-            />
-          </section>
-        )}
-
-        {hasMovers && (
-          <section className="mt-12">
-            <h2 className="text-center text-lg font-semibold tracking-tight text-ink">
-              Movers
-            </h2>
-            <p className="mt-1 text-center text-xs text-muted">Last 14 days</p>
-            <div className="mt-6 space-y-8">
-              <MoverGroup
-                title="📈 Risers"
-                rows={movers.risers}
-                emptyNote="No risers yet."
+          // One 7d / 14d toggle drives BOTH the chart and the movers.
+          <TrendRangeToggle
+            sevenDay={
+              <RangeView chartSeries={series7} movers={movers7} windowDays={7} />
+            }
+            fourteenDay={
+              <RangeView
+                chartSeries={series14}
+                movers={movers14}
+                windowDays={14}
               />
-              <MoverGroup
-                title="📉 Fallers"
-                rows={movers.fallers}
-                emptyNote="No fallers yet."
-              />
-            </div>
-          </section>
+            }
+          />
         )}
       </main>
     </>
