@@ -411,7 +411,7 @@ h4 {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: var(--ghost-mosaic-opacity, 0.05);
+  opacity: var(--ghost-mosaic-opacity, 0.15);
   pointer-events: none;
 }
 .ghost-mosaic--off {
