@@ -27,6 +27,7 @@ import {
   TREND_LINE_COLORS,
 } from "@/lib/trends";
 import { isUnderrated } from "@/lib/underrated";
+import { coverThumb } from "@/lib/cover-image";
 
 export const dynamic = "force-dynamic";
 
@@ -160,7 +161,7 @@ export default async function MapPage({
           {map.cover_image_url && (
             <div aria-hidden className="pointer-events-none absolute inset-0">
               <Image
-                src={map.cover_image_url}
+                src={coverThumb(map.cover_image_url, 900)}
                 alt=""
                 fill
                 sizes="(max-width: 896px) 100vw, 848px"

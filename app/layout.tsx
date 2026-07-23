@@ -31,6 +31,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Open connections to the image hosts early: wsrv.nl serves resized
+            cover WebPs, R2 serves the rest (floor blueprints, peek posters). */}
+        <link rel="preconnect" href="https://wsrv.nl" />
+        <link
+          rel="preconnect"
+          href="https://pub-c11cdf7d63734d52945843745d8e60a8.r2.dev"
+        />
         {/* Grow by Mediavine (Journey) — site-wide ad loader. */}
         <script
           type="text/javascript"

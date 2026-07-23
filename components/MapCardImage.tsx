@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { coverThumb } from "@/lib/cover-image";
 
 const IMG_SIZES =
   "(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw";
@@ -51,7 +52,7 @@ export function MapCardImage({
     <span ref={ref} aria-hidden className="absolute inset-0 bg-[#e7e3d7]">
       {near && (
         <Image
-          src={src}
+          src={coverThumb(src, 500)}
           alt=""
           fill
           sizes={IMG_SIZES}
