@@ -250,36 +250,6 @@ h4 {
   }
 }
 
-/* Sliding-gradient shimmer used as a skeleton placeholder behind
-   /whats-new thumbnails. The image (object-cover) paints over it
-   on load, so the shimmer is only visible during the loading window. */
-@keyframes peek-shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-.peek-shimmer {
-  background-image: linear-gradient(
-    90deg,
-    rgba(226, 224, 213, 0.35) 0%,
-    rgba(226, 224, 213, 0.65) 50%,
-    rgba(226, 224, 213, 0.35) 100%
-  );
-  background-size: 200% 100%;
-  animation: peek-shimmer 1.4s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .peek-shimmer {
-    animation: none;
-    background: rgba(226, 224, 213, 0.4);
-  }
-}
-
 /* TEMP: Calypso Casino "new map" highlight on the homepage Maps grid.
    Remove with the matching block in app/page.tsx when no longer the
    newest map. Search "new-map-pulse" or "Calypso Casino" to find.

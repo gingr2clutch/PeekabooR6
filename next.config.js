@@ -34,6 +34,19 @@ const nextConfig = {
         permanent: true,
       },
       {
+        // /whats-new (new-peek feed) removed — new-peek visibility is now a
+        // Discord perk. Send old/indexed links home instead of 404ing.
+        source: "/whats-new",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        // /gear (affiliate shop) removed. Redirect old/indexed links home.
+        source: "/gear",
+        destination: "/",
+        permanent: true,
+      },
+      {
         source: "/ads.txt",
         // Grow's hosted file lives at .../sites/{id}/ads.txt — the bare
         // /sites/{id} path returns a 403 from their API gateway.

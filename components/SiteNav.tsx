@@ -10,8 +10,6 @@ import {
   Map,
   Menu,
   Plus,
-  ShoppingBag,
-  Sparkles,
   // Users, // re-add when /creators tab is unhidden
   X,
 } from "lucide-react";
@@ -32,13 +30,11 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Maps", Icon: Map },
   { href: "/top", label: "Top", Icon: Flame },
-  { href: "/whats-new", label: "New", Icon: Sparkles },
   { href: "/pro", label: "Pro", Icon: Crown },
   // Hidden from nav for now — /creators route still serves directly.
   // { href: "/creators", label: "Creators", Icon: Users },
   { href: "/blog", label: "Guides", Icon: BookOpen },
   { href: "/submit", label: "Submit a peek", Icon: Plus },
-  { href: "/gear", label: "Shop for gear", Icon: ShoppingBag },
   { href: "/sponsor", label: "Partner", Icon: Handshake },
 ];
 
