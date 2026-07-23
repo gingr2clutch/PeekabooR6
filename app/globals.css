@@ -411,8 +411,24 @@ h4 {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: var(--ghost-mosaic-opacity, 0.15);
+  opacity: var(--ghost-mosaic-opacity, 0.25);
   pointer-events: none;
+  /* Fade the mosaic out into the page background at the top and bottom edges so
+     it blends in rather than hard-stopping. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 22%,
+    #000 78%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 22%,
+    #000 78%,
+    transparent 100%
+  );
 }
 .ghost-mosaic--off {
   display: none;
