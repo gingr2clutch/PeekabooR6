@@ -6,10 +6,12 @@ import {
   BookOpen,
   Crown,
   Flame,
+  Gem,
   Handshake,
   Map,
   Menu,
   Plus,
+  Scale,
   // Users, // re-add when /creators tab is unhidden
   X,
 } from "lucide-react";
@@ -30,6 +32,8 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Maps", Icon: Map },
   { href: "/top", label: "Top", Icon: Flame },
+  { href: "/compare", label: "Compare Maps", Icon: Scale },
+  { href: "/underrated", label: "Underrated", Icon: Gem },
   { href: "/pro", label: "Pro", Icon: Crown },
   // Hidden from nav for now — /creators route still serves directly.
   // { href: "/creators", label: "Creators", Icon: Users },
