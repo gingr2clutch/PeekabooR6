@@ -58,7 +58,7 @@ export default async function Home() {
             aria-hidden
             className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
           >
-            <div className="hero-grid-inner" />
+            <div className="ghost-mosaic" />
           </div>
           <div data-reveal className="mb-10">
             <DiscordBanner />

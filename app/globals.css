@@ -393,45 +393,29 @@ h4 {
   }
 }
 
-/* --- Homepage hero ambient grid (homepage only) ---------------------------
-   A faint tactical/blueprint grid drifting slowly on the diagonal behind the
-   hero. The layer is oversized and translated by exactly one 40px tile, so the
-   40s loop is seamless. Transform-only (GPU, no repaint); ~4.5% ink lines so
-   it's felt more than seen and never hurts readability. Sits behind content
-   via the wrapper's isolate/-z-10 and has no effect on layout. */
-.hero-grid-inner {
+/* --- Ghost mosaic (homepage hero background) -------------------------------
+   A single pre-composed tile of the map thumbnails — greyscaled, softly
+   blurred, heavily compressed (public/ghost-mosaic.webp, ~14KB; regenerate via
+   `npm run build-mosaic`). Rendered at a barely-there opacity so it reads as
+   texture and only reveals itself as maps on close inspection. One decorative
+   <img>-free background layer (no per-tile requests), sits behind content via
+   the wrapper's isolate/-z-10, and has no effect on layout.
+
+   Dials:
+     --ghost-mosaic-opacity   one number to tune the strength live
+     .ghost-mosaic--off       add to hide it entirely */
+.ghost-mosaic {
   position: absolute;
-  inset: -80px;
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      rgba(30, 33, 29, 0.045) 0,
-      rgba(30, 33, 29, 0.045) 1px,
-      transparent 1px,
-      transparent 40px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(30, 33, 29, 0.045) 0,
-      rgba(30, 33, 29, 0.045) 1px,
-      transparent 1px,
-      transparent 40px
-    );
-  animation: hero-grid-drift 40s linear infinite;
-  will-change: transform;
+  inset: -40px;
+  background-image: url("/ghost-mosaic.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: var(--ghost-mosaic-opacity, 0.05);
+  pointer-events: none;
 }
-@keyframes hero-grid-drift {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(40px, 40px, 0);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .hero-grid-inner {
-    animation: none;
-  }
+.ghost-mosaic--off {
+  display: none;
 }
 
 /* --- Top peeks #1 card: shimmer border (comet) + medal gleam --------------
