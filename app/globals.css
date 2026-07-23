@@ -417,22 +417,39 @@ h4 {
   overflow: hidden; /* clips the oversized drifting ::before */
   opacity: var(--ghost-mosaic-opacity, 0.5);
   pointer-events: none;
-  /* Strong fade into the page background at both edges — the mosaic reads as a
-     defined band through the middle and dissolves to white top and bottom. */
+  /* Two intersecting masks: a VERTICAL fade (clear above the stats, soft peak,
+     dissolve toward the bottom) AND a HORIZONTAL fade (soft left/right edges) so
+     all four corners feather out instead of hard-cutting dark. */
   -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    transparent 42%,
-    #000 64%,
-    transparent 100%
-  );
+      to bottom,
+      transparent 0%,
+      transparent 42%,
+      #000 64%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      transparent 0%,
+      #000 16%,
+      #000 84%,
+      transparent 100%
+    );
+  -webkit-mask-composite: source-in;
   mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    transparent 42%,
-    #000 64%,
-    transparent 100%
-  );
+      to bottom,
+      transparent 0%,
+      transparent 42%,
+      #000 64%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      transparent 0%,
+      #000 16%,
+      #000 84%,
+      transparent 100%
+    );
+  mask-composite: intersect;
 }
 
 /* The drifting layer: an oversized, TILED copy of the mosaic that pans
