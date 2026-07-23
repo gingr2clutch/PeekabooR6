@@ -10,6 +10,7 @@ import {
   getFloorsForMap,
   getMapBySlug,
   getPublishedPeeksForFloor,
+  getTopPeekForMap,
 } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -81,6 +82,8 @@ export default async function FloorPage({
   // Same query path /maps/[slug]/page.tsx uses — one extra round trip,
   // ordered by display_order ascending.
   const allFloors = await getFloorsForMap(map.id);
+  // The map's overall top peek — its pin gets the 🏆 mark on its floor.
+  const mapTopPeek = await getTopPeekForMap(allFloors.map((f) => f.id));
   const floorIdx = allFloors.findIndex((f) => f.id === floor.id);
   const prevFloor = floorIdx > 0 ? allFloors[floorIdx - 1] : null;
   const nextFloor =
@@ -143,7 +146,12 @@ export default async function FloorPage({
           )}
         </div>
 
-        <FloorView map={map} floor={floor} peeks={positioned} />
+        <FloorView
+          map={map}
+          floor={floor}
+          peeks={positioned}
+          topPeekId={mapTopPeek?.id ?? null}
+        />
 
         {peeks.length === 0 && (
           <p className="mt-6 text-center text-sm text-muted">

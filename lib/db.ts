@@ -1,6 +1,7 @@
 import { supabasePublic } from "./supabase";
 import { createSupabaseServerClient } from "./supabase/server";
 import { GRADED_THRESHOLDS, rating, ratingScore } from "./rate";
+import { isUnderrated } from "./underrated";
 
 export type Map = {
   id: string;
@@ -302,6 +303,29 @@ export async function getRankedPeeksForMap(
   return ((data ?? []) as unknown as PeekWithContext[])
     .filter((row) => row.floors?.maps?.published)
     .sort(compareBestPeek);
+}
+
+// Underrated ("hidden gem") peeks across every map — high grade, low votes (see
+// isUnderrated). Sorted best grade first, then FEWEST votes first (the least-
+// seen gems lead). Recomputed per request, so peeks leave the list once they
+// pass the vote ceiling.
+export async function getUnderratedPeeks(
+  limit = 60
+): Promise<PeekWithContext[]> {
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select(PEEK_WITH_CONTEXT_SELECT)
+    .eq("published", true);
+  if (error) throw error;
+  return ((data ?? []) as unknown as PeekWithContext[])
+    .filter((row) => row.floors?.maps?.published && isUnderrated(row))
+    .sort((a, b) => {
+      const ra = gradeRankFor(a);
+      const rb = gradeRankFor(b);
+      if (ra !== rb) return ra - rb; // best grade first
+      return (a.vote_count ?? 0) - (b.vote_count ?? 0); // fewest votes first
+    })
+    .slice(0, limit);
 }
 
 // The logged-in user's favorited peeks (with floor + map context), newest

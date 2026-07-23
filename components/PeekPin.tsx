@@ -11,6 +11,9 @@ type Props = {
   isNew?: boolean;
   hasTiktok?: boolean;
   ratingText?: string;
+  // Corner status badge: "top" = the map's top peek (gold star), "gem" =
+  // underrated hidden gem (teal diamond). One max; the caller picks the winner.
+  mark?: "top" | "gem" | null;
   isSelected?: boolean;
   onSelect?: () => void;
 };
@@ -74,6 +77,7 @@ export function PeekPin({
   isNew = false,
   hasTiktok = false,
   ratingText,
+  mark = null,
   isSelected = false,
   onSelect,
 }: Props) {
@@ -138,6 +142,28 @@ export function PeekPin({
                 aria-hidden
               >
                 <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.1z" />
+              </svg>
+            </span>
+          )}
+          {/* Status mark — top-right corner (TikTok owns bottom-right). Gold
+              star = map top peek, teal diamond = underrated. One max. */}
+          {mark && (
+            <span
+              aria-hidden
+              className={`pointer-events-none absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center rounded-full shadow-sm ring-1 ring-white md:h-3.5 md:w-3.5 ${
+                mark === "top" ? "bg-[#e6a817]" : "bg-teal"
+              }`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="h-2 w-2 fill-white md:h-2.5 md:w-2.5"
+                aria-hidden
+              >
+                {mark === "top" ? (
+                  <path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 7.1-1.01z" />
+                ) : (
+                  <path d="M12 2 22 12 12 22 2 12z" />
+                )}
               </svg>
             </span>
           )}

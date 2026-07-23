@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BestPeek } from "@/components/BestPeek";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { GradeBadge } from "@/components/GradeBadge";
 import { ProLockBadge } from "@/components/ProLockBadge";
@@ -25,6 +26,7 @@ import {
   pointsWithinDays,
   TREND_LINE_COLORS,
 } from "@/lib/trends";
+import { isUnderrated } from "@/lib/underrated";
 
 export const dynamic = "force-dynamic";
 
@@ -107,6 +109,9 @@ export default async function MapPage({
     rankedPeeks.map((p) => p.id),
     14
   );
+
+  // Hidden gems on this map — high grade, low votes (up to 4).
+  const underratedPeeks = rankedPeeks.filter(isUnderrated).slice(0, 4);
 
   // Always-visible "Last 7 days" chart: top 5 peeks, reusing the 14-day
   // snapshots above (filtered to the last 7 days). Only series with a real
@@ -299,6 +304,21 @@ export default async function MapPage({
 
         {floors.length === 0 && (
           <p className="text-center text-muted">No floors yet for this map.</p>
+        )}
+
+        {/* Hidden gems on this map — high grade, few votes. Only shown when the
+            map actually has some. */}
+        {underratedPeeks.length > 0 && (
+          <div className="mt-8">
+            <h2 className="mb-4 text-center text-lg font-bold tracking-tight text-ink">
+              💎 Underrated on this map
+            </h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {underratedPeeks.map((peek) => (
+                <BestPeek key={peek.id} peek={peek} />
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Effectiveness trend — always visible, below the floor picker. The
