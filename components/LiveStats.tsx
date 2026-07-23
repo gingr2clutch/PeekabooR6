@@ -5,10 +5,14 @@ import { useEffect, useLayoutEffect, useState } from "react";
 export type StatCell = {
   label: string;
   value: number;
-  // Teal ping dot after the number (for figures that change). Optional; the
-  // homepage counter doesn't use it.
+  // Teal ping dot after the number (for figures that change, e.g. Peeks/Votes).
   live?: boolean;
   plus?: boolean;
+  // Positional order + divider classes for this cell's slot in the 2x2 / row.
+  // Kept per-cell so a caller can lay out either the homepage counter (which
+  // reshuffles the mobile order via CSS `order`) or the map counter (natural
+  // order) without the component knowing which stats it shows.
+  cellClass: string;
 };
 
 type Props = {
@@ -18,10 +22,6 @@ type Props = {
 const ROLL_MS = 1100; // roll duration per digit
 const CELL_STAGGER_MS = 130; // delay between the 4 cells
 const DIGIT_STAGGER_MS = 55; // delay between digits within a number
-
-// Clamp so 5-digit figures still fit in the 4-up row at 320px width, scaling
-// back up to the original size on wider viewports.
-const NUMBER_FONT = "clamp(0.8125rem, 4.2vw, 1.875rem)";
 
 // Two 0-9 sequences: a digit rolls a full turn (0→9) then lands on its target
 // in the second sequence, so every wheel gets a satisfying spin.
@@ -87,10 +87,7 @@ function Odometer({
   const animate = phase === "roll";
   let d = 0;
   return (
-    <span
-      className="font-bold tabular-nums tracking-tight text-ink"
-      style={{ fontSize: NUMBER_FONT }}
-    >
+    <span className="text-2xl font-bold tabular-nums tracking-tight text-ink sm:text-3xl">
       {/* Real value for screen readers + crawlers; the rolling glyphs below are
           decorative. */}
       <span className="sr-only">
@@ -147,16 +144,16 @@ export function LiveStats({ cells }: Props) {
         aria-hidden
         className="peek-stats-scan pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-brand/20 to-transparent"
       />
-      {/* Single 4-column row with thin vertical dividers between columns. The
-          min-height reserves the card's height so there's no layout shift. */}
-      <div className="relative grid min-h-[64px] grid-cols-4 divide-x divide-[#dfe4dd] sm:min-h-[80px]">
+      <div className="relative grid grid-cols-2 sm:grid-cols-4">
         {cells.map((c, i) => (
           <div
             key={c.label}
-            className="peek-stats-cell flex flex-col items-center justify-center gap-1 px-2 py-4 text-center sm:px-4"
+            // Thin full-length dividers in faint teal-grey; each cell's
+            // order + border classes (c.cellClass) lay out the 2x2 / row.
+            className={`peek-stats-cell flex flex-col items-center justify-center gap-1 border-[#dfe4dd] px-4 py-4 text-center ${c.cellClass}`}
             style={{ animationDelay: `${i * CELL_STAGGER_MS}ms` }}
           >
-            <div className="flex items-center justify-center gap-1.5">
+            <div className="flex items-center gap-1.5">
               <Odometer
                 value={c.value}
                 plus={c.plus ?? false}
@@ -180,6 +177,16 @@ export function LiveStats({ cells }: Props) {
           </div>
         ))}
       </div>
+      {/* Small "LIVE" pill pinned to the exact center of the counter — the
+          intersection of the dividers (center of the mobile 2x2 and of the
+          desktop row). Sits in the empty center gap, on top of the dividers.
+          Decorative: the per-cell dots already announce "Live" to a11y. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal/40 bg-card px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-teal shadow-sm"
+      >
+        Live
+      </span>
     </div>
   );
 }
