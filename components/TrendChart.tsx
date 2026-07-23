@@ -1,4 +1,6 @@
 import {
+  autoYDomain,
+  axisTicks,
   domainDaysFor,
   layoutSeries,
   pathFromLayout,
@@ -12,13 +14,11 @@ import {
 const BOX: ChartBox = {
   width: 340,
   height: 150,
-  padL: 30,
+  padL: 34,
   padR: 12,
   padT: 12,
   padB: 22,
 };
-
-const GRID = [0, 25, 50, 75, 100];
 
 export function TrendChart({
   points,
@@ -28,13 +28,19 @@ export function TrendChart({
   color?: string;
 }) {
   const domainDays = domainDaysFor(points);
-  const laid = layoutSeries(points, BOX, domainDays);
+  // Auto-zoom the y-axis to this peek's own low→high so day-to-day moves are
+  // actually visible (same tight-fit + labelled ticks as the multi-line chart).
+  const yDomain = autoYDomain(points);
+  const laid = layoutSeries(points, BOX, domainDays, yDomain);
   const path = pathFromLayout(laid);
   const innerW = BOX.width - BOX.padL - BOX.padR;
 
   const yFor = (v: number) =>
-    BOX.padT + (1 - v / 100) * (BOX.height - BOX.padT - BOX.padB);
+    BOX.padT +
+    (1 - (v - yDomain.min) / Math.max(1, yDomain.max - yDomain.min)) *
+      (BOX.height - BOX.padT - BOX.padB);
 
+  const ticks = axisTicks(yDomain.min, yDomain.max);
   const first = points[0];
   const last = points[points.length - 1];
 
@@ -43,11 +49,11 @@ export function TrendChart({
       viewBox={`0 0 ${BOX.width} ${BOX.height}`}
       className="h-auto w-full"
       role="img"
-      aria-label="Effectiveness over time"
+      aria-label={`Effectiveness over time (${yDomain.min}% to ${yDomain.max}%)`}
       preserveAspectRatio="xMidYMid meet"
     >
-      {/* Horizontal grid + y labels (0/50/100 labelled to stay uncluttered). */}
-      {GRID.map((v) => (
+      {/* Horizontal grid + labelled y ticks across the auto-scaled domain. */}
+      {ticks.map((v) => (
         <g key={v}>
           <line
             x1={BOX.padL}
@@ -57,17 +63,15 @@ export function TrendChart({
             stroke="#e2e0d5"
             strokeWidth={1}
           />
-          {(v === 0 || v === 50 || v === 100) && (
-            <text
-              x={BOX.padL - 6}
-              y={yFor(v) + 3}
-              textAnchor="end"
-              fontSize={9}
-              fill="#8b8d86"
-            >
-              {v}
-            </text>
-          )}
+          <text
+            x={BOX.padL - 6}
+            y={yFor(v) + 3}
+            textAnchor="end"
+            fontSize={9}
+            fill="#8b8d86"
+          >
+            {v}%
+          </text>
         </g>
       ))}
 

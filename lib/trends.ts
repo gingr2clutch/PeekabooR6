@@ -214,6 +214,24 @@ export function autoYDomain(points: SnapshotPoint[], pad = 2): YDomain {
   return max > min ? { min, max } : { min, max: Math.min(100, min + 1) };
 }
 
+// Axis ticks for a tight y-domain: always the min and max (so the exact zoomed
+// range is labelled, e.g. 71%–84%), plus nice interior multiples (1/2/5/10…
+// steps sized to the range), dropping any that would crowd an endpoint. Narrow
+// ranges get 1% or 2% steps. Shared by the single- and multi-line charts.
+export function axisTicks(min: number, max: number): number[] {
+  const range = Math.max(1, max - min);
+  const step = [1, 2, 5, 10, 20, 25, 50].find((s) => range / s <= 5) ?? 100;
+  const ticks: number[] = [min];
+  const first = Math.ceil(min / step) * step;
+  for (let v = first; v < max; v += step) {
+    if (v - min >= step / 2 && max - v >= step / 2 && !ticks.includes(v)) {
+      ticks.push(v);
+    }
+  }
+  if (!ticks.includes(max)) ticks.push(max);
+  return ticks.sort((a, b) => a - b);
+}
+
 export type LaidPoint = {
   x: number;
   y: number;
