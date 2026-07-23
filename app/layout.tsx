@@ -72,6 +72,8 @@ export default function RootLayout({
         />
       </head>
       <body className="flex min-h-screen flex-col bg-bg text-ink">
+        {/* Single fixed, full-viewport ghost-mosaic texture behind everything. */}
+        <div aria-hidden className="ghost-mosaic" />
         <FavoritesProvider>
           <div className="flex-1">{children}</div>
         </FavoritesProvider>
