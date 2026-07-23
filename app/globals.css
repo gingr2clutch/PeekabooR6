@@ -401,16 +401,16 @@ h4 {
    <img>-free background layer (no per-tile requests), sits behind content via
    the wrapper's isolate/-z-10, and has no effect on layout.
 
+   The wrapper below holds the fade (mask) + opacity and stays put; the moving
+   tiled copy lives on ::before so the fade never drifts.
+
    Dials:
      --ghost-mosaic-opacity   one number to tune the strength live
      .ghost-mosaic--off       add to hide it entirely */
 .ghost-mosaic {
   position: absolute;
   inset: -40px;
-  background-image: url("/ghost-mosaic.webp");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  overflow: hidden; /* clips the oversized drifting ::before */
   opacity: var(--ghost-mosaic-opacity, 0.5);
   pointer-events: none;
   /* Strong fade into the page background at both edges — the mosaic reads as a
@@ -429,6 +429,40 @@ h4 {
     #000 56%,
     transparent 100%
   );
+}
+
+/* The drifting layer: an oversized, TILED copy of the mosaic that pans
+   diagonally by exactly one image period (704x660 = COLS*TILE_W x ROWS*TILE_H
+   from build-mosaic.mjs) every 40s. Because it moves by a whole period and the
+   tile repeats, the loop is pixel-identical at the wrap — no seam, no jump.
+   Transform-only (GPU compositor; no repaints, no JS). If the mosaic grid shape
+   ever changes, update the 704/660 values here to match.
+   Bleed: top/left >= one period so the trailing edge never exposes a gap. */
+.ghost-mosaic::before {
+  content: "";
+  position: absolute;
+  top: -700px;
+  left: -744px;
+  right: -40px;
+  bottom: -40px;
+  background-image: url("/ghost-mosaic.webp");
+  background-repeat: repeat;
+  background-size: 704px 660px;
+  animation: ghost-mosaic-drift 40s linear infinite;
+  will-change: transform;
+}
+@keyframes ghost-mosaic-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(704px, 660px, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ghost-mosaic::before {
+    animation: none;
+  }
 }
 .ghost-mosaic--off {
   display: none;
