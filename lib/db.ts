@@ -328,6 +328,16 @@ export async function getUnderratedPeeks(
     .slice(0, limit);
 }
 
+// A rotating daily highlight for the homepage. Picks one peek from the strongest
+// pool, keyed by the UTC day so it's stable all day and changes each morning.
+// Pro-only peeks are excluded so the featured clip is never gated.
+export async function getPeekOfTheDay(): Promise<PeekWithContext | null> {
+  const pool = (await getTopPeeks(30)).filter((p) => !p.is_pro_only);
+  if (pool.length === 0) return null;
+  const dayIndex = Math.floor(Date.now() / 86_400_000); // days since epoch (UTC)
+  return pool[dayIndex % pool.length];
+}
+
 // The logged-in user's favorited peeks (with floor + map context), newest
 // first. Uses the cookie-authed server client so RLS returns only their rows;
 // returns [] when signed out or before the favorites table exists.
