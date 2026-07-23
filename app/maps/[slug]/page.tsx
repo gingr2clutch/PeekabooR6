@@ -16,7 +16,7 @@ import {
   getRankedPeeksForMap,
   getTopPeekForMap,
 } from "@/lib/db";
-import { rating } from "@/lib/rate";
+import { rating, ratingScore } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
 import { TrendArrow } from "@/components/TrendArrow";
 import { MultiTrendChart, type TrendSeries } from "@/components/MultiTrendChart";
@@ -110,8 +110,20 @@ export default async function MapPage({
     14
   );
 
-  // Hidden gems on this map — high grade, low votes (up to 4).
-  const underratedPeeks = rankedPeeks.filter(isUnderrated).slice(0, 4);
+  // The 2 most underrated peeks on this map: genuine hidden gems first (grade
+  // >= B+, few votes), then the next least-seen high-grade peeks — so every map
+  // surfaces two.
+  const underratedPeeks = [...rankedPeeks]
+    .sort((a, b) => {
+      const au = isUnderrated(a) ? 0 : 1;
+      const bu = isUnderrated(b) ? 0 : 1;
+      if (au !== bu) return au - bu; // real hidden gems lead
+      const as = ratingScore(a.base_success_rate, a.worked_votes, a.vote_count);
+      const bs = ratingScore(b.base_success_rate, b.worked_votes, b.vote_count);
+      if (bs !== as) return bs - as; // then best grade
+      return (a.vote_count ?? 0) - (b.vote_count ?? 0); // then fewest votes
+    })
+    .slice(0, 2);
 
   // Always-visible "Last 7 days" chart: top 5 peeks, reusing the 14-day
   // snapshots above (filtered to the last 7 days). Only series with a real
