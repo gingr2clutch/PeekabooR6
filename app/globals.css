@@ -418,15 +418,15 @@ h4 {
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    #000 30%,
-    #000 56%,
+    #000 37%,
+    #000 53%,
     transparent 100%
   );
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    #000 30%,
-    #000 56%,
+    #000 37%,
+    #000 53%,
     transparent 100%
   );
 }
@@ -448,7 +448,7 @@ h4 {
   background-image: url("/ghost-mosaic.webp");
   background-repeat: repeat;
   background-size: 704px 660px;
-  animation: ghost-mosaic-drift 40s linear infinite;
+  animation: ghost-mosaic-drift 52s linear infinite;
   will-change: transform;
 }
 @keyframes ghost-mosaic-drift {
