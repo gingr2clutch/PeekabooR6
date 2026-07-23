@@ -35,8 +35,9 @@ export type Peek = {
   risk: "low" | "medium" | "high";
   tip: string | null;
   useful_pct: number;
-  vote_count: number; // running total of community votes
-  worked_votes: number; // count of "Worked for me" votes
+  vote_count: number; // distinct current voters (grade denominator)
+  worked_votes: number; // how many of those said "Worked for me"
+  total_casts: number; // every vote ever cast, repeats included (display only)
   success_rate: number; // drifted legacy gauge — not shown to users anymore
   base_success_rate: number; // admin-seeded estimate; drives Effectiveness
   published: boolean;
@@ -70,7 +71,7 @@ export type Creator = {
 // the code deploys before the 020 migration adds the column. lib/discord.ts
 // reads/writes the flag via its own targeted query.
 const PEEK_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, success_rate, base_success_rate, published, is_pro_only, created_at";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, total_casts, success_rate, base_success_rate, published, is_pro_only, created_at";
 
 export async function getMaps(): Promise<Map[]> {
   const { data, error } = await supabasePublic()

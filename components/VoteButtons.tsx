@@ -1,24 +1,31 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { castVote } from "@/app/peeks/actions";
+
+type Choice = "worked" | "didnt";
 
 type Props = {
   peekId: string;
+  // Logged-in state is server truth (from the append-only history). Anonymous
+  // voting stays one-time, gated only by a localStorage flag.
+  isLoggedIn: boolean;
+  initialVote: Choice | null;
+  initialDaysUntilRevote: number;
 };
-
-type Choice = "worked" | "didnt";
 
 // Bumped v1 → v2 at launch: the DB vote counts were reset, so test-era
 // "voted" flags in existing browsers must be invalidated too. Old
 // `voted_peek_<id>` keys no longer match and are simply ignored, letting
 // everyone vote again. Bump this version again for any future vote reset.
+// (Anonymous-only — logged-in vote history lives in the peek_votes table.)
 const storageKey = (id: string) => `voted_peek_v2_${id}`;
 
 // localStorage stores "kill" for "Worked for me" and "no-kill" for "Didn't
-// work" — the same values already written since launch, so existing remembered
-// votes light up correctly on return visits with no migration.
-const readChoice = (id: string): Choice | null => {
+// work" — the same values written since launch, so remembered anonymous votes
+// light up on return visits with no migration.
+const readAnonChoice = (id: string): Choice | null => {
   if (typeof window === "undefined") return null;
   const v = window.localStorage.getItem(storageKey(id));
   if (v === "kill") return "worked";
@@ -26,36 +33,73 @@ const readChoice = (id: string): Choice | null => {
   return null;
 };
 
-export function VoteButtons({ peekId }: Props) {
-  const [choice, setChoice] = useState<Choice | null>(null);
+export function VoteButtons({
+  peekId,
+  isLoggedIn,
+  initialVote,
+  initialDaysUntilRevote,
+}: Props) {
+  const [choice, setChoice] = useState<Choice | null>(initialVote);
+  const [daysLeft, setDaysLeft] = useState(initialDaysUntilRevote);
   const [pending, startTransition] = useTransition();
 
+  // Anonymous vote memory is client-only; ignored entirely when logged in.
   useEffect(() => {
-    setChoice(readChoice(peekId));
-  }, [peekId]);
+    if (isLoggedIn) return;
+    setChoice(readAnonChoice(peekId));
+  }, [peekId, isLoggedIn]);
 
   const voted = choice !== null;
+  // Anonymous voting is one-time (locked forever once voted). Logged-in unlocks
+  // again after the 7-day cooldown.
+  const locked = voted && (!isLoggedIn || daysLeft > 0);
+  const canVoteAgain = isLoggedIn && voted && daysLeft === 0;
 
   function vote(next: Choice) {
-    if (voted || pending) return;
+    if (pending || locked) return;
     startTransition(async () => {
       const result = await castVote(peekId, next === "worked");
       if (!result) return;
-      window.localStorage.setItem(
-        storageKey(peekId),
-        next === "worked" ? "kill" : "no-kill"
-      );
-      setChoice(next);
+      if (isLoggedIn) {
+        setChoice(result.myVote ?? next);
+        setDaysLeft(result.daysUntilRevote ?? 7);
+      } else {
+        window.localStorage.setItem(
+          storageKey(peekId),
+          next === "worked" ? "kill" : "no-kill"
+        );
+        setChoice(next);
+      }
     });
   }
 
   return (
     <div className="flex w-full max-w-md flex-col items-center gap-3">
       {voted ? (
-        <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
-          <CheckIcon className="h-4 w-4 text-[#1a9f4d]" />
-          You voted: {choice === "worked" ? "Worked for me" : "Didn't work for me"}
-        </p>
+        <div className="flex flex-col items-center gap-0.5 text-center">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+            <CheckIcon className="h-4 w-4 text-[#1a9f4d]" />
+            You voted: {choice === "worked" ? "Worked for me" : "Didn't work for me"}
+          </p>
+          {isLoggedIn && daysLeft > 0 && (
+            <p className="text-sm text-muted">
+              You can vote again in {daysLeft} {daysLeft === 1 ? "day" : "days"}.
+            </p>
+          )}
+          {canVoteAgain && (
+            <p className="text-sm text-muted">
+              You can vote again — pick below.
+            </p>
+          )}
+          {!isLoggedIn && (
+            <p className="text-sm text-muted">
+              <Link href="/login" className="underline hover:text-brand">
+                Log in
+              </Link>{" "}
+              to vote again later.
+            </p>
+          )}
+        </div>
       ) : (
         <p className="text-center text-sm text-muted">
           Cast your vote — every vote makes the grades more accurate.
@@ -65,23 +109,32 @@ export function VoteButtons({ peekId }: Props) {
       <div className="flex w-full gap-3">
         <VoteButton
           onClick={() => vote("worked")}
-          disabled={pending || voted}
+          disabled={pending || locked}
           active={choice === "worked"}
-          dimmed={voted && choice !== "worked"}
+          dimmed={locked && choice !== "worked"}
         >
           <CheckIcon className="h-5 w-5" />
           Worked for me
         </VoteButton>
         <VoteButton
           onClick={() => vote("didnt")}
-          disabled={pending || voted}
+          disabled={pending || locked}
           active={choice === "didnt"}
-          dimmed={voted && choice !== "didnt"}
+          dimmed={locked && choice !== "didnt"}
         >
           <XIcon className="h-5 w-5" />
           Didn't work for me
         </VoteButton>
       </div>
+
+      {!isLoggedIn && !voted && (
+        <p className="text-center text-xs text-muted">
+          <Link href="/login" className="underline hover:text-brand">
+            Log in
+          </Link>{" "}
+          to vote again later.
+        </p>
+      )}
     </div>
   );
 }

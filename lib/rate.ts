@@ -163,6 +163,10 @@ export function rating(
 
 export const votesText = (n: number) => `${n} ${n === 1 ? "vote" : "votes"}`;
 
+// Distinct-voter count for honest display — one person is one player no matter
+// how many times they've re-voted. Pairs with votesText for "N votes · M players".
+export const playersText = (n: number) => `${n} ${n === 1 ? "player" : "players"}`;
+
 // Numeric ranking score spanning both tiers so /popular can order across them:
 // measured peeks rank by their real percentage (nudged so a community-proven
 // peek edges an equal-scoring estimate), estimate peeks by their seed.

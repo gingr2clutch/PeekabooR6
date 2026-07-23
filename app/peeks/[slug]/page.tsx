@@ -9,7 +9,8 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { rating, votesText, type Grade } from "@/lib/rate";
+import { getMyLatestPeekVote } from "@/lib/votes";
+import { rating, votesText, playersText, type Grade } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
 import { GradeBar } from "@/components/GradeBar";
 import { TrendArrow } from "@/components/TrendArrow";
@@ -36,7 +37,7 @@ type Joined = Peek & {
 };
 
 const JOIN_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, success_rate, base_success_rate, published, is_pro_only, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, total_casts, success_rate, base_success_rate, published, is_pro_only, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
 
 async function fetchBySlug(slug: string): Promise<Joined | null> {
   const { data, error } = await supabasePublic()
@@ -159,6 +160,18 @@ export default async function PeekDetailPage({
   }
   const locked = peek.is_pro_only && !user?.isPro;
 
+  // Logged-in voters get a replaceable vote with a 7-day cadence; read their
+  // latest vote so the buttons render the right state on first paint. Never let
+  // an auth/DB hiccup 500 the page — fall back to "no vote yet".
+  let myVote: Awaited<ReturnType<typeof getMyLatestPeekVote>> = null;
+  if (user && !locked) {
+    try {
+      myVote = await getMyLatestPeekVote(peek.id, user.id);
+    } catch {
+      myVote = null;
+    }
+  }
+
   // Don't emit VideoObject JSON-LD for locked content (would expose the clip).
   const videoJsonLd = locked ? null : buildVideoJsonLd(peek, map, floor);
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(peek, map);
@@ -277,7 +290,12 @@ export default async function PeekDetailPage({
           <>
             {/* Vote buttons — 16px below stats card */}
             <div className="mt-4 flex justify-center">
-              <VoteButtons peekId={peek.id} />
+              <VoteButtons
+                peekId={peek.id}
+                isLoggedIn={!!user}
+                initialVote={myVote?.choice ?? null}
+                initialDaysUntilRevote={myVote?.daysUntilRevote ?? 0}
+              />
             </div>
 
             {/* Content section — when there are no steps and no pro tip the
@@ -518,7 +536,12 @@ function SuccessStat({
       {r.tier === "measured" && (
         <>
           <span className="text-[11px] font-medium text-muted md:text-xs">
-            {r.pct}% · {votesText(r.votes)}
+            {/* Honest count: players never inflate a single person's repeat
+                votes. Total casts shown alongside only once repeats exist. */}
+            {r.pct}% ·{" "}
+            {peek.total_casts > peek.vote_count
+              ? `${votesText(peek.total_casts)} · ${playersText(peek.vote_count)}`
+              : playersText(peek.vote_count)}
           </span>
           <PlayerVotedBadge />
         </>
