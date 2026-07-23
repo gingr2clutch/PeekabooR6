@@ -53,7 +53,7 @@ export function MapViewToggle({
     // reads as one unit between the stats box and the trends chart. The cards
     // inside keep their white styling; modest padding on mobile so the tint
     // doesn't steal card width.
-    <div className="rounded-card border border-brand/20 bg-[#f6e3d2] px-3 py-4 sm:p-6">
+    <div className="rounded-card border border-brand/20 bg-brand/[0.11] px-3 py-4 sm:p-6">
       <div className="mb-8 flex justify-center">
         <div
           role="tablist"

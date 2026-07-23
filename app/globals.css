@@ -393,29 +393,48 @@ h4 {
   }
 }
 
-/* --- Ghost mosaic (site-wide background) -----------------------------------
-   ONE fixed, full-viewport texture layer, mounted once in the root layout and
-   sitting behind ALL content. The tile (public/ghost-mosaic.webp — greyscaled +
-   blurred; regenerate via `npm run build-mosaic`) drifts diagonally; content
-   sections are opaque, so the mosaic only shows through in gutters, margins and
-   the gaps between them. z-index:-1 keeps it above the body's cream background
-   but behind content. A single decorative layer — no per-section images, no
-   per-tile requests, no layout impact.
+/* --- Ghost mosaic (homepage hero background) -------------------------------
+   A single pre-composed tile of the map thumbnails — greyscaled, softly
+   blurred, heavily compressed (public/ghost-mosaic.webp, ~14KB; regenerate via
+   `npm run build-mosaic`). Rendered at a barely-there opacity so it reads as
+   texture and only reveals itself as maps on close inspection. One decorative
+   <img>-free background layer (no per-tile requests), sits behind content via
+   the wrapper's isolate/-z-10, and has no effect on layout.
 
-   The moving tiled copy lives on ::before so only that layer is animated.
+   The wrapper below holds the fade (mask) + opacity and stays put; the moving
+   tiled copy lives on ::before so the fade never drifts.
 
    Dials:
-     --ghost-mosaic-opacity   one number to tune the strength live (~0.025)
+     --ghost-mosaic-opacity   one number to tune the strength live
      .ghost-mosaic--off       add to hide it entirely */
 .ghost-mosaic {
-  position: fixed;
+  position: absolute;
+  /* Align with the parent's clip box (isolate inset-0) so the mask's
+     transparent endpoints land exactly on the visible top/bottom edge — any
+     bleed here would leave the mosaic partly-opaque at the edge and then get
+     hard-clipped, showing a visible line. */
   inset: 0;
-  z-index: -1;
   overflow: hidden; /* clips the oversized drifting ::before */
-  opacity: var(--ghost-mosaic-opacity, 0.025);
+  opacity: var(--ghost-mosaic-opacity, 0.5);
   pointer-events: none;
-  /* Own compositor layer so it never repaints while content scrolls over it. */
-  will-change: transform;
+  /* Strong fade into the page background at both edges — the mosaic reads as a
+     defined band through the middle and dissolves to white top and bottom. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 26%,
+    #000 40%,
+    #000 62%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 26%,
+    #000 40%,
+    #000 62%,
+    transparent 100%
+  );
 }
 
 /* The drifting layer: an oversized, TILED copy of the mosaic that pans

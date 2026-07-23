@@ -50,10 +50,16 @@ export default async function Home() {
     <>
       <PageHeader home />
       <main className="fade-in-up mx-auto max-w-6xl px-6 pb-20 pt-10">
-        {/* Homepage hero. The ghost-mosaic texture now comes from the single
-            site-wide fixed layer (app/layout.tsx), so there's no per-page
-            background here. */}
-        <div className="relative">
+        {/* Homepage hero — a faint drifting blueprint grid sits behind the
+            stats/heading area only. `isolate` keeps the -z-10 layer scoped to
+            this region; it never overlaps the map grid below. */}
+        <div className="relative isolate">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+          >
+            <div className="ghost-mosaic" />
+          </div>
           <div data-reveal className="mb-10">
             <DiscordBanner />
         </div>
