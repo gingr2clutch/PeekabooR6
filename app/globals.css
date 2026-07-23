@@ -422,17 +422,15 @@ h4 {
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    transparent 32%,
-    #000 50%,
-    #000 56%,
+    transparent 42%,
+    #000 64%,
     transparent 100%
   );
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    transparent 32%,
-    #000 50%,
-    #000 56%,
+    transparent 42%,
+    #000 64%,
     transparent 100%
   );
 }
