@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { DiscordBanner } from "@/components/DiscordButton";
+import { MapCardImage } from "@/components/MapCardImage";
 import { LiveStats } from "@/components/LiveStats";
 import { PageHeader } from "@/components/PageHeader";
 import { getHomeStats, getMaps } from "@/lib/db";
@@ -87,27 +87,15 @@ export default async function Home() {
         </div>
 
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {maps.map((map, i) => {
+          {maps.map((map) => {
             const hasCover = !!map.cover_image_url;
-            // Cascade within each row; modulo keeps the delay small so cards
-            // never sit waiting long after they've scrolled into view.
-            const revealStyle = {
-              ["--reveal-delay"]: `${(i % 5) * 50}ms`,
-            } as React.CSSProperties;
             const cardBase =
               "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-all duration-200";
 
             const cover = hasCover ? (
-              <Image
+              <MapCardImage
                 src={map.cover_image_url!}
-                alt=""
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                className={`object-cover ${
-                  map.published
-                    ? "transition-transform duration-200 ease-out motion-safe:group-hover:scale-105"
-                    : "grayscale"
-                }`}
+                published={map.published}
               />
             ) : null;
 
@@ -126,7 +114,7 @@ export default async function Home() {
               // TEMP: Calypso Casino new-map highlight branch.
               const isNewMap = map.name === NEW_MAP_NAME;
               return (
-                <li key={map.id} data-reveal style={revealStyle}>
+                <li key={map.id}>
                   <Link
                     href={`/maps/${map.slug}`}
                     className={`${cardBase} border-[3px] ${
@@ -150,7 +138,7 @@ export default async function Home() {
             }
 
             return (
-              <li key={map.id} data-reveal style={revealStyle}>
+              <li key={map.id}>
                 <div
                   aria-disabled="true"
                   className={`${cardBase} !cursor-not-allowed border-[3px] border-white ${
