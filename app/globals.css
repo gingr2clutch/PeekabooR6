@@ -411,23 +411,24 @@ h4 {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: var(--ghost-mosaic-opacity, 0.25);
+  opacity: var(--ghost-mosaic-opacity, 0.35);
   pointer-events: none;
-  /* Fade the mosaic out into the page background at the top and bottom edges so
-     it blends in rather than hard-stopping. */
+  /* Fade the mosaic into the page background: a short top fade so it still
+     reads up over the Discord banner, and a longer, more aggressive bottom
+     fade that dissolves well before the maps grid. */
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    #000 22%,
-    #000 78%,
-    transparent 100%
+    #000 7%,
+    #000 52%,
+    transparent 90%
   );
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    #000 22%,
-    #000 78%,
-    transparent 100%
+    #000 7%,
+    #000 52%,
+    transparent 90%
   );
 }
 .ghost-mosaic--off {
