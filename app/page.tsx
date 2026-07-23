@@ -4,13 +4,9 @@ import { MapCardImage } from "@/components/MapCardImage";
 import { LiveStats } from "@/components/LiveStats";
 import { PageHeader } from "@/components/PageHeader";
 import { getHomeStats, getMaps } from "@/lib/db";
+import { getMapVoteActivity } from "@/lib/map-activity";
 
 export const dynamic = "force-dynamic";
-
-// Pinned order for published maps. Anything published but not listed here
-// comes after these in alphabetical order. Unpublished maps come last,
-// alphabetical.
-const FEATURED_ORDER = ["Oregon", "Clubhouse", "Nighthaven Labs"];
 
 // TEMP: Calypso Casino "new map" highlight. Pinned to first position +
 // rendered with a purple pulse glow and a "NEW MAP" badge. To remove:
@@ -21,14 +17,22 @@ const NEW_MAP_NAME = "Calypso Casino";
 export default async function Home() {
   const all = await getMaps();
   const stats = await getHomeStats();
+  const activity = await getMapVoteActivity();
+  const votesFor = (id: string) =>
+    activity.get(id) ?? { sevenDayVotes: 0, allTimeVotes: 0 };
+
+  // Activity-driven order: most votes in the last 7 days first (a rolling
+  // window off the daily snapshots, so it shifts with player activity), tie-
+  // broken by all-time votes, then name. Published maps rank above unpublished.
   const maps = [...all].sort((a, b) => {
     if (a.published !== b.published) return a.published ? -1 : 1;
     if (!a.published) return a.name.localeCompare(b.name);
-    const ai = FEATURED_ORDER.indexOf(a.name);
-    const bi = FEATURED_ORDER.indexOf(b.name);
-    if (ai !== -1 && bi !== -1) return ai - bi;
-    if (ai !== -1) return -1;
-    if (bi !== -1) return 1;
+    const av = votesFor(a.id);
+    const bv = votesFor(b.id);
+    if (av.sevenDayVotes !== bv.sevenDayVotes)
+      return bv.sevenDayVotes - av.sevenDayVotes;
+    if (av.allTimeVotes !== bv.allTimeVotes)
+      return bv.allTimeVotes - av.allTimeVotes;
     return a.name.localeCompare(b.name);
   });
 
@@ -41,6 +45,21 @@ export default async function Home() {
     const [pinned] = maps.splice(newMapIdx, 1);
     maps.unshift(pinned);
   }
+
+  // "Hot this week": up to 3 published maps with the most 7-day votes (must have
+  // at least one), excluding the NEW map, which carries its own badge.
+  const hotMapIds = new Set(
+    all
+      .filter(
+        (m) =>
+          m.published &&
+          m.name !== NEW_MAP_NAME &&
+          votesFor(m.id).sevenDayVotes > 0
+      )
+      .sort((a, b) => votesFor(b.id).sevenDayVotes - votesFor(a.id).sevenDayVotes)
+      .slice(0, 3)
+      .map((m) => m.id)
+  );
 
   return (
     <>
@@ -126,10 +145,16 @@ export default async function Home() {
                     } hover:shadow-lg motion-safe:hover:-translate-y-1 motion-safe:hover:scale-[1.03]`}
                   >
                     {cover}
-                    {isNewMap && (
+                    {isNewMap ? (
                       <span className="absolute right-2 top-2 z-20 inline-flex items-center rounded-btn bg-purple-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
                         New map
                       </span>
+                    ) : (
+                      hotMapIds.has(map.id) && (
+                        <span className="absolute right-2 top-2 z-20 inline-flex items-center rounded-btn bg-brand px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                          🔥 Hot
+                        </span>
+                      )
                     )}
                     {label}
                   </Link>
