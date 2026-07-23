@@ -46,21 +46,6 @@ export default async function Home() {
     maps.unshift(pinned);
   }
 
-  // "Hot this week": up to 3 published maps with the most 7-day votes (must have
-  // at least one), excluding the NEW map, which carries its own badge.
-  const hotMapIds = new Set(
-    all
-      .filter(
-        (m) =>
-          m.published &&
-          m.name !== NEW_MAP_NAME &&
-          votesFor(m.id).sevenDayVotes > 0
-      )
-      .sort((a, b) => votesFor(b.id).sevenDayVotes - votesFor(a.id).sevenDayVotes)
-      .slice(0, 3)
-      .map((m) => m.id)
-  );
-
   return (
     <>
       <PageHeader home />
@@ -145,16 +130,10 @@ export default async function Home() {
                     } hover:shadow-lg motion-safe:hover:-translate-y-1 motion-safe:hover:scale-[1.03]`}
                   >
                     {cover}
-                    {isNewMap ? (
+                    {isNewMap && (
                       <span className="absolute right-2 top-2 z-20 inline-flex items-center rounded-btn bg-purple-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
                         New map
                       </span>
-                    ) : (
-                      hotMapIds.has(map.id) && (
-                        <span className="absolute right-2 top-2 z-20 inline-flex items-center rounded-btn bg-brand px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
-                          🔥 Hot
-                        </span>
-                      )
                     )}
                     {label}
                   </Link>
