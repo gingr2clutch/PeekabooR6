@@ -212,7 +212,7 @@ export default async function MapPage({
                             fill
                             sizes="(max-width: 896px) 100vw, 848px"
                             loading="lazy"
-                            className="pointer-events-none object-cover object-center opacity-[0.10]"
+                            className="pointer-events-none object-cover object-center opacity-[0.16]"
                           />
                         )}
                         <span className="relative z-10 text-xl font-bold tracking-tight text-ink transition-colors group-hover:text-brand sm:text-2xl">
