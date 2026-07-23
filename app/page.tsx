@@ -64,16 +64,20 @@ export default async function Home() {
             <DiscordBanner />
         </div>
         <div className="mb-6">
-          {/* DOM/source order stays Maps, Peeks, Votes, S-Tier (keeps the
-              desktop single-row order); the `order-*` classes reshuffle the
-              mobile 2x2 to Peeks | Votes (top) / Maps | S-Tier (bottom), and
-              `sm:` resets both order and dividers to the source-order row. */}
+          {/* Section header — small teal dot + teal eyebrow, matching the
+              site's section-header type. */}
+          <div className="mb-2 flex items-center gap-2">
+            <span aria-hidden className="h-2 w-2 rounded-full bg-teal" />
+            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-teal">
+              Live Overview
+            </span>
+          </div>
           <LiveStats
             cells={[
-              { label: "Maps", value: stats.mapsLive, cellClass: "order-3 border-t sm:order-none sm:border-t-0" },
-              { label: "Peeks", value: stats.gradedPeeks, cellClass: "order-1 sm:order-none sm:border-l" },
-              { label: "Votes", value: stats.communityVotes, cellClass: "order-2 border-l sm:order-none" },
-              { label: "S-Tier", value: stats.sTierPeeks, cellClass: "order-4 border-t border-l sm:order-none sm:border-t-0" },
+              { label: "Peeks", value: stats.gradedPeeks },
+              { label: "Votes", value: stats.communityVotes },
+              { label: "Maps", value: stats.mapsLive },
+              { label: "S-Tier", value: stats.sTierPeeks },
             ]}
           />
         </div>
