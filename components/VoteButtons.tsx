@@ -7,71 +7,109 @@ type Props = {
   peekId: string;
 };
 
+type Choice = "worked" | "didnt";
+
 // Bumped v1 → v2 at launch: the DB vote counts were reset, so test-era
 // "voted" flags in existing browsers must be invalidated too. Old
 // `voted_peek_<id>` keys no longer match and are simply ignored, letting
 // everyone vote again. Bump this version again for any future vote reset.
 const storageKey = (id: string) => `voted_peek_v2_${id}`;
 
+// localStorage stores "kill" for "Worked for me" and "no-kill" for "Didn't
+// work" — the same values already written since launch, so existing remembered
+// votes light up correctly on return visits with no migration.
+const readChoice = (id: string): Choice | null => {
+  if (typeof window === "undefined") return null;
+  const v = window.localStorage.getItem(storageKey(id));
+  if (v === "kill") return "worked";
+  if (v === "no-kill") return "didnt";
+  return null;
+};
+
 export function VoteButtons({ peekId }: Props) {
-  const [hasVoted, setHasVoted] = useState(false);
+  const [choice, setChoice] = useState<Choice | null>(null);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.localStorage.getItem(storageKey(peekId))) {
-      setHasVoted(true);
-    }
+    setChoice(readChoice(peekId));
   }, [peekId]);
 
-  function vote(isKill: boolean) {
-    if (hasVoted || pending) return;
+  const voted = choice !== null;
+
+  function vote(next: Choice) {
+    if (voted || pending) return;
     startTransition(async () => {
-      const result = await castVote(peekId, isKill);
+      const result = await castVote(peekId, next === "worked");
       if (!result) return;
-      window.localStorage.setItem(storageKey(peekId), isKill ? "kill" : "no-kill");
-      setHasVoted(true);
+      window.localStorage.setItem(
+        storageKey(peekId),
+        next === "worked" ? "kill" : "no-kill"
+      );
+      setChoice(next);
     });
   }
 
-  if (hasVoted) {
-    return (
-      <div className="flex items-center gap-1.5 text-sm font-medium text-[#1a9f4d]">
-        <CheckIcon className="h-4 w-4" />
-        <span>Voted</span>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-wrap justify-center gap-2">
-      <GhostButton onClick={() => vote(true)} disabled={pending}>
-        <CheckIcon className="h-3.5 w-3.5" />
-        Worked for me
-      </GhostButton>
-      <GhostButton onClick={() => vote(false)} disabled={pending}>
-        <XIcon className="h-3.5 w-3.5" />
-        Didn't work
-      </GhostButton>
+    <div className="flex w-full max-w-md flex-col items-center gap-3">
+      {voted ? (
+        <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+          <CheckIcon className="h-4 w-4 text-[#1a9f4d]" />
+          You voted: {choice === "worked" ? "Worked for me" : "Didn't work for me"}
+        </p>
+      ) : (
+        <p className="text-center text-sm text-muted">
+          Cast your vote — every vote makes the grades more accurate.
+        </p>
+      )}
+
+      <div className="flex w-full gap-3">
+        <VoteButton
+          onClick={() => vote("worked")}
+          disabled={pending || voted}
+          active={choice === "worked"}
+          dimmed={voted && choice !== "worked"}
+        >
+          <CheckIcon className="h-5 w-5" />
+          Worked for me
+        </VoteButton>
+        <VoteButton
+          onClick={() => vote("didnt")}
+          disabled={pending || voted}
+          active={choice === "didnt"}
+          dimmed={voted && choice !== "didnt"}
+        >
+          <XIcon className="h-5 w-5" />
+          Didn't work for me
+        </VoteButton>
+      </div>
     </div>
   );
 }
 
-function GhostButton({
+function VoteButton({
   onClick,
   disabled,
+  active,
+  dimmed,
   children,
 }: {
   onClick: () => void;
   disabled?: boolean;
+  active?: boolean;
+  dimmed?: boolean;
   children: React.ReactNode;
 }) {
+  const state = active
+    ? "border-brand bg-brand text-white"
+    : dimmed
+      ? "border-border bg-card text-muted opacity-60"
+      : "border-border bg-card text-ink hover:border-brand hover:text-brand";
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center gap-1.5 rounded-btn border border-border bg-card px-3 py-1.5 text-sm text-ink transition-all duration-150 ease-out hover:border-brand hover:text-brand active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+      className={`inline-flex flex-1 items-center justify-center gap-2 rounded-btn border-2 px-5 py-3 text-base font-semibold transition-all duration-150 ease-out active:scale-95 disabled:active:scale-100 disabled:cursor-default ${state}`}
     >
       {children}
     </button>
