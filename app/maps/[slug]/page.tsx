@@ -198,29 +198,27 @@ export default async function MapPage({
                     >
                       <Link
                         href={`/maps/${map.slug}/${floor.slug}`}
-                        className="peek-lift group flex items-center justify-between gap-3 rounded-card border-[3px] border-white bg-card px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:border-brand sm:gap-4 sm:px-6 sm:py-5"
+                        className="peek-lift group relative flex items-center justify-between gap-4 overflow-hidden rounded-card border-[3px] border-white bg-card px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:border-brand sm:px-6 sm:py-5"
                       >
-                        {/* Floor name + its blueprint thumbnail (right-of-name).
-                            Thumbnail shrinks on mobile so nothing wraps; omitted
-                            entirely when the floor has no image. */}
-                        <span className="flex min-w-0 items-center gap-3 sm:gap-4">
-                          <span className="truncate text-xl font-bold tracking-tight text-ink transition-colors group-hover:text-brand sm:text-2xl">
-                            {floor.name}
-                          </span>
-                          {floor.birds_eye_url && (
-                            <span className="relative h-10 w-16 shrink-0 overflow-hidden rounded-btn border border-border bg-black/5 sm:h-14 sm:w-24">
-                              <Image
-                                src={floor.birds_eye_url}
-                                alt=""
-                                fill
-                                sizes="96px"
-                                loading="lazy"
-                                className="object-cover"
-                              />
-                            </span>
-                          )}
+                        {/* Faint floor blueprint as the card background —
+                            decorative, lazy, behind the text. The white card base
+                            keeps the name/count fully readable. Omitted when the
+                            floor has no image, so those cards stay plain. */}
+                        {floor.birds_eye_url && (
+                          <Image
+                            src={floor.birds_eye_url}
+                            alt=""
+                            aria-hidden
+                            fill
+                            sizes="(max-width: 896px) 100vw, 848px"
+                            loading="lazy"
+                            className="pointer-events-none object-cover object-center opacity-[0.10]"
+                          />
+                        )}
+                        <span className="relative z-10 text-xl font-bold tracking-tight text-ink transition-colors group-hover:text-brand sm:text-2xl">
+                          {floor.name}
                         </span>
-                        <span className="shrink-0 font-mono text-sm font-semibold uppercase tracking-wider text-brand">
+                        <span className="relative z-10 shrink-0 font-mono text-sm font-semibold uppercase tracking-wider text-brand">
                           {n} {n === 1 ? "peek" : "peeks"}
                         </span>
                       </Link>
