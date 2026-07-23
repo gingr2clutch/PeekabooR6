@@ -409,7 +409,11 @@ h4 {
      .ghost-mosaic--off       add to hide it entirely */
 .ghost-mosaic {
   position: absolute;
-  inset: -40px;
+  /* Align with the parent's clip box (isolate inset-0) so the mask's
+     transparent endpoints land exactly on the visible top/bottom edge — any
+     bleed here would leave the mosaic partly-opaque at the edge and then get
+     hard-clipped, showing a visible line. */
+  inset: 0;
   overflow: hidden; /* clips the oversized drifting ::before */
   opacity: var(--ghost-mosaic-opacity, 0.5);
   pointer-events: none;
