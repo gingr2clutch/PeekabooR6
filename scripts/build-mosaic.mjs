@@ -22,8 +22,8 @@ const publicDir = resolve(__dirname, "..", "public");
 const TILE_W = 176;
 const TILE_H = 132; // 4:3 cells
 const COLS = 4;
-const BLUR_SIGMA = 1.0; // light blur — keep the maps recognizable
-const WEBP_QUALITY = 40; // a touch higher now there's real detail to keep
+const BLUR_SIGMA = 0.5; // very light — keep the maps clearly readable
+const WEBP_QUALITY = 46; // higher now there's real detail to keep
 // --------------------------------------------------------------------------
 
 function loadEnvLocal() {
