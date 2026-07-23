@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { BestPeek } from "@/components/BestPeek";
 import { DiscordBanner } from "@/components/DiscordButton";
 import { MapCardImage } from "@/components/MapCardImage";
 import { LiveStats } from "@/components/LiveStats";
 import { PageHeader } from "@/components/PageHeader";
-import { getHomeStats, getMaps, getPeekOfTheDay } from "@/lib/db";
+import { getHomeStats, getMaps } from "@/lib/db";
 import { getMapVoteActivity } from "@/lib/map-activity";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +17,6 @@ const NEW_MAP_NAME = "Calypso Casino";
 export default async function Home() {
   const all = await getMaps();
   const stats = await getHomeStats();
-  const peekOfDay = await getPeekOfTheDay();
   const activity = await getMapVoteActivity();
   const votesFor = (id: string) =>
     activity.get(id) ?? { sevenDayVotes: 0, allTimeVotes: 0 };
@@ -91,14 +89,6 @@ export default async function Home() {
           </div>
         </div>
         </div>
-
-        {/* Peek of the Day — a rotating featured clip so the homepage shows the
-            product before the map grid. */}
-        {peekOfDay && (
-          <div className="mx-auto mb-10 max-w-xl">
-            <BestPeek peek={peekOfDay} eyebrow="Peek of the Day" showMap />
-          </div>
-        )}
 
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {maps.map((map) => {
