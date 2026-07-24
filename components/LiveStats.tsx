@@ -151,18 +151,6 @@ export function LiveStats({ cells }: Props) {
         aria-hidden
         className="peek-stats-scan pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-brand/20 to-transparent"
       />
-      {/* Subtle "Live" marker, top-right — a small teal dot (with the same tiny
-          ping we use elsewhere) + label. Replaces the old center pill. */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute right-2 top-1.5 z-20 inline-flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-teal"
-      >
-        <span className="relative flex h-1.5 w-1.5">
-          <span className="absolute inline-flex h-full w-full rounded-full bg-teal opacity-75 motion-safe:animate-ping" />
-          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-teal" />
-        </span>
-        Live
-      </span>
       <div className="relative grid grid-cols-2 sm:grid-cols-4">
         {cells.map((c, i) => {
           // Content is identical whether or not the cell links; only the wrapper
