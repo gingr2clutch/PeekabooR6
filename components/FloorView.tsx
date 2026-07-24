@@ -10,7 +10,6 @@ import type { Floor, Map, Peek } from "@/lib/db";
 import { rating, ratingLabel, votesText } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
 import { isPeekNew } from "@/lib/peek-recency";
-import { isUnderrated } from "@/lib/underrated";
 
 type Positioned = Peek & { displayX: number; displayY: number };
 
@@ -18,16 +17,13 @@ type Props = {
   map: Map;
   floor: Floor;
   peeks: Positioned[];
-  // The map's overall top peek id, so its pin gets the 🏆 mark on whichever
-  // floor it lives.
-  topPeekId?: string | null;
 };
 
 // Client wrapper around the bird's-eye image + pin overlay. Owns the
 // "selected pin" state used on mobile: tap a pin → highlights → its
 // details show in a fixed card below the map. Desktop users still get the
 // hover tooltip and click-to-navigate behavior.
-export function FloorView({ map, floor, peeks, topPeekId = null }: Props) {
+export function FloorView({ map, floor, peeks }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Mirror of selectedId that lags by the panel exit-animation duration so
   // the card can play its slide-out before unmounting. While `panelClosing`
@@ -194,13 +190,6 @@ export function FloorView({ map, floor, peeks, topPeekId = null }: Props) {
                 peek.worked_votes,
                 peek.vote_count
               )}
-              mark={
-                peek.id === topPeekId
-                  ? "top"
-                  : isUnderrated(peek)
-                    ? "gem"
-                    : null
-              }
               isSelected={selectedId === peek.id}
               onSelect={() => toggleSelect(peek.id)}
             />
