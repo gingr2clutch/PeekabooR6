@@ -10,9 +10,9 @@ import { getMapVoteActivity } from "@/lib/map-activity";
 export const dynamic = "force-dynamic";
 
 // TEMP: Calypso Casino "new map" highlight. Pinned to first position +
-// rendered with a purple pulse glow and a "NEW MAP" badge. To remove:
+// rendered with a soft static orange glow and a "NEW MAP" badge. To remove:
 // drop this constant, the pin-to-front block below, the isNewMap branch
-// in the card render, and the .new-map-pulse rules in app/globals.css.
+// in the card render, and the .new-map-glow rules in app/globals.css.
 const NEW_MAP_NAME = "Calypso Casino";
 
 export default async function Home() {
@@ -96,11 +96,11 @@ export default async function Home() {
         </div>
         </div>
 
-        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4">
           {maps.map((map) => {
             const hasCover = !!map.cover_image_url;
             const cardBase =
-              "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-all duration-150 ease-out";
+              "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium shadow-[0_6px_20px_rgba(0,0,0,0.09)] transition-all duration-[180ms] ease-out";
 
             const cover = hasCover ? (
               <MapCardImage
@@ -127,13 +127,11 @@ export default async function Home() {
                 <li key={map.id}>
                   <Link
                     href={`/maps/${map.slug}`}
-                    className={`${cardBase} border-[3px] ${
-                      isNewMap
-                        ? "new-map-pulse border-white hover:border-purple-500"
-                        : "border-white hover:border-brand"
+                    className={`${cardBase} border-2 border-white ${
+                      isNewMap ? "new-map-glow" : ""
                     } ${
                       hasCover ? "" : "bg-card text-ink"
-                    } hover:shadow-lg motion-safe:hover:-translate-y-1 motion-safe:hover:scale-[1.03] active:border-brand motion-safe:active:scale-[0.97]`}
+                    } hover:border-brand active:border-brand motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.97]`}
                   >
                     {cover}
                     {isNewMap && (
@@ -151,7 +149,7 @@ export default async function Home() {
               <li key={map.id}>
                 <div
                   aria-disabled="true"
-                  className={`${cardBase} !cursor-not-allowed border-[3px] border-white ${
+                  className={`${cardBase} !cursor-not-allowed border-2 border-white ${
                     hasCover ? "opacity-60" : "bg-card/60 text-muted"
                   }`}
                 >

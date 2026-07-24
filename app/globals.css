@@ -252,36 +252,16 @@ h4 {
 
 /* TEMP: Calypso Casino "new map" highlight on the homepage Maps grid.
    Remove with the matching block in app/page.tsx when no longer the
-   newest map. Search "new-map-pulse" or "Calypso Casino" to find.
+   newest map. Search "new-map-glow" or "Calypso Casino" to find.
 
-   Two layered shadows on the card edge:
-   - A thin 1px purple ring acts as a colored border, varying gently
-     in opacity so the outline itself breathes.
-   - A blurred outer glow whose blur + spread + alpha all expand
-     together — that's what gives the "swell outward and fade back"
-     feel, instead of just dim ↔ bright. */
-@keyframes new-map-pulse-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.45),
-      0 0 6px 0 rgba(168, 85, 247, 0.18);
-  }
-  50% {
-    box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.72),
-      0 0 30px 6px rgba(168, 85, 247, 0.5);
-  }
-}
-
-.new-map-pulse {
-  animation: new-map-pulse-glow 2.5s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .new-map-pulse {
-    animation: none;
-    box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.55),
-      0 0 16px rgba(168, 85, 247, 0.35);
-  }
+   The ONE sanctioned glow on the site: a STATIC, soft orange-tinted spotlight
+   at low opacity (~14%) with a tight spread — a gentle "this is new" halo,
+   clearly quieter than the solid orange selected-state border. Layered on top
+   of the shared soft card shadow so the new card keeps the same lift as the
+   rest of the grid. No animation. */
+.new-map-glow {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09),
+    0 0 14px 1px rgba(242, 100, 14, 0.14);
 }
 
 /* --- Scroll reveal (progressive enhancement) -------------------------------
