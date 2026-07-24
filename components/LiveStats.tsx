@@ -87,7 +87,7 @@ function Odometer({
   const animate = phase === "roll";
   let d = 0;
   return (
-    <span className="text-2xl font-bold tabular-nums tracking-tight text-ink sm:text-3xl">
+    <span className="text-xl font-bold tabular-nums tracking-tight text-ink sm:text-2xl">
       {/* Real value for screen readers + crawlers; the rolling glyphs below are
           decorative. */}
       <span className="sr-only">
@@ -150,7 +150,7 @@ export function LiveStats({ cells }: Props) {
             key={c.label}
             // Thin full-length dividers in faint teal-grey; each cell's
             // order + border classes (c.cellClass) lay out the 2x2 / row.
-            className={`peek-stats-cell flex flex-col items-center justify-center gap-1 border-[#dfe4dd] px-4 py-4 text-center ${c.cellClass}`}
+            className={`peek-stats-cell flex flex-col items-center justify-center gap-1 border-[#dfe4dd] px-4 py-3 text-center ${c.cellClass}`}
             style={{ animationDelay: `${i * CELL_STAGGER_MS}ms` }}
           >
             <div className="flex items-center gap-1.5">

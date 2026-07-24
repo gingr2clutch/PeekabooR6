@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { DiscordBanner } from "@/components/DiscordButton";
 import { MapCardImage } from "@/components/MapCardImage";
@@ -58,12 +59,17 @@ export default async function Home() {
             aria-hidden
             className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
           >
-            <div className="ghost-mosaic" />
+            {/* Near-invisible: reads as faint texture, never lowers contrast
+                behind the stats/Maps heading. */}
+            <div
+              className="ghost-mosaic"
+              style={{ "--ghost-mosaic-opacity": "0.03" } as CSSProperties}
+            />
           </div>
-          <div data-reveal className="mb-10">
+          <div data-reveal className="mb-6">
             <DiscordBanner />
         </div>
-        <div className="mb-6">
+        <div className="mb-5">
           {/* DOM/source order stays Maps, Peeks, Votes, S-Tier (keeps the
               desktop single-row order); the `order-*` classes reshuffle the
               mobile 2x2 to Peeks | Votes (top) / Maps | S-Tier (bottom), and
@@ -77,7 +83,7 @@ export default async function Home() {
             ]}
           />
         </div>
-        <div data-reveal className="mb-10 text-center">
+        <div data-reveal className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
           <p className="mt-2 text-[#6f716a]">Click the map you're on</p>
           <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">
@@ -90,7 +96,7 @@ export default async function Home() {
         </div>
         </div>
 
-        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4">
           {maps.map((map) => {
             const hasCover = !!map.cover_image_url;
             const cardBase =
