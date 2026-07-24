@@ -51,22 +51,9 @@ export default async function Home() {
     <>
       <PageHeader home />
       <main className="fade-in-up mx-auto max-w-6xl px-6 pb-20 pt-10">
-        {/* Homepage hero — a faint drifting blueprint grid sits behind the
-            stats/heading area only. `isolate` keeps the -z-10 layer scoped to
-            this region; it never overlaps the map grid below. */}
-        <div className="relative isolate">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-          >
-            {/* Faint drifting texture. Low enough to stay contrast-safe behind
-                the stats/Maps heading, but not so low the left-to-right drift
-                becomes imperceptible (3% read as "stopped"). Tune this one number. */}
-            <div
-              className="ghost-mosaic"
-              style={{ "--ghost-mosaic-opacity": "0.4" } as CSSProperties}
-            />
-          </div>
+        {/* Homepage hero. The drifting map filmstrip is anchored to the Maps
+            heading below (not here) so it stays clear of the stats card. */}
+        <div>
           <div data-reveal className="mb-6">
             <DiscordBanner />
         </div>
@@ -84,7 +71,19 @@ export default async function Home() {
             ]}
           />
         </div>
-        <div data-reveal className="mb-8 text-center">
+        <div data-reveal className="relative isolate mb-8 text-center">
+          {/* Drifting map filmstrip — anchored to the heading so it sits behind
+              the Maps title and eases down toward the grid, never up into the
+              stats. Opacity is the one tunable knob. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 -top-4 bottom-[-40px] -z-10 overflow-hidden"
+          >
+            <div
+              className="ghost-mosaic"
+              style={{ "--ghost-mosaic-opacity": "0.4" } as CSSProperties}
+            />
+          </div>
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
           <p className="mt-2 text-[#6f716a]">Click the map you're on</p>
           <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">

@@ -423,8 +423,8 @@ h4 {
   -webkit-mask-image: linear-gradient(
       to bottom,
       transparent 0%,
-      transparent 28%,
-      #000 64%,
+      #000 28%,
+      #000 74%,
       transparent 100%
     ),
     linear-gradient(
@@ -438,8 +438,8 @@ h4 {
   mask-image: linear-gradient(
       to bottom,
       transparent 0%,
-      transparent 28%,
-      #000 64%,
+      #000 28%,
+      #000 74%,
       transparent 100%
     ),
     linear-gradient(
@@ -452,25 +452,26 @@ h4 {
   mask-composite: intersect;
 }
 
-/* The drifting layer: an oversized, TILED copy of the mosaic that pans straight
-   LEFT-TO-RIGHT by exactly one horizontal image period (704px = COLS*TILE_W from
-   build-mosaic.mjs) every 52s — tiles cross the view, one map after another.
-   Because it moves by a whole period and the tile repeats, the loop is pixel-
-   identical at the wrap — no seam, no jump. Transform-only (GPU compositor; no
-   repaints, no JS per frame). If the mosaic grid shape ever changes, update 704.
-   Bleed: the LEFT edge (the trailing edge as it pans right) gets >= one full
-   period so it never exposes a gap; no vertical drift, so top/bottom just clear
-   the masked band. */
+/* The drifting layer: the SINGLE-ROW strip (public/ghost-mosaic.webp,
+   STRIP_TILES=8 covers wide) tiled horizontally and panned straight LEFT-TO-
+   RIGHT, so 2-3 maps sit side by side and cross the view one after another —
+   never stacked. Sizing is viewport-relative so the count stays ~2-3 at any
+   width: each cover is 34vw, the whole 8-cover strip is 8*34vw = 272vw, and it
+   repeats every 272vw. The pan moves by exactly that one period, so the wrap is
+   pixel-identical — no seam. repeat-x only (no vertical tiling → one clean row).
+   Transform-only (GPU compositor; no repaints, no JS per frame). If STRIP_TILES
+   changes, update 272vw ( = STRIP_TILES * 34vw ) here and in the keyframe. */
 .ghost-mosaic::before {
   content: "";
   position: absolute;
-  top: -40px;
-  left: -744px;
-  right: -40px;
-  bottom: -40px;
+  top: 0;
+  bottom: 0;
+  left: -272vw; /* one full period of left bleed (trailing edge as it pans right) */
+  right: 0;
   background-image: url("/ghost-mosaic.webp");
-  background-repeat: repeat;
-  background-size: 704px 660px;
+  background-repeat: repeat-x;
+  background-position: 0 50%;
+  background-size: 272vw auto;
   animation: ghost-mosaic-drift 52s linear infinite;
   will-change: transform;
 }
@@ -479,7 +480,7 @@ h4 {
     transform: translate3d(0, 0, 0);
   }
   to {
-    transform: translate3d(704px, 0, 0);
+    transform: translate3d(272vw, 0, 0);
   }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -19,9 +19,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicDir = resolve(__dirname, "..", "public");
 
 // --- tunables -------------------------------------------------------------
-const TILE_W = 176;
-const TILE_H = 132; // 4:3 cells
-const COLS = 4;
+// A SINGLE ROW strip (not a grid) — the homepage drifts it horizontally so a
+// few maps cross the view side by side, never stacked. STRIP_TILES is a fixed
+// loop length so the CSS drift period stays constant as maps are added; if
+// there are more covers we sample the first STRIP_TILES, fewer and we repeat.
+const TILE_W = 384;
+const TILE_H = 216; // 16:9 — a wide, short filmstrip cell
+const STRIP_TILES = 8;
 const BLUR_SIGMA = 0.5; // very light — keep the maps clearly readable
 const WEBP_QUALITY = 46; // higher now there's real detail to keep
 // --------------------------------------------------------------------------
@@ -87,19 +91,14 @@ async function main() {
   }
   if (tiles.length === 0) throw new Error("No tiles could be downloaded.");
 
-  const rows = Math.ceil(tiles.length / COLS);
-  const cells = COLS * rows;
-  const width = COLS * TILE_W;
-  const height = rows * TILE_H;
+  // One row of exactly STRIP_TILES cells (repeat covers to fill if we have
+  // fewer). Fixed width keeps the horizontal loop period constant in CSS.
+  const width = STRIP_TILES * TILE_W;
+  const height = TILE_H;
 
-  // Fill the full rectangle; repeat from the start for any leftover cells so
-  // there are no blank gaps (minimal repeats).
   const composite = [];
-  for (let i = 0; i < cells; i++) {
-    const tile = tiles[i % tiles.length];
-    const col = i % COLS;
-    const row = Math.floor(i / COLS);
-    composite.push({ input: tile, top: row * TILE_H, left: col * TILE_W });
+  for (let i = 0; i < STRIP_TILES; i++) {
+    composite.push({ input: tiles[i % tiles.length], top: 0, left: i * TILE_W });
   }
 
   const out = resolve(publicDir, "ghost-mosaic.webp");
