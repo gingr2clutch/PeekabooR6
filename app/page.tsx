@@ -77,7 +77,7 @@ export default async function Home() {
               stats. Opacity is the one tunable knob. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 -top-6 bottom-[-72px] -z-10 overflow-hidden"
+            className="pointer-events-none absolute inset-x-0 -top-6 bottom-[-24px] -z-10 overflow-hidden"
           >
             <div
               className="ghost-mosaic"
