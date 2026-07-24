@@ -11,6 +11,11 @@ export const UNDERRATED_MIN_SCORE = 65; // B+ floor
 export const UNDERRATED_MIN_VOTES = 4;
 export const UNDERRATED_MAX_VOTES = 15;
 
+// The feature is deliberately RARE: only the N most underrated peeks sitewide
+// carry the gem badge and appear on /underrated. Everything reads from this one
+// number, so the list stays curated and the badge stays scarce.
+export const UNDERRATED_TOP_COUNT = 10;
+
 export function isUnderrated(peek: {
   base_success_rate: number;
   worked_votes: number;

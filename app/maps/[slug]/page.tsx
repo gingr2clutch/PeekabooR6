@@ -15,9 +15,11 @@ import {
   getMapBySlug,
   getRankedPeeksForMap,
   getTopPeekForMap,
+  getUnderratedTopIds,
 } from "@/lib/db";
-import { rating, ratingScore } from "@/lib/rate";
+import { rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
+import { GemBadge } from "@/components/GemBadge";
 import { TrendArrow } from "@/components/TrendArrow";
 import { MultiTrendChart, type TrendSeries } from "@/components/MultiTrendChart";
 import {
@@ -26,7 +28,6 @@ import {
   pointsWithinDays,
   TREND_LINE_COLORS,
 } from "@/lib/trends";
-import { isUnderrated } from "@/lib/underrated";
 import { coverThumb } from "@/lib/cover-image";
 
 export const dynamic = "force-dynamic";
@@ -104,6 +105,9 @@ export default async function MapPage({
 
   const topPeek = await getTopPeekForMap(floorIds);
   const rankedPeeks = await getRankedPeeksForMap(floorIds);
+  // The sitewide top-10 hidden gems — used to badge cards and to decide which
+  // (if any) of this map's peeks show in "Underrated on this map".
+  const gemIds = await getUnderratedTopIds();
 
   // Batched 7-vs-7 trend direction for the ranked-list arrows (one query).
   const rankedTrends = await getSnapshotsForPeeks(
@@ -111,20 +115,11 @@ export default async function MapPage({
     14
   );
 
-  // The 2 most underrated peeks on this map: genuine hidden gems first (grade
-  // >= B+, few votes), then the next least-seen high-grade peeks — so every map
-  // surfaces two.
-  const underratedPeeks = [...rankedPeeks]
-    .sort((a, b) => {
-      const au = isUnderrated(a) ? 0 : 1;
-      const bu = isUnderrated(b) ? 0 : 1;
-      if (au !== bu) return au - bu; // real hidden gems lead
-      const as = ratingScore(a.base_success_rate, a.worked_votes, a.vote_count);
-      const bs = ratingScore(b.base_success_rate, b.worked_votes, b.vote_count);
-      if (bs !== as) return bs - as; // then best grade
-      return (a.vote_count ?? 0) - (b.vote_count ?? 0); // then fewest votes
-    })
-    .slice(0, 2);
+  // "Underrated on this map" now shows ONLY this map's peeks that made the
+  // sitewide top 10 — so a map surfaces 0–3 real gems (or the row hides). Keeps
+  // the rarity story consistent with /underrated. rankedPeeks is already sorted
+  // best-first, so this preserves grade order.
+  const underratedPeeks = rankedPeeks.filter((p) => gemIds.has(p.id));
 
   // Always-visible "Last 7 days" chart: top 5 peeks, reusing the 14-day
   // snapshots above (filtered to the last 7 days). Only series with a real
@@ -289,6 +284,7 @@ export default async function MapPage({
                             </div>
                           </div>
                           <span className="inline-flex items-center gap-1">
+                            {gemIds.has(peek.id) && <GemBadge />}
                             <GradeBadge label={r.label} score={r.score} />
                             <TrendArrow
                               direction={computeDirection(
@@ -328,7 +324,7 @@ export default async function MapPage({
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {underratedPeeks.map((peek) => (
-                <BestPeek key={peek.id} peek={peek} />
+                <BestPeek key={peek.id} peek={peek} isGem />
               ))}
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { supabasePublic } from "./supabase";
 import { createSupabaseServerClient } from "./supabase/server";
 import { GRADED_THRESHOLDS, rating, ratingScore } from "./rate";
-import { isUnderrated } from "./underrated";
+import { isUnderrated, UNDERRATED_TOP_COUNT } from "./underrated";
 
 export type Map = {
   id: string;
@@ -309,9 +309,10 @@ export async function getRankedPeeksForMap(
 // Underrated ("hidden gem") peeks across every map — high grade, low votes (see
 // isUnderrated). Sorted best grade first, then FEWEST votes first (the least-
 // seen gems lead). Recomputed per request, so peeks leave the list once they
-// pass the vote ceiling.
+// pass the vote ceiling and the next candidate rotates in. Capped at the top N
+// sitewide (UNDERRATED_TOP_COUNT) so the feature stays rare and curated.
 export async function getUnderratedPeeks(
-  limit = 60
+  limit = UNDERRATED_TOP_COUNT
 ): Promise<PeekWithContext[]> {
   const { data, error } = await supabasePublic()
     .from("peeks")
@@ -327,6 +328,14 @@ export async function getUnderratedPeeks(
       return (a.vote_count ?? 0) - (b.vote_count ?? 0); // fewest votes first
     })
     .slice(0, limit);
+}
+
+// IDs of the sitewide top-N underrated peeks — the exact set that earns the gem
+// badge. Cards across the site check membership to decide whether to show it, so
+// the badge means the same thing everywhere it renders.
+export async function getUnderratedTopIds(): Promise<Set<string>> {
+  const top = await getUnderratedPeeks();
+  return new Set(top.map((p) => p.id));
 }
 
 // The logged-in user's favorited peeks (with floor + map context), newest

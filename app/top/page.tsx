@@ -4,9 +4,10 @@ import Link from "next/link";
 import { NewBadge } from "@/components/NewBadge";
 import { ProLockBadge } from "@/components/ProLockBadge";
 import { PageHeader } from "@/components/PageHeader";
-import { getTopPeeks, type PeekWithContext } from "@/lib/db";
+import { getTopPeeks, getUnderratedTopIds, type PeekWithContext } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
+import { GemBadge } from "@/components/GemBadge";
 import { TrendArrow } from "@/components/TrendArrow";
 import {
   computeDirection,
@@ -57,6 +58,8 @@ const MEDALS: Record<number, Medal> = {
 
 export default async function PopularPage() {
   const peeks = await getTopPeeks(8);
+  // Sitewide top-10 hidden gems, to badge any that also rank here.
+  const gemIds = await getUnderratedTopIds();
 
   // Batched 7-vs-7 trend direction for every ranked peek (one query).
   const trends = await getSnapshotsForPeeks(
@@ -90,6 +93,7 @@ export default async function PopularPage() {
                 peek={peek}
                 rank={i + 1}
                 trend={computeDirection(trends.get(peek.id) ?? [])}
+                isGem={gemIds.has(peek.id)}
               />
             ))}
           </ol>
@@ -103,10 +107,12 @@ function PeekRow({
   peek,
   rank,
   trend,
+  isGem = false,
 }: {
   peek: PeekWithContext;
   rank: number;
   trend: TrendDirection | null;
+  isGem?: boolean;
 }) {
   const floor = peek.floors!;
   const map = floor.maps;
@@ -175,6 +181,7 @@ function PeekRow({
 
       <div className="shrink-0 text-right">
         <span className="inline-flex items-center gap-1">
+          {isGem && <GemBadge />}
           <GradeBadge label={r.label} score={r.score} />
           <TrendArrow direction={trend} />
         </span>

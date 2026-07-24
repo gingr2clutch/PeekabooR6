@@ -24,11 +24,11 @@ export default async function UnderratedPage() {
       <main className="fade-in-up mx-auto max-w-2xl px-4 pb-20 pt-10 sm:px-6">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">
-            💎 Hidden gems
+            💎 The 10 most underrated peeks
           </h1>
           <p className="mx-auto mt-2 max-w-md text-[15px] text-muted">
-            Great peeks the community hasn&apos;t discovered yet. Vote to change
-            that.
+            The 10 most underrated peeks in the game right now — great peeks
+            almost nobody has voted on. Discover them before everyone else.
           </p>
         </div>
 
@@ -41,7 +41,7 @@ export default async function UnderratedPage() {
           <ul className="space-y-3">
             {peeks.map((peek) => (
               <li key={peek.id}>
-                <BestPeek peek={peek} showMap />
+                <BestPeek peek={peek} showMap isGem />
               </li>
             ))}
           </ul>

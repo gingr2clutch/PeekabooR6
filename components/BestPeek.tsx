@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { GradeBadge } from "@/components/GradeBadge";
+import { GemBadge } from "@/components/GemBadge";
 import { ProLockBadge } from "@/components/ProLockBadge";
 import type { PeekWithContext } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
@@ -14,13 +15,21 @@ type Props = {
   // `bare` drops the card chrome (border/shadow/bg/padding) so the row can sit
   // inside another card; still a link, just no bubble of its own.
   bare?: boolean;
+  // Marks this peek as one of the sitewide top-10 hidden gems.
+  isGem?: boolean;
 };
 
 // Compact featured "best peek" card — preview thumbnail, name, location, grade
 // badge, and vote count. The whole card links to the peek. Server component:
 // no client hooks; the thumbnail is the video's first frame (the same #t=0.1
 // trick used elsewhere), non-interactive so taps hit the card link.
-export function BestPeek({ peek, eyebrow, showMap = false, bare = false }: Props) {
+export function BestPeek({
+  peek,
+  eyebrow,
+  showMap = false,
+  bare = false,
+  isGem = false,
+}: Props) {
   const floor = peek.floors;
   const map = floor?.maps ?? null;
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
@@ -75,7 +84,10 @@ export function BestPeek({ peek, eyebrow, showMap = false, bare = false }: Props
 
       <div className="shrink-0 text-right">
         {peek.is_pro_only && <ProLockBadge className="mb-1" />}
-        <GradeBadge label={r.label} score={r.score} />
+        <span className="inline-flex items-center gap-1">
+          {isGem && <GemBadge />}
+          <GradeBadge label={r.label} score={r.score} />
+        </span>
         <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
           {votesText(peek.vote_count ?? 0)}
         </div>
