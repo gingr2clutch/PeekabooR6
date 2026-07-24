@@ -64,10 +64,10 @@ export default async function Home() {
               `sm:` resets both order and dividers to the source-order row. */}
           <LiveStats
             cells={[
-              { label: "Maps", value: stats.mapsLive, cellClass: "order-3 border-t sm:order-none sm:border-t-0" },
+              { label: "Maps", value: stats.mapsLive, cellClass: "order-3 sm:order-none" },
               { label: "Peeks", value: stats.gradedPeeks, cellClass: "order-1 sm:order-none sm:border-l" },
               { label: "Votes", value: stats.communityVotes, cellClass: "order-2 border-l sm:order-none" },
-              { label: "S-Tier", value: stats.sTierPeeks, cellClass: "order-4 border-t border-l sm:order-none sm:border-t-0" },
+              { label: "S-Tier", value: stats.sTierPeeks, cellClass: "order-4 border-l sm:order-none" },
             ]}
           />
         </div>
@@ -81,7 +81,7 @@ export default async function Home() {
           >
             <div
               className="ghost-mosaic"
-              style={{ "--ghost-mosaic-opacity": "0.22" } as CSSProperties}
+              style={{ "--ghost-mosaic-opacity": "0.16" } as CSSProperties}
             />
           </div>
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
@@ -100,7 +100,7 @@ export default async function Home() {
           {maps.map((map) => {
             const hasCover = !!map.cover_image_url;
             const cardBase =
-              "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-all duration-200";
+              "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-all duration-150 ease-out";
 
             const cover = hasCover ? (
               <MapCardImage
@@ -133,7 +133,7 @@ export default async function Home() {
                         : "border-white hover:border-brand"
                     } ${
                       hasCover ? "" : "bg-card text-ink"
-                    } hover:shadow-lg motion-safe:hover:-translate-y-1 motion-safe:hover:scale-[1.03]`}
+                    } hover:shadow-lg motion-safe:hover:-translate-y-1 motion-safe:hover:scale-[1.03] active:border-brand motion-safe:active:scale-[0.97]`}
                   >
                     {cover}
                     {isNewMap && (

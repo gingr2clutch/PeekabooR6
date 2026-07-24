@@ -162,7 +162,7 @@ export function LiveStats({ cells }: Props) {
             key={c.label}
             // Thin full-length dividers in faint teal-grey; each cell's
             // order + border classes (c.cellClass) lay out the 2x2 / row.
-            className={`peek-stats-cell flex flex-col items-center justify-center gap-1 border-[#dfe4dd]/60 px-4 py-2.5 text-center ${c.cellClass}`}
+            className={`peek-stats-cell flex flex-col items-center justify-center gap-1 border-[#dfe4dd]/60 px-4 py-2 text-center ${c.cellClass}`}
             style={{ animationDelay: `${i * CELL_STAGGER_MS}ms` }}
           >
             <div className="flex items-center gap-1.5">
