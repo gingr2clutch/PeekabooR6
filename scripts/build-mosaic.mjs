@@ -24,10 +24,10 @@ const publicDir = resolve(__dirname, "..", "public");
 // loop length so the CSS drift period stays constant as maps are added; if
 // there are more covers we sample the first STRIP_TILES, fewer and we repeat.
 const TILE_W = 384;
-const TILE_H = 216; // 16:9 — a wide, short filmstrip cell
+const TILE_H = 288; // 4:3 — taller cells so more of each cover shows
 const STRIP_TILES = 8;
 const BLUR_SIGMA = 0.5; // very light — keep the maps clearly readable
-const WEBP_QUALITY = 46; // higher now there's real detail to keep
+const WEBP_QUALITY = 40; // blurred greyscale — keep the strip lean (<60KB)
 // --------------------------------------------------------------------------
 
 function loadEnvLocal() {
