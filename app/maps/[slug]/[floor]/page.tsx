@@ -146,7 +146,12 @@ export default async function FloorPage({
           )}
         </div>
 
-        <FloorView map={map} floor={floor} peeks={positioned} />
+        <FloorView
+          map={map}
+          floor={floor}
+          peeks={positioned}
+          gemIds={gemIds}
+        />
 
         {peeks.length === 0 && (
           <p className="mt-6 text-center text-sm text-muted">
