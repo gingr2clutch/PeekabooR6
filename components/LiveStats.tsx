@@ -138,7 +138,7 @@ export function LiveStats({ cells }: Props) {
   }, []);
 
   return (
-    <div className="peek-stats relative w-full overflow-hidden rounded-card border border-border bg-card">
+    <div className="peek-stats elev-md relative w-full overflow-hidden rounded-card border border-border bg-card">
       {/* One-time orange scan-line sweep on load (CSS; off for reduced-motion). */}
       <span
         aria-hidden

@@ -259,9 +259,61 @@ h4 {
    clearly quieter than the solid orange selected-state border. Layered on top
    of the shared soft card shadow so the new card keeps the same lift as the
    rest of the grid. No animation. */
-.new-map-glow {
+/* Scoped to .map-card so it wins over the shared .elev-card base shadow at
+   rest (equal specificity would otherwise let the later .elev-card override the
+   glow). On hover the card steps up to the standard lift shadow. */
+.map-card.new-map-glow {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09),
     0 0 14px 1px rgba(242, 100, 14, 0.14);
+}
+
+/* --- Elevation system -----------------------------------------------------
+   One shadow language for the homepage surfaces, in deliberately small steps so
+   the hierarchy reads without heaviness:
+     header  = none      banner = sm      stats = md      map cards = card. */
+.elev-sm {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.elev-md {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+}
+.elev-card {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09);
+}
+
+/* --- Map card interaction (desktop hover + touch press + selection) --------
+   All additive and self-contained — none of it is scroll-triggered.
+   - hover lifts to a stronger shadow (elevation step up), 180ms via the card's
+     own transition-all.
+   - the orange 2px selection border DRAWS IN via a clipped ::after (top→bottom)
+     instead of snapping on. No glow anywhere. Outline lives inside the card's
+     overflow, so it reads as a crisp inner ring over the cover. */
+.map-card:hover {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.13);
+}
+.map-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid #f2640e;
+  opacity: 0;
+  clip-path: inset(0 0 100% 0);
+  transition: opacity 120ms ease, clip-path 220ms ease;
+  pointer-events: none;
+}
+.map-card:hover::after,
+.map-card:active::after {
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Border change only: the selection ring fades in with no draw, and the
+     hover/press scale is already gated by motion-safe in the markup. */
+  .map-card::after {
+    clip-path: inset(0 0 0 0);
+    transition: opacity 160ms ease;
+  }
 }
 
 /* --- Scroll reveal (progressive enhancement) -------------------------------
@@ -473,30 +525,8 @@ h4 {
   display: none;
 }
 
-/* Slight pulsing teal glow on the homepage Discord banner. Keeps the base card
-   shadow and gently breathes a soft glow on top. */
-@keyframes peek-discord-glow {
-  0%,
-  100% {
-    box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.05),
-      0 0 0 rgba(63, 151, 139, 0);
-  }
-  50% {
-    box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.05),
-      0 0 16px rgba(63, 151, 139, 0.45);
-  }
-}
-.peek-discord-glow {
-  animation: peek-discord-glow 3.2s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .peek-discord-glow {
-    animation: none;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
-}
+/* The Discord banner now sits on the shared elevation scale (elev-sm) instead
+   of a teal glow — glow is reserved for the NEW-map card only. */
 
 /* --- Top peeks #1 card: shimmer border (comet) + medal gleam --------------
    The #1 card has a thin ~18% orange base ring; a brighter #ff8038 segment

@@ -6,6 +6,7 @@ import { LiveStats } from "@/components/LiveStats";
 import { PageHeader } from "@/components/PageHeader";
 import { getHomeStats, getMaps } from "@/lib/db";
 import { getMapVoteActivity } from "@/lib/map-activity";
+import { BackToTop } from "@/components/BackToTop";
 
 export const dynamic = "force-dynamic";
 
@@ -100,7 +101,7 @@ export default async function Home() {
           {maps.map((map) => {
             const hasCover = !!map.cover_image_url;
             const cardBase =
-              "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium shadow-[0_6px_20px_rgba(0,0,0,0.09)] transition-all duration-[180ms] ease-out";
+              "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium elev-card transition-all duration-[180ms] ease-out";
 
             const cover = hasCover ? (
               <MapCardImage
@@ -127,11 +128,11 @@ export default async function Home() {
                 <li key={map.id}>
                   <Link
                     href={`/maps/${map.slug}`}
-                    className={`${cardBase} border-2 border-white ${
+                    className={`${cardBase} map-card border-2 border-white ${
                       isNewMap ? "new-map-glow" : ""
                     } ${
                       hasCover ? "" : "bg-card text-ink"
-                    } hover:border-brand active:border-brand motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.97]`}
+                    } motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.97]`}
                   >
                     {cover}
                     {isNewMap && (
@@ -163,7 +164,17 @@ export default async function Home() {
             );
           })}
         </ul>
+
+        {/* Scroll-completion note after the last row. Static (no animation),
+            muted. Count reflects the live maps shown in the stats. */}
+        <div className="mt-10 text-center text-sm">
+          <p className="font-medium text-ink/70">
+            ✓ You&apos;ve explored all {stats.mapsLive} maps
+          </p>
+          <p className="mt-1 text-muted">More peeks added every week.</p>
+        </div>
       </main>
+      <BackToTop />
     </>
   );
 }
