@@ -1,4 +1,37 @@
 import { supabaseAdmin, supabasePublic } from "@/lib/supabase";
+import { rating } from "@/lib/rate";
+
+export type MapPeekCounts = { peeks: number; sTier: number };
+
+// Published-peek counts per map (total + how many grade S) for the homepage map
+// card status line. Keyed by map id. One query; runs per request.
+export async function getMapPeekCounts(): Promise<Map<string, MapPeekCounts>> {
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select("base_success_rate, worked_votes, vote_count, floors(map_id)")
+    .eq("published", true);
+  if (error) throw error;
+  const counts = new Map<string, MapPeekCounts>();
+  for (const row of (data ?? []) as unknown as {
+    base_success_rate: number;
+    worked_votes: number;
+    vote_count: number;
+    floors: { map_id: string } | null;
+  }[]) {
+    const mapId = row.floors?.map_id;
+    if (!mapId) continue;
+    const c = counts.get(mapId) ?? { peeks: 0, sTier: 0 };
+    c.peeks += 1;
+    if (
+      rating(row.base_success_rate, row.worked_votes, row.vote_count).grade ===
+      "S"
+    ) {
+      c.sTier += 1;
+    }
+    counts.set(mapId, c);
+  }
+  return counts;
+}
 
 export type MapVoteActivity = {
   sevenDayVotes: number; // votes gained across the map's peeks in the last ~7 days

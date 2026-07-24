@@ -5,7 +5,11 @@ import { MapCardImage } from "@/components/MapCardImage";
 import { LiveStats } from "@/components/LiveStats";
 import { PageHeader } from "@/components/PageHeader";
 import { getHomeStats, getMaps } from "@/lib/db";
-import { getMapVoteActivity, getRecentPeekCountsByMap } from "@/lib/map-activity";
+import {
+  getMapPeekCounts,
+  getMapVoteActivity,
+  getRecentPeekCountsByMap,
+} from "@/lib/map-activity";
 import { BackToTop } from "@/components/BackToTop";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +26,8 @@ export default async function Home() {
   const activity = await getMapVoteActivity();
   // Peeks added per map in the last 72h → the "N new" accent on fresh maps.
   const recentPeeks = await getRecentPeekCountsByMap(72);
+  // Published-peek counts per map → the map card status line ("N peeks · N S-tier").
+  const mapPeekCounts = await getMapPeekCounts();
   const votesFor = (id: string) =>
     activity.get(id) ?? { sevenDayVotes: 0, allTimeVotes: 0 };
 
@@ -67,10 +73,10 @@ export default async function Home() {
               `sm:` resets both order and dividers to the source-order row. */}
           <LiveStats
             cells={[
-              { label: "Maps", value: stats.mapsLive, href: "#maps", cellClass: "order-3 sm:order-none" },
-              { label: "Peeks", value: stats.gradedPeeks, href: "/peeks?sort=new", cellClass: "order-1 sm:order-none sm:border-l" },
-              { label: "Votes", value: stats.communityVotes, href: "/peeks?sort=votes", cellClass: "order-2 border-l sm:order-none" },
-              { label: "S-Tier", value: stats.sTierPeeks, href: "/peeks?tier=s", cellClass: "order-4 border-l sm:order-none" },
+              { label: "Maps", value: stats.mapsLive, icon: "pin", href: "#maps", cellClass: "order-3 sm:order-none" },
+              { label: "Peeks", value: stats.gradedPeeks, icon: "eye", href: "/peeks?sort=new", cellClass: "order-1 sm:order-none sm:border-l" },
+              { label: "Votes", value: stats.communityVotes, icon: "check", href: "/peeks?sort=votes", cellClass: "order-2 border-l sm:order-none" },
+              { label: "S-Tier", value: stats.sTierPeeks, icon: "trophy", href: "/peeks?tier=s", cellClass: "order-4 border-l sm:order-none" },
             ]}
           />
         </div>
@@ -107,6 +113,16 @@ export default async function Home() {
             const hasCover = !!map.cover_image_url;
             // Peeks added on this map in the last 72h (accent shown when > 0).
             const recentCount = recentPeeks.get(map.id) ?? 0;
+            // Live per-map counts → one short status line under the name.
+            const counts = mapPeekCounts.get(map.id);
+            const statusParts: string[] = [];
+            if (counts && counts.peeks > 0) {
+              statusParts.push(
+                `${counts.peeks} ${counts.peeks === 1 ? "peek" : "peeks"}`
+              );
+              if (counts.sTier > 0) statusParts.push(`${counts.sTier} S-tier`);
+            }
+            const statusLine = statusParts.join(" · ");
             const cardBase =
               "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium elev-card transition-all duration-[180ms] ease-out";
 
@@ -119,9 +135,18 @@ export default async function Home() {
 
             const label = hasCover ? (
               <>
-                <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-                <span className="relative z-10 mt-auto w-full px-3 pb-3 text-left text-white drop-shadow">
-                  {map.name}
+                {/* Soft bottom-up scrim (dark→transparent) so the name reads on
+                    any image — a smooth fade, never a hard label bar. */}
+                <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+                <span className="relative z-10 mt-auto w-full px-3 pb-2.5 text-left">
+                  <span className="block truncate font-medium text-white drop-shadow-sm">
+                    {map.name}
+                  </span>
+                  {statusLine && (
+                    <span className="mt-0.5 block truncate whitespace-nowrap text-[11px] font-medium text-white/70">
+                      {statusLine}
+                    </span>
+                  )}
                 </span>
               </>
             ) : (

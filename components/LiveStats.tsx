@@ -3,9 +3,13 @@
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useState } from "react";
 
+export type StatIcon = "eye" | "check" | "pin" | "trophy";
+
 export type StatCell = {
   label: string;
   value: number;
+  // Small muted glyph sitting to the left of the number.
+  icon?: StatIcon;
   // Teal ping dot after the number (for figures that change, e.g. Peeks/Votes).
   live?: boolean;
   plus?: boolean;
@@ -167,6 +171,7 @@ export function LiveStats({ cells }: Props) {
           const inner = (
             <>
               <div className="flex items-center gap-1.5">
+                {c.icon && <StatGlyph icon={c.icon} />}
                 <Odometer
                   value={c.value}
                   plus={c.plus ?? false}
@@ -215,4 +220,51 @@ export function LiveStats({ cells }: Props) {
       </div>
     </div>
   );
+}
+
+// Small, muted stat glyph (14px). Sits inside the number's line box so it never
+// adds height to the trimmed stats card. Secondary/muted so it reads as a quiet
+// accent, not a button.
+function StatGlyph({ icon }: { icon: StatIcon }) {
+  const common = {
+    viewBox: "0 0 24 24",
+    className: "h-3.5 w-3.5 shrink-0 fill-none stroke-current text-muted",
+    strokeWidth: 1.9,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+  switch (icon) {
+    case "eye":
+      return (
+        <svg {...common}>
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      );
+    case "check":
+      return (
+        <svg {...common}>
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      );
+    case "pin":
+      return (
+        <svg {...common}>
+          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+          <circle cx="12" cy="10" r="2.5" />
+        </svg>
+      );
+    case "trophy":
+      return (
+        <svg {...common}>
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+          <path d="M4 22h16" />
+          <path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.9 18.8 7 20.2 7 22" />
+          <path d="M14 14.7V17c0 .6.5 1 1 1.2C16.1 18.8 17 20.2 17 22" />
+          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+        </svg>
+      );
+  }
 }
