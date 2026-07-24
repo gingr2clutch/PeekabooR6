@@ -46,7 +46,7 @@ export function DiscordBanner() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Join the peekabooR6 Discord (opens in new tab)"
-      className="elev-sm group mx-auto flex w-[92%] max-w-md items-center gap-3 rounded-card bg-gradient-to-r from-[#57938b] to-[#497f75] px-4 py-2.5 transition-[filter] duration-150 ease-out hover:brightness-95"
+      className="elev-sm group mx-auto flex w-[86%] max-w-sm items-center gap-2.5 rounded-card bg-gradient-to-r from-[#57938b] to-[#497f75] px-3.5 py-1.5 transition-[filter] duration-150 ease-out hover:brightness-95"
     >
       <span className="shrink-0 text-white">
         <DiscordIcon size={20} />
