@@ -87,7 +87,7 @@ function Odometer({
   const animate = phase === "roll";
   let d = 0;
   return (
-    <span className="text-xl font-bold tabular-nums tracking-tight text-ink sm:text-2xl">
+    <span className="text-lg font-bold tabular-nums tracking-tight text-ink sm:text-xl">
       {/* Real value for screen readers + crawlers; the rolling glyphs below are
           decorative. */}
       <span className="sr-only">
@@ -144,13 +144,25 @@ export function LiveStats({ cells }: Props) {
         aria-hidden
         className="peek-stats-scan pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-brand/20 to-transparent"
       />
+      {/* Subtle "Live" marker, top-right — a small teal dot (with the same tiny
+          ping we use elsewhere) + label. Replaces the old center pill. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute right-2 top-1.5 z-20 inline-flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-teal"
+      >
+        <span className="relative flex h-1.5 w-1.5">
+          <span className="absolute inline-flex h-full w-full rounded-full bg-teal opacity-75 motion-safe:animate-ping" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-teal" />
+        </span>
+        Live
+      </span>
       <div className="relative grid grid-cols-2 sm:grid-cols-4">
         {cells.map((c, i) => (
           <div
             key={c.label}
             // Thin full-length dividers in faint teal-grey; each cell's
             // order + border classes (c.cellClass) lay out the 2x2 / row.
-            className={`peek-stats-cell flex flex-col items-center justify-center gap-1 border-[#dfe4dd] px-4 py-3 text-center ${c.cellClass}`}
+            className={`peek-stats-cell flex flex-col items-center justify-center gap-1 border-[#dfe4dd]/60 px-4 py-2.5 text-center ${c.cellClass}`}
             style={{ animationDelay: `${i * CELL_STAGGER_MS}ms` }}
           >
             <div className="flex items-center gap-1.5">
@@ -177,16 +189,6 @@ export function LiveStats({ cells }: Props) {
           </div>
         ))}
       </div>
-      {/* Small "LIVE" pill pinned to the exact center of the counter — the
-          intersection of the dividers (center of the mobile 2x2 and of the
-          desktop row). Sits in the empty center gap, on top of the dividers.
-          Decorative: the per-cell dots already announce "Live" to a11y. */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal/40 bg-card px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-teal shadow-sm"
-      >
-        Live
-      </span>
     </div>
   );
 }

@@ -81,7 +81,7 @@ export default async function Home() {
           >
             <div
               className="ghost-mosaic"
-              style={{ "--ghost-mosaic-opacity": "0.4" } as CSSProperties}
+              style={{ "--ghost-mosaic-opacity": "0.22" } as CSSProperties}
             />
           </div>
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
@@ -137,7 +137,7 @@ export default async function Home() {
                   >
                     {cover}
                     {isNewMap && (
-                      <span className="absolute right-2 top-2 z-20 inline-flex items-center rounded-btn bg-purple-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                      <span className="absolute right-1.5 top-1.5 z-20 inline-flex items-center rounded-btn bg-purple-600 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-white shadow-sm">
                         New map
                       </span>
                     )}
