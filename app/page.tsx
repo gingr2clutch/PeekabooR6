@@ -59,11 +59,12 @@ export default async function Home() {
             aria-hidden
             className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
           >
-            {/* Near-invisible: reads as faint texture, never lowers contrast
-                behind the stats/Maps heading. */}
+            {/* Faint drifting texture. Low enough to stay contrast-safe behind
+                the stats/Maps heading, but not so low the left-to-right drift
+                becomes imperceptible (3% read as "stopped"). Tune this one number. */}
             <div
               className="ghost-mosaic"
-              style={{ "--ghost-mosaic-opacity": "0.03" } as CSSProperties}
+              style={{ "--ghost-mosaic-opacity": "0.06" } as CSSProperties}
             />
           </div>
           <div data-reveal className="mb-6">

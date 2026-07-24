@@ -452,21 +452,22 @@ h4 {
   mask-composite: intersect;
 }
 
-/* The drifting layer: an oversized, TILED copy of the mosaic that pans
-   diagonally — bottom-left toward top-right — by exactly one image period
-   (704x660 = COLS*TILE_W x ROWS*TILE_H from build-mosaic.mjs) every 52s. Because
-   it moves by a whole period and the tile repeats, the loop is pixel-identical at
-   the wrap — no seam, no jump. Transform-only (GPU compositor; no repaints, no
-   JS). If the mosaic grid shape ever changes, update the 704/660 values here.
-   Bleed: the TRAILING edges (left, since it moves right; bottom, since it moves
-   up) get >= one period so they never expose a gap. */
+/* The drifting layer: an oversized, TILED copy of the mosaic that pans straight
+   LEFT-TO-RIGHT by exactly one horizontal image period (704px = COLS*TILE_W from
+   build-mosaic.mjs) every 52s — tiles cross the view, one map after another.
+   Because it moves by a whole period and the tile repeats, the loop is pixel-
+   identical at the wrap — no seam, no jump. Transform-only (GPU compositor; no
+   repaints, no JS per frame). If the mosaic grid shape ever changes, update 704.
+   Bleed: the LEFT edge (the trailing edge as it pans right) gets >= one full
+   period so it never exposes a gap; no vertical drift, so top/bottom just clear
+   the masked band. */
 .ghost-mosaic::before {
   content: "";
   position: absolute;
   top: -40px;
   left: -744px;
   right: -40px;
-  bottom: -700px;
+  bottom: -40px;
   background-image: url("/ghost-mosaic.webp");
   background-repeat: repeat;
   background-size: 704px 660px;
@@ -478,7 +479,7 @@ h4 {
     transform: translate3d(0, 0, 0);
   }
   to {
-    transform: translate3d(704px, -660px, 0);
+    transform: translate3d(704px, 0, 0);
   }
 }
 @media (prefers-reduced-motion: reduce) {
