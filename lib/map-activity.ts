@@ -14,6 +14,29 @@ function isoDaysAgoUTC(days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+// Peeks added per map in the last `withinHours` (default 72h), keyed by map id.
+// Powers the homepage "N new" accent so a freshly-updated map stands out.
+// Cheap single query; runs per request.
+export async function getRecentPeekCountsByMap(
+  withinHours = 72
+): Promise<Map<string, number>> {
+  const cutoff = new Date(Date.now() - withinHours * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select("created_at, floors(map_id)")
+    .eq("published", true)
+    .gte("created_at", cutoff);
+  if (error) throw error;
+  const counts = new Map<string, number>();
+  for (const row of (data ?? []) as unknown as {
+    floors: { map_id: string } | null;
+  }[]) {
+    const mapId = row.floors?.map_id;
+    if (mapId) counts.set(mapId, (counts.get(mapId) ?? 0) + 1);
+  }
+  return counts;
+}
+
 // Per-map vote activity, keyed by map id.
 //
 // Votes are stored only as running counters on peeks (no per-vote table), so

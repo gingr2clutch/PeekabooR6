@@ -251,6 +251,62 @@ export async function getTopPeeks(limit = 5): Promise<PeekWithContext[]> {
 // Full select (peek + floor + map) shared by the "best peek" pickers below.
 const PEEK_WITH_CONTEXT_SELECT = `${PEEK_COLUMNS}, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))`;
 
+// Over-fetch factor for DB-ordered lists: some rows drop when their map is
+// unpublished, so pull a few times the limit before slicing.
+const LIST_OVERFETCH = 3;
+
+// Newest published peeks first (created_at desc) — the homepage "Peeks" stat.
+export async function getNewestPeeks(limit = 30): Promise<PeekWithContext[]> {
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select(PEEK_WITH_CONTEXT_SELECT)
+    .eq("published", true)
+    .order("created_at", { ascending: false })
+    .limit(limit * LIST_OVERFETCH);
+  if (error) throw error;
+  return ((data ?? []) as unknown as PeekWithContext[])
+    .filter((row) => row.floors?.maps?.published)
+    .slice(0, limit);
+}
+
+// Most-voted published peeks (vote_count desc) — the homepage "Votes" stat.
+export async function getMostVotedPeeks(limit = 30): Promise<PeekWithContext[]> {
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select(PEEK_WITH_CONTEXT_SELECT)
+    .eq("published", true)
+    .order("vote_count", { ascending: false })
+    .limit(limit * LIST_OVERFETCH);
+  if (error) throw error;
+  return ((data ?? []) as unknown as PeekWithContext[])
+    .filter((row) => row.floors?.maps?.published)
+    .slice(0, limit);
+}
+
+// S-tier published peeks only (grade letter "S" = S+, S, S-), ranked best-first
+// — the homepage "S-Tier" stat.
+export async function getSTierPeeks(limit = 30): Promise<PeekWithContext[]> {
+  const { data, error } = await supabasePublic()
+    .from("peeks")
+    .select(PEEK_WITH_CONTEXT_SELECT)
+    .eq("published", true);
+  if (error) throw error;
+  return ((data ?? []) as unknown as PeekWithContext[])
+    .filter(
+      (row) =>
+        row.floors?.maps?.published &&
+        rating(row.base_success_rate, row.worked_votes, row.vote_count).grade ===
+          "S"
+    )
+    .sort((a, b) => {
+      const ra = gradeRankFor(a);
+      const rb = gradeRankFor(b);
+      if (ra !== rb) return ra - rb;
+      return (b.vote_count ?? 0) - (a.vote_count ?? 0);
+    })
+    .slice(0, limit);
+}
+
 // Best→worst ordering: HIGHEST GRADE first, then (tie) most votes, then (tie)
 // most recently created. The single source of truth for "Peek of the Day",
 // each map's "Top Peek", and the map ranked-list view.

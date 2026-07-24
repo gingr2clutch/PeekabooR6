@@ -5,7 +5,7 @@ import { MapCardImage } from "@/components/MapCardImage";
 import { LiveStats } from "@/components/LiveStats";
 import { PageHeader } from "@/components/PageHeader";
 import { getHomeStats, getMaps } from "@/lib/db";
-import { getMapVoteActivity } from "@/lib/map-activity";
+import { getMapVoteActivity, getRecentPeekCountsByMap } from "@/lib/map-activity";
 import { BackToTop } from "@/components/BackToTop";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +20,8 @@ export default async function Home() {
   const all = await getMaps();
   const stats = await getHomeStats();
   const activity = await getMapVoteActivity();
+  // Peeks added per map in the last 72h → the "N new" accent on fresh maps.
+  const recentPeeks = await getRecentPeekCountsByMap(72);
   const votesFor = (id: string) =>
     activity.get(id) ?? { sevenDayVotes: 0, allTimeVotes: 0 };
 
@@ -65,10 +67,10 @@ export default async function Home() {
               `sm:` resets both order and dividers to the source-order row. */}
           <LiveStats
             cells={[
-              { label: "Maps", value: stats.mapsLive, cellClass: "order-3 sm:order-none" },
-              { label: "Peeks", value: stats.gradedPeeks, cellClass: "order-1 sm:order-none sm:border-l" },
-              { label: "Votes", value: stats.communityVotes, cellClass: "order-2 border-l sm:order-none" },
-              { label: "S-Tier", value: stats.sTierPeeks, cellClass: "order-4 border-l sm:order-none" },
+              { label: "Maps", value: stats.mapsLive, href: "#maps", cellClass: "order-3 sm:order-none" },
+              { label: "Peeks", value: stats.gradedPeeks, href: "/peeks?sort=new", cellClass: "order-1 sm:order-none sm:border-l" },
+              { label: "Votes", value: stats.communityVotes, href: "/peeks?sort=votes", cellClass: "order-2 border-l sm:order-none" },
+              { label: "S-Tier", value: stats.sTierPeeks, href: "/peeks?tier=s", cellClass: "order-4 border-l sm:order-none" },
             ]}
           />
         </div>
@@ -82,7 +84,7 @@ export default async function Home() {
           >
             <div
               className="ghost-mosaic"
-              style={{ "--ghost-mosaic-opacity": "0.16" } as CSSProperties}
+              style={{ "--ghost-mosaic-opacity": "0.11" } as CSSProperties}
             />
           </div>
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
@@ -97,9 +99,14 @@ export default async function Home() {
         </div>
         </div>
 
-        <ul className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4">
+        <ul
+          id="maps"
+          className="grid scroll-mt-24 grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4"
+        >
           {maps.map((map) => {
             const hasCover = !!map.cover_image_url;
+            // Peeks added on this map in the last 72h (accent shown when > 0).
+            const recentCount = recentPeeks.get(map.id) ?? 0;
             const cardBase =
               "group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card text-center text-base font-medium elev-card transition-all duration-[180ms] ease-out";
 
@@ -138,6 +145,14 @@ export default async function Home() {
                     {isNewMap && (
                       <span className="absolute right-1.5 top-1.5 z-20 inline-flex items-center rounded-btn bg-purple-600 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-white shadow-sm">
                         New map
+                      </span>
+                    )}
+                    {/* Fresh-peeks accent — top-LEFT so it never collides with
+                        the top-right NEW MAP badge. Suppressed on the new-map
+                        card (redundant there) and when there are none. */}
+                    {!isNewMap && recentCount > 0 && (
+                      <span className="absolute left-1.5 top-1.5 z-20 inline-flex items-center rounded-btn bg-brand px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-white shadow-sm">
+                        {recentCount} new
                       </span>
                     )}
                     {label}

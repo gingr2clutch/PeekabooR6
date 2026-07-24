@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useLayoutEffect, useState } from "react";
 
 export type StatCell = {
@@ -8,6 +9,8 @@ export type StatCell = {
   // Teal ping dot after the number (for figures that change, e.g. Peeks/Votes).
   live?: boolean;
   plus?: boolean;
+  // When set, the whole cell becomes a subtle link to this route (tappable stat).
+  href?: string;
   // Positional order + divider classes for this cell's slot in the 2x2 / row.
   // Kept per-cell so a caller can lay out either the homepage counter (which
   // reshuffles the mobile order via CSS `order`) or the map counter (natural
@@ -157,37 +160,58 @@ export function LiveStats({ cells }: Props) {
         Live
       </span>
       <div className="relative grid grid-cols-2 sm:grid-cols-4">
-        {cells.map((c, i) => (
-          <div
-            key={c.label}
-            // Thin full-length dividers in faint teal-grey; each cell's
-            // order + border classes (c.cellClass) lay out the 2x2 / row.
-            className={`peek-stats-cell flex flex-col items-center justify-center gap-1 border-[#dfe4dd]/60 px-4 py-[5px] text-center ${c.cellClass}`}
-            style={{ animationDelay: `${i * CELL_STAGGER_MS}ms` }}
-          >
-            <div className="flex items-center gap-1.5">
-              <Odometer
-                value={c.value}
-                plus={c.plus ?? false}
-                phase={phase}
-                cellDelay={i * CELL_STAGGER_MS}
-              />
-              {c.live && (
-                <span
-                  className="relative flex h-2 w-2"
-                  aria-label="Live"
-                  title="Live"
+        {cells.map((c, i) => {
+          // Content is identical whether or not the cell links; only the wrapper
+          // differs (Link vs div). Padding/flex live on the wrapper so a linked
+          // cell's whole area is the tap target.
+          const inner = (
+            <>
+              <div className="flex items-center gap-1.5">
+                <Odometer
+                  value={c.value}
+                  plus={c.plus ?? false}
+                  phase={phase}
+                  cellDelay={i * CELL_STAGGER_MS}
+                />
+                {c.live && (
+                  <span
+                    className="relative flex h-2 w-2"
+                    aria-label="Live"
+                    title="Live"
+                  >
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-teal opacity-75 motion-safe:animate-ping" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-teal" />
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand">
+                {c.label}
+              </span>
+            </>
+          );
+          const wrapClass =
+            "flex h-full flex-col items-center justify-center gap-1 px-4 py-[5px] text-center";
+          return (
+            <div
+              key={c.label}
+              // Thin full-length dividers in faint teal-grey; each cell's
+              // order + border classes (c.cellClass) lay out the 2x2 / row.
+              className={`peek-stats-cell border-[#dfe4dd]/60 ${c.cellClass}`}
+              style={{ animationDelay: `${i * CELL_STAGGER_MS}ms` }}
+            >
+              {c.href ? (
+                <Link
+                  href={c.href}
+                  className={`${wrapClass} rounded-[10px] transition-colors duration-150 hover:bg-brand/[0.05] motion-safe:active:scale-[0.98]`}
                 >
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-teal opacity-75 motion-safe:animate-ping" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-teal" />
-                </span>
+                  {inner}
+                </Link>
+              ) : (
+                <div className={wrapClass}>{inner}</div>
               )}
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand">
-              {c.label}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
