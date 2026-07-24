@@ -64,7 +64,7 @@ export default async function Home() {
                 becomes imperceptible (3% read as "stopped"). Tune this one number. */}
             <div
               className="ghost-mosaic"
-              style={{ "--ghost-mosaic-opacity": "0.25" } as CSSProperties}
+              style={{ "--ghost-mosaic-opacity": "0.4" } as CSSProperties}
             />
           </div>
           <div data-reveal className="mb-6">
