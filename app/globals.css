@@ -456,22 +456,23 @@ h4 {
    STRIP_TILES=8 covers wide) tiled horizontally and panned straight LEFT-TO-
    RIGHT, so 2-3 maps sit side by side and cross the view one after another —
    never stacked. Sizing is viewport-relative so the count stays ~2-3 at any
-   width: each cover is 34vw, the whole 8-cover strip is 8*34vw = 272vw, and it
-   repeats every 272vw. The pan moves by exactly that one period, so the wrap is
+   width: each cover is 42vw, the whole 8-cover strip is 8*42vw = 336vw, and it
+   repeats every 336vw. The pan moves by exactly that one period, so the wrap is
    pixel-identical — no seam. repeat-x only (no vertical tiling → one clean row).
-   Transform-only (GPU compositor; no repaints, no JS per frame). If STRIP_TILES
-   changes, update 272vw ( = STRIP_TILES * 34vw ) here and in the keyframe. */
+   Bigger vw = taller/wider covers (fewer across); it's the size knob. Transform-
+   only (GPU compositor; no repaints, no JS per frame). If STRIP_TILES or the vw
+   change, update 336vw ( = STRIP_TILES * 42vw ) here and in the keyframe. */
 .ghost-mosaic::before {
   content: "";
   position: absolute;
   top: 0;
   bottom: 0;
-  left: -272vw; /* one full period of left bleed (trailing edge as it pans right) */
+  left: -336vw; /* one full period of left bleed (trailing edge as it pans right) */
   right: 0;
   background-image: url("/ghost-mosaic.webp");
   background-repeat: repeat-x;
   background-position: 0 50%;
-  background-size: 272vw auto;
+  background-size: 336vw auto;
   animation: ghost-mosaic-drift 52s linear infinite;
   will-change: transform;
 }
@@ -480,7 +481,7 @@ h4 {
     transform: translate3d(0, 0, 0);
   }
   to {
-    transform: translate3d(272vw, 0, 0);
+    transform: translate3d(336vw, 0, 0);
   }
 }
 @media (prefers-reduced-motion: reduce) {
