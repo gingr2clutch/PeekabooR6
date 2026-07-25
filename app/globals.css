@@ -771,32 +771,8 @@ h4 {
 .arena-rafter {
   position: relative;
   overflow: hidden;
-  /* Smooth top + bottom fade so the grey band (and fire) dissolves gently
-     into the page — eased multi-stops, with a long gradual bottom fade. */
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.12) 5%,
-    rgba(0, 0, 0, 0.5) 10%,
-    #000 16%,
-    #000 64%,
-    rgba(0, 0, 0, 0.85) 76%,
-    rgba(0, 0, 0, 0.5) 86%,
-    rgba(0, 0, 0, 0.2) 94%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.12) 5%,
-    rgba(0, 0, 0, 0.5) 10%,
-    #000 16%,
-    #000 64%,
-    rgba(0, 0, 0, 0.85) 76%,
-    rgba(0, 0, 0, 0.5) 86%,
-    rgba(0, 0, 0, 0.2) 94%,
-    transparent 100%
-  );
+  /* Fully opaque — no mask/transparency, so nothing bleeds through behind it. */
+  isolation: isolate;
   background-color: #3d3a32;
   /* top light + bottom vignette layered over the base gradient for depth */
   background-image:
@@ -828,6 +804,12 @@ h4 {
   position: relative;
   z-index: 1;
 }
+/* The beam at the bottom edge of the header — the banners hang from it. */
+.arena-beam {
+  height: 8px;
+  background: #191713;
+  border-bottom: 2px solid #3a352a;
+}
 .arena-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -847,9 +829,9 @@ h4 {
 }
 .arena-title {
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.015em;
-  color: #f6f1e6;
+  color: #f4efe2;
   /* lit-by-fire glow, gently flickering */
   text-shadow:
     0 0 1px rgba(255, 226, 158, 0.5),
@@ -1034,7 +1016,7 @@ h4 {
   align-items: flex-start;
   column-gap: 10px;
   row-gap: 0;
-  margin: -30px 0 0; /* pull the banners up so they hang from the beam */
+  margin: -1px 0 0; /* butt flush against the beam, no gap */
   padding: 0;
   list-style: none;
 }
@@ -1068,8 +1050,9 @@ h4 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 16px 10px 30px; /* extra bottom clears the pennant notch */
+  gap: 5px;
+  height: 228px; /* fixed height so all three tips align (ranks 2/3) */
+  padding: 16px 10px 22px; /* bottom clears the 14px pennant notch */
   border: 1px solid #e6dfcf;
   border-top: none; /* butt flush against the beam */
   /* Woven-cloth texture: two crossing hatch layers + edge curvature shading. */
@@ -1101,9 +1084,9 @@ h4 {
   clip-path: polygon(
     0 0,
     100% 0,
-    100% calc(100% - 16px),
+    100% calc(100% - 14px),
     50% 100%,
-    0 calc(100% - 16px)
+    0 calc(100% - 14px)
   );
   /* Hinged at the top (the beam): the banner starts rolled up and tipped
      back, then unfurls downward into the hanging plane. */
@@ -1115,8 +1098,8 @@ h4 {
   animation: arena-unfurl 1050ms cubic-bezier(0.33, 1, 0.68, 1) both;
 }
 .arena-banner--1 .arena-banner-card {
-  margin-top: -10px; /* champion sits a touch taller */
-  padding: 22px 12px 36px;
+  height: 252px; /* only slightly taller; tips still nearly align */
+  padding: 16px 12px 24px;
   background-color: #fdf2cf;
   background-image:
     linear-gradient(
@@ -1158,14 +1141,22 @@ h4 {
   outline-offset: 2px;
 }
 
+/* Crown pinned just above the champion's coin. */
+.arena-crown {
+  font-size: 18px;
+  line-height: 1;
+  margin-bottom: 1px;
+  filter: drop-shadow(0 1px 1px rgba(120, 80, 0, 0.35));
+}
+
 /* Rank coins */
 .arena-coin {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 9999px;
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
   font-weight: 700;
@@ -1181,9 +1172,9 @@ h4 {
 /* Shared metal shading: a diagonal gleam + a bottom-right shade sit UNDER the
    number (background layers) so the digit stays crisp. */
 .arena-coin--1 {
-  width: 48px;
-  height: 48px;
-  font-size: 22px;
+  width: 54px;
+  height: 54px;
+  font-size: 24px;
   background-image:
     linear-gradient(125deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 40%),
     radial-gradient(circle at 68% 80%, rgba(120, 80, 0, 0.28), transparent 46%),
@@ -1206,7 +1197,7 @@ h4 {
 .arena-name {
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 13px; /* two words fit per line down to 360px */
   line-height: 1.2;
   color: #1b1813;
   display: -webkit-box;
@@ -1215,7 +1206,7 @@ h4 {
   overflow: hidden;
 }
 .arena-banner--1 .arena-name {
-  font-size: 17px;
+  font-size: 15px;
 }
 .arena-loc {
   font-size: 11px;
@@ -1227,7 +1218,7 @@ h4 {
   overflow: hidden;
 }
 
-/* Grade badge — teal, on every grade on this page */
+/* Grade badge — teal on the banners; a glossy domed chip. */
 .arena-grade {
   display: inline-flex;
   align-items: center;
@@ -1236,8 +1227,7 @@ h4 {
   height: 30px;
   padding: 0 8px;
   border-radius: 8px;
-  /* base color comes inline from gradeTierColor(); this gloss layer sits over
-     it (top highlight → transparent → faint bottom shade) for a domed chip. */
+  background-color: #0e8f8b;
   background-image: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.24),
@@ -1254,7 +1244,15 @@ h4 {
   font-size: 15px;
   line-height: 1;
 }
+.arena-banner--1 .arena-grade {
+  min-width: 38px;
+  height: 36px;
+  padding: 0 10px;
+  font-size: 18px;
+}
+/* Vote count pinned to the bottom so all three align, above the pennant tip. */
 .arena-votes {
+  margin-top: auto;
   font-family: var(--font-plex-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.08em;

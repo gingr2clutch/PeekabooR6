@@ -120,11 +120,14 @@ export default async function TopPeeksPage() {
               <span>Hall of Peeks</span>
               <span className="arena-eyebrow-rule" aria-hidden />
             </div>
-            <h1 className="arena-title mt-5 text-4xl sm:text-5xl">Top Peeks</h1>
+            <h1 className="arena-title mt-5 text-4xl sm:text-5xl">
+              🔥 Top Peeks
+            </h1>
             <p className="arena-subline mt-3.5 text-[15px]">
               Banners hang for the community&rsquo;s best.
             </p>
           </div>
+          <div className="arena-beam" aria-hidden />
         </section>
 
         <div className="mx-auto max-w-3xl px-4">
@@ -173,6 +176,11 @@ function Banner({ peek, rank }: { peek: PeekWithContext; rank: number }) {
   return (
     <li className={`arena-banner arena-banner--${rank}`}>
       <Link href={`/peeks/${peek.slug}?from=top`} className="arena-banner-card">
+        {rank === 1 && (
+          <span className="arena-crown" aria-hidden>
+            👑
+          </span>
+        )}
         <span className={`arena-coin arena-coin--${rank}`} aria-hidden>
           {rank}
         </span>
@@ -182,11 +190,7 @@ function Banner({ peek, rank }: { peek: PeekWithContext; rank: number }) {
         </span>
         <span className="flex items-center gap-1.5">
           {peek.is_pro_only && <ProLockBadge />}
-          <span
-            className="arena-grade"
-            style={{ backgroundColor: gradeTierColor(r.label) }}
-            aria-label={`Grade ${r.label}`}
-          >
+          <span className="arena-grade" aria-label={`Grade ${r.label}`}>
             {r.label}
           </span>
         </span>
