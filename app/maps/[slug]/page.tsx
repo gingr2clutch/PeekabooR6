@@ -47,8 +47,11 @@ export async function generateMetadata({
 
 export default async function MapPage({
   params,
+  searchParams,
 }: {
   params: { slug: string };
+  // ?view=ranked keeps the ranked-list choice on direct links and back-nav.
+  searchParams: { view?: string };
 }) {
   const map = await getMapBySlug(params.slug);
   if (!map || !map.published) notFound();
@@ -195,6 +198,7 @@ export default async function MapPage({
 
         {floors.length > 0 && (
           <MapViewToggle
+            initialView={searchParams.view === "ranked" ? "ranked" : "floors"}
             floorsView={
               <ul className="space-y-3">
                 {floors.map((floor, i) => {
