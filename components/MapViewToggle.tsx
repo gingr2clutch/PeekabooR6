@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useLayoutEffect,
-  useState,
-  useTransition,
-  type ReactNode,
-} from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 
 // useLayoutEffect on the client (applies the resolved choice before paint, so a
 // remembered/URL "Ranked list" doesn't flash the Floors view); useEffect on the
@@ -22,16 +15,42 @@ function isView(v: unknown): v is View {
   return v === "floors" || v === "ranked";
 }
 
+// Write ?view= onto the CURRENT history entry with the native History API.
+// Next.js (14.1+) patches replaceState and keeps its router in sync, so this is
+// instant — no navigation, no refetch, no loading flash, no scroll jump — and
+// the entry the peek link is pushed over now carries ?view=ranked. That's what
+// makes browser-back return to the same view. Pass `null` as the state (per the
+// Next docs): passing Next's own state object throws inside the patched method.
+function writeViewToUrl(next: View) {
+  if (typeof window === "undefined") return;
+  try {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("view") === next) return;
+    url.searchParams.set("view", next);
+    window.history.replaceState(null, "", url.toString());
+  } catch {
+    // ignore
+  }
+}
+
+function readViewFromUrl(): View | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const v = new URLSearchParams(window.location.search).get("view");
+    return isView(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
 // Client-side toggle between two server-rendered views. Both view trees are
 // built on the server and passed in as props, so the visible switch is instant
 // (driven by local state) with no refetch.
 //
-// The chosen view is written to the URL (?view=ranked) THROUGH THE NEXT ROUTER
-// (router.replace) so the router owns the param. That is what fixes back-
+// The chosen view is written to the URL (?view=ranked). That is what fixes back-
 // navigation: tapping a peek then pressing back returns to the map URL that
-// still carries ?view=ranked, and the page renders that view server-side. The
-// URL write runs in a transition so it never flashes the route's loading state.
-// localStorage stays a cross-visit fallback when the URL has no ?view.
+// still carries ?view=ranked, so the ranked list is restored on the server AND
+// re-read on the client. localStorage stays a cross-visit fallback.
 export function MapViewToggle({
   floorsView,
   rankedView,
@@ -39,26 +58,26 @@ export function MapViewToggle({
 }: {
   floorsView: ReactNode;
   rankedView: ReactNode;
-  // What the server rendered from ?view= (defaults to "floors").
+  // What the server rendered from ?view= (defaults to "floors"). The client
+  // reconciles against the live URL + stored preference on mount.
   initialView?: View;
 }) {
   const [view, setView] = useState<View>(initialView);
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
 
-  // On mount, resolve the view: the URL wins (source of truth for back-nav and
-  // shared links), then the stored cross-visit preference.
   useIsoLayoutEffect(() => {
-    const urlView = searchParams.get("view");
-    if (isView(urlView)) {
-      if (urlView !== view) setView(urlView);
+    // Source of truth on the client: the live URL (restored on browser-back and
+    // present on shared links), then the stored cross-visit preference.
+    const fromUrl = readViewFromUrl();
+    if (fromUrl) {
+      if (fromUrl !== view) setView(fromUrl);
       return;
     }
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (isView(saved) && saved !== view) setView(saved);
+      if (isView(saved)) {
+        if (saved !== view) setView(saved);
+        writeViewToUrl(saved); // reflect stored pref so a later back-nav works
+      }
     } catch {
       // localStorage unavailable — keep the default.
     }
@@ -68,19 +87,12 @@ export function MapViewToggle({
 
   function choose(next: View) {
     setView(next); // instant visual switch
+    writeViewToUrl(next); // Next-integrated URL update → back-nav restores it
     try {
       window.localStorage.setItem(STORAGE_KEY, next);
     } catch {
       // ignore write failures
     }
-    // Reflect the choice in the URL via the router so back-navigation returns
-    // here. scroll:false keeps the list position; the transition avoids the
-    // route's loading fallback while the (cheap) re-render settles.
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("view", next);
-    startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    });
   }
 
   const options: { value: View; label: string }[] = [

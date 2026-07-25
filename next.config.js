@@ -19,6 +19,12 @@ const nextConfig = {
   experimental: {
     // Allow video clips up to 50MB through server actions.
     serverActions: { bodySizeLimit: "50mb" },
+    // Don't reuse a cached client render for dynamic pages on back/forward — the
+    // page must re-render from the current URL. This is what lets the map page's
+    // ?view= param actually take effect on browser-back (otherwise Next served a
+    // stale Floors render and never re-read the URL). Our pages are force-dynamic
+    // anyway, so this just makes back-nav honest.
+    staleTimes: { dynamic: 0 },
   },
   // Serve ads.txt via Grow by Mediavine's hosted redirect so it stays
   // auto-updated (no static file to maintain). redirects() run before the
