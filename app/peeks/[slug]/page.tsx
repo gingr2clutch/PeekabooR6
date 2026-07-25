@@ -116,8 +116,12 @@ export async function generateMetadata({
 
 export default async function PeekDetailPage({
   params,
+  searchParams,
 }: {
   params: { slug: string };
+  // ?from=ranked means the visitor tapped this peek from a map's ranked list —
+  // send the back link there (ranked view) instead of to the floor page.
+  searchParams: { from?: string };
 }) {
   // Old UUID URLs (/peeks/<uuid>) stay alive: look the peek up by id and
   // 308 to its slug URL so search engines and any external links update.
@@ -142,6 +146,15 @@ export default async function PeekDetailPage({
   const floor = peek.floors;
   const map = floor.maps;
   const floorHref = `/maps/${map.slug}/${floor.slug}`;
+  // Back link: return to wherever they came from. From a map's ranked list →
+  // back to that ranked view; otherwise the floor breadcrumb (the default).
+  const cameFromRanked = searchParams.from === "ranked";
+  const backHref = cameFromRanked
+    ? `/maps/${map.slug}?view=ranked`
+    : floorHref;
+  const backLabel = cameFromRanked
+    ? `${map.name} · Ranked list`
+    : `${map.name} · ${floor.name}`;
   const steps = Array.isArray(peek.instructions) ? peek.instructions : [];
   const hasInstructionsContent = steps.length > 0 || !!peek.tip;
 
@@ -216,13 +229,11 @@ export default async function PeekDetailPage({
           </div>
           <div className="mb-3">
             <Link
-              href={floorHref}
+              href={backHref}
               className="inline-flex min-h-[36px] items-center gap-1.5 rounded-btn px-2.5 py-1 text-sm font-medium text-muted transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
             >
               <BackArrowIcon />
-              <span>
-                {map.name} · {floor.name}
-              </span>
+              <span>{backLabel}</span>
             </Link>
           </div>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">

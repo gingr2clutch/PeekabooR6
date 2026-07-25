@@ -269,7 +269,7 @@ export default async function MapPage({
                       >
                         <div className="peek-lift group relative flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 shadow-sm hover:border-brand">
                           <Link
-                            href={`/peeks/${peek.slug}`}
+                            href={`/peeks/${peek.slug}?from=ranked`}
                             aria-label={peek.name}
                             className="absolute inset-0 rounded-card"
                           />
