@@ -862,32 +862,11 @@ h4 {
 
 /* --- Banners (ranks 1–3) --- */
 .arena-banner {
-  position: relative;
   flex: 1 1 0;
   min-width: 0;
   z-index: 1;
   /* drop-shadow (not box-shadow) so it follows the pennant clip shape */
   filter: drop-shadow(0 8px 14px rgba(20, 16, 8, 0.28));
-}
-/* A small fabric tab peeking above each banner, as if pinned over the beam. */
-.arena-banner::before {
-  content: "";
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  width: 30px;
-  height: 12px;
-  transform: translateX(-50%);
-  background: linear-gradient(180deg, #f0e8d7, #fffdf7);
-  border: 1px solid #e6dfcf;
-  border-bottom: none;
-  border-radius: 5px 5px 0 0;
-  z-index: 0;
-}
-.arena-banner--1::before {
-  width: 34px;
-  background: linear-gradient(180deg, #f4e4b4, #fdf2cf);
-  border-color: #e9d391;
 }
 .arena-banner--2 {
   order: 1;
