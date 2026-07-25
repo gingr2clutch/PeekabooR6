@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { ProLockBadge } from "@/components/ProLockBadge";
@@ -20,6 +21,43 @@ function voteLabel(votes: number) {
   return `${votes} ${votes === 1 ? "vote" : "votes"}`;
 }
 
+// --- Rafter fire: decorative flame tongues + embers rising from the beam.
+// Deterministic configs (no random, SSR-safe); negative delays start each one
+// mid-cycle so the fire is already alive on first paint. Purely CSS-animated.
+type Flame = { cls: string; left: string; w: number; h: number; dur: string; delay: string };
+const FIRE_FLAMES: Flame[] = [
+  // big soft background tongues (depth)
+  { cls: "arena-flame arena-flame--back", left: "16%", w: 78, h: 128, dur: "2.6s", delay: "-0.3s" },
+  { cls: "arena-flame arena-flame--back", left: "38%", w: 96, h: 158, dur: "3.1s", delay: "-1.4s" },
+  { cls: "arena-flame arena-flame--back", left: "58%", w: 86, h: 142, dur: "2.8s", delay: "-0.8s" },
+  { cls: "arena-flame arena-flame--back", left: "78%", w: 80, h: 132, dur: "3.3s", delay: "-1.9s" },
+  // tall tongues that reach up around the title
+  { cls: "arena-flame arena-flame--back", left: "46%", w: 108, h: 188, dur: "3.5s", delay: "-2.2s" },
+  { cls: "arena-flame arena-flame--front", left: "41%", w: 38, h: 132, dur: "1.95s", delay: "-0.6s" },
+  { cls: "arena-flame arena-flame--front", left: "52%", w: 36, h: 122, dur: "1.7s", delay: "-1.45s" },
+  // sharper bright front tongues (detail)
+  { cls: "arena-flame arena-flame--front", left: "8%", w: 34, h: 82, dur: "1.5s", delay: "-0.2s" },
+  { cls: "arena-flame arena-flame--front", left: "20%", w: 40, h: 100, dur: "1.75s", delay: "-0.95s" },
+  { cls: "arena-flame arena-flame--front", left: "31%", w: 36, h: 90, dur: "1.4s", delay: "-0.5s" },
+  { cls: "arena-flame arena-flame--front", left: "44%", w: 46, h: 116, dur: "1.85s", delay: "-1.25s" },
+  { cls: "arena-flame arena-flame--front", left: "55%", w: 38, h: 96, dur: "1.6s", delay: "-0.4s" },
+  { cls: "arena-flame arena-flame--front", left: "67%", w: 44, h: 108, dur: "1.8s", delay: "-1.05s" },
+  { cls: "arena-flame arena-flame--front", left: "80%", w: 36, h: 88, dur: "1.5s", delay: "-0.7s" },
+  { cls: "arena-flame arena-flame--front", left: "91%", w: 32, h: 78, dur: "1.65s", delay: "-0.25s" },
+];
+type Ember = { left: string; size: number; dur: string; delay: string; drift: string };
+const FIRE_EMBERS: Ember[] = [
+  { left: "12%", size: 3, dur: "3.2s", delay: "-0.4s", drift: "14px" },
+  { left: "24%", size: 2, dur: "3.8s", delay: "-1.7s", drift: "-10px" },
+  { left: "35%", size: 4, dur: "3.0s", delay: "-0.9s", drift: "8px" },
+  { left: "46%", size: 2, dur: "4.1s", delay: "-2.3s", drift: "-16px" },
+  { left: "54%", size: 3, dur: "3.5s", delay: "-0.2s", drift: "12px" },
+  { left: "63%", size: 2, dur: "3.9s", delay: "-1.3s", drift: "-8px" },
+  { left: "72%", size: 4, dur: "3.1s", delay: "-2.0s", drift: "16px" },
+  { left: "84%", size: 3, dur: "3.6s", delay: "-0.7s", drift: "-12px" },
+  { left: "93%", size: 2, dur: "4.0s", delay: "-1.9s", drift: "9px" },
+];
+
 export default async function TopPeeksPage() {
   const peeks = await getTopPeeks(10);
 
@@ -40,6 +78,42 @@ export default async function TopPeeksPage() {
         {/* Rafter header — dark, full-bleed, with the beam at its bottom edge.
             Rendered server-side so there's no flash against the cream page. */}
         <section className="arena-rafter">
+          {/* Decorative fire rising from the beam up around the title. */}
+          <div className="arena-fire" aria-hidden>
+            <span className="arena-fire-glow" />
+            {FIRE_FLAMES.map((f, i) => (
+              <span
+                key={`f${i}`}
+                className={f.cls}
+                style={
+                  {
+                    left: f.left,
+                    width: f.w,
+                    height: f.h,
+                    marginLeft: -f.w / 2,
+                    "--dur": f.dur,
+                    "--delay": f.delay,
+                  } as CSSProperties
+                }
+              />
+            ))}
+            {FIRE_EMBERS.map((e, i) => (
+              <span
+                key={`e${i}`}
+                className="arena-ember"
+                style={
+                  {
+                    left: e.left,
+                    width: e.size,
+                    height: e.size,
+                    "--dur": e.dur,
+                    "--delay": e.delay,
+                    "--drift": e.drift,
+                  } as CSSProperties
+                }
+              />
+            ))}
+          </div>
           <div className="mx-auto max-w-3xl px-4 pb-9 pt-8 text-center sm:pt-9">
             <div className="arena-eyebrow">
               <span className="arena-eyebrow-rule" aria-hidden />
