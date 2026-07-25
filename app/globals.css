@@ -895,6 +895,14 @@ h4 {
   mix-blend-mode: screen;
   animation: arena-fire-glow 3.4s ease-in-out infinite;
 }
+/* The whole group blends + blurs together so the separate tongues fuse into
+   one continuous flame (rather than reading as individual blobs). */
+.arena-flames {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+  filter: blur(5px);
+}
 /* Flame tongues. Positioned by inline --left/width/height; flicker by
    scaling up from a bottom origin while swaying + fading. */
 .arena-flame {
@@ -902,7 +910,6 @@ h4 {
   bottom: -12px;
   border-radius: 50% 50% 48% 52% / 68% 66% 34% 32%;
   transform-origin: 50% 100%;
-  mix-blend-mode: screen;
   will-change: transform, opacity;
   /* Full/dense at the base, fading to transparent toward the tip. */
   -webkit-mask-image: linear-gradient(
@@ -932,7 +939,6 @@ h4 {
     #ff5f10 72%,
     rgba(200, 45, 0, 0) 92%
   );
-  filter: blur(3px);
   opacity: 1;
 }
 .arena-flame--back {
@@ -943,7 +949,7 @@ h4 {
     #ff5410 62%,
     rgba(150, 30, 0, 0) 90%
   );
-  filter: blur(11px);
+  filter: blur(4px);
   opacity: 0.62;
   animation-name: arena-flicker-back;
 }

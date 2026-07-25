@@ -82,22 +82,26 @@ export default async function TopPeeksPage() {
           {/* Decorative fire rising from the beam up around the title. */}
           <div className="arena-fire" aria-hidden>
             <span className="arena-fire-glow" />
-            {FIRE_FLAMES.map((f, i) => (
-              <span
-                key={`f${i}`}
-                className={f.cls}
-                style={
-                  {
-                    left: f.left,
-                    width: f.w,
-                    height: f.h,
-                    marginLeft: -f.w / 2,
-                    "--dur": f.dur,
-                    "--delay": f.delay,
-                  } as CSSProperties
-                }
-              />
-            ))}
+            {/* All tongues live in one group so a group-level blur + blend
+                fuses them into a single continuous flame. */}
+            <div className="arena-flames">
+              {FIRE_FLAMES.map((f, i) => (
+                <span
+                  key={`f${i}`}
+                  className={f.cls}
+                  style={
+                    {
+                      left: f.left,
+                      width: f.w,
+                      height: f.h,
+                      marginLeft: -f.w / 2,
+                      "--dur": f.dur,
+                      "--delay": f.delay,
+                    } as CSSProperties
+                  }
+                />
+              ))}
+            </div>
             {FIRE_EMBERS.map((e, i) => (
               <span
                 key={`e${i}`}
