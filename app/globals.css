@@ -810,6 +810,12 @@ h4 {
   background: #191713;
   border-bottom: 2px solid #3a352a;
 }
+/* Matching beam line at the top edge (accent faces up). */
+.arena-beam-top {
+  height: 8px;
+  background: #191713;
+  border-top: 2px solid #3a352a;
+}
 .arena-eyebrow {
   display: inline-flex;
   align-items: center;
