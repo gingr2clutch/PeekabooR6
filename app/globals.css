@@ -883,13 +883,13 @@ h4 {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -34px;
-  height: 150px;
+  bottom: -40px;
+  height: 172px;
   background: radial-gradient(
-    70% 100% at 50% 100%,
-    rgba(255, 120, 0, 0.5),
-    rgba(255, 55, 0, 0.18) 45%,
-    transparent 72%
+    82% 100% at 50% 100%,
+    rgba(255, 132, 12, 0.66),
+    rgba(255, 62, 0, 0.28) 46%,
+    transparent 74%
   );
   filter: blur(12px);
   mix-blend-mode: screen;
@@ -904,31 +904,47 @@ h4 {
   transform-origin: 50% 100%;
   mix-blend-mode: screen;
   will-change: transform, opacity;
+  /* Full/dense at the base, fading to transparent toward the tip. */
+  -webkit-mask-image: linear-gradient(
+    to top,
+    #000 0%,
+    #000 26%,
+    rgba(0, 0, 0, 0.45) 62%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    #000 0%,
+    #000 26%,
+    rgba(0, 0, 0, 0.45) 62%,
+    transparent 100%
+  );
   animation: arena-flicker var(--dur, 1.6s) ease-in-out infinite;
   animation-delay: var(--delay, 0s);
 }
 .arena-flame--front {
+  /* denser, fuller body at the base (the mask fades the tip) */
   background: radial-gradient(
-    ellipse 62% 74% at 50% 100%,
+    ellipse 66% 78% at 50% 100%,
     #fff6c0 0%,
-    #ffde72 16%,
-    #ffa62a 40%,
-    #ff5f10 62%,
-    rgba(200, 45, 0, 0) 80%
+    #ffde72 22%,
+    #ffab2e 48%,
+    #ff5f10 72%,
+    rgba(200, 45, 0, 0) 92%
   );
   filter: blur(3px);
-  opacity: 0.92;
+  opacity: 1;
 }
 .arena-flame--back {
   background: radial-gradient(
-    ellipse 62% 74% at 50% 100%,
+    ellipse 66% 78% at 50% 100%,
     #ffd98a 0%,
-    #ff9a2a 30%,
-    #ff5410 55%,
-    rgba(150, 30, 0, 0) 80%
+    #ff9a2a 34%,
+    #ff5410 62%,
+    rgba(150, 30, 0, 0) 90%
   );
   filter: blur(11px);
-  opacity: 0.5;
+  opacity: 0.62;
   animation-name: arena-flicker-back;
 }
 /* Embers drifting up and out. */
