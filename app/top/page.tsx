@@ -46,9 +46,7 @@ export default async function TopPeeksPage() {
               <span>Hall of Peeks</span>
               <span className="arena-eyebrow-rule" aria-hidden />
             </div>
-            <h1 className="arena-title mt-3 text-3xl sm:text-4xl">
-              🔥 Top Peeks
-            </h1>
+            <h1 className="arena-title mt-3 text-3xl sm:text-4xl">Top Peeks</h1>
             <p className="arena-subline mt-2 text-sm">
               Banners hang for the community&rsquo;s best.
             </p>
@@ -102,11 +100,6 @@ function Banner({ peek, rank }: { peek: PeekWithContext; rank: number }) {
   return (
     <li className={`arena-banner arena-banner--${rank}`}>
       <Link href={`/peeks/${peek.slug}?from=top`} className="arena-banner-card">
-        {rank === 1 && (
-          <span className="arena-crown" aria-hidden>
-            👑
-          </span>
-        )}
         <span className={`arena-coin arena-coin--${rank}`} aria-hidden>
           {rank}
         </span>

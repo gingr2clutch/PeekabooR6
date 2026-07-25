@@ -963,20 +963,6 @@ h4 {
   color: #8a8274;
 }
 
-/* Champion crown — pops in after the banner settles. */
-.arena-crown {
-  position: absolute;
-  top: -15px;
-  left: 50%;
-  margin-left: -0.55em;
-  font-size: 20px;
-  line-height: 1;
-  transform-origin: bottom center;
-  transform: scale(0);
-  opacity: 0;
-  animation: arena-crown 300ms ease-out 1950ms both;
-}
-
 /* --- Climbing list (ranks 4+) --- */
 .arena-climb-head {
   order: 9;
@@ -1137,23 +1123,8 @@ h4 {
     opacity: 1;
   }
 }
-@keyframes arena-crown {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.15);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  .arena-banner-card,
-  .arena-crown {
+  .arena-banner-card {
     animation: none !important;
     transform: none !important;
     opacity: 1 !important;
