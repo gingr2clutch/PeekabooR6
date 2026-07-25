@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { ProLockBadge } from "@/components/ProLockBadge";
 import { getTopPeeks, type PeekWithContext } from "@/lib/db";
-import { rating } from "@/lib/rate";
+import { rating, gradeTierColor } from "@/lib/rate";
 import { computeDirection, getSnapshotsForPeeks } from "@/lib/trends";
 import { isPeekNew } from "@/lib/peek-recency";
 
@@ -123,7 +123,11 @@ function Banner({ peek, rank }: { peek: PeekWithContext; rank: number }) {
         </span>
         <span className="flex items-center gap-1.5">
           {peek.is_pro_only && <ProLockBadge />}
-          <span className="arena-grade" aria-label={`Grade ${r.label}`}>
+          <span
+            className="arena-grade"
+            style={{ backgroundColor: gradeTierColor(r.label) }}
+            aria-label={`Grade ${r.label}`}
+          >
             {r.label}
           </span>
         </span>
@@ -171,7 +175,11 @@ function ClimbRow({
             {map.name} · {floor.name}
           </span>
         </span>
-        <span className="arena-chip" aria-label={`Grade ${r.label}`}>
+        <span
+          className="arena-chip"
+          style={{ backgroundColor: gradeTierColor(r.label) }}
+          aria-label={`Grade ${r.label}`}
+        >
           {r.label}
         </span>
         <span

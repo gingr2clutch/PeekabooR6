@@ -947,7 +947,8 @@ h4 {
   height: 30px;
   padding: 0 8px;
   border-radius: 8px;
-  background: #0e8f8b;
+  /* background comes inline from gradeTierColor() so grades match the rest of
+     the site (S/A green shades, B amber, C red-orange). */
   color: #fff;
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
   font-weight: 700;
@@ -1066,8 +1067,8 @@ h4 {
   height: 24px;
   padding: 0 7px;
   border-radius: 6px;
-  background: #dcefec;
-  color: #0e8f8b;
+  /* tier color inline (matches site-wide grade colors) */
+  color: #fff;
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
   font-weight: 700;
   font-size: 13px;
