@@ -26,24 +26,25 @@ function voteLabel(votes: number) {
 // mid-cycle so the fire is already alive on first paint. Purely CSS-animated.
 type Flame = { cls: string; left: string; w: number; h: number; dur: string; delay: string };
 const FIRE_FLAMES: Flame[] = [
-  // big soft background tongues (depth)
-  { cls: "arena-flame arena-flame--back", left: "16%", w: 78, h: 128, dur: "2.6s", delay: "-0.3s" },
-  { cls: "arena-flame arena-flame--back", left: "38%", w: 96, h: 158, dur: "3.1s", delay: "-1.4s" },
-  { cls: "arena-flame arena-flame--back", left: "58%", w: 86, h: 142, dur: "2.8s", delay: "-0.8s" },
-  { cls: "arena-flame arena-flame--back", left: "78%", w: 80, h: 132, dur: "3.3s", delay: "-1.9s" },
-  // tall tongues that reach up around the title
-  { cls: "arena-flame arena-flame--back", left: "46%", w: 108, h: 188, dur: "3.5s", delay: "-2.2s" },
-  { cls: "arena-flame arena-flame--front", left: "41%", w: 38, h: 132, dur: "1.95s", delay: "-0.6s" },
-  { cls: "arena-flame arena-flame--front", left: "52%", w: 36, h: 122, dur: "1.7s", delay: "-1.45s" },
-  // sharper bright front tongues (detail)
-  { cls: "arena-flame arena-flame--front", left: "8%", w: 34, h: 82, dur: "1.5s", delay: "-0.2s" },
-  { cls: "arena-flame arena-flame--front", left: "20%", w: 40, h: 100, dur: "1.75s", delay: "-0.95s" },
-  { cls: "arena-flame arena-flame--front", left: "31%", w: 36, h: 90, dur: "1.4s", delay: "-0.5s" },
-  { cls: "arena-flame arena-flame--front", left: "44%", w: 46, h: 116, dur: "1.85s", delay: "-1.25s" },
-  { cls: "arena-flame arena-flame--front", left: "55%", w: 38, h: 96, dur: "1.6s", delay: "-0.4s" },
-  { cls: "arena-flame arena-flame--front", left: "67%", w: 44, h: 108, dur: "1.8s", delay: "-1.05s" },
-  { cls: "arena-flame arena-flame--front", left: "80%", w: 36, h: 88, dur: "1.5s", delay: "-0.7s" },
-  { cls: "arena-flame arena-flame--front", left: "91%", w: 32, h: 78, dur: "1.65s", delay: "-0.25s" },
+  // big soft background tongues — taller toward the center so the fire peaks
+  // in the middle (around the title) and tapers to the edges.
+  { cls: "arena-flame arena-flame--back", left: "16%", w: 78, h: 120, dur: "2.6s", delay: "-0.3s" },
+  { cls: "arena-flame arena-flame--back", left: "38%", w: 98, h: 210, dur: "3.1s", delay: "-1.4s" },
+  { cls: "arena-flame arena-flame--back", left: "58%", w: 90, h: 200, dur: "2.8s", delay: "-0.8s" },
+  { cls: "arena-flame arena-flame--back", left: "78%", w: 80, h: 126, dur: "3.3s", delay: "-1.9s" },
+  // tallest tongue dead-center, reaching up past the title
+  { cls: "arena-flame arena-flame--back", left: "48%", w: 116, h: 270, dur: "3.5s", delay: "-2.2s" },
+  { cls: "arena-flame arena-flame--front", left: "41%", w: 40, h: 208, dur: "1.95s", delay: "-0.6s" },
+  { cls: "arena-flame arena-flame--front", left: "52%", w: 38, h: 196, dur: "1.7s", delay: "-1.45s" },
+  // sharper bright front tongues (detail) — shorter at the edges
+  { cls: "arena-flame arena-flame--front", left: "8%", w: 34, h: 78, dur: "1.5s", delay: "-0.2s" },
+  { cls: "arena-flame arena-flame--front", left: "20%", w: 40, h: 104, dur: "1.75s", delay: "-0.95s" },
+  { cls: "arena-flame arena-flame--front", left: "31%", w: 38, h: 138, dur: "1.4s", delay: "-0.5s" },
+  { cls: "arena-flame arena-flame--front", left: "45%", w: 48, h: 176, dur: "1.85s", delay: "-1.25s" },
+  { cls: "arena-flame arena-flame--front", left: "56%", w: 40, h: 150, dur: "1.6s", delay: "-0.4s" },
+  { cls: "arena-flame arena-flame--front", left: "67%", w: 44, h: 112, dur: "1.8s", delay: "-1.05s" },
+  { cls: "arena-flame arena-flame--front", left: "80%", w: 36, h: 84, dur: "1.5s", delay: "-0.7s" },
+  { cls: "arena-flame arena-flame--front", left: "91%", w: 32, h: 74, dur: "1.65s", delay: "-0.25s" },
 ];
 type Ember = { left: string; size: number; dur: string; delay: string; drift: string };
 const FIRE_EMBERS: Ember[] = [
@@ -120,10 +121,8 @@ export default async function TopPeeksPage() {
               <span>Hall of Peeks</span>
               <span className="arena-eyebrow-rule" aria-hidden />
             </div>
-            <h1 className="arena-title mt-5 text-4xl sm:text-5xl">
-              🔥 Top Peeks
-            </h1>
-            <p className="arena-subline mt-3.5 text-[15px]">
+            <h1 className="arena-title mt-5 text-5xl sm:text-6xl">Top Peeks</h1>
+            <p className="arena-subline mt-4 text-base sm:text-lg">
               Banners hang for the community&rsquo;s best.
             </p>
           </div>
