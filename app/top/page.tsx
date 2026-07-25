@@ -7,7 +7,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { getTopPeeks, getUnderratedTopIds, type PeekWithContext } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
-import { GemBadge } from "@/components/GemBadge";
+import { PeekBadge } from "@/components/PeekBadge";
+import { isBeginnerPeek } from "@/lib/badges";
 import { TrendArrow } from "@/components/TrendArrow";
 import {
   computeDirection,
@@ -181,7 +182,9 @@ function PeekRow({
 
       <div className="shrink-0 text-right">
         <span className="inline-flex items-center gap-1">
-          {isGem && <GemBadge />}
+          {/* No flame here — this whole page IS the top peeks, so it would be
+              redundant. Gem/beginner still apply (gem wins over beginner). */}
+          <PeekBadge isGem={isGem} isBeginner={isBeginnerPeek(peek)} />
           <GradeBadge label={r.label} score={r.score} />
           <TrendArrow direction={trend} />
         </span>

@@ -17,15 +17,16 @@ type Props = {
   map: Map;
   floor: Floor;
   peeks: Positioned[];
-  // IDs of the sitewide top-10 hidden gems, to badge matching pins.
+  // Pin badge membership: sitewide top peeks (flame) and top-10 hidden gems.
   gemIds?: Set<string>;
+  topIds?: Set<string>;
 };
 
 // Client wrapper around the bird's-eye image + pin overlay. Owns the
 // "selected pin" state used on mobile: tap a pin → highlights → its
 // details show in a fixed card below the map. Desktop users still get the
 // hover tooltip and click-to-navigate behavior.
-export function FloorView({ map, floor, peeks, gemIds }: Props) {
+export function FloorView({ map, floor, peeks, gemIds, topIds }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Mirror of selectedId that lags by the panel exit-animation duration so
   // the card can play its slide-out before unmounting. While `panelClosing`
@@ -193,6 +194,7 @@ export function FloorView({ map, floor, peeks, gemIds }: Props) {
                 peek.vote_count
               )}
               isGem={gemIds?.has(peek.id)}
+              isFlame={topIds?.has(peek.id)}
               isSelected={selectedId === peek.id}
               onSelect={() => toggleSelect(peek.id)}
             />

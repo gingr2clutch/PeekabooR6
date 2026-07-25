@@ -2,21 +2,24 @@ import Link from "next/link";
 import type { Floor, Map, Peek } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
-import { GemBadge } from "@/components/GemBadge";
+import { PeekBadge } from "@/components/PeekBadge";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { ProLockBadge } from "@/components/ProLockBadge";
+import { isBeginnerPeek } from "@/lib/badges";
 
 export function FloorPeekList({
   map,
   floor,
   peeks,
   gemIds,
+  topIds,
 }: {
   map: Map;
   floor: Floor;
   peeks: Peek[];
-  // IDs of the sitewide top-10 hidden gems, to badge matching rows.
+  // Badge membership: sitewide top peeks (flame) and top-10 hidden gems (gem).
   gemIds?: Set<string>;
+  topIds?: Set<string>;
 }) {
   if (peeks.length === 0) return null;
 
@@ -73,7 +76,11 @@ export function FloorPeekList({
                     >
                       {peek.name}
                     </Link>
-                    {gemIds?.has(peek.id) && <GemBadge />}
+                    <PeekBadge
+                      isFlame={topIds?.has(peek.id)}
+                      isGem={gemIds?.has(peek.id)}
+                      isBeginner={isBeginnerPeek(peek)}
+                    />
                     <GradeBadge label={r.label} score={r.score} />
                     {peek.is_pro_only && <ProLockBadge />}
                   </div>

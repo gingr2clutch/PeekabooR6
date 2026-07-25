@@ -13,6 +13,8 @@ import { getMyLatestPeekVote } from "@/lib/votes";
 import { rating, votesText, playersText, type Grade } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
 import { GradeBar } from "@/components/GradeBar";
+import { BeginnerBadge } from "@/components/BeginnerBadge";
+import { isBeginnerPeek } from "@/lib/badges";
 import { TrendArrow } from "@/components/TrendArrow";
 import { TrendChart } from "@/components/TrendChart";
 import {
@@ -269,6 +271,12 @@ export default async function PeekDetailPage({
             workedVotes={peek.worked_votes}
             voteCount={peek.vote_count}
           />
+          {isBeginnerPeek(peek) && (
+            <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-sm font-medium text-emerald-700">
+              <BeginnerBadge className="h-4 w-4" />
+              Good first peek — low risk, easy to hit.
+            </p>
+          )}
         </section>
 
         {/* Effectiveness trend — daily snapshots. Cold-start grace: < 2 points

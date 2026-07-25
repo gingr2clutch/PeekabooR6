@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { GemBadge } from "@/components/GemBadge";
+import { PeekBadge } from "@/components/PeekBadge";
 
 type Props = {
   slug: string;
@@ -12,8 +12,10 @@ type Props = {
   isNew?: boolean;
   hasTiktok?: boolean;
   ratingText?: string;
-  // One of the sitewide top-10 hidden gems — gets a small gem badge on the pin.
+  // Pin badge (top-right corner). flame = sitewide top peek, gem = underrated
+  // top-10; flame wins, one badge max. Beginner badge is card-only, not on pins.
   isGem?: boolean;
+  isFlame?: boolean;
   isSelected?: boolean;
   onSelect?: () => void;
 };
@@ -78,6 +80,7 @@ export function PeekPin({
   hasTiktok = false,
   ratingText,
   isGem = false,
+  isFlame = false,
   isSelected = false,
   onSelect,
 }: Props) {
@@ -145,14 +148,19 @@ export function PeekPin({
               </svg>
             </span>
           )}
-          {/* Hidden-gem mark — top-right corner (TikTok owns bottom-right). On a
-              white disc so the teal gem reads on any pin colour. */}
-          {isGem && (
+          {/* Top-peek / hidden-gem mark — top-right corner (TikTok owns
+              bottom-right). On a white disc so the glyph reads on any pin colour
+              and over map screenshots. flame > gem, one max. */}
+          {(isFlame || isGem) && (
             <span
               aria-hidden
               className="pointer-events-none absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-white md:h-3.5 md:w-3.5"
             >
-              <GemBadge className="h-2 w-2 md:h-2.5 md:w-2.5" />
+              <PeekBadge
+                isFlame={isFlame}
+                isGem={isGem}
+                className="h-2 w-2 md:h-2.5 md:w-2.5"
+              />
             </span>
           )}
         </span>

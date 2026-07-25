@@ -11,6 +11,7 @@ import {
   getMapBySlug,
   getPublishedPeeksForFloor,
   getUnderratedTopIds,
+  getTopPeekIds,
 } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -82,8 +83,12 @@ export default async function FloorPage({
   // Same query path /maps/[slug]/page.tsx uses — one extra round trip,
   // ordered by display_order ascending.
   const allFloors = await getFloorsForMap(map.id);
-  // Sitewide top-10 hidden gems, to badge any matching peek in this floor's list.
-  const gemIds = await getUnderratedTopIds();
+  // Sitewide badge sets: top-10 hidden gems + top peeks, to mark matching
+  // pins/rows on this floor.
+  const [gemIds, topIds] = await Promise.all([
+    getUnderratedTopIds(),
+    getTopPeekIds(),
+  ]);
   const floorIdx = allFloors.findIndex((f) => f.id === floor.id);
   const prevFloor = floorIdx > 0 ? allFloors[floorIdx - 1] : null;
   const nextFloor =
@@ -151,6 +156,7 @@ export default async function FloorPage({
           floor={floor}
           peeks={positioned}
           gemIds={gemIds}
+          topIds={topIds}
         />
 
         {peeks.length === 0 && (
@@ -164,6 +170,7 @@ export default async function FloorPage({
           floor={floor}
           peeks={peeks}
           gemIds={gemIds}
+          topIds={topIds}
         />
 
         {/* Other floors + prev/next navigation to keep users browsing. */}

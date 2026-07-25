@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { GradeBadge } from "@/components/GradeBadge";
-import { GemBadge } from "@/components/GemBadge";
+import { PeekBadge } from "@/components/PeekBadge";
 import { ProLockBadge } from "@/components/ProLockBadge";
 import type { PeekWithContext } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
+import { isBeginnerPeek } from "@/lib/badges";
 
 type Props = {
   peek: PeekWithContext;
@@ -15,8 +16,11 @@ type Props = {
   // `bare` drops the card chrome (border/shadow/bg/padding) so the row can sit
   // inside another card; still a link, just no bubble of its own.
   bare?: boolean;
-  // Marks this peek as one of the sitewide top-10 hidden gems.
+  // Badge membership (flame = sitewide top peek, gem = underrated top-10). The
+  // beginner badge is derived from the peek itself. One badge max, flame > gem
+  // > beginner (see PeekBadge).
   isGem?: boolean;
+  isFlame?: boolean;
 };
 
 // Compact featured "best peek" card — preview thumbnail, name, location, grade
@@ -29,6 +33,7 @@ export function BestPeek({
   showMap = false,
   bare = false,
   isGem = false,
+  isFlame = false,
 }: Props) {
   const floor = peek.floors;
   const map = floor?.maps ?? null;
@@ -85,7 +90,11 @@ export function BestPeek({
       <div className="shrink-0 text-right">
         {peek.is_pro_only && <ProLockBadge className="mb-1" />}
         <span className="inline-flex items-center gap-1">
-          {isGem && <GemBadge />}
+          <PeekBadge
+            isFlame={isFlame}
+            isGem={isGem}
+            isBeginner={isBeginnerPeek(peek)}
+          />
           <GradeBadge label={r.label} score={r.score} />
         </span>
         <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
