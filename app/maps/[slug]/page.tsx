@@ -19,7 +19,6 @@ import {
 } from "@/lib/db";
 import { rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
-import { GemBadge } from "@/components/GemBadge";
 import { TrendArrow } from "@/components/TrendArrow";
 import { MultiTrendChart, type TrendSeries } from "@/components/MultiTrendChart";
 import {
@@ -288,7 +287,6 @@ export default async function MapPage({
                             </div>
                           </div>
                           <span className="inline-flex items-center gap-1">
-                            {gemIds.has(peek.id) && <GemBadge />}
                             <GradeBadge label={r.label} score={r.score} />
                             <TrendArrow
                               direction={computeDirection(

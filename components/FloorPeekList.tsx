@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Floor, Map, Peek } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
-import { GemBadge } from "@/components/GemBadge";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { ProLockBadge } from "@/components/ProLockBadge";
 
@@ -73,7 +72,6 @@ export function FloorPeekList({
                     >
                       {peek.name}
                     </Link>
-                    {gemIds?.has(peek.id) && <GemBadge />}
                     <GradeBadge label={r.label} score={r.score} />
                     {peek.is_pro_only && <ProLockBadge />}
                   </div>
