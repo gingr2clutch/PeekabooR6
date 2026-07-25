@@ -17,6 +17,9 @@ type Props = {
   bare?: boolean;
   // Marks this peek as one of the sitewide top-10 hidden gems.
   isGem?: boolean;
+  // Origin tag so the peek page's back link returns to the list this card is in
+  // (e.g. "underrated", "new", "votes", "stier", "map"). Omit for none.
+  from?: string;
 };
 
 // Compact featured "best peek" card — preview thumbnail, name, location, grade
@@ -29,6 +32,7 @@ export function BestPeek({
   showMap = false,
   bare = false,
   isGem = false,
+  from,
 }: Props) {
   const floor = peek.floors;
   const map = floor?.maps ?? null;
@@ -37,7 +41,7 @@ export function BestPeek({
 
   return (
     <Link
-      href={`/peeks/${peek.slug}`}
+      href={from ? `/peeks/${peek.slug}?from=${from}` : `/peeks/${peek.slug}`}
       className={
         bare
           ? "group flex items-center gap-3 transition-colors duration-150 ease-out sm:gap-4"

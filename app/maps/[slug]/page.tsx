@@ -328,7 +328,7 @@ export default async function MapPage({
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {underratedPeeks.map((peek) => (
-                <BestPeek key={peek.id} peek={peek} isGem />
+                <BestPeek key={peek.id} peek={peek} isGem from="map" />
               ))}
             </div>
           </div>

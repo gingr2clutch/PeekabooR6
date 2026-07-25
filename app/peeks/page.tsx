@@ -83,7 +83,7 @@ export default async function PeeksPage({
           <ul className="space-y-3">
             {peeks.map((peek) => (
               <li key={peek.id}>
-                <BestPeek peek={peek} showMap />
+                <BestPeek peek={peek} showMap from={mode} />
               </li>
             ))}
           </ul>

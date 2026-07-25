@@ -41,7 +41,7 @@ export default async function UnderratedPage() {
           <ul className="space-y-3">
             {peeks.map((peek) => (
               <li key={peek.id}>
-                <BestPeek peek={peek} showMap isGem />
+                <BestPeek peek={peek} showMap isGem from="underrated" />
               </li>
             ))}
           </ul>

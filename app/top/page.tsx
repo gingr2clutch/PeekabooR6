@@ -200,7 +200,7 @@ function PeekRow({
         <div className="top1-shimmer rounded-card">
           <span aria-hidden className="top1-comet" />
           <Link
-            href={`/peeks/${peek.slug}`}
+            href={`/peeks/${peek.slug}?from=top`}
             className="group relative z-[1] m-[2px] flex items-center gap-4 rounded-[12px] bg-card p-4 sm:gap-5 sm:p-5"
           >
             {content}
@@ -213,7 +213,7 @@ function PeekRow({
   return (
     <li>
       <Link
-        href={`/peeks/${peek.slug}`}
+        href={`/peeks/${peek.slug}?from=top`}
         style={cardStyle}
         className={`peek-lift group flex items-center gap-4 rounded-card bg-card p-4 sm:gap-5 sm:p-5 ${cardCls}`}
       >

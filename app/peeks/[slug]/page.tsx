@@ -114,13 +114,41 @@ export async function generateMetadata({
   };
 }
 
+// Maps a ?from= origin (set by whichever list linked here) to the back-link
+// target, so pressing back returns to that exact list. "ranked" and "map" are
+// map-specific; the rest are fixed list routes.
+function backOrigin(
+  from: string | undefined,
+  map: { slug: string; name: string }
+): { href: string; label: string } | null {
+  switch (from) {
+    case "ranked":
+      return { href: `/maps/${map.slug}?view=ranked`, label: `${map.name} · Ranked list` };
+    case "map":
+      return { href: `/maps/${map.slug}`, label: map.name };
+    case "top":
+      return { href: "/top", label: "Top peeks" };
+    case "underrated":
+      return { href: "/underrated", label: "Underrated" };
+    case "new":
+      return { href: "/peeks?sort=new", label: "Newest peeks" };
+    case "votes":
+      return { href: "/peeks?sort=votes", label: "Most-voted peeks" };
+    case "stier":
+      return { href: "/peeks?tier=s", label: "S-Tier peeks" };
+    default:
+      return null;
+  }
+}
+
 export default async function PeekDetailPage({
   params,
   searchParams,
 }: {
   params: { slug: string };
-  // ?from=ranked means the visitor tapped this peek from a map's ranked list —
-  // send the back link there (ranked view) instead of to the floor page.
+  // ?from=<origin> tells the back link which list the visitor came from (ranked,
+  // top, underrated, new, votes, stier, map) so back returns there instead of
+  // the floor page. See backOrigin().
   searchParams: { from?: string };
 }) {
   // Old UUID URLs (/peeks/<uuid>) stay alive: look the peek up by id and
@@ -146,15 +174,12 @@ export default async function PeekDetailPage({
   const floor = peek.floors;
   const map = floor.maps;
   const floorHref = `/maps/${map.slug}/${floor.slug}`;
-  // Back link: return to wherever they came from. From a map's ranked list →
-  // back to that ranked view; otherwise the floor breadcrumb (the default).
-  const cameFromRanked = searchParams.from === "ranked";
-  const backHref = cameFromRanked
-    ? `/maps/${map.slug}?view=ranked`
-    : floorHref;
-  const backLabel = cameFromRanked
-    ? `${map.name} · Ranked list`
-    : `${map.name} · ${floor.name}`;
+  // Back link: return to wherever they came from (?from=). Any list that links
+  // here passes its origin so pressing back lands on that same list; with no
+  // origin it falls back to the floor breadcrumb (the default).
+  const origin = backOrigin(searchParams.from, map);
+  const backHref = origin?.href ?? floorHref;
+  const backLabel = origin?.label ?? `${map.name} · ${floor.name}`;
   const steps = Array.isArray(peek.instructions) ? peek.instructions : [];
   const hasInstructionsContent = steps.length > 0 || !!peek.tip;
 
