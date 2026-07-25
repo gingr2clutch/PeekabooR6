@@ -771,6 +771,22 @@ h4 {
 .arena-rafter {
   position: relative;
   overflow: hidden;
+  /* Aggressive top + bottom fade so the grey band (and fire) feathers into
+     the page instead of ending in hard edges. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 16%,
+    #000 76%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 16%,
+    #000 76%,
+    transparent 100%
+  );
   background-color: #3d3a32;
   /* top light + bottom vignette layered over the base gradient for depth */
   background-image:
