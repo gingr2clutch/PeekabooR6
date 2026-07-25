@@ -8,7 +8,7 @@ type Props = {
   variant?: "blurple" | "teal";
 };
 
-const DISCORD_INVITE = "https://discord.gg/t8yqGZsE7Z";
+export const DISCORD_INVITE = "https://discord.gg/t8yqGZsE7Z";
 
 // Filled Discord-blurple CTA. Opens the permanent Discord invite in a new
 // tab. Used in the site nav (desktop + mobile drawer) and near the top of
