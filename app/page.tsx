@@ -73,10 +73,10 @@ export default async function Home() {
               `sm:` resets both order and dividers to the source-order row. */}
           <LiveStats
             cells={[
-              { label: "Maps", value: stats.mapsLive, icon: "pin", href: "#maps", cellClass: "order-3 sm:order-none" },
-              { label: "Peeks", value: stats.gradedPeeks, icon: "eye", href: "/peeks?sort=new", cellClass: "order-1 sm:order-none sm:border-l" },
-              { label: "Votes", value: stats.communityVotes, icon: "check", href: "/peeks?sort=votes", cellClass: "order-2 border-l sm:order-none" },
-              { label: "S-Tier", value: stats.sTierPeeks, icon: "trophy", href: "/peeks?tier=s", cellClass: "order-4 border-l sm:order-none" },
+              { label: "Maps", value: stats.mapsLive, icon: "pin", cellClass: "order-3 sm:order-none" },
+              { label: "Peeks", value: stats.gradedPeeks, icon: "eye", cellClass: "order-1 sm:order-none sm:border-l" },
+              { label: "Votes", value: stats.communityVotes, icon: "check", cellClass: "order-2 border-l sm:order-none" },
+              { label: "S-Tier", value: stats.sTierPeeks, icon: "trophy", cellClass: "order-4 border-l sm:order-none" },
             ]}
           />
         </div>
