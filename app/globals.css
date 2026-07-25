@@ -970,7 +970,7 @@ h4 {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 30px 0 2px;
+  margin: 30px 0 12px;
 }
 .arena-climb-dot {
   width: 7px;
@@ -994,14 +994,24 @@ h4 {
 .arena-climb {
   order: 10;
   width: 100%;
-  border-top: 1px solid #e6dfcf;
+  margin-bottom: 8px;
 }
 .arena-climb-link {
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 12px 4px;
+  padding: 12px 14px;
+  border: 1px solid #e6dfcf;
+  border-radius: 14px;
+  background: #fffdf7;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+.arena-climb-link:hover {
+  border-color: #d6cdb5;
+  box-shadow: 0 6px 16px -12px rgba(20, 16, 8, 0.4);
 }
 .arena-climb-link:focus-visible {
   outline: 2px solid #0e8f8b;
