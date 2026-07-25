@@ -7,7 +7,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { getTopPeeks, getUnderratedTopIds, type PeekWithContext } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
-import { PeekBadge } from "@/components/PeekBadge";
+import { PeekBadgeRow } from "@/components/PeekBadgeRow";
+import { BadgeKey } from "@/components/BadgeKey";
 import { isBeginnerPeek } from "@/lib/badges";
 import { TrendArrow } from "@/components/TrendArrow";
 import {
@@ -80,6 +81,10 @@ export default async function PopularPage() {
           <p className="mt-1 text-xs text-muted/70">
             Ranked by effectiveness grade — vote to make grades community-backed
           </p>
+        </div>
+
+        <div className="mb-6 flex justify-center">
+          <BadgeKey />
         </div>
 
         {peeks.length === 0 ? (
@@ -183,8 +188,8 @@ function PeekRow({
       <div className="shrink-0 text-right">
         <span className="inline-flex items-center gap-1">
           {/* No flame here — this whole page IS the top peeks, so it would be
-              redundant. Gem/beginner still apply (gem wins over beginner). */}
-          <PeekBadge isGem={isGem} isBeginner={isBeginnerPeek(peek)} />
+              redundant. Gem + beginner still show (both, in order). */}
+          <PeekBadgeRow isGem={isGem} isBeginner={isBeginnerPeek(peek)} />
           <GradeBadge label={r.label} score={r.score} />
           <TrendArrow direction={trend} />
         </span>

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { GradeBadge } from "@/components/GradeBadge";
-import { PeekBadge } from "@/components/PeekBadge";
+import { PeekBadgeRow } from "@/components/PeekBadgeRow";
 import { ProLockBadge } from "@/components/ProLockBadge";
 import type { PeekWithContext } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
@@ -17,8 +17,8 @@ type Props = {
   // inside another card; still a link, just no bubble of its own.
   bare?: boolean;
   // Badge membership (flame = sitewide top peek, gem = underrated top-10). The
-  // beginner badge is derived from the peek itself. One badge max, flame > gem
-  // > beginner (see PeekBadge).
+  // beginner badge is derived from the peek itself. All earned badges show in a
+  // row (flame, gem, beginner order) — see PeekBadgeRow.
   isGem?: boolean;
   isFlame?: boolean;
 };
@@ -89,14 +89,16 @@ export function BestPeek({
 
       <div className="shrink-0 text-right">
         {peek.is_pro_only && <ProLockBadge className="mb-1" />}
-        <span className="inline-flex items-center gap-1">
-          <PeekBadge
+        {/* Badge row across the top of this column (right-aligned), separate
+            from — and never overlapping — the grade badge below it. */}
+        <div className="mb-1 flex justify-end">
+          <PeekBadgeRow
             isFlame={isFlame}
             isGem={isGem}
             isBeginner={isBeginnerPeek(peek)}
           />
-          <GradeBadge label={r.label} score={r.score} />
-        </span>
+        </div>
+        <GradeBadge label={r.label} score={r.score} />
         <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
           {votesText(peek.vote_count ?? 0)}
         </div>

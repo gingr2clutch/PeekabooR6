@@ -14,6 +14,7 @@ import { rating, votesText, playersText, type Grade } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
 import { GradeBar } from "@/components/GradeBar";
 import { BeginnerBadge } from "@/components/BeginnerBadge";
+import { BadgeKey } from "@/components/BadgeKey";
 import { isBeginnerPeek } from "@/lib/badges";
 import { TrendArrow } from "@/components/TrendArrow";
 import { TrendChart } from "@/components/TrendChart";
@@ -278,6 +279,10 @@ export default async function PeekDetailPage({
             </p>
           )}
         </section>
+
+        <div className="mt-3 flex justify-center">
+          <BadgeKey />
+        </div>
 
         {/* Effectiveness trend — daily snapshots. Cold-start grace: < 2 points
             shows a "coming soon" note instead of an empty chart. */}

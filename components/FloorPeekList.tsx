@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Floor, Map, Peek } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
-import { PeekBadge } from "@/components/PeekBadge";
+import { PeekBadgeRow } from "@/components/PeekBadgeRow";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { ProLockBadge } from "@/components/ProLockBadge";
 import { isBeginnerPeek } from "@/lib/badges";
@@ -76,7 +76,7 @@ export function FloorPeekList({
                     >
                       {peek.name}
                     </Link>
-                    <PeekBadge
+                    <PeekBadgeRow
                       isFlame={topIds?.has(peek.id)}
                       isGem={gemIds?.has(peek.id)}
                       isBeginner={isBeginnerPeek(peek)}

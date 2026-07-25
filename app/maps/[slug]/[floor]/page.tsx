@@ -13,6 +13,7 @@ import {
   getUnderratedTopIds,
   getTopPeekIds,
 } from "@/lib/db";
+import { BadgeKey } from "@/components/BadgeKey";
 import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -149,6 +150,10 @@ export default async function FloorPage({
               })}
             </nav>
           )}
+        </div>
+
+        <div className="mb-3 flex justify-end">
+          <BadgeKey />
         </div>
 
         <FloorView

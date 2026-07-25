@@ -20,7 +20,8 @@ import {
 } from "@/lib/db";
 import { rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
-import { PeekBadge } from "@/components/PeekBadge";
+import { PeekBadgeRow } from "@/components/PeekBadgeRow";
+import { BadgeKey } from "@/components/BadgeKey";
 import { isBeginnerPeek } from "@/lib/badges";
 import { TrendArrow } from "@/components/TrendArrow";
 import { MultiTrendChart, type TrendSeries } from "@/components/MultiTrendChart";
@@ -202,6 +203,12 @@ export default async function MapPage({
         )}
 
         {floors.length > 0 && (
+          <div className="mb-3 flex justify-end">
+            <BadgeKey />
+          </div>
+        )}
+
+        {floors.length > 0 && (
           <MapViewToggle
             initialView={searchParams.view === "ranked" ? "ranked" : "floors"}
             floorsView={
@@ -293,7 +300,7 @@ export default async function MapPage({
                             </div>
                           </div>
                           <span className="inline-flex items-center gap-1">
-                            <PeekBadge
+                            <PeekBadgeRow
                               isFlame={topIds.has(peek.id)}
                               isGem={gemIds.has(peek.id)}
                               isBeginner={isBeginnerPeek(peek)}
