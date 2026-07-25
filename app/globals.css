@@ -962,9 +962,6 @@ h4 {
   text-transform: uppercase;
   color: #8a8274;
 }
-.arena-votes--pending {
-  color: #0e8f8b;
-}
 
 /* Champion crown — pops in after the banner settles. */
 .arena-crown {
@@ -1082,9 +1079,6 @@ h4 {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #8a8274;
-}
-.arena-climb-votes--pending {
-  color: #0e8f8b;
 }
 .arena-newpill {
   flex-shrink: 0;

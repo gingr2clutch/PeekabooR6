@@ -15,15 +15,9 @@ export const metadata: Metadata = {
     "The top spawn peeks across every map in Rainbow Six Siege, ranked by community success rate.",
 };
 
-// Votes needed before a peek is "measured" and stops showing "N to rank".
-const RANK_THRESHOLD = 5;
-
-// Shared vote-count / "N to rank" line, styled for either surface.
+// Shared vote-count line, styled for either surface.
 function voteLabel(votes: number) {
-  if (votes < RANK_THRESHOLD) {
-    return { text: `${RANK_THRESHOLD - votes} to rank`, pending: true };
-  }
-  return { text: `${votes} ${votes === 1 ? "vote" : "votes"}`, pending: false };
+  return `${votes} ${votes === 1 ? "vote" : "votes"}`;
 }
 
 export default async function TopPeeksPage() {
@@ -104,7 +98,6 @@ function Banner({ peek, rank }: { peek: PeekWithContext; rank: number }) {
   const map = floor.maps;
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   const votes = peek.vote_count ?? 0;
-  const v = voteLabel(votes);
 
   return (
     <li className={`arena-banner arena-banner--${rank}`}>
@@ -131,9 +124,7 @@ function Banner({ peek, rank }: { peek: PeekWithContext; rank: number }) {
             {r.label}
           </span>
         </span>
-        <span className={`arena-votes ${v.pending ? "arena-votes--pending" : ""}`}>
-          {v.text}
-        </span>
+        <span className="arena-votes">{voteLabel(votes)}</span>
       </Link>
     </li>
   );
@@ -152,7 +143,6 @@ function ClimbRow({
   const map = floor.maps;
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   const votes = peek.vote_count ?? 0;
-  const v = voteLabel(votes);
 
   return (
     <li className="arena-climb">
@@ -182,13 +172,7 @@ function ClimbRow({
         >
           {r.label}
         </span>
-        <span
-          className={`arena-climb-votes ${
-            v.pending ? "arena-climb-votes--pending" : ""
-          }`}
-        >
-          {v.text}
-        </span>
+        <span className="arena-climb-votes">{voteLabel(votes)}</span>
       </Link>
     </li>
   );
