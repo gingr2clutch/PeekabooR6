@@ -125,7 +125,6 @@ export default async function TopPeeksPage() {
               Banners hang for the community&rsquo;s best.
             </p>
           </div>
-          <div className="arena-beam" aria-hidden />
         </section>
 
         <div className="mx-auto max-w-3xl px-4">
