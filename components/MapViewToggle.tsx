@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 // useLayoutEffect on the client (applies the resolved choice before paint, so a
 // remembered/URL "Ranked list" doesn't flash the Floors view); useEffect on the
@@ -15,31 +22,16 @@ function isView(v: unknown): v is View {
   return v === "floors" || v === "ranked";
 }
 
-// Update just the ?view= param on the CURRENT history entry — no navigation, no
-// refetch, no scroll jump. window.history.replaceState is integrated with the
-// Next.js App Router, so browser back returns to this exact URL/view and the
-// link stays shareable.
-function syncViewInUrl(next: View) {
-  if (typeof window === "undefined") return;
-  try {
-    const url = new URL(window.location.href);
-    if (url.searchParams.get("view") === next) return;
-    url.searchParams.set("view", next);
-    window.history.replaceState(window.history.state, "", url);
-  } catch {
-    // ignore
-  }
-}
-
 // Client-side toggle between two server-rendered views. Both view trees are
-// built on the server and passed in as props, so switching is instant with no
-// refetch.
+// built on the server and passed in as props, so the visible switch is instant
+// (driven by local state) with no refetch.
 //
-// The view is reflected in the URL (?view=ranked). That is what fixes back-
+// The chosen view is written to the URL (?view=ranked) THROUGH THE NEXT ROUTER
+// (router.replace) so the router owns the param. That is what fixes back-
 // navigation: tapping a peek then pressing back returns to the map URL that
-// still carries ?view=ranked, so the ranked list is restored (and shared links
-// land on the right view). localStorage remains a cross-visit fallback for when
-// no ?view is present.
+// still carries ?view=ranked, and the page renders that view server-side. The
+// URL write runs in a transition so it never flashes the route's loading state.
+// localStorage stays a cross-visit fallback when the URL has no ?view.
 export function MapViewToggle({
   floorsView,
   rankedView,
@@ -47,48 +39,48 @@ export function MapViewToggle({
 }: {
   floorsView: ReactNode;
   rankedView: ReactNode;
-  // What the server rendered from ?view= (defaults to "floors"). The client
-  // reconciles this against the live URL + stored preference on mount.
+  // What the server rendered from ?view= (defaults to "floors").
   initialView?: View;
 }) {
   const [view, setView] = useState<View>(initialView);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
 
-  // On mount, resolve the view from (1) the live URL — the source of truth for
-  // back-navigation and shared links — then (2) the stored cross-visit
-  // preference. Reflect the result back into the URL so a later
-  // "tap a peek → press back" returns to this same view.
+  // On mount, resolve the view: the URL wins (source of truth for back-nav and
+  // shared links), then the stored cross-visit preference.
   useIsoLayoutEffect(() => {
-    let next: View | null = null;
+    const urlView = searchParams.get("view");
+    if (isView(urlView)) {
+      if (urlView !== view) setView(urlView);
+      return;
+    }
     try {
-      const p = new URLSearchParams(window.location.search).get("view");
-      if (isView(p)) next = p;
+      const saved = window.localStorage.getItem(STORAGE_KEY);
+      if (isView(saved) && saved !== view) setView(saved);
     } catch {
-      // ignore
-    }
-    if (!next) {
-      try {
-        const saved = window.localStorage.getItem(STORAGE_KEY);
-        if (isView(saved)) next = saved;
-      } catch {
-        // ignore
-      }
-    }
-    if (next) {
-      if (next !== view) setView(next);
-      syncViewInUrl(next);
+      // localStorage unavailable — keep the default.
     }
     // Mount only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function choose(next: View) {
-    setView(next);
-    syncViewInUrl(next);
+    setView(next); // instant visual switch
     try {
       window.localStorage.setItem(STORAGE_KEY, next);
     } catch {
       // ignore write failures
     }
+    // Reflect the choice in the URL via the router so back-navigation returns
+    // here. scroll:false keeps the list position; the transition avoids the
+    // route's loading fallback while the (cheap) re-render settles.
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", next);
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
   }
 
   const options: { value: View; label: string }[] = [
