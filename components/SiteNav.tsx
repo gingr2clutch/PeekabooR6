@@ -3,20 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  BookOpen,
   Crown,
   Flame,
   Gem,
   Handshake,
   Map,
   Menu,
-  Plus,
-  Scale,
   // Users, // re-add when /creators tab is unhidden
   X,
 } from "lucide-react";
 import { Wordmark } from "./Wordmark";
-import { DiscordButton } from "./DiscordButton";
 import { AuthNavIcon } from "./AuthNavIcon";
 
 const ICON_SIZE = 16;
@@ -29,16 +25,15 @@ type NavItem = {
   Icon: typeof Map;
 };
 
+// Core navigation only. Guides (/blog), Submit a peek (/submit) and Compare
+// Maps (/compare) live in the footer; Discord lives on the homepage banner.
 const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Maps", Icon: Map },
   { href: "/top", label: "Top", Icon: Flame },
-  { href: "/compare", label: "Compare Maps", Icon: Scale },
   { href: "/underrated", label: "Underrated", Icon: Gem },
   { href: "/pro", label: "Pro", Icon: Crown },
   // Hidden from nav for now — /creators route still serves directly.
   // { href: "/creators", label: "Creators", Icon: Users },
-  { href: "/blog", label: "Guides", Icon: BookOpen },
-  { href: "/submit", label: "Submit a peek", Icon: Plus },
   { href: "/sponsor", label: "Partner", Icon: Handshake },
 ];
 
@@ -130,7 +125,6 @@ export function SiteNav() {
             <span>{label}</span>
           </Link>
         ))}
-        <DiscordButton />
         <AuthNavIcon iconSize={20} />
       </nav>
 
@@ -196,11 +190,6 @@ export function SiteNav() {
                     <span>{label}</span>
                   </Link>
                 ))}
-                <DiscordButton
-                  variant="teal"
-                  onClick={closeDrawer}
-                  className="mt-3 w-full py-4 text-base"
-                />
               </div>
             </nav>
           </div>

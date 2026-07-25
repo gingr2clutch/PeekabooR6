@@ -7,6 +7,18 @@ export function SiteFooter() {
   return (
     <footer className="mt-16 border-t border-border px-4 py-6 text-xs text-muted sm:px-6">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-3 gap-y-2 text-center">
+        <Link href="/blog" className={linkCls}>
+          Guides
+        </Link>
+        <span aria-hidden>·</span>
+        <Link href="/submit" className={linkCls}>
+          Submit a peek
+        </Link>
+        <span aria-hidden>·</span>
+        <Link href="/compare" className={linkCls}>
+          Compare Maps
+        </Link>
+        <span aria-hidden>·</span>
         <Link href="/privacy-policy" className={linkCls}>
           Privacy
         </Link>
