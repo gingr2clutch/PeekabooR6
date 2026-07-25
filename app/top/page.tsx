@@ -21,7 +21,7 @@ function voteLabel(votes: number) {
 }
 
 export default async function TopPeeksPage() {
-  const peeks = await getTopPeeks(8);
+  const peeks = await getTopPeeks(10);
 
   // Batched 7-vs-7 trend direction for every ranked peek (one query) — the
   // climbing list flags any that are slipping with a red ▼.
