@@ -751,3 +751,416 @@ h4 {
     animation: none;
   }
 }
+
+/* ============================================================
+   Top Peeks — "Arena Banners" (app/top/page.tsx)
+   Presentational only. Fonts come from the CSS variables defined
+   in app/layout.tsx (Space Grotesk / Inter / IBM Plex Mono).
+   ============================================================ */
+.arena {
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+.arena-display {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+.arena-mono {
+  font-family: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+}
+
+/* --- Rafter header (dark, full-bleed) --- */
+.arena-rafter {
+  background: linear-gradient(180deg, #221f19 0%, #2c2820 100%);
+}
+.arena-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #0e8f8b;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+.arena-eyebrow-rule {
+  height: 1px;
+  width: 26px;
+  background: #0e8f8b;
+  opacity: 0.75;
+}
+.arena-title {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #f4efe2;
+}
+.arena-subline {
+  color: #b3a795;
+}
+/* The beam the banners hang from. */
+.arena-beam {
+  height: 9px;
+  background: #191713;
+  border-bottom: 2px solid #3a352a;
+}
+
+/* --- Shared ranking list (banners + climbing rows are one <ol>) --- */
+.arena-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  column-gap: 10px;
+  row-gap: 0;
+  margin: -30px 0 0; /* pull the banners up so they hang from the beam */
+  padding: 0;
+  list-style: none;
+}
+
+/* --- Banners (ranks 1–3) --- */
+.arena-banner {
+  flex: 1 1 0;
+  min-width: 0;
+  z-index: 1;
+  /* drop-shadow (not box-shadow) so it follows the pennant clip shape */
+  filter: drop-shadow(0 8px 14px rgba(20, 16, 8, 0.28));
+}
+.arena-banner--2 {
+  order: 1;
+}
+.arena-banner--1 {
+  order: 2;
+  flex-grow: 1.22; /* champion is wider */
+  z-index: 2;
+  filter: drop-shadow(0 12px 18px rgba(233, 180, 33, 0.5));
+}
+.arena-banner--3 {
+  order: 3;
+}
+.arena-banner:focus-within {
+  filter: drop-shadow(0 0 0 2px #0e8f8b);
+}
+
+.arena-banner-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 10px 30px; /* extra bottom clears the pennant notch */
+  border: 1px solid #e6dfcf;
+  border-top: none; /* butt flush against the beam */
+  background: #fffdf7;
+  text-align: center;
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - 16px),
+    50% 100%,
+    0 calc(100% - 16px)
+  );
+  transform-origin: top center;
+  transform: scaleY(0);
+  opacity: 0;
+  animation: arena-drop 1600ms cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+.arena-banner--1 .arena-banner-card {
+  margin-top: -10px; /* champion sits a touch taller */
+  padding: 22px 12px 36px;
+  background: linear-gradient(180deg, #fffbef 0%, #fdf2cf 100%);
+  border-color: #e9d391;
+}
+/* Champion drops LAST (350ms); silver first, bronze second. */
+.arena-banner--2 .arena-banner-card {
+  animation-delay: 0ms;
+}
+.arena-banner--3 .arena-banner-card {
+  animation-delay: 150ms;
+}
+.arena-banner--1 .arena-banner-card {
+  animation-delay: 350ms;
+}
+.arena-banner-card:focus-visible {
+  outline: 2px solid #0e8f8b;
+  outline-offset: 2px;
+}
+
+/* Rank coins */
+.arena-coin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #1b1813;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.6),
+    0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.arena-coin--1 {
+  width: 48px;
+  height: 48px;
+  font-size: 22px;
+  background: radial-gradient(circle at 35% 30%, #ffe08a, #e9b421);
+}
+.arena-coin--2 {
+  background: radial-gradient(circle at 35% 30%, #f4f4f4, #c0c0c0);
+}
+.arena-coin--3 {
+  background: radial-gradient(circle at 35% 30%, #e8bd94, #cd7f32);
+  color: #2a1c0e;
+}
+
+.arena-name {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.2;
+  color: #1b1813;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.arena-banner--1 .arena-name {
+  font-size: 17px;
+}
+.arena-loc {
+  font-size: 11px;
+  line-height: 1.25;
+  color: #8a8274;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Grade badge — teal, on every grade on this page */
+.arena-grade {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: #0e8f8b;
+  color: #fff;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1;
+}
+.arena-votes {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a8274;
+}
+.arena-votes--pending {
+  color: #0e8f8b;
+}
+
+/* Champion crown — pops in after the banner settles. */
+.arena-crown {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  margin-left: -0.55em;
+  font-size: 20px;
+  line-height: 1;
+  transform-origin: bottom center;
+  transform: scale(0);
+  opacity: 0;
+  animation: arena-crown 300ms ease-out 1950ms both;
+}
+
+/* --- Climbing list (ranks 4+) --- */
+.arena-climb-head {
+  order: 9;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 30px 0 2px;
+}
+.arena-climb-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #0e8f8b;
+}
+.arena-climb-label {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #8a8274;
+}
+.arena-climb-rule {
+  flex: 1;
+  height: 1px;
+  background: #e6dfcf;
+}
+.arena-climb {
+  order: 10;
+  width: 100%;
+  border-top: 1px solid #e6dfcf;
+}
+.arena-climb-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 4px;
+}
+.arena-climb-link:focus-visible {
+  outline: 2px solid #0e8f8b;
+  outline-offset: 2px;
+}
+.arena-climb-rank {
+  flex-shrink: 0;
+  width: 24px;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 13px;
+  color: #8a8274;
+}
+.arena-climb-main {
+  min-width: 0;
+  flex: 1;
+}
+.arena-climb-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1b1813;
+}
+.arena-climb-nametext {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.arena-climb-loc {
+  margin-top: 1px;
+  font-size: 12px;
+  color: #8a8274;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.arena-chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 6px;
+  background: #dcefec;
+  color: #0e8f8b;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+}
+.arena-climb-votes {
+  flex-shrink: 0;
+  width: 76px;
+  text-align: right;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a8274;
+}
+.arena-climb-votes--pending {
+  color: #0e8f8b;
+}
+.arena-newpill {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  background: #ff6b1a;
+  color: #fff;
+  padding: 1px 6px;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.arena-trend-down {
+  flex-shrink: 0;
+  color: #d1573a;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* --- The signature roll-down: unroll (scaleY overshoot) then a one-time
+   pendulum settle, baked into a single keyframe timeline so the two phases
+   share the `transform` property cleanly. 44% ≈ 700ms of a 1600ms run. --- */
+@keyframes arena-drop {
+  0% {
+    transform: scaleY(0) rotate(0deg);
+    opacity: 0;
+  }
+  13% {
+    opacity: 1;
+  }
+  26% {
+    transform: scaleY(1.06) rotate(0deg);
+  }
+  35% {
+    transform: scaleY(0.98) rotate(0deg);
+  }
+  44% {
+    transform: scaleY(1) rotate(0deg);
+    opacity: 1;
+  }
+  60% {
+    transform: scaleY(1) rotate(1.2deg);
+  }
+  78% {
+    transform: scaleY(1) rotate(-0.8deg);
+  }
+  100% {
+    /* opacity MUST be pinned here — without it CSS synthesizes an implicit
+       100% keyframe from the base value (opacity: 0), fading the banner back
+       out after the unroll. */
+    transform: scaleY(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+@keyframes arena-crown {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arena-banner-card,
+  .arena-crown {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}

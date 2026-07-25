@@ -1,10 +1,31 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Space_Grotesk, Inter, IBM_Plex_Mono } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SiteFooter } from "@/components/SiteFooter";
 import { FavoritesProvider } from "@/components/FavoritesProvider";
 import "./globals.css";
+
+// Loaded as CSS variables only — the site-wide body font is unchanged. The
+// Top Peeks "Arena Banners" page opts in via var(--font-*) on its own elements.
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+});
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-plex-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -29,7 +50,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${spaceGrotesk.variable} ${inter.variable} ${plexMono.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         {/* Open connections to the image hosts early: wsrv.nl serves resized
             cover WebPs, R2 serves the rest (floor blueprints, peek posters). */}
