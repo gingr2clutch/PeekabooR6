@@ -2,7 +2,6 @@ import { supabasePublic } from "./supabase";
 import { createSupabaseServerClient } from "./supabase/server";
 import { GRADED_THRESHOLDS, rating, ratingScore } from "./rate";
 import { isUnderrated, UNDERRATED_TOP_COUNT } from "./underrated";
-import { TOP_PEEK_BADGE_COUNT } from "./badges";
 
 export type Map = {
   id: string;
@@ -392,15 +391,6 @@ export async function getUnderratedPeeks(
 // the badge means the same thing everywhere it renders.
 export async function getUnderratedTopIds(): Promise<Set<string>> {
   const top = await getUnderratedPeeks();
-  return new Set(top.map((p) => p.id));
-}
-
-// IDs of the sitewide top-N peeks by grade — the set that earns the flame ("top
-// peek") badge. Same membership-check pattern as gems.
-export async function getTopPeekIds(
-  limit = TOP_PEEK_BADGE_COUNT
-): Promise<Set<string>> {
-  const top = await getTopPeeks(limit);
   return new Set(top.map((p) => p.id));
 }
 

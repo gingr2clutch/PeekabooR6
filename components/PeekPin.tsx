@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { PeekBadge } from "@/components/PeekBadge";
 
 type Props = {
   slug: string;
@@ -12,10 +11,6 @@ type Props = {
   isNew?: boolean;
   hasTiktok?: boolean;
   ratingText?: string;
-  // Pin badge (top-right corner). flame = sitewide top peek, gem = underrated
-  // top-10; flame wins, one badge max. Beginner badge is card-only, not on pins.
-  isGem?: boolean;
-  isFlame?: boolean;
   isSelected?: boolean;
   onSelect?: () => void;
 };
@@ -79,8 +74,6 @@ export function PeekPin({
   isNew = false,
   hasTiktok = false,
   ratingText,
-  isGem = false,
-  isFlame = false,
   isSelected = false,
   onSelect,
 }: Props) {
@@ -134,21 +127,6 @@ export function PeekPin({
           } text-[10px] font-bold text-white shadow-md ${ringCls} group-hover:scale-[1.2] group-hover:shadow-[0_0_12px_rgba(242,100,14,0.6)] group-active:scale-[0.92] md:h-7 md:w-7 md:text-[11px] ${selectedStyle}`}
         >
           {number}
-          {/* Top-peek / hidden-gem mark — top-right corner. On a white disc so
-              the glyph reads on any pin colour and over map screenshots.
-              flame > gem, one max. */}
-          {(isFlame || isGem) && (
-            <span
-              aria-hidden
-              className="pointer-events-none absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-white md:h-3.5 md:w-3.5"
-            >
-              <PeekBadge
-                isFlame={isFlame}
-                isGem={isGem}
-                className="h-2 w-2 md:h-2.5 md:w-2.5"
-              />
-            </span>
-          )}
         </span>
       </span>
       {/* Floating tooltip — desktop hover only. Hidden on mobile so we

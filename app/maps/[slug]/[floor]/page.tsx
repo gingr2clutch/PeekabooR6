@@ -11,9 +11,7 @@ import {
   getMapBySlug,
   getPublishedPeeksForFloor,
   getUnderratedTopIds,
-  getTopPeekIds,
 } from "@/lib/db";
-import { BadgeKey } from "@/components/BadgeKey";
 import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -84,12 +82,8 @@ export default async function FloorPage({
   // Same query path /maps/[slug]/page.tsx uses — one extra round trip,
   // ordered by display_order ascending.
   const allFloors = await getFloorsForMap(map.id);
-  // Sitewide badge sets: top-10 hidden gems + top peeks, to mark matching
-  // pins/rows on this floor.
-  const [gemIds, topIds] = await Promise.all([
-    getUnderratedTopIds(),
-    getTopPeekIds(),
-  ]);
+  // Sitewide top-10 hidden gems, to badge any matching peek in this floor's list.
+  const gemIds = await getUnderratedTopIds();
   const floorIdx = allFloors.findIndex((f) => f.id === floor.id);
   const prevFloor = floorIdx > 0 ? allFloors[floorIdx - 1] : null;
   const nextFloor =
@@ -152,17 +146,7 @@ export default async function FloorPage({
           )}
         </div>
 
-        <div className="mb-3 flex justify-end">
-          <BadgeKey />
-        </div>
-
-        <FloorView
-          map={map}
-          floor={floor}
-          peeks={positioned}
-          gemIds={gemIds}
-          topIds={topIds}
-        />
+        <FloorView map={map} floor={floor} peeks={positioned} />
 
         {peeks.length === 0 && (
           <p className="mt-6 text-center text-sm text-muted">
@@ -170,13 +154,7 @@ export default async function FloorPage({
           </p>
         )}
 
-        <FloorPeekList
-          map={map}
-          floor={floor}
-          peeks={peeks}
-          gemIds={gemIds}
-          topIds={topIds}
-        />
+        <FloorPeekList map={map} floor={floor} peeks={peeks} gemIds={gemIds} />
 
         {/* Other floors + prev/next navigation to keep users browsing. */}
         {allFloors.length > 1 && (

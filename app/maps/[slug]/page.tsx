@@ -16,13 +16,10 @@ import {
   getRankedPeeksForMap,
   getTopPeekForMap,
   getUnderratedTopIds,
-  getTopPeekIds,
 } from "@/lib/db";
 import { rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
-import { PeekBadgeRow } from "@/components/PeekBadgeRow";
-import { BadgeKey } from "@/components/BadgeKey";
-import { isBeginnerPeek } from "@/lib/badges";
+import { GemBadge } from "@/components/GemBadge";
 import { TrendArrow } from "@/components/TrendArrow";
 import { MultiTrendChart, type TrendSeries } from "@/components/MultiTrendChart";
 import {
@@ -111,12 +108,9 @@ export default async function MapPage({
 
   const topPeek = await getTopPeekForMap(floorIds);
   const rankedPeeks = await getRankedPeeksForMap(floorIds);
-  // Sitewide badge sets — top-10 hidden gems (also decides "Underrated on this
-  // map") and top peeks (flame).
-  const [gemIds, topIds] = await Promise.all([
-    getUnderratedTopIds(),
-    getTopPeekIds(),
-  ]);
+  // The sitewide top-10 hidden gems — used to badge cards and to decide which
+  // (if any) of this map's peeks show in "Underrated on this map".
+  const gemIds = await getUnderratedTopIds();
 
   // Batched 7-vs-7 trend direction for the ranked-list arrows (one query).
   const rankedTrends = await getSnapshotsForPeeks(
@@ -199,12 +193,6 @@ export default async function MapPage({
               grades={{ S: mapSTier, A: mapATier, B: mapBTier, C: mapCTier }}
               topPeek={topPeek}
             />
-          </div>
-        )}
-
-        {floors.length > 0 && (
-          <div className="mb-3 flex justify-end">
-            <BadgeKey />
           </div>
         )}
 
@@ -300,11 +288,7 @@ export default async function MapPage({
                             </div>
                           </div>
                           <span className="inline-flex items-center gap-1">
-                            <PeekBadgeRow
-                              isFlame={topIds.has(peek.id)}
-                              isGem={gemIds.has(peek.id)}
-                              isBeginner={isBeginnerPeek(peek)}
-                            />
+                            {gemIds.has(peek.id) && <GemBadge />}
                             <GradeBadge label={r.label} score={r.score} />
                             <TrendArrow
                               direction={computeDirection(
@@ -344,12 +328,7 @@ export default async function MapPage({
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {underratedPeeks.map((peek) => (
-                <BestPeek
-                  key={peek.id}
-                  peek={peek}
-                  isGem
-                  isFlame={topIds.has(peek.id)}
-                />
+                <BestPeek key={peek.id} peek={peek} isGem />
               ))}
             </div>
           </div>

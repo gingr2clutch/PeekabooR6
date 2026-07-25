@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BestPeek } from "@/components/BestPeek";
-import { BadgeKey } from "@/components/BadgeKey";
 import { PageHeader } from "@/components/PageHeader";
 import { getUnderratedPeeks } from "@/lib/db";
 
@@ -31,10 +30,6 @@ export default async function UnderratedPage() {
             The 10 most underrated peeks in the game right now — great peeks
             almost nobody has voted on. Discover them before everyone else.
           </p>
-        </div>
-
-        <div className="mb-6 flex justify-center">
-          <BadgeKey />
         </div>
 
         {peeks.length === 0 ? (
