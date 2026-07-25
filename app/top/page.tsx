@@ -40,14 +40,14 @@ export default async function TopPeeksPage() {
         {/* Rafter header — dark, full-bleed, with the beam at its bottom edge.
             Rendered server-side so there's no flash against the cream page. */}
         <section className="arena-rafter">
-          <div className="mx-auto max-w-3xl px-4 pb-8 pt-10 text-center sm:pt-12">
+          <div className="mx-auto max-w-3xl px-4 pb-10 pt-14 text-center sm:pt-16">
             <div className="arena-eyebrow">
               <span className="arena-eyebrow-rule" aria-hidden />
               <span>Hall of Peeks</span>
               <span className="arena-eyebrow-rule" aria-hidden />
             </div>
-            <h1 className="arena-title mt-3 text-3xl sm:text-4xl">Top Peeks</h1>
-            <p className="arena-subline mt-2 text-sm">
+            <h1 className="arena-title mt-5 text-4xl sm:text-5xl">Top Peeks</h1>
+            <p className="arena-subline mt-3.5 text-[15px]">
               Banners hang for the community&rsquo;s best.
             </p>
           </div>

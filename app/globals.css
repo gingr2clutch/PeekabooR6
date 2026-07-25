@@ -769,39 +769,40 @@ h4 {
 
 /* --- Rafter header (dark, full-bleed) --- */
 .arena-rafter {
-  background: linear-gradient(180deg, #221f19 0%, #2c2820 100%);
+  background: linear-gradient(180deg, #4a473e 0%, #3d3a32 100%);
 }
 .arena-eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  color: #0e8f8b;
+  gap: 12px;
+  color: #16b3ad;
   font-family: var(--font-plex-mono), ui-monospace, monospace;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
 }
 .arena-eyebrow-rule {
   height: 1px;
-  width: 26px;
-  background: #0e8f8b;
-  opacity: 0.75;
+  width: 34px;
+  background: #16b3ad;
+  opacity: 0.6;
 }
 .arena-title {
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: #f4efe2;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  color: #f6f1e6;
 }
 .arena-subline {
-  color: #b3a795;
+  color: #c7bdac;
+  letter-spacing: 0.01em;
 }
 /* The beam the banners hang from. */
 .arena-beam {
   height: 9px;
-  background: #191713;
-  border-bottom: 2px solid #3a352a;
+  background: #2b2820;
+  border-bottom: 2px solid #57513f;
 }
 
 /* --- Shared ranking list (banners + climbing rows are one <ol>) --- */
