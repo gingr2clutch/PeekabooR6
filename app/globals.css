@@ -1018,7 +1018,7 @@ h4 {
   order: 2;
   flex-grow: 1.22; /* champion is wider */
   z-index: 2;
-  filter: drop-shadow(0 12px 18px rgba(233, 180, 33, 0.5));
+  filter: drop-shadow(0 10px 16px rgba(20, 16, 8, 0.26));
 }
 .arena-banner--3 {
   order: 3;
@@ -1035,33 +1035,31 @@ h4 {
   gap: 5px;
   height: 228px; /* fixed height so all three tips align (ranks 2/3) */
   padding: 16px 10px 22px; /* bottom clears the 14px pennant notch */
-  border: 1px solid #e6dfcf;
+  border: 1px solid #d7dade;
   border-top: none; /* butt flush against the beam */
-  /* Woven-cloth texture: two crossing hatch layers + edge curvature shading. */
-  background-color: #fffdf7;
+  /* Shiny light-metallic surface: top sheen + a diagonal gloss streak.
+     Per-rank background-color tints it gold / silver / bronze. */
+  background-color: #eceef1;
   background-image:
     linear-gradient(
-      90deg,
-      rgba(70, 58, 34, 0.06),
-      rgba(70, 58, 34, 0) 16%,
-      rgba(70, 58, 34, 0) 84%,
-      rgba(70, 58, 34, 0.06)
+      180deg,
+      rgba(255, 255, 255, 0.62),
+      rgba(255, 255, 255, 0) 32%
     ),
-    repeating-linear-gradient(
-      45deg,
-      rgba(120, 100, 60, 0.028) 0 1px,
-      transparent 1px 4px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(120, 100, 60, 0.022) 0 1px,
-      transparent 1px 4px
+    linear-gradient(
+      118deg,
+      rgba(255, 255, 255, 0) 30%,
+      rgba(255, 255, 255, 0.7) 44%,
+      rgba(255, 255, 255, 0.12) 50%,
+      rgba(255, 255, 255, 0) 60%,
+      rgba(255, 255, 255, 0) 80%,
+      rgba(255, 255, 255, 0.34) 87%,
+      rgba(255, 255, 255, 0) 94%
     );
-  /* Matted double edge + soft depth toward the pennant. */
   box-shadow:
-    inset 0 0 0 3px rgba(255, 255, 255, 0.75),
-    inset 0 0 0 4px rgba(226, 224, 213, 0.55),
-    inset 0 -14px 20px -14px rgba(90, 70, 30, 0.14);
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.4),
+    inset 0 -12px 18px -14px rgba(80, 60, 30, 0.12);
   text-align: center;
   clip-path: polygon(
     0 0,
@@ -1082,38 +1080,19 @@ h4 {
 .arena-banner--1 .arena-banner-card {
   height: 252px; /* only slightly taller; tips still nearly align */
   padding: 16px 12px 24px;
-  background-color: #fdf2cf;
-  background-image:
-    linear-gradient(
-      90deg,
-      rgba(120, 90, 20, 0.08),
-      rgba(120, 90, 20, 0) 16%,
-      rgba(120, 90, 20, 0) 84%,
-      rgba(120, 90, 20, 0.08)
-    ),
-    repeating-linear-gradient(
-      45deg,
-      rgba(150, 110, 30, 0.05) 0 1px,
-      transparent 1px 4px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(150, 110, 30, 0.04) 0 1px,
-      transparent 1px 4px
-    ),
-    linear-gradient(180deg, #fffbef 0%, #fdf2cf 100%);
-  border-color: #e9d391;
-  box-shadow:
-    inset 0 0 0 3px rgba(255, 251, 239, 0.8),
-    inset 0 0 0 4px rgba(233, 211, 145, 0.6),
-    inset 0 -16px 22px -14px rgba(150, 110, 30, 0.18);
+  background-color: #f7e6ac; /* light gold */
+  border-color: #e6cf82;
 }
 /* Unfurl order: bronze (#3) first, silver (#2) next, champion (#1) last. */
 .arena-banner--3 .arena-banner-card {
   animation-delay: 0ms;
+  background-color: #f0ddc6; /* light bronze */
+  border-color: #ddc09c;
 }
 .arena-banner--2 .arena-banner-card {
   animation-delay: 200ms;
+  background-color: #eceef1; /* light silver */
+  border-color: #cfd5db;
 }
 .arena-banner--1 .arena-banner-card {
   animation-delay: 420ms;
