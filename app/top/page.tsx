@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { ProLockBadge } from "@/components/ProLockBadge";
+import { ExploreNext } from "@/components/ExploreNext";
 import { getTopPeeks, type PeekWithContext } from "@/lib/db";
 import { rating, gradeTierColor } from "@/lib/rate";
 import { computeDirection, getSnapshotsForPeeks } from "@/lib/trends";
@@ -164,6 +165,14 @@ export default async function TopPeeksPage() {
             </ol>
           )}
         </div>
+
+        <ExploreNext
+          line="The community's highest-rated peeks. Think one's ranked wrong? Cast your vote."
+          cards={[
+            { href: "/underrated", emoji: "💎", label: "Underrated Peeks" },
+            { href: "/#maps", emoji: "🗺️", label: "Browse Maps" },
+          ]}
+        />
       </main>
     </>
   );
