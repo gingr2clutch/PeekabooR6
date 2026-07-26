@@ -291,10 +291,15 @@ export default async function PeekDetailPage({
                 </span>
               </div>
               {r.tier === "measured" && (
-                <p className="mt-2 text-xs text-muted">
-                  <span className="font-semibold text-ink">{r.pct}%</span> ·{" "}
-                  {peek.vote_count}
-                </p>
+                <div className="mt-2 text-center leading-tight">
+                  <span className="text-xs font-semibold text-ink">
+                    {r.pct}%
+                  </span>
+                  <span className="mt-0.5 block text-[11px] text-muted">
+                    {peek.vote_count} player{" "}
+                    {peek.vote_count === 1 ? "vote" : "votes"}
+                  </span>
+                </div>
               )}
             </div>
 
