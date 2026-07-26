@@ -817,6 +817,8 @@ h4 {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  /* whole fire 20% more transparent */
+  opacity: 0.8;
   /* Solid fire fill along the very bottom so no cream shows through the base
      of the flames. */
   background: linear-gradient(
