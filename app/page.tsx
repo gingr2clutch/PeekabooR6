@@ -107,7 +107,7 @@ export default async function Home() {
 
         <ul
           id="maps"
-          className="grid scroll-mt-24 grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4"
+          className="grid scroll-mt-24 grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5"
         >
           {maps.map((map) => {
             const hasCover = !!map.cover_image_url;

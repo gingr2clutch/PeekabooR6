@@ -149,7 +149,7 @@ export default async function MapPage({
   return (
     <>
       <PageHeader />
-      <main className="fade-in-up mx-auto max-w-4xl px-6 pb-20 pt-6">
+      <main className="fade-in-up mx-auto max-w-5xl px-6 pb-20 pt-6">
         {/* Header with a subtle backdrop of the map's own cover image — faint,
             cover-cropped, fading into the page background at the bottom so it
             blends into the stats section. Decorative (empty alt) and absolutely
