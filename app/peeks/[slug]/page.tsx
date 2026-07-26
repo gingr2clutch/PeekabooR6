@@ -9,7 +9,12 @@ import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getMyLatestPeekVote } from "@/lib/votes";
-import { rating, votesText, playersText, type Grade } from "@/lib/rate";
+import {
+  rating,
+  votesText,
+  gradeTierColor,
+  type Grade,
+} from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
 import { GradeBar } from "@/components/GradeBar";
 import { TrendArrow } from "@/components/TrendArrow";
@@ -222,10 +227,11 @@ export default async function PeekDetailPage({
     .map((x) => x.p);
 
   // Effectiveness history (server-side; peek_snapshots is RLS-locked to the
-  // service role). 30 days for the chart, plus a 7-vs-7 direction for the arrow.
+  // service role). 30 days for the trend chart.
   const trendPoints = await getSnapshotsForPeek(peek.id, 30);
-  const trendDirection = computeDirection(trendPoints);
   const trackingSince = trackingSinceLabel(trendPoints);
+  // Effectiveness rating for the hero grade tile + measured stat line.
+  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   // Batched arrows for the "close by" list — one query, direction per peek.
   const nearbyTrends = await getSnapshotsForPeeks(
     nearby.map((p) => p.id),
@@ -267,25 +273,59 @@ export default async function PeekDetailPage({
           </p>
         </div>
 
-        {/* Hero stats card — 32px below header */}
-        <section className="mt-6 rounded-card border border-border bg-card p-4 md:mt-8 md:p-8">
-          {/* Order: Effectiveness → its C·B·A·S grade bar → Risk → Difficulty. */}
-          <StatCell label="Effectiveness">
-            <SuccessStat peek={peek} trend={trendDirection} />
-          </StatCell>
+        {/* Hero stats card — compact two-column hero. */}
+        <section className="mt-6 rounded-card border border-border bg-card p-4 md:mt-8 md:p-6">
+          <div className="flex items-center gap-[18px]">
+            {/* Left: grade tile + measured stat line */}
+            <div className="flex shrink-0 flex-col items-center">
+              <div
+                aria-label={`Grade ${r.label}`}
+                className="flex h-[86px] w-[86px] items-center justify-center rounded-2xl text-white max-[359px]:h-[72px] max-[359px]:w-[72px]"
+                style={{ backgroundColor: gradeTierColor(r.label) }}
+              >
+                <span
+                  className="text-[40px] font-extrabold leading-none max-[359px]:text-[34px]"
+                  style={{ letterSpacing: "-0.02em" }}
+                >
+                  {r.label}
+                </span>
+              </div>
+              {r.tier === "measured" && (
+                <p className="mt-2 text-xs text-muted">
+                  <span className="font-semibold text-ink">{r.pct}%</span> ·{" "}
+                  {peek.vote_count}
+                </p>
+              )}
+            </div>
+
+            {/* Right: Risk / Difficulty / Rating */}
+            <div className="flex flex-1 flex-col divide-y divide-border">
+              <StatRow label="Risk">
+                <RiskPill risk={peek.risk} />
+              </StatRow>
+              <StatRow label="Difficulty">
+                <DifficultyDots difficulty={peek.difficulty} />
+              </StatRow>
+              <StatRow label="Rating">
+                {r.tier === "measured" ? (
+                  <PlayerVotedBadge />
+                ) : (
+                  <a
+                    href="#vote"
+                    className="inline-flex items-center rounded-btn bg-brand px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-brand/90"
+                  >
+                    Vote
+                  </a>
+                )}
+              </StatRow>
+            </div>
+          </div>
+
           <GradeBar
             baseSuccessRate={peek.base_success_rate}
             workedVotes={peek.worked_votes}
             voteCount={peek.vote_count}
           />
-          <div className="mt-6 grid grid-cols-1 divide-y divide-border border-t border-border pt-2 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-            <StatCell label="Risk">
-              <RiskPill risk={peek.risk} />
-            </StatCell>
-            <StatCell label="Difficulty">
-              <DifficultyDots difficulty={peek.difficulty} />
-            </StatCell>
-          </div>
         </section>
 
         {/* Effectiveness trend — daily snapshots. Cold-start grace: < 2 points
@@ -313,7 +353,7 @@ export default async function PeekDetailPage({
         {(
           <>
             {/* Vote buttons — 16px below stats card */}
-            <div className="mt-4 flex justify-center">
+            <div id="vote" className="mt-4 flex scroll-mt-20 justify-center">
               <VoteButtons
                 peekId={peek.id}
                 isLoggedIn={!!user}
@@ -514,37 +554,6 @@ function buildBreadcrumbJsonLd(
 // Hero rating figure — the headline grade badge. Once a peek is vote-backed
 // (measured tier) the real percentage and vote count show beneath the grade;
 // estimate-tier peeks show the grade alone, never a percentage.
-function SuccessStat({
-  peek,
-  trend,
-}: {
-  peek: Peek;
-  trend: TrendDirection | null;
-}) {
-  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
-  return (
-    <div className="flex flex-col items-center gap-1.5">
-      <span className="inline-flex items-center gap-1.5">
-        <GradeBadge label={r.label} score={r.score} size="lg" />
-        <TrendArrow direction={trend} className="text-lg" />
-      </span>
-      {r.tier === "measured" && (
-        <>
-          <span className="text-[11px] font-medium text-muted md:text-xs">
-            {/* Honest count: players never inflate a single person's repeat
-                votes. Total casts shown alongside only once repeats exist. */}
-            {r.pct}% ·{" "}
-            {peek.total_casts > peek.vote_count
-              ? `${votesText(peek.total_casts)} · ${playersText(peek.vote_count)}`
-              : playersText(peek.vote_count)}
-          </span>
-          <PlayerVotedBadge />
-        </>
-      )}
-    </div>
-  );
-}
-
 // Shown only on measured-tier peeks so the grade reads as community-backed
 // rather than an estimate.
 function PlayerVotedBadge() {
@@ -567,7 +576,9 @@ function PlayerVotedBadge() {
   );
 }
 
-function StatCell({
+// A label/value row in the stats hero's right column. Hairline dividers
+// between rows come from `divide-y` on the parent.
+function StatRow({
   label,
   children,
 }: {
@@ -575,13 +586,11 @@ function StatCell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-start gap-2 px-2 py-4 md:gap-4 md:px-4 md:py-2">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted md:text-[11px]">
+    <div className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+      <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted">
         {label}
       </span>
-      <div className="flex min-h-[44px] flex-1 items-center md:min-h-[72px]">
-        {children}
-      </div>
+      {children}
     </div>
   );
 }
