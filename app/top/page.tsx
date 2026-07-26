@@ -119,8 +119,7 @@ export default async function TopPeeksPage() {
               />
             ))}
           </div>
-          <div className="arena-beam-top" aria-hidden />
-          <div className="mx-auto max-w-3xl px-4 pb-14 pt-5 text-center sm:pt-6">
+          <div className="mx-auto max-w-3xl px-4 pb-14 pt-8 text-center sm:pt-10">
             <div className="arena-eyebrow">
               <span className="arena-eyebrow-rule" aria-hidden />
               <span>Hall of Peeks</span>
@@ -131,7 +130,6 @@ export default async function TopPeeksPage() {
               Banners hang for the community&rsquo;s best.
             </p>
           </div>
-          <div className="arena-beam" aria-hidden />
         </section>
 
         <div className="mx-auto max-w-3xl px-4">
