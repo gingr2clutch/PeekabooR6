@@ -823,13 +823,13 @@ h4 {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -40px;
-  height: 172px;
+  bottom: -44px;
+  height: 190px;
   background: radial-gradient(
-    82% 100% at 50% 100%,
-    rgba(255, 132, 12, 0.66),
-    rgba(255, 62, 0, 0.28) 46%,
-    transparent 74%
+    94% 100% at 50% 100%,
+    rgba(255, 138, 18, 0.74),
+    rgba(255, 66, 0, 0.36) 52%,
+    transparent 78%
   );
   filter: blur(12px);
   animation: arena-fire-glow 3.4s ease-in-out infinite;
@@ -842,7 +842,7 @@ h4 {
   /* normal blend so the flames show on the light page (screen only glows on
      a dark backdrop) */
   filter: blur(5px);
-  opacity: 0.9;
+  opacity: 0.8;
 }
 /* Flame tongues. Positioned by inline --left/width/height; flicker by
    scaling up from a bottom origin while swaying + fading. */
@@ -856,15 +856,15 @@ h4 {
   -webkit-mask-image: linear-gradient(
     to top,
     #000 0%,
-    #000 26%,
-    rgba(0, 0, 0, 0.45) 62%,
+    #000 42%,
+    rgba(0, 0, 0, 0.5) 72%,
     transparent 100%
   );
   mask-image: linear-gradient(
     to top,
     #000 0%,
-    #000 26%,
-    rgba(0, 0, 0, 0.45) 62%,
+    #000 42%,
+    rgba(0, 0, 0, 0.5) 72%,
     transparent 100%
   );
   animation: arena-flicker var(--dur, 1.6s) ease-in-out infinite;
