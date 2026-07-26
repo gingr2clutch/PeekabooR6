@@ -1077,6 +1077,34 @@ h4 {
   backface-visibility: hidden;
   animation: arena-unfurl 1050ms cubic-bezier(0.33, 1, 0.68, 1) both;
 }
+/* A soft glint that periodically sweeps across the banner (clipped to the
+   pennant shape by the card's clip-path). Staggered per rank below. */
+.arena-banner-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 55%;
+  pointer-events: none;
+  background: linear-gradient(
+    118deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-190%) skewX(-14deg);
+  animation: arena-sheen 5.5s ease-in-out infinite;
+}
+.arena-banner--1 .arena-banner-card::after {
+  animation-delay: 0.6s;
+}
+.arena-banner--2 .arena-banner-card::after {
+  animation-delay: 2.2s;
+}
+.arena-banner--3 .arena-banner-card::after {
+  animation-delay: 3.8s;
+}
 .arena-banner--1 .arena-banner-card {
   height: 252px; /* only slightly taller; tips still nearly align */
   padding: 16px 12px 24px;
@@ -1412,11 +1440,26 @@ h4 {
     opacity: 1;
   }
 }
+/* Quick glint sweep, then a long pause before it repeats (a subtle shimmer). */
+@keyframes arena-sheen {
+  0% {
+    transform: translateX(-190%) skewX(-14deg);
+  }
+  16% {
+    transform: translateX(220%) skewX(-14deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-14deg);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .arena-banner-card {
     animation: none !important;
     transform: none !important;
     opacity: 1 !important;
+  }
+  .arena-banner-card::after {
+    animation: none !important;
   }
   /* No fire motion; hide the flames and freeze the title glow. */
   .arena-fire {
