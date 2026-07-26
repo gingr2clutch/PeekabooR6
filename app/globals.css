@@ -1290,37 +1290,49 @@ h4 {
   padding: 12px 14px;
   border: 1px solid #e6dfcf;
   border-radius: 14px;
-  /* faint paper texture + top sheen */
+  /* subtle wash toward the peek's grade-tier color (fallback for no color-mix) */
   background-color: #fffdf7;
+  background-color: color-mix(in srgb, var(--tier, #0e8f8b) 7%, #fffdf7);
+  border-color: #e6dfcf;
+  border-color: color-mix(in srgb, var(--tier, #0e8f8b) 22%, #e6dfcf);
   background-image:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 42%),
-    repeating-linear-gradient(
-      45deg,
-      rgba(120, 100, 60, 0.016) 0 1px,
-      transparent 1px 4px
-    );
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 42%);
+  /* colored left accent stripe (tier color) + top sheen */
+  box-shadow:
+    inset 3px 0 0 var(--tier, #0e8f8b),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transition:
     border-color 150ms ease,
-    box-shadow 150ms ease;
+    box-shadow 150ms ease,
+    background-color 150ms ease;
 }
 .arena-climb-link:hover {
-  border-color: #cdbf9f;
-  /* teal accent edge + lift */
+  border-color: color-mix(in srgb, var(--tier, #0e8f8b) 48%, #e6dfcf);
+  background-color: color-mix(in srgb, var(--tier, #0e8f8b) 14%, #fffdf7);
   box-shadow:
-    inset 3px 0 0 rgba(14, 143, 139, 0.55),
+    inset 4px 0 0 var(--tier, #0e8f8b),
     0 8px 18px -12px rgba(20, 16, 8, 0.42);
 }
 .arena-climb-link:focus-visible {
   outline: 2px solid #0e8f8b;
   outline-offset: 2px;
 }
+/* Rank as a small colored token tinted by the grade tier. */
 .arena-climb-rank {
   flex-shrink: 0;
-  width: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background-color: #eef0f2;
+  background-color: color-mix(in srgb, var(--tier, #0e8f8b) 18%, #ffffff);
   font-family: var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 13px;
-  color: #8a8274;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b6d66;
+  color: color-mix(in srgb, var(--tier, #0e8f8b) 72%, #1b1813);
 }
 .arena-climb-main {
   min-width: 0;

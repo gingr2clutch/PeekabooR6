@@ -222,7 +222,11 @@ function ClimbRow({
 
   return (
     <li className="arena-climb">
-      <Link href={`/peeks/${peek.slug}?from=top`} className="arena-climb-link">
+      <Link
+        href={`/peeks/${peek.slug}?from=top`}
+        className="arena-climb-link"
+        style={{ ["--tier"]: gradeTierColor(r.label) } as CSSProperties}
+      >
         <span className="arena-climb-rank">{rank}</span>
         <span className="arena-climb-main">
           <span className="arena-climb-name">
