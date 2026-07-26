@@ -806,6 +806,95 @@ h4 {
   color: #6f716a;
   letter-spacing: 0.01em;
 }
+
+/* --- Rotating diamond (underrated header) --------------------------------
+   A faceted brilliant-cut gem that spins in 3D (rotateY), with twinkling
+   sparkles around it. */
+.arena-gem-stage {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 10px;
+  perspective: 620px;
+}
+.arena-gem {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: arena-gem-spin 5.5s linear infinite;
+  filter: drop-shadow(0 5px 9px rgba(14, 143, 139, 0.4));
+}
+.arena-gem-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+@keyframes arena-gem-spin {
+  0% {
+    transform: rotateX(10deg) rotateY(0deg);
+  }
+  100% {
+    transform: rotateX(10deg) rotateY(360deg);
+  }
+}
+.arena-gem-spark {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(
+    closest-side,
+    #ffffff,
+    rgba(214, 248, 246, 0.6) 45%,
+    rgba(255, 255, 255, 0) 72%
+  );
+  clip-path: polygon(
+    50% 0,
+    58% 42%,
+    100% 50%,
+    58% 58%,
+    50% 100%,
+    42% 58%,
+    0 50%,
+    42% 42%
+  );
+  opacity: 0;
+  transform: scale(0);
+  animation: arena-gem-spark 2.6s ease-in-out infinite;
+}
+.arena-gem-spark--1 {
+  top: 4px;
+  right: 6px;
+}
+.arena-gem-spark--2 {
+  bottom: 14px;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  animation-delay: 0.9s;
+}
+.arena-gem-spark--3 {
+  top: 30px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  animation-delay: 1.7s;
+}
+@keyframes arena-gem-spark {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1) rotate(35deg);
+  }
+  62% {
+    opacity: 0.85;
+    transform: scale(0.82) rotate(45deg);
+  }
+}
+
 /* --- Rafter fire ---------------------------------------------------------
    Flames rise from the beam (bottom of the grey) up around the title. Sits
    above the grain but behind the header text (which is a later .arena-rafter
@@ -1472,6 +1561,14 @@ h4 {
   }
   .arena-banner-card::after {
     animation: none !important;
+  }
+  /* Freeze the diamond at a nice angle; hide sparkles. */
+  .arena-gem {
+    animation: none !important;
+    transform: rotateX(10deg) rotateY(-22deg);
+  }
+  .arena-gem-spark {
+    display: none;
   }
   /* No fire motion; hide the flames and freeze the title glow. */
   .arena-fire {
