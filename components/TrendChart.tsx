@@ -85,6 +85,21 @@ export function TrendChart({
         strokeLinejoin="round"
       />
 
+      {/* Soft light that travels along the line (see .chart-shine). Overlay of
+          the same path; brightens over the line without hiding it. */}
+      <path
+        d={path}
+        className="chart-shine"
+        pathLength={100}
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth={3.5}
+        strokeOpacity={0.65}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      />
+
       {/* Point dots with accessible/hover titles. */}
       {laid.map((pt) => (
         <circle key={pt.point.date} cx={pt.x} cy={pt.y} r={2.6} fill={color}>

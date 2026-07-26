@@ -62,6 +62,34 @@ h4 {
   }
 }
 
+/* Trend-chart shine — a soft light highlight that travels along the line.
+   `.chart-shine` is an overlay <path> sharing the data line's `d`; one dash
+   sweeps across it, then pauses off-screen and repeats. pathLength=100
+   normalizes the dash math to any line length, so it works on every chart.
+   It brightens over the line without hiding it. */
+.chart-shine {
+  stroke-dasharray: 16 220;
+  stroke-dashoffset: 16;
+  animation: chart-shine-travel 5s ease-in-out infinite;
+  will-change: stroke-dashoffset;
+}
+@keyframes chart-shine-travel {
+  0% {
+    stroke-dashoffset: 16;
+  }
+  70% {
+    stroke-dashoffset: -132;
+  }
+  100% {
+    stroke-dashoffset: -132;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chart-shine {
+    display: none;
+  }
+}
+
 /* Staggered entrance for floor-page peek pins. Each pin's wrapper sets
    its own animation-delay so #1 lands first, #2 next, etc. */
 @keyframes peek-pin-in {
