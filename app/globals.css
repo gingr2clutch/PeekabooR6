@@ -852,7 +852,7 @@ h4 {
   /* normal blend so the flames show on the light page (screen only glows on
      a dark backdrop) */
   filter: blur(5px);
-  opacity: 0.6;
+  opacity: 0.45;
 }
 /* Flame tongues. Positioned by inline --left/width/height; flicker by
    scaling up from a bottom origin while swaying + fading. */
