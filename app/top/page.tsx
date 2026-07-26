@@ -192,7 +192,11 @@ function Banner({ peek, rank }: { peek: PeekWithContext; rank: number }) {
         </span>
         <span className="flex items-center gap-1.5">
           {peek.is_pro_only && <ProLockBadge />}
-          <span className="arena-grade" aria-label={`Grade ${r.label}`}>
+          <span
+            className="arena-grade"
+            style={{ backgroundColor: gradeTierColor(r.label) }}
+            aria-label={`Grade ${r.label}`}
+          >
             {r.label}
           </span>
         </span>

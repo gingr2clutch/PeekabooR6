@@ -783,7 +783,7 @@ h4 {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  color: #7c7e76;
+  color: #0e8f8b;
   font-family: var(--font-plex-mono), ui-monospace, monospace;
   font-size: 12.5px;
   font-weight: 600;
@@ -793,7 +793,8 @@ h4 {
 .arena-eyebrow-rule {
   height: 1px;
   width: 34px;
-  background: #b7b4a8;
+  background: #0e8f8b;
+  opacity: 0.5;
 }
 .arena-title {
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
@@ -1196,7 +1197,7 @@ h4 {
   height: 30px;
   padding: 0 8px;
   border-radius: 8px;
-  background-color: #0e8f8b;
+  /* base color comes inline from gradeTierColor(); gloss layered over it */
   background-image: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.24),
