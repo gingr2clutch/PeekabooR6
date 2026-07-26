@@ -269,22 +269,23 @@ export default async function PeekDetailPage({
 
         {/* Hero stats card — 32px below header */}
         <section className="mt-6 rounded-card border border-border bg-card p-4 md:mt-8 md:p-8">
-          <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-            <StatCell label="Effectiveness">
-              <SuccessStat peek={peek} trend={trendDirection} />
-            </StatCell>
-            <StatCell label="Difficulty">
-              <DifficultyDots difficulty={peek.difficulty} />
-            </StatCell>
-            <StatCell label="Risk">
-              <RiskPill risk={peek.risk} />
-            </StatCell>
-          </div>
+          {/* Order: Effectiveness → its C·B·A·S grade bar → Risk → Difficulty. */}
+          <StatCell label="Effectiveness">
+            <SuccessStat peek={peek} trend={trendDirection} />
+          </StatCell>
           <GradeBar
             baseSuccessRate={peek.base_success_rate}
             workedVotes={peek.worked_votes}
             voteCount={peek.vote_count}
           />
+          <div className="mt-6 grid grid-cols-1 divide-y divide-border border-t border-border pt-2 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+            <StatCell label="Risk">
+              <RiskPill risk={peek.risk} />
+            </StatCell>
+            <StatCell label="Difficulty">
+              <DifficultyDots difficulty={peek.difficulty} />
+            </StatCell>
+          </div>
         </section>
 
         {/* Effectiveness trend — daily snapshots. Cold-start grace: < 2 points
