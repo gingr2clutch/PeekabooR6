@@ -250,23 +250,6 @@ h4 {
   }
 }
 
-/* TEMP: Calypso Casino "new map" highlight on the homepage Maps grid.
-   Remove with the matching block in app/page.tsx when no longer the
-   newest map. Search "new-map-glow" or "Calypso Casino" to find.
-
-   The ONE sanctioned glow on the site: a STATIC, soft orange-tinted spotlight
-   at low opacity (~14%) with a tight spread — a gentle "this is new" halo,
-   clearly quieter than the solid orange selected-state border. Layered on top
-   of the shared soft card shadow so the new card keeps the same lift as the
-   rest of the grid. No animation. */
-/* Scoped to .map-card so it wins over the shared .elev-card base shadow at
-   rest (equal specificity would otherwise let the later .elev-card override the
-   glow). On hover the card steps up to the standard lift shadow. */
-.map-card.new-map-glow {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09),
-    0 0 14px 1px rgba(242, 100, 14, 0.14);
-}
-
 /* --- Elevation system -----------------------------------------------------
    One shadow language for the homepage surfaces, in deliberately small steps so
    the hierarchy reads without heaviness:

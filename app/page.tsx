@@ -8,24 +8,15 @@ import { getHomeStats, getMaps } from "@/lib/db";
 import {
   getMapPeekCounts,
   getMapVoteActivity,
-  getRecentPeekCountsByMap,
 } from "@/lib/map-activity";
 import { BackToTop } from "@/components/BackToTop";
 
 export const dynamic = "force-dynamic";
 
-// TEMP: Calypso Casino "new map" highlight. Pinned to first position +
-// rendered with a soft static orange glow and a "NEW MAP" badge. To remove:
-// drop this constant, the pin-to-front block below, the isNewMap branch
-// in the card render, and the .new-map-glow rules in app/globals.css.
-const NEW_MAP_NAME = "Calypso Casino";
-
 export default async function Home() {
   const all = await getMaps();
   const stats = await getHomeStats();
   const activity = await getMapVoteActivity();
-  // Peeks added per map in the last 72h → the "N new" accent on fresh maps.
-  const recentPeeks = await getRecentPeekCountsByMap(72);
   // Published-peek counts per map → the map card status line ("N peeks · N S-tier").
   const mapPeekCounts = await getMapPeekCounts();
   const votesFor = (id: string) =>
@@ -45,16 +36,6 @@ export default async function Home() {
       return bv.allTimeVotes - av.allTimeVotes;
     return a.name.localeCompare(b.name);
   });
-
-  // TEMP: pull the new-map card to position 0 if it's published. No-op
-  // if it isn't found or isn't published (keeps sort behaviour intact).
-  const newMapIdx = maps.findIndex(
-    (m) => m.name === NEW_MAP_NAME && m.published
-  );
-  if (newMapIdx > 0) {
-    const [pinned] = maps.splice(newMapIdx, 1);
-    maps.unshift(pinned);
-  }
 
   return (
     <>
@@ -111,8 +92,6 @@ export default async function Home() {
         >
           {maps.map((map) => {
             const hasCover = !!map.cover_image_url;
-            // Peeks added on this map in the last 72h (accent shown when > 0).
-            const recentCount = recentPeeks.get(map.id) ?? 0;
             // Live per-map counts → one short status line under the name.
             const counts = mapPeekCounts.get(map.id);
             const statusParts: string[] = [];
@@ -154,32 +133,15 @@ export default async function Home() {
             );
 
             if (map.published) {
-              // TEMP: Calypso Casino new-map highlight branch.
-              const isNewMap = map.name === NEW_MAP_NAME;
               return (
                 <li key={map.id}>
                   <Link
                     href={`/maps/${map.slug}`}
                     className={`${cardBase} map-card border-2 border-white ${
-                      isNewMap ? "new-map-glow" : ""
-                    } ${
                       hasCover ? "" : "bg-card text-ink"
                     } motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.97]`}
                   >
                     {cover}
-                    {isNewMap && (
-                      <span className="absolute right-1.5 top-1.5 z-20 inline-flex items-center rounded-btn bg-purple-600 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-white shadow-sm">
-                        New map
-                      </span>
-                    )}
-                    {/* Fresh-peeks accent — top-LEFT so it never collides with
-                        the top-right NEW MAP badge. Suppressed on the new-map
-                        card (redundant there) and when there are none. */}
-                    {!isNewMap && recentCount > 0 && (
-                      <span className="absolute left-1.5 top-1.5 z-20 inline-flex items-center rounded-btn bg-brand px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-white shadow-sm">
-                        {recentCount} new
-                      </span>
-                    )}
                     {label}
                   </Link>
                 </li>
