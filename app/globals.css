@@ -1068,49 +1068,14 @@ h4 {
     50% 100%,
     0 calc(100% - 14px)
   );
-  /* Unrolls top→bottom: the pennant clip-path reveals downward while a roller
-     bar (::before) travels down the fold. A tiny vertical settle at the end —
-     no side-to-side sway. */
+  /* Hinged at the top (the beam): the banner starts rolled up and tipped
+     back, then unfurls downward into the hanging plane. */
+  transform-origin: top center;
+  transform: perspective(1100px) rotateX(-84deg) scaleY(0.28);
   opacity: 0;
-  will-change: clip-path, transform;
-  animation: arena-unroll 1150ms cubic-bezier(0.32, 0.72, 0.28, 1) both;
-}
-/* The rolled "cylinder" at the fold, descending as the banner unrolls. Clipped
-   to the pennant by the card, so its lower half tucks under the fold. */
-.arena-banner-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -3%;
-  width: 106%;
-  height: 15px;
-  z-index: 4;
-  pointer-events: none;
-  border-radius: 4px;
-  /* dark → highlight → dark reads as a rounded roll */
-  background: linear-gradient(
-    to bottom,
-    rgba(45, 30, 5, 0.4) 0%,
-    rgba(60, 42, 12, 0.5) 18%,
-    rgba(255, 250, 235, 0.55) 46%,
-    rgba(70, 48, 14, 0.5) 82%,
-    rgba(35, 22, 2, 0.55) 100%
-  );
-  opacity: 0;
-  transform: translateY(-12px);
-  animation: arena-roller-228 1150ms cubic-bezier(0.32, 0.72, 0.28, 1) both;
-}
-.arena-banner--1 .arena-banner-card::before {
-  animation-name: arena-roller-252;
-}
-.arena-banner--3 .arena-banner-card::before {
-  animation-delay: 0ms;
-}
-.arena-banner--2 .arena-banner-card::before {
-  animation-delay: 200ms;
-}
-.arena-banner--1 .arena-banner-card::before {
-  animation-delay: 420ms;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  animation: arena-unfurl 1050ms cubic-bezier(0.33, 1, 0.68, 1) both;
 }
 /* A soft glint that periodically sweeps across the banner (clipped to the
    pennant shape by the card's clip-path). Staggered per rank below. */
@@ -1441,80 +1406,38 @@ h4 {
   line-height: 1;
 }
 
-/* --- The unroll: the pennant clip-path reveals top→bottom (like a scroll
-   rolling down) while ::before (the roller) travels down the fold. A tiny
-   vertical settle at the end — no side-to-side motion. The bottom clip points
-   start at y=0 (fully rolled at the top) and descend to the full pennant.
-   opacity is pinned at 100% so it doesn't fade back out. --- */
-@keyframes arena-unroll {
+/* --- The signature unfurl: the banner is hinged at the top (the beam) and
+   starts rolled up + tipped back (rotateX -84deg, scaleY 0.28). It swings
+   down and unrolls into the hanging plane (rotateX → 0, scaleY → 1) with a
+   soft overshoot as the fabric catches, then a small damped side-to-side sway
+   (rotateZ) as it settles. One timeline so every phase shares `transform`.
+   opacity is pinned at 100% — otherwise CSS synthesizes an implicit end
+   keyframe from the base value (opacity: 0) and fades the banner back out. --- */
+@keyframes arena-unfurl {
   0% {
-    clip-path: polygon(0 0, 100% 0, 100% 0%, 50% 0%, 0 0%);
+    transform: perspective(1100px) rotateX(-84deg) scaleY(0.28) rotateZ(0deg);
     opacity: 0;
   }
-  7% {
+  22% {
     opacity: 1;
   }
-  84% {
-    clip-path: polygon(
-      0 0,
-      100% 0,
-      100% calc(100% - 14px),
-      50% 100%,
-      0 calc(100% - 14px)
-    );
-    transform: translateY(0);
+  48% {
+    /* fabric overshoots past flat — tips slightly forward and stretches */
+    transform: perspective(1100px) rotateX(9deg) scaleY(1.06) rotateZ(0deg);
     opacity: 1;
   }
-  92% {
-    /* the last of the roll drops and settles vertically */
-    transform: translateY(3px);
+  64% {
+    transform: perspective(1100px) rotateX(-4deg) scaleY(0.985) rotateZ(1.1deg);
+  }
+  78% {
+    transform: perspective(1100px) rotateX(2deg) scaleY(1) rotateZ(-0.7deg);
+  }
+  90% {
+    transform: perspective(1100px) rotateX(0deg) scaleY(1) rotateZ(0.3deg);
   }
   100% {
-    clip-path: polygon(
-      0 0,
-      100% 0,
-      100% calc(100% - 14px),
-      50% 100%,
-      0 calc(100% - 14px)
-    );
-    transform: translateY(0);
+    transform: perspective(1100px) rotateX(0deg) scaleY(1) rotateZ(0deg);
     opacity: 1;
-  }
-}
-/* Roller travels down the fold, synced with the reveal, then fades once the
-   banner is fully unrolled. Two variants for the two card heights. */
-@keyframes arena-roller-228 {
-  0% {
-    transform: translateY(-12px);
-    opacity: 0;
-  }
-  7% {
-    opacity: 0.85;
-  }
-  84% {
-    transform: translateY(207px);
-    opacity: 0.85;
-  }
-  100% {
-    transform: translateY(213px);
-    opacity: 0;
-  }
-}
-@keyframes arena-roller-252 {
-  0% {
-    transform: translateY(-12px);
-    opacity: 0;
-  }
-  7% {
-    opacity: 0.85;
-  }
-  84% {
-    transform: translateY(231px);
-    opacity: 0.85;
-  }
-  100% {
-    transform: translateY(237px);
-    opacity: 0;
   }
 }
 /* Quick glint sweep, then a long pause before it repeats (a subtle shimmer). */
@@ -1537,9 +1460,6 @@ h4 {
   }
   .arena-banner-card::after {
     animation: none !important;
-  }
-  .arena-banner-card::before {
-    display: none;
   }
   /* No fire motion; hide the flames and freeze the title glow. */
   .arena-fire {
