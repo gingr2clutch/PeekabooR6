@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
-import { ProLockBadge } from "@/components/ProLockBadge";
 import { ExploreNext } from "@/components/ExploreNext";
 import { getUnderratedPeeks, type PeekWithContext } from "@/lib/db";
 import { rating, gradeTierColor } from "@/lib/rate";
@@ -172,7 +171,6 @@ function Podium({ peek, rank }: { peek: PeekWithContext; rank: number }) {
             {map.name} · {floor.name}
           </span>
           <span className="arena-podium-meta">
-            {peek.is_pro_only && <ProLockBadge />}
             <span
               className="arena-grade"
               style={{ backgroundColor: gradeTierColor(r.label) }}
@@ -224,7 +222,6 @@ function ClimbRow({
                 ▼
               </span>
             )}
-            {peek.is_pro_only && <ProLockBadge />}
           </span>
           <span className="arena-climb-loc">
             {map.name} · {floor.name}

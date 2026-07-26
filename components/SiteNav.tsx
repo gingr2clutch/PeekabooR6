@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   BookOpen,
   ChevronRight,
-  Crown,
   Flame,
   Gem,
   Handshake,
@@ -34,7 +33,6 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Maps", Icon: Map },
   { href: "/top", label: "Top", Icon: Flame },
   { href: "/underrated", label: "Underrated", Icon: Gem },
-  { href: "/pro", label: "Pro", Icon: Crown },
   { href: "/sponsor", label: "Partner", Icon: Handshake },
 ];
 
@@ -74,8 +72,6 @@ const SECTIONS: { label: string; items: MenuItem[] }[] = [
     items: [
       { href: "/blog", label: "Guides", subtitle: "Tips & strategy", Icon: BookOpen },
       { href: "/compare", label: "Compare maps", subtitle: "Map vs map", Icon: Scale },
-      // The NEW pill is a plain prop — drop `badge` at the Pro launch.
-      { href: "/pro", label: "Pro", subtitle: "Unlock everything", Icon: Crown, pro: true, badge: "NEW" },
     ],
   },
 ];

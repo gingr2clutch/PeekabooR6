@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import { BestPeek } from "@/components/BestPeek";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { GradeBadge } from "@/components/GradeBadge";
-import { ProLockBadge } from "@/components/ProLockBadge";
 import { MapStats } from "@/components/MapStats";
 import { MapViewToggle } from "@/components/MapViewToggle";
 import { PageHeader } from "@/components/PageHeader";
@@ -294,7 +293,6 @@ export default async function MapPage({
                               )}
                             />
                           </span>
-                          {peek.is_pro_only && <ProLockBadge />}
                           <span className="shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted tabular-nums">
                             {peek.vote_count}{" "}
                             {peek.vote_count === 1 ? "vote" : "votes"}

@@ -36,12 +36,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
     {
-      url: `${BASE_URL}/pro`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
       url: `${BASE_URL}/about`,
       lastModified: now,
       changeFrequency: "monthly",
@@ -109,13 +103,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   );
 
-  // Only include peeks whose parent map is also published. Pro-only peeks are
-  // gated content, so they're excluded here (and marked noindex on their page).
+  // Only include peeks whose parent map is also published.
   const { data: peeks } = await supabase
     .from("peeks")
     .select("slug, floors!inner(maps!inner(published))")
     .eq("published", true)
-    .eq("is_pro_only", false)
     .eq("floors.maps.published", true);
 
   const peekEntries: MetadataRoute.Sitemap = (peeks ?? []).map(

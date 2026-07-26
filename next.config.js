@@ -53,6 +53,14 @@ const nextConfig = {
         permanent: true,
       },
       {
+        // /pro (Pro tier / waitlist) unlaunched — send links home. Temporary
+        // (307) since the Pro tier may return; the underlying infra is dormant,
+        // not deleted.
+        source: "/pro",
+        destination: "/",
+        permanent: false,
+      },
+      {
         source: "/ads.txt",
         // Grow's hosted file lives at .../sites/{id}/ads.txt — the bare
         // /sites/{id} path returns a 403 from their API gateway.

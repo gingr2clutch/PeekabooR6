@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { GradeBadge } from "@/components/GradeBadge";
-import { ProLockBadge } from "@/components/ProLockBadge";
 import type { PeekWithContext } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
 
@@ -86,7 +85,6 @@ export function BestPeek({
       </div>
 
       <div className="shrink-0 text-right">
-        {peek.is_pro_only && <ProLockBadge className="mb-1" />}
         <GradeBadge label={r.label} score={r.score} />
         <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
           {votesText(peek.vote_count ?? 0)}

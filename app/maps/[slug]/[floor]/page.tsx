@@ -12,7 +12,6 @@ import {
   getPublishedPeeksForFloor,
   getUnderratedTopIds,
 } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -71,14 +70,8 @@ export default async function FloorPage({
   if (!floor) notFound();
 
   const peeks = await getPublishedPeeksForFloor(floor.id);
-  // Pin gating (option A): Pro-only peeks are hidden from the bird's-eye map for
-  // non-Pro viewers (their position is gated), but still appear in the text list
-  // below with a Pro lock badge. Pro users see every pin.
-  const user = await getCurrentUser();
-  const visibleForPins = user?.isPro
-    ? peeks
-    : peeks.filter((p) => !p.is_pro_only);
-  const positioned = fanOutCoincidentPins(visibleForPins);
+  // Every peek's position is public (Pro tier not launched).
+  const positioned = fanOutCoincidentPins(peeks);
   // Same query path /maps/[slug]/page.tsx uses — one extra round trip,
   // ordered by display_order ascending.
   const allFloors = await getFloorsForMap(map.id);
