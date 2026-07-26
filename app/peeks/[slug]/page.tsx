@@ -591,7 +591,7 @@ function StatRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+    <div className="flex h-[52px] items-center justify-between">
       <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted">
         {label}
       </span>
@@ -602,11 +602,11 @@ function StatRow({
 
 function DifficultyDots({ difficulty }: { difficulty: number }) {
   return (
-    <div className="flex gap-1 md:gap-2.5">
+    <div className="flex gap-1.5">
       {[1, 2, 3, 4, 5].map((n) => (
         <span
           key={n}
-          className={`h-2 w-2 rounded-full md:h-4 md:w-4 ${
+          className={`h-2.5 w-2.5 rounded-full ${
             n <= difficulty ? "bg-ink" : "bg-border"
           }`}
         />
@@ -624,7 +624,7 @@ function RiskPill({ risk }: { risk: string }) {
         : "text-amber-700 bg-amber-50 border-amber-200";
   return (
     <span
-      className={`inline-flex items-center rounded-btn border px-2 py-0.5 text-xs font-medium capitalize md:px-4 md:py-2 md:text-lg ${riskColor}`}
+      className={`inline-flex items-center rounded-btn border px-2.5 py-1 text-xs font-medium capitalize ${riskColor}`}
     >
       {risk}
     </span>
