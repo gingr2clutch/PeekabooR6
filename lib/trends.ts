@@ -270,14 +270,86 @@ export function layoutSeries(
   return out;
 }
 
-// SVG path `d` from laid-out points, starting a fresh subpath after any gap.
+// SVG path `d` from laid-out points, using a monotone cubic spline so the line
+// flows smoothly instead of connecting sharp segments. A fresh subpath starts
+// after any gap; curves are computed within a contiguous run only.
+//
+// Monotone (Fritsch–Carlson): the cubic is monotone on every segment, so it
+// passes through each point WITHOUT overshooting past the data — a peek that
+// went 78% → 81% never bows up to imply 83%.
 export function pathFromLayout(laid: LaidPoint[]): string {
-  return laid
-    .map(
-      (pt, i) =>
-        `${i === 0 || pt.gapBefore ? "M" : "L"} ${pt.x.toFixed(1)} ${pt.y.toFixed(
-          1
-        )}`
-    )
-    .join(" ");
+  if (laid.length === 0) return "";
+
+  // Split into contiguous runs at gap boundaries (never curve across a gap).
+  const runs: LaidPoint[][] = [];
+  let cur: LaidPoint[] = [];
+  for (const pt of laid) {
+    if (pt.gapBefore && cur.length) {
+      runs.push(cur);
+      cur = [];
+    }
+    cur.push(pt);
+  }
+  if (cur.length) runs.push(cur);
+
+  return runs.map(monotoneRunPath).join(" ");
+}
+
+// One contiguous run → "M … C … C …" via monotone cubic interpolation.
+function monotoneRunPath(run: LaidPoint[]): string {
+  const n = run.length;
+  const x = run.map((p) => p.x);
+  const y = run.map((p) => p.y);
+  const move = `M ${x[0].toFixed(1)} ${y[0].toFixed(1)}`;
+  if (n === 1) return move;
+
+  // Secant slopes between consecutive points.
+  const d = new Array<number>(n - 1);
+  for (let i = 0; i < n - 1; i++) {
+    const dx = x[i + 1] - x[i];
+    d[i] = dx === 0 ? 0 : (y[i + 1] - y[i]) / dx;
+  }
+
+  // Tangents at each point: 0 at a local extremum (sign change / flat) so the
+  // curve turns without overshooting; averaged elsewhere. Endpoints use the
+  // adjacent secant.
+  const m = new Array<number>(n);
+  m[0] = d[0];
+  m[n - 1] = d[n - 2];
+  for (let i = 1; i < n - 1; i++) {
+    m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+  }
+
+  // Clamp so each segment stays monotone (Fritsch–Carlson: α² + β² ≤ 9). This
+  // keeps every cubic inside its [yᵢ, yᵢ₊₁] band → the line can't overshoot.
+  for (let i = 0; i < n - 1; i++) {
+    if (d[i] === 0) {
+      m[i] = 0;
+      m[i + 1] = 0;
+      continue;
+    }
+    const a = m[i] / d[i];
+    const b = m[i + 1] / d[i];
+    const s = a * a + b * b;
+    if (s > 9) {
+      const t = 3 / Math.sqrt(s);
+      m[i] = t * a * d[i];
+      m[i + 1] = t * b * d[i];
+    }
+  }
+
+  // Hermite tangents → cubic Bézier control points (⅓ of the segment width).
+  let out = move;
+  for (let i = 0; i < n - 1; i++) {
+    const dx = (x[i + 1] - x[i]) / 3;
+    const c1x = x[i] + dx;
+    const c1y = y[i] + dx * m[i];
+    const c2x = x[i + 1] - dx;
+    const c2y = y[i + 1] - dx * m[i + 1];
+    out +=
+      ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(
+        1
+      )}, ${x[i + 1].toFixed(1)} ${y[i + 1].toFixed(1)}`;
+  }
+  return out;
 }
