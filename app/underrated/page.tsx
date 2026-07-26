@@ -109,9 +109,9 @@ export default async function UnderratedPage() {
               peek picks up a few (but not too many) votes.
             </p>
           ) : (
-            <ol className="arena-list">
+            <ol className="arena-list arena-list--podium">
               {banners.map((peek, i) => (
-                <Banner key={peek.id} peek={peek} rank={i + 1} />
+                <Podium key={peek.id} peek={peek} rank={i + 1} />
               ))}
 
               {gems.length > 0 && (
@@ -140,41 +140,43 @@ export default async function UnderratedPage() {
   );
 }
 
-function Banner({ peek, rank }: { peek: PeekWithContext; rank: number }) {
+function Podium({ peek, rank }: { peek: PeekWithContext; rank: number }) {
   const floor = peek.floors!;
   const map = floor.maps;
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   const votes = peek.vote_count ?? 0;
 
   return (
-    <li className={`arena-banner arena-banner--${rank}`}>
+    <li className={`arena-podium arena-podium--${rank}`}>
       <Link
         href={`/peeks/${peek.slug}?from=underrated`}
-        className="arena-banner-card"
+        className="arena-podium-link"
       >
         {rank === 1 && (
-          <span className="arena-crown" aria-hidden>
+          <span className="arena-podium-crown" aria-hidden>
             👑
           </span>
         )}
-        <span className={`arena-coin arena-coin--${rank}`} aria-hidden>
-          {rank}
-        </span>
-        <span className="arena-name">{peek.name}</span>
-        <span className="arena-loc">
-          {map.name} · {floor.name}
-        </span>
-        <span className="flex items-center gap-1.5">
-          {peek.is_pro_only && <ProLockBadge />}
-          <span
-            className="arena-grade"
-            style={{ backgroundColor: gradeTierColor(r.label) }}
-            aria-label={`Grade ${r.label}`}
-          >
-            {r.label}
+        <div className="arena-podium-info">
+          <span className="arena-podium-name">{peek.name}</span>
+          <span className="arena-podium-loc">
+            {map.name} · {floor.name}
           </span>
-        </span>
-        <span className="arena-votes">{voteLabel(votes)}</span>
+          <span className="arena-podium-meta">
+            {peek.is_pro_only && <ProLockBadge />}
+            <span
+              className="arena-grade"
+              style={{ backgroundColor: gradeTierColor(r.label) }}
+              aria-label={`Grade ${r.label}`}
+            >
+              {r.label}
+            </span>
+          </span>
+          <span className="arena-podium-votes">{voteLabel(votes)}</span>
+        </div>
+        <div className="arena-podium-block">
+          <span className="arena-podium-rank">{rank}</span>
+        </div>
       </Link>
     </li>
   );
