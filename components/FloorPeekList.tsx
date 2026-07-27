@@ -35,14 +35,6 @@ export function FloorPeekList({
       >
         Every spawn peek on {map.name} — {floor.name}, ranked by grade
       </h2>
-      <p className="mt-2 text-[15px] leading-relaxed text-muted">
-        These are the {peeks.length} spawn{" "}
-        {peeks.length === 1 ? "peek" : "peeks"} the community has mapped on{" "}
-        {map.name}&rsquo;s {floor.name} in Rainbow Six Siege, ordered from the
-        highest-rated angle to the lowest. Each grade reflects how reliably the
-        peek works in real matches — tap any peek to watch the clip, see the
-        exact spot on the map, and get the setup steps.
-      </p>
 
       <ol className="mt-6 space-y-3">
         {peeks.map((peek, i) => {
