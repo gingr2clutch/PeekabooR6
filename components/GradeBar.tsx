@@ -21,7 +21,7 @@ export function GradeBar({
   const color = gradeTierColor(r.label);
 
   return (
-    <div className="mt-6 border-t border-border pt-3">
+    <div className="border-t border-border pt-3">
       {/* pt-9 reserves room for the marker sitting above the bar */}
       <div className="relative pt-9">
         <div className="relative h-2 rounded-full" style={{ background: gradeBarGradientCss() }}>
