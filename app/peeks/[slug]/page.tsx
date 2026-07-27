@@ -23,7 +23,6 @@ import {
   computeDirection,
   getSnapshotsForPeek,
   getSnapshotsForPeeks,
-  trackingSinceLabel,
   type TrendDirection,
 } from "@/lib/trends";
 import { isUuid } from "@/lib/slug";
@@ -228,7 +227,6 @@ export default async function PeekDetailPage({
   // Effectiveness history (server-side; peek_snapshots is RLS-locked to the
   // service role). 30 days for the trend chart.
   const trendPoints = await getSnapshotsForPeek(peek.id, 30);
-  const trackingSince = trackingSinceLabel(trendPoints);
   // Effectiveness rating for the hero grade tile + measured stat line.
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   // Batched arrows for the "close by" list — one query, direction per peek.
@@ -272,8 +270,10 @@ export default async function PeekDetailPage({
           </p>
         </div>
 
-        {/* Hero stats card — 3-column grid + grade bar + summary row. */}
-        <section className="mt-6 rounded-card border border-border bg-card p-4 md:mt-8 md:p-6">
+        {/* Peek stats */}
+        <section className="mt-6 md:mt-8">
+          <SectionLabel>Peek stats</SectionLabel>
+          <div className="mt-4 rounded-card border border-border bg-card p-4 md:p-6">
           {/* Grade | Risk | Difficulty — always 3-across */}
           <div className="grid grid-cols-3">
             <StatCol label="Grade">
@@ -324,19 +324,29 @@ export default async function PeekDetailPage({
               </a>
             )}
           </div>
+          </div>
         </section>
 
-        {/* Effectiveness trend — daily snapshots. Cold-start grace: < 2 points
-            shows a "coming soon" note instead of an empty chart. */}
+        {/* Rate this peek — moved out of the stats card into its own card. */}
         <section className="mt-8">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-              Trend
-            </h2>
-            {trackingSince && (
-              <span className="text-[11px] text-muted">{trackingSince}</span>
-            )}
+          <SectionLabel>Rate this peek</SectionLabel>
+          <div
+            id="vote"
+            className="mt-4 flex scroll-mt-20 justify-center rounded-card border border-border bg-card p-4"
+          >
+            <VoteButtons
+              peekId={peek.id}
+              isLoggedIn={!!user}
+              initialVote={myVote?.choice ?? null}
+              initialDaysUntilRevote={myVote?.daysUntilRevote ?? 0}
+            />
           </div>
+        </section>
+
+        {/* Trend Chart — daily snapshots. Cold-start grace: < 2 points shows a
+            "coming soon" note instead of an empty chart. */}
+        <section className="mt-8">
+          <SectionLabel>Trend Chart</SectionLabel>
           {trendPoints.length < 2 ? (
             <p className="mt-4 rounded-card border border-border bg-card p-4 text-center text-sm text-muted">
               Trend data coming soon — effectiveness is snapshotted daily.
@@ -350,16 +360,6 @@ export default async function PeekDetailPage({
 
         {(
           <>
-            {/* Vote buttons — 16px below stats card */}
-            <div id="vote" className="mt-4 flex scroll-mt-20 justify-center">
-              <VoteButtons
-                peekId={peek.id}
-                isLoggedIn={!!user}
-                initialVote={myVote?.choice ?? null}
-                initialDaysUntilRevote={myVote?.daysUntilRevote ?? 0}
-              />
-            </div>
-
             {/* Content section — when there are no steps and no pro tip the
                 instructions column would be empty and the media column would
                 render at half width with dead space beside it. Drop to a
@@ -552,6 +552,16 @@ function buildBreadcrumbJsonLd(
 // Hero rating figure — the headline grade badge. Once a peek is vote-backed
 // (measured tier) the real percentage and vote count show beneath the grade;
 // estimate-tier peeks show the grade alone, never a percentage.
+// Section header above each card — reuses the page's existing 11px/0.12em
+// uppercase muted label style, with a hairline divider beneath (border-border).
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="border-b border-border pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+      {children}
+    </h2>
+  );
+}
+
 // Shown only on measured-tier peeks so the grade reads as community-backed
 // rather than an estimate.
 function PlayerVotedBadge() {
