@@ -251,7 +251,7 @@ export default async function PeekDetailPage({
           <div className="mb-3">
             <Link
               href={backHref}
-              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-btn px-2.5 py-1 text-sm font-medium text-brand transition-colors duration-150 ease-out hover:bg-brand/[0.08]"
+              className="inline-flex min-h-[40px] items-center gap-2 rounded-btn px-3 py-1.5 text-base font-semibold text-brand transition-colors duration-150 ease-out hover:bg-brand/[0.08]"
             >
               <BackArrowIcon />
               <span>Back</span>
@@ -676,8 +676,8 @@ function BackArrowIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      width="16"
-      height="16"
+      width="19"
+      height="19"
       aria-hidden
       className="fill-none stroke-current"
       strokeWidth={2}
