@@ -352,7 +352,7 @@ export default async function PeekDetailPage({
         {/* Rate this peek — the one loud section. The orange accent card lives
             inside VoteButtons so it collapses to a normal card once voted. */}
         <section className="mt-12">
-          <SectionLabel accent>Rate this peek</SectionLabel>
+          <SectionLabel>Rate this peek</SectionLabel>
           <div id="vote" className="mt-4 scroll-mt-20">
             <VoteButtons
               peekId={peek.id}
@@ -547,19 +547,9 @@ function buildBreadcrumbJsonLd(
 // estimate-tier peeks show the grade alone, never a percentage.
 // Section header above each card — reuses the page's existing 11px/0.12em
 // uppercase muted label style, with a hairline divider beneath (border-border).
-function SectionLabel({
-  children,
-  accent,
-}: {
-  children: React.ReactNode;
-  accent?: boolean;
-}) {
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2
-      className={`rounded-btn bg-brand/[0.08] px-3 py-2 text-lg font-semibold uppercase tracking-[0.12em] text-center ${
-        accent ? "text-brand" : "text-ink"
-      }`}
-    >
+    <h2 className="rounded-btn bg-brand/[0.08] px-3 py-2 text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
       {children}
     </h2>
   );
