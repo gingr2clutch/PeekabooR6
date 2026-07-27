@@ -556,7 +556,7 @@ function buildBreadcrumbJsonLd(
 // uppercase muted label style, with a hairline divider beneath (border-border).
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="border-b border-brand/20 pb-2 text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
+    <h2 className="text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
       {children}
     </h2>
   );
@@ -599,7 +599,7 @@ function StatCol({
   return (
     <div
       className={`flex flex-col items-center px-2 sm:px-3 ${
-        border ? "border-l border-brand/20" : ""
+        border ? "border-l border-border" : ""
       }`}
     >
       <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted">
