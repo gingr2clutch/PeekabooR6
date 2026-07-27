@@ -261,7 +261,7 @@ export default async function PeekDetailPage({
           <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
             {peek.name}
           </h1>
-          <p className="mt-3 text-sm text-muted">
+          <p className="mt-3 text-sm text-ink">
             <Link href={`/maps/${map.slug}`} className="hover:text-brand">
               {map.name}
             </Link>{" "}
