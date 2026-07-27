@@ -11,7 +11,7 @@ import {
   getRankedPeeksForMap,
 } from "@/lib/db";
 import type { Peek } from "@/lib/db";
-import { rating, gradeTierColor } from "@/lib/rate";
+import { rating, gradeTierColor, displayRate } from "@/lib/rate";
 
 export const dynamic = "force-dynamic";
 
@@ -155,33 +155,6 @@ export default async function FloorPage({
           )}
         </div>
 
-        {/* Floor-level stats — server-rendered so crawlers and ad units see
-            them on load. All values derived from this floor's peeks. */}
-        <div className="mx-auto mt-6 grid max-w-md grid-cols-2 sm:grid-cols-4">
-          <FloorStatCell label="Peeks" value={String(floorStats.total)} />
-          <FloorStatCell
-            label="Best"
-            value={floorStats.bestGrade ?? "—"}
-            valueStyle={
-              floorStats.bestColor ? { color: floorStats.bestColor } : undefined
-            }
-            className="border-l border-border"
-          />
-          <FloorStatCell
-            label="S/A tier"
-            value={String(floorStats.saCount)}
-            className="sm:border-l sm:border-border"
-          />
-          <FloorStatCell
-            label="Avg risk"
-            value={floorStats.risk ? RISK_LABEL[floorStats.risk] : "—"}
-            valueClassName={
-              floorStats.risk ? RISK_TEXT[floorStats.risk] : undefined
-            }
-            className="border-l border-border"
-          />
-        </div>
-
         <FloorView map={map} floor={floor} peeks={positioned} />
 
         {peeks.length === 0 && (
@@ -203,6 +176,30 @@ export default async function FloorPage({
             for S/A-tier peeks.
           </p>
         )}
+
+        {/* Floor-level stats — server-rendered so crawlers and ad units see
+            them on load. All values derived from this floor's peeks. */}
+        <div className="mx-auto mt-10 grid max-w-md grid-cols-2 sm:grid-cols-4">
+          <FloorStatCell label="Peeks" value={String(floorStats.total)} />
+          <FloorStatCell
+            label="Best"
+            value={floorStats.bestGrade ?? "—"}
+            valueStyle={
+              floorStats.bestColor ? { color: floorStats.bestColor } : undefined
+            }
+            className="border-l border-border"
+          />
+          <FloorStatCell
+            label="S/A tier"
+            value={String(floorStats.saCount)}
+            className="sm:border-l sm:border-border"
+          />
+          <FloorStatCell
+            label="Average %"
+            value={floorStats.avgPct !== null ? `${floorStats.avgPct}%` : "—"}
+            className="border-l border-border"
+          />
+        </div>
       </main>
     </>
   );
@@ -217,27 +214,25 @@ function isSaTier(p: {
   return g === "A" || g === "S";
 }
 
-// Total, best grade + its tier colour, S/A-tier count, and modal risk for a
-// floor's peeks. Best/risk are null on an empty floor (strip shows dashes).
+// Total, best grade + its tier colour, S/A-tier count, and average
+// effectiveness % for a floor's peeks. best/avgPct are null on an empty floor
+// (strip shows dashes). The % per peek is the measured worked/total rate, or
+// the (clamped) admin seed for estimate-tier peeks.
 function computeFloorStats(peeks: Peek[]): {
   total: number;
   bestGrade: string | null;
   bestColor: string | null;
   saCount: number;
-  risk: "low" | "medium" | "high" | null;
+  avgPct: number | null;
 } {
   const total = peeks.length;
   if (total === 0)
-    return { total: 0, bestGrade: null, bestColor: null, saCount: 0, risk: null };
+    return { total: 0, bestGrade: null, bestColor: null, saCount: 0, avgPct: null };
 
   let bestGrade: string | null = null;
   let bestScore = -1;
   let saCount = 0;
-  const riskCounts: Record<"low" | "medium" | "high", number> = {
-    low: 0,
-    medium: 0,
-    high: 0,
-  };
+  let pctSum = 0;
   for (const p of peeks) {
     const r = rating(p.base_success_rate, p.worked_votes, p.vote_count);
     if (r.score > bestScore) {
@@ -245,37 +240,16 @@ function computeFloorStats(peeks: Peek[]): {
       bestGrade = r.grade;
     }
     if (r.grade === "A" || r.grade === "S") saCount++;
-    riskCounts[p.risk]++;
-  }
-  // Modal risk; ties break toward the higher severity (high > medium > low).
-  let risk: "low" | "medium" | "high" = "low";
-  let riskN = -1;
-  for (const rk of ["high", "medium", "low"] as const) {
-    if (riskCounts[rk] > riskN) {
-      riskN = riskCounts[rk];
-      risk = rk;
-    }
+    pctSum += r.tier === "measured" ? r.pct : displayRate(p.base_success_rate);
   }
   return {
     total,
     bestGrade,
     bestColor: bestGrade ? gradeTierColor(bestGrade) : null,
     saCount,
-    risk,
+    avgPct: Math.round(pctSum / total),
   };
 }
-
-const RISK_LABEL: Record<"low" | "medium" | "high", string> = {
-  low: "Low",
-  medium: "Medium",
-  high: "High",
-};
-// The existing risk text colours (same as RiskPill on the peek page).
-const RISK_TEXT: Record<"low" | "medium" | "high", string> = {
-  low: "text-emerald-700",
-  medium: "text-amber-700",
-  high: "text-red-700",
-};
 
 function ordinal(n: number): string {
   const v = n % 100;
