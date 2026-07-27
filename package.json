@@ -33,6 +33,7 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^8",
     "eslint-config-next": "14.2.15",
+    "playwright": "^1.62.0",
     "png-to-ico": "^3.0.1",
     "postcss": "^8.4.47",
     "sharp": "^0.34.5",

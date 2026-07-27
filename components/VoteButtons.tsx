@@ -74,7 +74,14 @@ export function VoteButtons({
   }
 
   return (
-    <div className="flex w-full max-w-md flex-col items-center gap-3">
+    <div
+      className={`rounded-card border p-4 transition-colors duration-150 ${
+        voted
+          ? "border-border bg-card"
+          : "border-[1.5px] border-brand bg-brand/[0.05]"
+      }`}
+    >
+      <div className="mx-auto flex w-full max-w-md flex-col items-center gap-3">
       {voted ? (
         <div className="flex flex-col items-center gap-0.5 text-center">
           <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
@@ -101,7 +108,7 @@ export function VoteButtons({
           )}
         </div>
       ) : (
-        <p className="text-center text-sm text-muted">
+        <p className="text-center text-[17px] font-bold text-muted">
           Cast your vote — every vote makes the grades more accurate.
         </p>
       )}
@@ -135,6 +142,7 @@ export function VoteButtons({
           to vote again later.
         </p>
       )}
+      </div>
     </div>
   );
 }
@@ -162,7 +170,7 @@ function VoteButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex flex-1 items-center justify-center gap-2 rounded-btn border-2 px-5 py-3 text-base font-semibold transition-all duration-150 ease-out active:scale-95 disabled:active:scale-100 disabled:cursor-default ${state}`}
+      className={`inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-btn border-2 px-5 py-3 text-base font-semibold transition-all duration-150 ease-out active:scale-95 disabled:active:scale-100 disabled:cursor-default ${state}`}
     >
       {children}
     </button>

@@ -327,13 +327,33 @@ export default async function PeekDetailPage({
           </div>
         </section>
 
-        {/* Rate this peek — moved out of the stats card into its own card. */}
-        <section className="mt-8">
-          <SectionLabel>Rate this peek</SectionLabel>
-          <div
-            id="vote"
-            className="mt-4 flex scroll-mt-20 justify-center rounded-card border border-border bg-card p-4"
-          >
+        {/* Content — media ("Watch the peek") + how-to. Moved directly under
+            the stats so the clip and steps come before rating. Styling
+            unchanged; when there are no steps/tip the media spans the row. */}
+        {hasInstructionsContent ? (
+          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
+            {peek.tiktok_url ? (
+              <TikTokLinkCard url={peek.tiktok_url} />
+            ) : (
+              <PeekMedia videoUrl={peek.video_url} name={peek.name} />
+            )}
+            <Instructions steps={steps} tip={peek.tip} />
+          </div>
+        ) : (
+          <div className="mt-16">
+            {peek.tiktok_url ? (
+              <TikTokLinkCard url={peek.tiktok_url} />
+            ) : (
+              <PeekMedia videoUrl={peek.video_url} name={peek.name} />
+            )}
+          </div>
+        )}
+
+        {/* Rate this peek — the one loud section. The orange accent card lives
+            inside VoteButtons so it collapses to a normal card once voted. */}
+        <section className="mt-12">
+          <SectionLabel accent>Rate this peek</SectionLabel>
+          <div id="vote" className="mt-4 scroll-mt-20">
             <VoteButtons
               peekId={peek.id}
               isLoggedIn={!!user}
@@ -345,7 +365,7 @@ export default async function PeekDetailPage({
 
         {/* Trend Chart — daily snapshots. Cold-start grace: < 2 points shows a
             "coming soon" note instead of an empty chart. */}
-        <section className="mt-8">
+        <section className="mt-12">
           <SectionLabel>Trend Chart</SectionLabel>
           {trendPoints.length < 2 ? (
             <p className="mt-4 rounded-card border border-border bg-card p-4 text-center text-sm text-muted">
@@ -358,36 +378,9 @@ export default async function PeekDetailPage({
           )}
         </section>
 
-        {(
-          <>
-            {/* Content section — when there are no steps and no pro tip the
-                instructions column would be empty and the media column would
-                render at half width with dead space beside it. Drop to a
-                single column in that case so the media spans the row. */}
-            {hasInstructionsContent ? (
-              <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
-                {peek.tiktok_url ? (
-                  <TikTokLinkCard url={peek.tiktok_url} />
-                ) : (
-                  <PeekMedia videoUrl={peek.video_url} name={peek.name} />
-                )}
-                <Instructions steps={steps} tip={peek.tip} />
-              </div>
-            ) : (
-              <div className="mt-16">
-                {peek.tiktok_url ? (
-                  <TikTokLinkCard url={peek.tiktok_url} />
-                ) : (
-                  <PeekMedia videoUrl={peek.video_url} name={peek.name} />
-                )}
-              </div>
-            )}
-          </>
-        )}
-
         {nearby.length > 0 && (
           <section className="mt-16">
-            <h2 className="text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
+            <h2 className="rounded-btn bg-brand/[0.08] px-3 py-2 text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
               Peeks close by
             </h2>
             <ul className="mt-4 space-y-3">
@@ -554,9 +547,19 @@ function buildBreadcrumbJsonLd(
 // estimate-tier peeks show the grade alone, never a percentage.
 // Section header above each card — reuses the page's existing 11px/0.12em
 // uppercase muted label style, with a hairline divider beneath (border-border).
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({
+  children,
+  accent,
+}: {
+  children: React.ReactNode;
+  accent?: boolean;
+}) {
   return (
-    <h2 className="text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
+    <h2
+      className={`rounded-btn bg-brand/[0.08] px-3 py-2 text-lg font-semibold uppercase tracking-[0.12em] text-center ${
+        accent ? "text-brand" : "text-ink"
+      }`}
+    >
       {children}
     </h2>
   );
@@ -649,7 +652,7 @@ function RiskPill({ risk }: { risk: string }) {
 function TikTokLinkCard({ url }: { url: string }) {
   return (
     <div>
-      <h2 className="text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
+      <h2 className="rounded-btn bg-brand/[0.08] px-3 py-2 text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
         Watch the peek
       </h2>
       <a
@@ -711,7 +714,7 @@ function Instructions({
     <div>
       {steps.length > 0 && (
         <>
-          <h2 className="text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
+          <h2 className="rounded-btn bg-brand/[0.08] px-3 py-2 text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
             How to do it
           </h2>
           <ol className="mt-4 list-decimal space-y-5 pl-5 text-[16px] leading-[1.6]">
