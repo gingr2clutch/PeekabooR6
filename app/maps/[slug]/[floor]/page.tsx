@@ -179,27 +179,34 @@ export default async function FloorPage({
 
         {/* Floor-level stats — server-rendered so crawlers and ad units see
             them on load. All values derived from this floor's peeks. */}
-        <div className="mx-auto mt-10 grid max-w-md grid-cols-2 sm:grid-cols-4">
-          <FloorStatCell label="Peeks" value={String(floorStats.total)} />
-          <FloorStatCell
-            label="Best"
-            value={floorStats.bestGrade ?? "—"}
-            valueStyle={
-              floorStats.bestColor ? { color: floorStats.bestColor } : undefined
-            }
-            className="border-l border-border"
-          />
-          <FloorStatCell
-            label="S/A tier"
-            value={String(floorStats.saCount)}
-            className="sm:border-l sm:border-border"
-          />
-          <FloorStatCell
-            label="Average %"
-            value={floorStats.avgPct !== null ? `${floorStats.avgPct}%` : "—"}
-            className="border-l border-border"
-          />
-        </div>
+        <section className="mx-auto mt-12 max-w-md">
+          <h2 className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+            Floor stats
+          </h2>
+          <div className="mt-3 grid grid-cols-2 gap-y-6 rounded-card border border-border bg-card px-2 py-6 shadow-[0_2px_10px_rgba(0,0,0,0.05)] sm:grid-cols-4 sm:gap-y-0">
+            <FloorStatCell label="Peeks" value={String(floorStats.total)} />
+            <FloorStatCell
+              label="Best"
+              value={floorStats.bestGrade ?? "—"}
+              valueStyle={
+                floorStats.bestColor
+                  ? { color: floorStats.bestColor }
+                  : undefined
+              }
+              className="border-l border-border"
+            />
+            <FloorStatCell
+              label="S/A tier"
+              value={String(floorStats.saCount)}
+              className="sm:border-l sm:border-border"
+            />
+            <FloorStatCell
+              label="Average %"
+              value={floorStats.avgPct !== null ? `${floorStats.avgPct}%` : "—"}
+              className="border-l border-border"
+            />
+          </div>
+        </section>
       </main>
     </>
   );
@@ -275,12 +282,14 @@ function FloorStatCell({
   className?: string;
 }) {
   return (
-    <div className={`flex flex-col items-center px-4 py-1 ${className ?? ""}`}>
+    <div className={`flex flex-col items-center px-3 ${className ?? ""}`}>
       <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
         {label}
       </span>
       <span
-        className={`mt-1 text-[14px] font-bold ${valueClassName ?? "text-ink"}`}
+        className={`mt-2 text-[26px] font-extrabold leading-none ${
+          valueClassName ?? "text-ink"
+        }`}
         style={valueStyle}
       >
         {value}
