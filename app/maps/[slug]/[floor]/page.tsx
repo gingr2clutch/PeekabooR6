@@ -8,7 +8,10 @@ import {
   getFloorsForMap,
   getMapBySlug,
   getPublishedPeeksForFloor,
+  getRankedPeeksForMap,
 } from "@/lib/db";
+import type { Peek } from "@/lib/db";
+import { rating, gradeTierColor } from "@/lib/rate";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +76,31 @@ export default async function FloorPage({
   // ordered by display_order ascending.
   const allFloors = await getFloorsForMap(map.id);
 
+  // Floor-level stats, computed from the peeks already loaded for this floor.
+  const floorStats = computeFloorStats(peeks);
+
+  // Rank this floor vs. the map's other floors by S/A-tier count. Needs every
+  // floor's peeks (one extra map-wide query) — only when there's more than one
+  // floor and this floor has peeks to rank.
+  let saRank: { rank: number; total: number } | null = null;
+  if (allFloors.length > 1 && peeks.length > 0) {
+    const mapPeeks = await getRankedPeeksForMap(allFloors.map((f) => f.id));
+    const countByFloor = new Map<string, number>();
+    for (const f of allFloors) countByFloor.set(f.id, 0);
+    for (const p of mapPeeks) {
+      if (isSaTier(p) && countByFloor.has(p.floor_id)) {
+        countByFloor.set(p.floor_id, (countByFloor.get(p.floor_id) ?? 0) + 1);
+      }
+    }
+    // Standard competition ranking: floors with a strictly higher count rank
+    // ahead; ties share a rank number ("2nd of 4" for both).
+    let ahead = 0;
+    countByFloor.forEach((c, id) => {
+      if (id !== floor.id && c > floorStats.saCount) ahead++;
+    });
+    saRank = { rank: ahead + 1, total: allFloors.length };
+  }
+
   return (
     <>
       <PageHeader />
@@ -127,6 +155,33 @@ export default async function FloorPage({
           )}
         </div>
 
+        {/* Floor-level stats — server-rendered so crawlers and ad units see
+            them on load. All values derived from this floor's peeks. */}
+        <div className="mx-auto mt-6 grid max-w-md grid-cols-2 sm:grid-cols-4">
+          <FloorStatCell label="Peeks" value={String(floorStats.total)} />
+          <FloorStatCell
+            label="Best"
+            value={floorStats.bestGrade ?? "—"}
+            valueStyle={
+              floorStats.bestColor ? { color: floorStats.bestColor } : undefined
+            }
+            className="border-l border-border"
+          />
+          <FloorStatCell
+            label="S/A tier"
+            value={String(floorStats.saCount)}
+            className="sm:border-l sm:border-border"
+          />
+          <FloorStatCell
+            label="Avg risk"
+            value={floorStats.risk ? RISK_LABEL[floorStats.risk] : "—"}
+            valueClassName={
+              floorStats.risk ? RISK_TEXT[floorStats.risk] : undefined
+            }
+            className="border-l border-border"
+          />
+        </div>
+
         <FloorView map={map} floor={floor} peeks={positioned} />
 
         {peeks.length === 0 && (
@@ -134,8 +189,129 @@ export default async function FloorPage({
             No spawn peeks pinned to this floor yet.
           </p>
         )}
+
+        {saRank && (
+          <p className="mt-6 text-center text-[13px] text-muted">
+            {floor.name} ranks {ordinal(saRank.rank)}{" "}
+            <Link href={`/maps/${map.slug}`} className="hover:text-brand">
+              of {saRank.total}
+            </Link>{" "}
+            on{" "}
+            <Link href={`/maps/${map.slug}`} className="hover:text-brand">
+              {map.name}
+            </Link>{" "}
+            for S/A-tier peeks.
+          </p>
+        )}
       </main>
     </>
+  );
+}
+
+function isSaTier(p: {
+  base_success_rate: number;
+  worked_votes: number;
+  vote_count: number;
+}): boolean {
+  const g = rating(p.base_success_rate, p.worked_votes, p.vote_count).grade;
+  return g === "A" || g === "S";
+}
+
+// Total, best grade + its tier colour, S/A-tier count, and modal risk for a
+// floor's peeks. Best/risk are null on an empty floor (strip shows dashes).
+function computeFloorStats(peeks: Peek[]): {
+  total: number;
+  bestGrade: string | null;
+  bestColor: string | null;
+  saCount: number;
+  risk: "low" | "medium" | "high" | null;
+} {
+  const total = peeks.length;
+  if (total === 0)
+    return { total: 0, bestGrade: null, bestColor: null, saCount: 0, risk: null };
+
+  let bestGrade: string | null = null;
+  let bestScore = -1;
+  let saCount = 0;
+  const riskCounts: Record<"low" | "medium" | "high", number> = {
+    low: 0,
+    medium: 0,
+    high: 0,
+  };
+  for (const p of peeks) {
+    const r = rating(p.base_success_rate, p.worked_votes, p.vote_count);
+    if (r.score > bestScore) {
+      bestScore = r.score;
+      bestGrade = r.grade;
+    }
+    if (r.grade === "A" || r.grade === "S") saCount++;
+    riskCounts[p.risk]++;
+  }
+  // Modal risk; ties break toward the higher severity (high > medium > low).
+  let risk: "low" | "medium" | "high" = "low";
+  let riskN = -1;
+  for (const rk of ["high", "medium", "low"] as const) {
+    if (riskCounts[rk] > riskN) {
+      riskN = riskCounts[rk];
+      risk = rk;
+    }
+  }
+  return {
+    total,
+    bestGrade,
+    bestColor: bestGrade ? gradeTierColor(bestGrade) : null,
+    saCount,
+    risk,
+  };
+}
+
+const RISK_LABEL: Record<"low" | "medium" | "high", string> = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+};
+// The existing risk text colours (same as RiskPill on the peek page).
+const RISK_TEXT: Record<"low" | "medium" | "high", string> = {
+  low: "text-emerald-700",
+  medium: "text-amber-700",
+  high: "text-red-700",
+};
+
+function ordinal(n: number): string {
+  const v = n % 100;
+  const suffix =
+    v >= 11 && v <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th";
+  return `${n}${suffix}`;
+}
+
+// One stat in the floor strip: small-caps label above, bold value below.
+// `className` carries the dividing hairline; `valueStyle`/`valueClassName`
+// carry the per-value colour (grade green, risk amber).
+function FloorStatCell({
+  label,
+  value,
+  valueClassName,
+  valueStyle,
+  className,
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+  valueStyle?: React.CSSProperties;
+  className?: string;
+}) {
+  return (
+    <div className={`flex flex-col items-center px-4 py-1 ${className ?? ""}`}>
+      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+        {label}
+      </span>
+      <span
+        className={`mt-1 text-[14px] font-bold ${valueClassName ?? "text-ink"}`}
+        style={valueStyle}
+      >
+        {value}
+      </span>
+    </div>
   );
 }
 
