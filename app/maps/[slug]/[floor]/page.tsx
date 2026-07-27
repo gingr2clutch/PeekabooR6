@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FloorPeekList } from "@/components/FloorPeekList";
 import { FloorView } from "@/components/FloorView";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -9,7 +8,6 @@ import {
   getFloorsForMap,
   getMapBySlug,
   getPublishedPeeksForFloor,
-  getUnderratedTopIds,
 } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -74,8 +72,6 @@ export default async function FloorPage({
   // Same query path /maps/[slug]/page.tsx uses — one extra round trip,
   // ordered by display_order ascending.
   const allFloors = await getFloorsForMap(map.id);
-  // Sitewide top-10 hidden gems, to badge any matching peek in this floor's list.
-  const gemIds = await getUnderratedTopIds();
 
   return (
     <>
@@ -138,8 +134,6 @@ export default async function FloorPage({
             No spawn peeks pinned to this floor yet.
           </p>
         )}
-
-        <FloorPeekList map={map} floor={floor} peeks={peeks} gemIds={gemIds} />
       </main>
     </>
   );
