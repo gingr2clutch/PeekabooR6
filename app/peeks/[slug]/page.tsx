@@ -180,7 +180,6 @@ export default async function PeekDetailPage({
   // origin it falls back to the floor breadcrumb (the default).
   const origin = backOrigin(searchParams.from, map);
   const backHref = origin?.href ?? floorHref;
-  const backLabel = origin?.label ?? `${map.name} · ${floor.name}`;
   const steps = Array.isArray(peek.instructions) ? peek.instructions : [];
   const hasInstructionsContent = steps.length > 0 || !!peek.tip;
 
@@ -252,10 +251,10 @@ export default async function PeekDetailPage({
           <div className="mb-3">
             <Link
               href={backHref}
-              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-btn px-2.5 py-1 text-sm font-medium text-muted transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-btn px-2.5 py-1 text-sm font-medium text-brand transition-colors duration-150 ease-out hover:bg-brand/[0.08]"
             >
               <BackArrowIcon />
-              <span>{backLabel}</span>
+              <span>Back</span>
             </Link>
           </div>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
