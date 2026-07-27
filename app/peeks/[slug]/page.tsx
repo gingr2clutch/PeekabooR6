@@ -273,57 +273,27 @@ export default async function PeekDetailPage({
           </p>
         </div>
 
-        {/* Hero stats card — compact two-column hero. */}
+        {/* Hero stats card — 3-column grid + grade bar + summary row. */}
         <section className="mt-6 rounded-card border border-border bg-card p-4 md:mt-8 md:p-6">
-          <div className="flex items-center gap-[18px]">
-            {/* Left: grade tile + measured stat line */}
-            <div className="flex shrink-0 flex-col items-center">
+          {/* Grade | Risk | Difficulty — always 3-across */}
+          <div className="grid grid-cols-3">
+            <StatCol label="Grade">
               <div
                 aria-label={`Grade ${r.label}`}
-                className="flex h-[86px] w-[86px] items-center justify-center rounded-2xl text-white max-[359px]:h-[72px] max-[359px]:w-[72px]"
+                className="flex h-11 w-11 items-center justify-center rounded-[10px] text-white"
                 style={{ backgroundColor: gradeTierColor(r.label) }}
               >
-                <span
-                  className="text-[40px] font-extrabold leading-none max-[359px]:text-[34px]"
-                  style={{ letterSpacing: "-0.02em" }}
-                >
+                <span className="text-[20px] font-extrabold leading-none">
                   {r.label}
                 </span>
               </div>
-              {r.tier === "measured" && (
-                <div className="mt-2 text-center leading-tight">
-                  <span className="text-xs font-semibold text-ink">
-                    {r.pct}%
-                  </span>
-                  <span className="mt-0.5 block text-[11px] text-muted">
-                    {peek.vote_count} player{" "}
-                    {peek.vote_count === 1 ? "vote" : "votes"}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Right: Risk / Difficulty / Rating */}
-            <div className="flex flex-1 flex-col divide-y divide-border">
-              <StatRow label="Risk">
-                <RiskPill risk={peek.risk} />
-              </StatRow>
-              <StatRow label="Difficulty">
-                <DifficultyDots difficulty={peek.difficulty} />
-              </StatRow>
-              <StatRow label="Rating">
-                {r.tier === "measured" ? (
-                  <PlayerVotedBadge />
-                ) : (
-                  <a
-                    href="#vote"
-                    className="inline-flex items-center rounded-btn bg-brand px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-brand/90"
-                  >
-                    Vote
-                  </a>
-                )}
-              </StatRow>
-            </div>
+            </StatCol>
+            <StatCol label="Risk" border>
+              <RiskPill risk={peek.risk} />
+            </StatCol>
+            <StatCol label="Difficulty" border>
+              <DifficultyDots difficulty={peek.difficulty} />
+            </StatCol>
           </div>
 
           <GradeBar
@@ -331,6 +301,30 @@ export default async function PeekDetailPage({
             workedVotes={peek.worked_votes}
             voteCount={peek.vote_count}
           />
+
+          {/* Summary: % from N players · Voted pill / Vote CTA */}
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <span className="text-[13px] text-muted">
+              {r.tier === "measured" ? (
+                <>
+                  <span className="font-semibold text-ink">{r.pct}%</span> from{" "}
+                  {peek.vote_count} player{peek.vote_count === 1 ? "" : "s"}
+                </>
+              ) : (
+                "Community estimate"
+              )}
+            </span>
+            {r.tier === "measured" ? (
+              <PlayerVotedBadge />
+            ) : (
+              <a
+                href="#vote"
+                className="inline-flex shrink-0 items-center rounded-btn bg-brand px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-brand/90"
+              >
+                Vote
+              </a>
+            )}
+          </div>
         </section>
 
         {/* Effectiveness trend — daily snapshots. Cold-start grace: < 2 points
@@ -581,21 +575,28 @@ function PlayerVotedBadge() {
   );
 }
 
-// A label/value row in the stats hero's right column. Hairline dividers
-// between rows come from `divide-y` on the parent.
-function StatRow({
+// A column in the stats hero's 3-across grid: uppercase label on top, value
+// centered in a fixed min-height so all three baselines line up. `border`
+// adds the vertical hairline (cells 2 and 3).
+function StatCol({
   label,
+  border,
   children,
 }: {
   label: string;
+  border?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-[52px] items-center justify-between">
+    <div
+      className={`flex flex-col items-center px-2 sm:px-3 ${
+        border ? "border-l border-border" : ""
+      }`}
+    >
       <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted">
         {label}
       </span>
-      {children}
+      <div className="mt-2.5 flex min-h-[62px] items-center">{children}</div>
     </div>
   );
 }
