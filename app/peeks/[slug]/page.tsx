@@ -387,7 +387,7 @@ export default async function PeekDetailPage({
 
         {nearby.length > 0 && (
           <section className="mt-16">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+            <h2 className="text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
               Peeks close by
             </h2>
             <ul className="mt-4 space-y-3">
@@ -556,7 +556,7 @@ function buildBreadcrumbJsonLd(
 // uppercase muted label style, with a hairline divider beneath (border-border).
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="border-b border-border pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+    <h2 className="border-b border-border pb-2 text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
       {children}
     </h2>
   );
@@ -649,7 +649,7 @@ function RiskPill({ risk }: { risk: string }) {
 function TikTokLinkCard({ url }: { url: string }) {
   return (
     <div>
-      <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+      <h2 className="text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
         Watch the peek
       </h2>
       <a
@@ -711,7 +711,7 @@ function Instructions({
     <div>
       {steps.length > 0 && (
         <>
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+          <h2 className="text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
             How to do it
           </h2>
           <ol className="mt-4 list-decimal space-y-5 pl-5 text-[16px] leading-[1.6]">
