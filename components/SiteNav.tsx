@@ -122,8 +122,11 @@ export function SiteNav({ version }: { version?: string }) {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
+    // Focus the dialog container itself (tabIndex -1, outline-none) rather than
+    // the first link, so opening the drawer doesn't paint a focus ring around
+    // the logo. The trap below still cycles Tab through the real controls.
     requestAnimationFrame(() => {
-      panelRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
+      panelRef.current?.focus();
     });
 
     function onKey(e: KeyboardEvent) {
@@ -221,7 +224,8 @@ export function SiteNav({ version }: { version?: string }) {
             role="dialog"
             aria-modal="true"
             aria-label="Site navigation"
-            className="fixed inset-y-0 right-0 z-50 flex w-[85vw] max-w-[400px] flex-col rounded-l-2xl bg-bg shadow-[-8px_0_30px_rgba(0,0,0,0.14)] md:hidden"
+            tabIndex={-1}
+            className="fixed inset-y-0 right-0 z-50 flex w-[85vw] max-w-[400px] flex-col rounded-l-2xl bg-bg shadow-[-8px_0_30px_rgba(0,0,0,0.14)] outline-none md:hidden"
             style={{
               transform: reduce ? "none" : show ? "translateX(0)" : "translateX(100%)",
               opacity: reduce ? (show ? 1 : 0) : 1,
