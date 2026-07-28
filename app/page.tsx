@@ -62,7 +62,7 @@ export default async function Home() {
         </div>
         <div data-reveal className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
-          <p className="mt-2 text-lg font-medium text-ink">Click the map you're on</p>
+          <p className="mt-2 text-lg font-medium text-[#6f716a]">Click the map you're on</p>
         </div>
         </div>
 
