@@ -6,6 +6,7 @@ import { BestPeek } from "@/components/BestPeek";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { GradeBadge } from "@/components/GradeBadge";
 import { MapStats } from "@/components/MapStats";
+import { MapEntryScope } from "@/components/MapEntryScope";
 import { MapViewToggle } from "@/components/MapViewToggle";
 import { PageHeader } from "@/components/PageHeader";
 import { RandomPeekButton } from "@/components/RandomPeekButton";
@@ -148,14 +149,15 @@ export default async function MapPage({
   return (
     <>
       <PageHeader />
-      <main className="fade-in-up mx-auto max-w-5xl px-6 pb-20 pt-6">
+      <main className="mx-auto max-w-5xl px-6 pb-20 pt-6">
+        <MapEntryScope>
         {/* Header with a subtle backdrop of the map's own cover image — faint,
             cover-cropped, fading into the page background at the bottom so it
             blends into the stats section. Decorative (empty alt) and absolutely
             positioned, so it adds no layout shift. */}
         <div className="relative mb-8 overflow-hidden rounded-card">
           {map.cover_image_url && (
-            <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div aria-hidden className="map-image-enter pointer-events-none absolute inset-0">
               <Image
                 src={coverThumb(map.cover_image_url, 900)}
                 alt=""
@@ -167,7 +169,7 @@ export default async function MapPage({
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-bg" />
             </div>
           )}
-          <div data-reveal className="relative z-10 px-4 py-8 text-center">
+          <div className="relative z-10 px-4 py-8 text-center">
             <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
               {map.name}
             </h1>
@@ -184,7 +186,7 @@ export default async function MapPage({
         </div>
 
         {totalPeeks > 0 && (
-          <div data-reveal className="mb-8">
+          <div className="mb-8">
             <MapStats
               peeks={totalPeeks}
               votes={mapVotes}
@@ -204,10 +206,10 @@ export default async function MapPage({
                   return (
                     <li
                       key={floor.id}
-                      data-reveal
+                      className="floor-enter"
                       style={
                         {
-                          ["--reveal-delay"]: `${(i % 5) * 70}ms`,
+                          ["--enter-delay"]: `${Math.min(i, 12) * 40}ms`,
                         } as React.CSSProperties
                       }
                     >
@@ -256,15 +258,7 @@ export default async function MapPage({
                       peek.vote_count
                     );
                     return (
-                      <li
-                        key={peek.id}
-                        className="peek-cascade"
-                        style={
-                          {
-                            ["--cascade-delay"]: `${Math.min(i, 20) * 40}ms`,
-                          } as React.CSSProperties
-                        }
-                      >
+                      <li key={peek.id}>
                         <div className="peek-lift group relative flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 shadow-sm hover:border-brand">
                           <Link
                             href={`/peeks/${peek.slug}?from=ranked`}
@@ -334,7 +328,7 @@ export default async function MapPage({
             7-day chart lives here; the full 30-day chart + Movers are one tap
             away. Card matches the stats box width/styling. */}
         {totalPeeks >= 2 && (
-          <div data-reveal className="mt-8">
+          <div className="mt-8">
             <div className="rounded-card border border-border bg-card px-4 py-5 shadow-sm sm:px-6">
               <h2 className="mb-4 text-center text-lg font-bold tracking-tight text-ink">
                 Last 7 days — Top 5 peeks
@@ -368,6 +362,7 @@ export default async function MapPage({
             {lastUpdatedLabel ? ` Updated ${lastUpdatedLabel}.` : ""}
           </p>
         )}
+        </MapEntryScope>
       </main>
     </>
   );

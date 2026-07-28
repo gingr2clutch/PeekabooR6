@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { DiscordBanner } from "@/components/DiscordButton";
 import { MapCardImage } from "@/components/MapCardImage";
+import { MapCardLink } from "@/components/MapCardLink";
 import { LiveStats } from "@/components/LiveStats";
 import { PageHeader } from "@/components/PageHeader";
 import { getHomeStats, getMaps } from "@/lib/db";
@@ -122,15 +122,15 @@ export default async function Home() {
             if (map.published) {
               return (
                 <li key={map.id}>
-                  <Link
+                  <MapCardLink
                     href={`/maps/${map.slug}`}
                     className={`${cardBase} map-card border-2 border-white ${
                       hasCover ? "" : "bg-card text-ink"
-                    } motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.97]`}
+                    } motion-safe:hover:scale-[1.02]`}
                   >
                     {cover}
                     {label}
-                  </Link>
+                  </MapCardLink>
                 </li>
               );
             }
