@@ -182,6 +182,16 @@ export default async function MapPage({
                 <RandomPeekButton href={`/api/maps/${map.slug}/random-peek`} />
               </div>
             )}
+            {totalPeeks > 0 && (
+              <div className="mt-3">
+                <Link
+                  href={`/maps/${map.slug}/attacking`}
+                  className="inline-flex items-center gap-1.5 rounded-btn border border-border bg-card px-3.5 py-2 text-sm font-semibold text-ink transition-colors duration-150 ease-out hover:border-brand hover:text-brand"
+                >
+                  <span aria-hidden>⚔️</span> Attacker&apos;s Guide
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 

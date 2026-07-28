@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { PeekMedia } from "@/components/PeekMedia";
 import { VoteButtons } from "@/components/VoteButtons";
+import { AttackerCallout } from "@/components/AttackerCallout";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { supabasePublic } from "@/lib/supabase";
 import type { Floor, Map, Peek } from "@/lib/db";
@@ -136,6 +137,11 @@ function backOrigin(
       return { href: "/peeks?sort=votes", label: "Most-voted peeks" };
     case "stier":
       return { href: "/peeks?tier=s", label: "S-Tier peeks" };
+    case "attacking":
+      return {
+        href: `/maps/${map.slug}/attacking`,
+        label: `${map.name} · Attacker's Guide`,
+      };
     default:
       return null;
   }
@@ -326,6 +332,10 @@ export default async function PeekDetailPage({
           </div>
           </div>
         </section>
+
+        {/* Playing Attacker? — one auto-generated line reframing this angle as
+            attacker intel, with a link to the map's full attacker guide. */}
+        <AttackerCallout peek={peek} map={map} floor={floor} />
 
         {/* Content — media ("Watch the peek") + how-to. Moved directly under
             the stats so the clip and steps come before rating. Styling

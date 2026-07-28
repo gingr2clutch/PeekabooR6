@@ -77,6 +77,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.6,
     },
+    {
+      url: `${BASE_URL}/attacking`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
   ];
 
   const { data: maps } = await supabase
@@ -100,6 +106,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.5,
+    })
+  );
+
+  // Per-map attacker guide page.
+  const attackingEntries: MetadataRoute.Sitemap = (maps ?? []).map(
+    (m: { slug: string }) => ({
+      url: `${BASE_URL}/maps/${m.slug}/attacking`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.6,
     })
   );
 
@@ -142,6 +158,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...staticEntries,
     ...mapEntries,
     ...trendsEntries,
+    ...attackingEntries,
     ...peekEntries,
     ...blogEntries,
     ...compareEntries,
