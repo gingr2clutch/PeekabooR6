@@ -136,9 +136,11 @@ export function SiteSearch() {
 
   const [index, setIndex] = useState<SearchIndex | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [panelTop, setPanelTop] = useState(64);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { maps, floors, peeks, flat } = useMemo(
@@ -148,6 +150,11 @@ export function SiteSearch() {
   const showResults = panelOpen && query.trim().length >= MIN_CHARS;
 
   function openPanel() {
+    // Anchor the popover just below the icon, pinned to the top-right of the
+    // viewport (see the panel's `fixed right-3`) so it never overflows no
+    // matter where the icon sits in the header.
+    const r = buttonRef.current?.getBoundingClientRect();
+    if (r) setPanelTop(r.bottom + 8);
     setPanelOpen(true);
     // Kick off the index load the first time the panel is opened.
     loadSearchIndex()
@@ -252,6 +259,7 @@ export function SiteSearch() {
   return (
     <div ref={containerRef} className="relative">
       <button
+        ref={buttonRef}
         type="button"
         aria-label="Search"
         aria-expanded={panelOpen}
@@ -262,7 +270,10 @@ export function SiteSearch() {
       </button>
 
       {panelOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[min(340px,calc(100vw-1.5rem))] rounded-card border border-border bg-card p-2 shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
+        <div
+          style={{ top: panelTop }}
+          className="fixed right-3 z-50 w-[min(340px,calc(100vw-1.5rem))] rounded-card border border-border bg-card p-2 shadow-[0_10px_30px_rgba(0,0,0,0.12)]"
+        >
           <div className="relative flex items-center">
             <Search
               size={18}

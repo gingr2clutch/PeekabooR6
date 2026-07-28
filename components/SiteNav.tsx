@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Wordmark } from "./Wordmark";
 import { AuthNavIcon } from "./AuthNavIcon";
+import { SiteSearch } from "./SiteSearch";
 import { DISCORD_INVITE } from "./DiscordButton";
 
 const ICON_SIZE = 16;
@@ -178,11 +179,13 @@ export function SiteNav({ version }: { version?: string }) {
           </Link>
         ))}
         <AuthNavIcon iconSize={20} />
+        <SiteSearch />
       </nav>
 
-      {/* Mobile: profile icon + hamburger, top-right. */}
+      {/* Mobile: profile icon + search + hamburger, top-right (menu rightmost). */}
       <div className="flex items-center gap-0.5 md:hidden">
         <AuthNavIcon />
+        <SiteSearch />
         <button
           type="button"
           onClick={openDrawer}
