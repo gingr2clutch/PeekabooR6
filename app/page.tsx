@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import { DiscordBanner } from "@/components/DiscordButton";
 import { MapCardImage } from "@/components/MapCardImage";
@@ -61,19 +60,7 @@ export default async function Home() {
             ]}
           />
         </div>
-        <div data-reveal className="relative isolate mb-8 text-center">
-          {/* Drifting map filmstrip — anchored to the heading so it sits behind
-              the Maps title and eases down toward the grid, never up into the
-              stats. Opacity is the one tunable knob. */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 -top-6 bottom-[-24px] -z-10 overflow-hidden"
-          >
-            <div
-              className="ghost-mosaic"
-              style={{ "--ghost-mosaic-opacity": "0.11" } as CSSProperties}
-            />
-          </div>
+        <div data-reveal className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
           <p className="mt-2 text-[#6f716a]">Click the map you're on</p>
           <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">
