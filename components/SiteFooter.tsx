@@ -19,10 +19,6 @@ export function SiteFooter() {
           About
         </Link>
         <span aria-hidden>·</span>
-        <Link href="/attacking" className={linkCls}>
-          Attacker Guides
-        </Link>
-        <span aria-hidden>·</span>
         <Link href="/sponsor" className={linkCls}>
           Partner With Us
         </Link>
