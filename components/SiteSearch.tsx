@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { ArrowLeft, Search, X } from "lucide-react";
 import { supabasePublic } from "@/lib/supabase";
 
 type SearchIndex = {
@@ -135,43 +135,41 @@ export function SiteSearch() {
   const optId = (i: number) => `${uid}-opt-${i}`;
 
   const [index, setIndex] = useState<SearchIndex | null>(null);
-  const [panelOpen, setPanelOpen] = useState(false);
-  const [panelTop, setPanelTop] = useState(64);
+  const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(-1);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { maps, floors, peeks, flat } = useMemo(
     () => buildResults(index, query),
     [index, query]
   );
-  const showResults = panelOpen && query.trim().length >= MIN_CHARS;
+  const showResults = expanded && query.trim().length >= MIN_CHARS;
 
-  function openPanel() {
-    // Anchor the popover just below the icon, pinned to the top-right of the
-    // viewport (see the panel's `fixed right-3`) so it never overflows no
-    // matter where the icon sits in the header.
-    const r = buttonRef.current?.getBoundingClientRect();
-    if (r) setPanelTop(r.bottom + 8);
-    setPanelOpen(true);
-    // Kick off the index load the first time the panel is opened.
+  function expand() {
+    setExpanded(true);
+    // Kick off the index load the first time search is opened.
     loadSearchIndex()
       .then((idx) => setIndex(idx))
       .catch(() => {});
   }
 
-  function closePanel() {
-    setPanelOpen(false);
+  function collapse() {
+    setExpanded(false);
     setQuery("");
     setActive(-1);
   }
 
-  // Focus the input when the panel opens.
+  // Focus the input + lock body scroll while the search bar is expanded.
   useEffect(() => {
-    if (panelOpen) requestAnimationFrame(() => inputRef.current?.focus());
-  }, [panelOpen]);
+    if (!expanded) return;
+    requestAnimationFrame(() => inputRef.current?.focus());
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [expanded]);
 
   useEffect(() => setActive(-1), [query]);
 
@@ -181,28 +179,14 @@ export function SiteSearch() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
-  // Close on outside click.
-  useEffect(() => {
-    if (!panelOpen) return;
-    function onDown(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setPanelOpen(false);
-        setQuery("");
-        setActive(-1);
-      }
-    }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [panelOpen]);
-
   function select(item: ResultItem) {
-    closePanel();
+    collapse();
     router.push(item.href);
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Escape") {
-      closePanel();
+      collapse();
       return;
     }
     if (!showResults) return;
@@ -257,89 +241,105 @@ export function SiteSearch() {
     );
 
   return (
-    <div ref={containerRef} className="relative">
+    <>
       <button
-        ref={buttonRef}
         type="button"
         aria-label="Search"
-        aria-expanded={panelOpen}
-        onClick={() => (panelOpen ? closePanel() : openPanel())}
+        aria-expanded={expanded}
+        onClick={expand}
         className="inline-flex h-11 w-11 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
       >
         <Search size={20} strokeWidth={2} aria-hidden />
       </button>
 
-      {panelOpen && (
-        <div
-          style={{ top: panelTop }}
-          className="fixed right-3 z-50 w-[min(340px,calc(100vw-1.5rem))] rounded-card border border-border bg-card p-2 shadow-[0_10px_30px_rgba(0,0,0,0.12)]"
-        >
-          <div className="relative flex items-center">
-            <Search
-              size={18}
-              strokeWidth={2}
-              aria-hidden
-              className="pointer-events-none absolute left-3 text-muted"
-            />
-            <input
-              ref={inputRef}
-              type="text"
-              role="combobox"
-              aria-expanded={showResults}
-              aria-controls={listId}
-              aria-activedescendant={showResults && active >= 0 ? optId(active) : undefined}
-              aria-autocomplete="list"
-              aria-label="Search maps, floors, and peeks"
-              autoComplete="off"
-              spellCheck={false}
-              placeholder="Search maps, floors, peeks"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={onKeyDown}
-              className="h-11 w-full rounded-card border border-border bg-card pl-10 pr-9 text-sm text-ink outline-none transition-colors placeholder:text-muted focus:border-brand"
-            />
-            {query && (
+      {expanded && (
+        <>
+          {/* Dim the page below; tapping it closes search. */}
+          <div
+            aria-hidden
+            onClick={collapse}
+            className="fixed inset-0 z-40 bg-ink/20"
+          />
+          {/* Full-width bar that covers the header (logo + icons sit beneath it),
+              with a back arrow on the left and results attached directly below. */}
+          <div className="fixed inset-x-0 top-0 z-50 bg-bg px-4 pb-3 pt-4 shadow-[0_6px_20px_rgba(0,0,0,0.09)] sm:px-6 sm:pt-6">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
-                aria-label="Clear search"
-                onClick={() => {
-                  setQuery("");
-                  setActive(-1);
-                  inputRef.current?.focus();
-                }}
-                className="absolute right-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-ink/[0.06] hover:text-ink"
+                aria-label="Close search"
+                onClick={collapse}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
               >
-                <X size={16} strokeWidth={2} aria-hidden />
+                <ArrowLeft size={22} strokeWidth={2} aria-hidden />
               </button>
+              <div className="relative flex flex-1 items-center">
+                <Search
+                  size={18}
+                  strokeWidth={2}
+                  aria-hidden
+                  className="pointer-events-none absolute left-3 text-muted"
+                />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  role="combobox"
+                  aria-expanded={showResults}
+                  aria-controls={listId}
+                  aria-activedescendant={showResults && active >= 0 ? optId(active) : undefined}
+                  aria-autocomplete="list"
+                  aria-label="Search maps, floors, and peeks"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="Search maps, floors, peeks"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={onKeyDown}
+                  className="h-11 w-full rounded-card border border-border bg-card pl-10 pr-9 text-sm text-ink outline-none transition-colors placeholder:text-muted focus:border-brand"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    aria-label="Clear search"
+                    onClick={() => {
+                      setQuery("");
+                      setActive(-1);
+                      inputRef.current?.focus();
+                    }}
+                    className="absolute right-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-ink/[0.06] hover:text-ink"
+                  >
+                    <X size={16} strokeWidth={2} aria-hidden />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {showResults && (
+              <ul
+                id={listId}
+                role="listbox"
+                aria-label="Search results"
+                className="mt-3 max-h-[calc(100vh-6rem)] overflow-y-auto overscroll-contain border-t border-border pt-1"
+              >
+                {index === null ? (
+                  <li role="presentation" className="px-3 py-3 text-sm text-muted">
+                    Searching…
+                  </li>
+                ) : flat.length === 0 ? (
+                  <li role="presentation" className="px-3 py-3 text-sm text-muted">
+                    No results for “{query.trim()}”
+                  </li>
+                ) : (
+                  <>
+                    {renderGroup("Maps", maps, 0)}
+                    {renderGroup("Floors", floors, maps.length)}
+                    {renderGroup("Peeks", peeks, maps.length + floors.length)}
+                  </>
+                )}
+              </ul>
             )}
           </div>
-
-          {showResults && (
-            <ul
-              id={listId}
-              role="listbox"
-              aria-label="Search results"
-              className="mt-2 max-h-[60vh] overflow-y-auto overscroll-contain"
-            >
-              {index === null ? (
-                <li role="presentation" className="px-3 py-3 text-sm text-muted">
-                  Searching…
-                </li>
-              ) : flat.length === 0 ? (
-                <li role="presentation" className="px-3 py-3 text-sm text-muted">
-                  No results for “{query.trim()}”
-                </li>
-              ) : (
-                <>
-                  {renderGroup("Maps", maps, 0)}
-                  {renderGroup("Floors", floors, maps.length)}
-                  {renderGroup("Peeks", peeks, maps.length + floors.length)}
-                </>
-              )}
-            </ul>
-          )}
-        </div>
+        </>
       )}
-    </div>
+    </>
   );
 }
