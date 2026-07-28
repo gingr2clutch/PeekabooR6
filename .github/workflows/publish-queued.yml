@@ -1,0 +1,17 @@
+name: Publish queued peeks
+
+on:
+  schedule:
+    - cron: "0 16 * * *" # daily at 16:00 UTC; the Mon/Wed/Fri release gate lives in the app
+  workflow_dispatch: {} # manual "Run workflow" button
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish next queued peek
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET repo
