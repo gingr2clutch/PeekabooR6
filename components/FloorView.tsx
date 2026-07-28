@@ -24,6 +24,8 @@ type Props = {
 // details show in a fixed card below the map. Desktop users still get the
 // hover tooltip and click-to-navigate behavior.
 export function FloorView({ map, floor, peeks }: Props) {
+  // "pins" (default) vs "heatmap" (danger bloom over the same coordinates).
+  const [mode, setMode] = useState<"pins" | "heatmap">("pins");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Mirror of selectedId that lags by the panel exit-animation duration so
   // the card can play its slide-out before unmounting. While `panelClosing`
@@ -139,8 +141,44 @@ export function FloorView({ map, floor, peeks }: Props) {
   const displayedSelected =
     displayedSelectedIndex >= 0 ? adjustedPeeks[displayedSelectedIndex] : null;
 
+  const segCls = (active: boolean) =>
+    `rounded-[6px] px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+      active ? "bg-brand text-white shadow-sm" : "text-muted hover:text-ink"
+    }`;
+
   return (
     <>
+      {/* Pins vs Heatmap toggle — heatmap needs peeks to show anything. */}
+      {peeks.length > 0 && (
+        <div className="mb-3 flex justify-center">
+          <div
+            role="group"
+            aria-label="Map view"
+            className="inline-flex rounded-btn border border-border bg-card p-0.5"
+          >
+            <button
+              type="button"
+              onClick={() => setMode("pins")}
+              aria-pressed={mode === "pins"}
+              className={segCls(mode === "pins")}
+            >
+              Pins
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedId(null);
+                setMode("heatmap");
+              }}
+              aria-pressed={mode === "heatmap"}
+              className={segCls(mode === "heatmap")}
+            >
+              Heatmap
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Outer wrapper has no overflow so tooltips and the active pin
           can extend beyond the visual bounds of the map without being
           clipped. The bordered/rounded image lives in a separate
@@ -166,6 +204,12 @@ export function FloorView({ map, floor, peeks }: Props) {
               </span>
             </div>
           )}
+
+          {/* Danger heatmap — soft blobs per peek, weighted by grade, pooling
+              into hot zones where peeks stack. Clipped by this rounded box. */}
+          {mode === "heatmap" && peeks.length > 0 && (
+            <FloorHeatmap peeks={peeks} />
+          )}
         </div>
 
         {/* Pin layer. Clicking inside but not on a pin deselects. */}
@@ -175,37 +219,41 @@ export function FloorView({ map, floor, peeks }: Props) {
             if (e.target === e.currentTarget) deselect();
           }}
         >
-          {adjustedPeeks.map((peek, i) => (
-            <PeekPin
-              key={peek.id}
-              slug={peek.slug}
-              name={peek.name}
-              xPct={peek.displayX}
-              yPct={peek.displayY}
-              number={i + 1}
-              isNew={isPeekNew(peek.created_at)}
-              hasTiktok={!!peek.tiktok_url}
-              ratingText={ratingLabel(
-                peek.base_success_rate,
-                peek.worked_votes,
-                peek.vote_count
-              )}
-              isSelected={selectedId === peek.id}
-              onSelect={() => toggleSelect(peek.id)}
-            />
-          ))}
+          {mode === "pins" &&
+            adjustedPeeks.map((peek, i) => (
+              <PeekPin
+                key={peek.id}
+                slug={peek.slug}
+                name={peek.name}
+                xPct={peek.displayX}
+                yPct={peek.displayY}
+                number={i + 1}
+                isNew={isPeekNew(peek.created_at)}
+                hasTiktok={!!peek.tiktok_url}
+                ratingText={ratingLabel(
+                  peek.base_success_rate,
+                  peek.worked_votes,
+                  peek.vote_count
+                )}
+                isSelected={selectedId === peek.id}
+                onSelect={() => toggleSelect(peek.id)}
+              />
+            ))}
         </div>
       </div>
 
-      {peeks.length > 0 && (
-        <p className="mt-3 text-center text-[13px] text-muted">
-          Ranked by grade
-        </p>
-      )}
+      {peeks.length > 0 &&
+        (mode === "pins" ? (
+          <p className="mt-3 text-center text-[13px] text-muted">
+            Ranked by grade
+          </p>
+        ) : (
+          <HeatLegend />
+        ))}
 
       {/* Mobile-only detail card. Avoids the desktop tooltip's clipping
           and z-stacking issues entirely on the smallest screens. */}
-      {peeks.length > 0 && (
+      {mode === "pins" && peeks.length > 0 && (
         <div className="mt-4 md:hidden">
           {displayedSelected ? (
             <SelectedPeekCard
@@ -468,6 +516,130 @@ function DifficultyDots({ level }: { level: number }) {
           }
         />
       ))}
+    </div>
+  );
+}
+
+// Amber→red danger ramp. Accumulated blob alpha (0..1) → colour + a translucent
+// out-alpha so the blueprint still reads through the cool zones.
+const HEAT_STOPS: ReadonlyArray<readonly [number, readonly [number, number, number]]> = [
+  [0.0, [250, 204, 21]], // amber-300 (coolest visible)
+  [0.35, [245, 158, 11]], // amber-500
+  [0.6, [234, 88, 12]], // orange-600
+  [1.0, [220, 38, 38]], // red-600
+];
+
+function heatColor(a: number): [number, number, number, number] {
+  const t = Math.max(0, Math.min(1, a));
+  let lo = HEAT_STOPS[0];
+  let hi = HEAT_STOPS[HEAT_STOPS.length - 1];
+  for (let i = 0; i < HEAT_STOPS.length - 1; i++) {
+    if (t >= HEAT_STOPS[i][0] && t <= HEAT_STOPS[i + 1][0]) {
+      lo = HEAT_STOPS[i];
+      hi = HEAT_STOPS[i + 1];
+      break;
+    }
+  }
+  const span = hi[0] - lo[0] || 1;
+  const f = (t - lo[0]) / span;
+  const r = Math.round(lo[1][0] + (hi[1][0] - lo[1][0]) * f);
+  const g = Math.round(lo[1][1] + (hi[1][1] - lo[1][1]) * f);
+  const b = Math.round(lo[1][2] + (hi[1][2] - lo[1][2]) * f);
+  const outA = Math.round(Math.min(0.82, t * 1.25) * 255);
+  return [r, g, b, outA];
+}
+
+// Canvas danger heatmap. Two passes: (1) draw each peek as a soft radial blob
+// of black-alpha weighted by its grade — overlapping blobs accumulate, so
+// stacked peeks pool into hotter zones; (2) recolour the accumulated alpha
+// through the amber→red ramp. Uses each peek's true x_pct/y_pct (not the
+// collision-adjusted pin positions) so real clusters read as danger. Decorative
+// (aria-hidden) — the pins view carries the accessible data.
+function FloorHeatmap({ peeks }: { peeks: Positioned[] }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useLayoutEffect(() => {
+    const wrap = wrapRef.current;
+    const canvas = canvasRef.current;
+    if (!wrap || !canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    function draw() {
+      if (!wrap || !canvas || !ctx) return;
+      const rect = wrap.getBoundingClientRect();
+      const w = Math.round(rect.width);
+      const h = Math.round(rect.height);
+      if (w <= 0 || h <= 0) return;
+
+      // dpr 1 is plenty — the blobs are soft, and it keeps the per-pixel
+      // recolour cheap.
+      canvas.width = w;
+      canvas.height = h;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.clearRect(0, 0, w, h);
+
+      const base = Math.min(w, h);
+      for (const p of peeks) {
+        if (!Number.isFinite(p.x_pct) || !Number.isFinite(p.y_pct)) continue;
+        const r = rating(p.base_success_rate, p.worked_votes, p.vote_count);
+        const threat = Math.max(0, Math.min(1, r.score / 100));
+        const radius = base * (0.12 + 0.12 * threat); // hotter peeks bloom wider
+        const alpha = 0.22 + 0.45 * threat; // and stronger
+        const x = (p.x_pct / 100) * w;
+        const y = (p.y_pct / 100) * h;
+        const g = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        g.addColorStop(0, `rgba(0,0,0,${alpha})`);
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const img = ctx.getImageData(0, 0, w, h);
+      const d = img.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const a = d[i + 3] / 255;
+        if (a === 0) continue;
+        const [cr, cg, cb, ca] = heatColor(a);
+        d[i] = cr;
+        d[i + 1] = cg;
+        d[i + 2] = cb;
+        d[i + 3] = ca;
+      }
+      ctx.putImageData(img, 0, 0);
+    }
+
+    draw();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(draw);
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, [peeks]);
+
+  return (
+    <div ref={wrapRef} aria-hidden className="pointer-events-none absolute inset-0">
+      <canvas ref={canvasRef} className="h-full w-full" />
+    </div>
+  );
+}
+
+function HeatLegend() {
+  return (
+    <div className="mt-3 flex items-center justify-center gap-2 text-[11px] font-medium text-muted">
+      <span>Less peeked</span>
+      <span
+        aria-hidden
+        className="h-2 w-24 rounded-full"
+        style={{
+          background:
+            "linear-gradient(to right, rgba(250,204,21,0.85), rgb(245,158,11), rgb(234,88,12), rgb(220,38,38))",
+        }}
+      />
+      <span>More peeked</span>
     </div>
   );
 }
