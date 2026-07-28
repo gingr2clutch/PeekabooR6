@@ -62,14 +62,7 @@ export default async function Home() {
         </div>
         <div data-reveal className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
-          <p className="mt-2 text-[#6f716a]">Click the map you're on</p>
-          <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">
-            <span className="relative flex h-2 w-2" aria-hidden>
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-brand" />
-            </span>
-            <span>New peeks daily</span>
-          </div>
+          <p className="mt-2 text-lg font-medium text-ink">Click the map you're on</p>
         </div>
         </div>
 
