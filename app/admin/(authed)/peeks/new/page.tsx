@@ -33,6 +33,7 @@ export default async function AdminNewPeekPage() {
           floors={floors}
           action={createPeekAction}
           submitLabel="Create peek"
+          showQueue
         />
       )}
     </div>

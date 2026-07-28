@@ -68,9 +68,26 @@ export async function createPeekAction(formData: FormData) {
   const risk = parseRisk(formData.get("risk"));
   const tip = parseTip(formData.get("tip"));
   const success_rate = parseSuccessRate(formData.get("success_rate"));
-  const published = formData.get("published") === "on";
+  const queue = formData.get("queue") === "on";
+  // Queue overrides Published: a queued peek is saved unpublished with a queue
+  // slot, then auto-published on schedule (see lib/queue.ts).
+  const published = queue ? false : formData.get("published") === "on";
   const is_pro_only = formData.get("is_pro_only") === "on";
   const instructions = parseInstructions(formData);
+
+  // Append to the end of the release queue when queued.
+  let queue_position: number | null = null;
+  if (queue) {
+    const { data: maxRow } = await supabaseAdmin()
+      .from("peeks")
+      .select("queue_position")
+      .not("queue_position", "is", null)
+      .order("queue_position", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    queue_position =
+      ((maxRow?.queue_position as number | null | undefined) ?? 0) + 1;
+  }
 
   console.log("[createPeekAction] parsed payload:", {
     floor_id,
@@ -112,6 +129,7 @@ export async function createPeekAction(formData: FormData) {
       // start identical so the slider value is the visible rate.
       base_success_rate: success_rate,
       published,
+      queue_position,
       is_pro_only,
       instructions: instructions.length ? instructions : null,
     })

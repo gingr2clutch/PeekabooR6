@@ -21,6 +21,9 @@ type Props = {
   // never accidentally revert a live peek to draft). Defaults to true so the
   // "new peek" form can still create published.
   showPublished?: boolean;
+  // Shows the "Add to release queue" checkbox (new-peek form only). A queued
+  // peek is saved unpublished with a queue slot, then auto-published on schedule.
+  showQueue?: boolean;
   initial?: {
     id?: string;
     floor_id?: string;
@@ -45,6 +48,7 @@ export function PeekForm({
   submitLabel,
   initial,
   showPublished = true,
+  showQueue = false,
 }: Props) {
   const [floorId, setFloorId] = useState(
     initial?.floor_id ?? floors[0]?.id ?? ""
@@ -193,6 +197,21 @@ export function PeekForm({
               className="h-4 w-4 rounded border-border accent-brand"
             />
             <span>Published (visible on the public site)</span>
+          </label>
+        )}
+
+        {showQueue && (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="queue"
+              defaultChecked={false}
+              className="h-4 w-4 rounded border-border accent-brand"
+            />
+            <span>
+              ⚔️ Add to release queue (stays hidden, auto-publishes on schedule —
+              overrides Published)
+            </span>
           </label>
         )}
 
