@@ -20,8 +20,8 @@ type SearchIndex = {
 // Client-side load of the search index (published maps + published peeks with
 // floor/map context, floors derived from the peeks on them). Fetched via the
 // public anon client so the header stays static on every page — no server-side
-// per-page query. Cached at module scope so both header instances (desktop +
-// mobile) share one request and it survives client navigation.
+// per-page query. Cached at module scope so it loads once and survives client
+// navigation.
 let indexPromise: Promise<SearchIndex> | null = null;
 
 function loadSearchIndex(): Promise<SearchIndex> {
@@ -73,7 +73,7 @@ function loadSearchIndex(): Promise<SearchIndex> {
     }));
     return { maps, floors, peeks };
   })().catch((e) => {
-    // Let a failed load retry on the next mount rather than caching the error.
+    // Let a failed load retry on the next open rather than caching the error.
     indexPromise = null;
     throw e;
   });
@@ -128,37 +128,43 @@ function buildResults(index: SearchIndex | null, raw: string) {
   return { maps, floors, peeks, flat };
 }
 
-export function SiteSearch({ className }: { className?: string }) {
+export function SiteSearch() {
   const router = useRouter();
   const uid = useId();
   const listId = `${uid}-listbox`;
   const optId = (i: number) => `${uid}-opt-${i}`;
 
   const [index, setIndex] = useState<SearchIndex | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Load the index once on mount (shared, module-cached promise).
-  useEffect(() => {
-    let alive = true;
-    loadSearchIndex()
-      .then((idx) => {
-        if (alive) setIndex(idx);
-      })
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   const { maps, floors, peeks, flat } = useMemo(
     () => buildResults(index, query),
     [index, query]
   );
-  const showDropdown = open && query.trim().length >= MIN_CHARS;
+  const showResults = panelOpen && query.trim().length >= MIN_CHARS;
+
+  function openPanel() {
+    setPanelOpen(true);
+    // Kick off the index load the first time the panel is opened.
+    loadSearchIndex()
+      .then((idx) => setIndex(idx))
+      .catch(() => {});
+  }
+
+  function closePanel() {
+    setPanelOpen(false);
+    setQuery("");
+    setActive(-1);
+  }
+
+  // Focus the input when the panel opens.
+  useEffect(() => {
+    if (panelOpen) requestAnimationFrame(() => inputRef.current?.focus());
+  }, [panelOpen]);
 
   useEffect(() => setActive(-1), [query]);
 
@@ -168,39 +174,31 @@ export function SiteSearch({ className }: { className?: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
+  // Close on outside click.
   useEffect(() => {
-    if (!open) return;
+    if (!panelOpen) return;
     function onDown(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
+        setPanelOpen(false);
+        setQuery("");
+        setActive(-1);
       }
     }
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
-  }, [open]);
+  }, [panelOpen]);
 
   function select(item: ResultItem) {
-    setQuery("");
-    setOpen(false);
-    setActive(-1);
-    inputRef.current?.blur();
+    closePanel();
     router.push(item.href);
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Escape") {
-      setOpen(false);
-      setActive(-1);
-      inputRef.current?.blur();
+      closePanel();
       return;
     }
-    if (!showDropdown) {
-      if (e.key === "ArrowDown" && query.trim().length >= MIN_CHARS) {
-        e.preventDefault();
-        setOpen(true);
-      }
-      return;
-    }
+    if (!showResults) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActive((a) => (flat.length === 0 ? -1 : (a + 1) % flat.length));
@@ -252,74 +250,84 @@ export function SiteSearch({ className }: { className?: string }) {
     );
 
   return (
-    <div ref={containerRef} className={`relative ${className ?? ""}`}>
-      <div className="relative flex items-center">
-        <Search
-          size={18}
-          strokeWidth={2}
-          aria-hidden
-          className="pointer-events-none absolute left-3 text-muted"
-        />
-        <input
-          ref={inputRef}
-          type="text"
-          role="combobox"
-          aria-expanded={showDropdown}
-          aria-controls={listId}
-          aria-activedescendant={showDropdown && active >= 0 ? optId(active) : undefined}
-          aria-autocomplete="list"
-          aria-label="Search maps, floors, and peeks"
-          autoComplete="off"
-          spellCheck={false}
-          placeholder="Search maps, floors, peeks"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onKeyDown={onKeyDown}
-          className="h-11 w-full rounded-card border border-border bg-card pl-10 pr-9 text-sm text-ink outline-none transition-colors placeholder:text-muted focus:border-brand"
-        />
-        {query && (
-          <button
-            type="button"
-            aria-label="Clear search"
-            onClick={() => {
-              setQuery("");
-              setActive(-1);
-              inputRef.current?.focus();
-            }}
-            className="absolute right-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-ink/[0.06] hover:text-ink"
-          >
-            <X size={16} strokeWidth={2} aria-hidden />
-          </button>
-        )}
-      </div>
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        aria-label="Search"
+        aria-expanded={panelOpen}
+        onClick={() => (panelOpen ? closePanel() : openPanel())}
+        className="inline-flex h-11 w-11 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
+      >
+        <Search size={20} strokeWidth={2} aria-hidden />
+      </button>
 
-      {showDropdown && (
-        <ul
-          id={listId}
-          role="listbox"
-          aria-label="Search results"
-          className="absolute left-0 right-0 z-50 mt-2 max-h-[70vh] overflow-y-auto overscroll-contain rounded-card border border-border bg-card py-1 shadow-[0_10px_30px_rgba(0,0,0,0.12)]"
-        >
-          {index === null ? (
-            <li role="presentation" className="px-3 py-3 text-sm text-muted">
-              Searching…
-            </li>
-          ) : flat.length === 0 ? (
-            <li role="presentation" className="px-3 py-3 text-sm text-muted">
-              No results for “{query.trim()}”
-            </li>
-          ) : (
-            <>
-              {renderGroup("Maps", maps, 0)}
-              {renderGroup("Floors", floors, maps.length)}
-              {renderGroup("Peeks", peeks, maps.length + floors.length)}
-            </>
+      {panelOpen && (
+        <div className="absolute right-0 top-full z-50 mt-2 w-[min(340px,calc(100vw-1.5rem))] rounded-card border border-border bg-card p-2 shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
+          <div className="relative flex items-center">
+            <Search
+              size={18}
+              strokeWidth={2}
+              aria-hidden
+              className="pointer-events-none absolute left-3 text-muted"
+            />
+            <input
+              ref={inputRef}
+              type="text"
+              role="combobox"
+              aria-expanded={showResults}
+              aria-controls={listId}
+              aria-activedescendant={showResults && active >= 0 ? optId(active) : undefined}
+              aria-autocomplete="list"
+              aria-label="Search maps, floors, and peeks"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="Search maps, floors, peeks"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={onKeyDown}
+              className="h-11 w-full rounded-card border border-border bg-card pl-10 pr-9 text-sm text-ink outline-none transition-colors placeholder:text-muted focus:border-brand"
+            />
+            {query && (
+              <button
+                type="button"
+                aria-label="Clear search"
+                onClick={() => {
+                  setQuery("");
+                  setActive(-1);
+                  inputRef.current?.focus();
+                }}
+                className="absolute right-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-ink/[0.06] hover:text-ink"
+              >
+                <X size={16} strokeWidth={2} aria-hidden />
+              </button>
+            )}
+          </div>
+
+          {showResults && (
+            <ul
+              id={listId}
+              role="listbox"
+              aria-label="Search results"
+              className="mt-2 max-h-[60vh] overflow-y-auto overscroll-contain"
+            >
+              {index === null ? (
+                <li role="presentation" className="px-3 py-3 text-sm text-muted">
+                  Searching…
+                </li>
+              ) : flat.length === 0 ? (
+                <li role="presentation" className="px-3 py-3 text-sm text-muted">
+                  No results for “{query.trim()}”
+                </li>
+              ) : (
+                <>
+                  {renderGroup("Maps", maps, 0)}
+                  {renderGroup("Floors", floors, maps.length)}
+                  {renderGroup("Peeks", peeks, maps.length + floors.length)}
+                </>
+              )}
+            </ul>
           )}
-        </ul>
+        </div>
       )}
     </div>
   );
