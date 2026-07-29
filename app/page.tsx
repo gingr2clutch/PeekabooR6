@@ -56,7 +56,7 @@ export default async function Home() {
               { label: "Maps", value: stats.mapsLive, icon: "pin", cellClass: "order-3 sm:order-none" },
               { label: "Peeks", value: stats.gradedPeeks, icon: "eye", cellClass: "order-1 sm:order-none sm:border-l" },
               { label: "Votes", value: stats.communityVotes, icon: "check", cellClass: "order-2 border-l sm:order-none" },
-              { label: "S/A Tier", value: stats.saTierPeeks, icon: "trophy", cellClass: "order-4 border-l sm:order-none" },
+              { label: "S/A+ Tier", value: stats.saTierPeeks, icon: "trophy", cellClass: "order-4 border-l sm:order-none" },
             ]}
           />
         </div>
