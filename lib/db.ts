@@ -483,7 +483,7 @@ export type HomeStats = {
   mapsLive: number; // published maps
   gradedPeeks: number; // published peeks
   communityVotes: number; // sum of vote_count across published peeks
-  sTierPeeks: number; // published S-tier peeks: grade letter "S" == S+, S, or S-
+  saTierPeeks: number; // published S/A-tier peeks: grade letter "S" or "A"
 };
 
 // Real, request-time stats for the homepage "live stats" strip. All peek
@@ -511,13 +511,12 @@ export async function getHomeStats(): Promise<HomeStats> {
   }[];
 
   let communityVotes = 0;
-  let sTierPeeks = 0;
+  let saTierPeeks = 0;
   for (const p of rows) {
     communityVotes += p.vote_count ?? 0;
-    if (
-      rating(p.base_success_rate, p.worked_votes, p.vote_count).grade === "S"
-    ) {
-      sTierPeeks += 1;
+    const g = rating(p.base_success_rate, p.worked_votes, p.vote_count).grade;
+    if (g === "S" || g === "A") {
+      saTierPeeks += 1;
     }
   }
 
@@ -525,6 +524,6 @@ export async function getHomeStats(): Promise<HomeStats> {
     mapsLive: mapsLive ?? 0,
     gradedPeeks: rows.length,
     communityVotes,
-    sTierPeeks,
+    saTierPeeks,
   };
 }
