@@ -86,7 +86,6 @@ export default async function Home() {
               statusParts.push(
                 `${counts.peeks} ${counts.peeks === 1 ? "peek" : "peeks"}`
               );
-              if (counts.sTier > 0) statusParts.push(`${counts.sTier} S-tier`);
             }
             const statusLine = statusParts.join(" · ");
             const cardBase =

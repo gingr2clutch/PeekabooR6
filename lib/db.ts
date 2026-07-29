@@ -483,7 +483,7 @@ export type HomeStats = {
   mapsLive: number; // published maps
   gradedPeeks: number; // published peeks
   communityVotes: number; // sum of vote_count across published peeks
-  saTierPeeks: number; // published S/A-tier peeks: grade letter "S" or "A"
+  saTierPeeks: number; // published peeks graded S (any) or A+ specifically
 };
 
 // Real, request-time stats for the homepage "live stats" strip. All peek
@@ -514,8 +514,9 @@ export async function getHomeStats(): Promise<HomeStats> {
   let saTierPeeks = 0;
   for (const p of rows) {
     communityVotes += p.vote_count ?? 0;
-    const g = rating(p.base_success_rate, p.worked_votes, p.vote_count).grade;
-    if (g === "S" || g === "A") {
+    const r = rating(p.base_success_rate, p.worked_votes, p.vote_count);
+    // "S/A tier" = any S grade, plus only the top of A (A+) — not all A.
+    if (r.grade === "S" || r.label === "A+") {
       saTierPeeks += 1;
     }
   }
