@@ -32,7 +32,16 @@ export const dynamic = "force-dynamic";
 const SITE_URL = "https://peekaboor6.com";
 
 // Grade on a 4-point scale for schema.org AggregateRating (measured tier only).
-const GRADE_RATING_VALUE: Record<Grade, number> = { S: 4, A: 3, B: 2, C: 1 };
+// D/F clamp to the worst point on the existing 1–4 schema scale (bestRating 4,
+// worstRating 1). S/A/B/C values are unchanged.
+const GRADE_RATING_VALUE: Record<Grade, number> = {
+  S: 4,
+  A: 3,
+  B: 2,
+  C: 1,
+  D: 1,
+  F: 1,
+};
 
 type Joined = Peek & {
   created_at: string;

@@ -8,7 +8,7 @@ export const displayRate = (n: number) =>
 // once it has collected this many real votes.
 export const MEASURED_MIN_VOTES = 5;
 
-export type Grade = "S" | "A" | "B" | "C";
+export type Grade = "S" | "A" | "B" | "C" | "D" | "F";
 
 // THE one place to tune Effectiveness grading. Strongest-first; a 0–100 value
 // (the admin seed for the estimate tier, or the worked/total % for the
@@ -20,18 +20,20 @@ export type Grade = "S" | "A" | "B" | "C";
 // The plain letter is just a graded label's leading character, so the two can
 // never drift apart.
 export const GRADED_THRESHOLDS: ReadonlyArray<{ label: string; min: number }> = [
-  { label: "S+", min: 95 },
+  { label: "S+", min: 93 },
   { label: "S", min: 90 },
   { label: "S-", min: 85 },
   { label: "A+", min: 80 },
   { label: "A", min: 75 },
   { label: "A-", min: 70 },
-  { label: "B+", min: 65 },
-  { label: "B", min: 60 },
-  { label: "B-", min: 55 },
-  { label: "C+", min: 50 },
-  { label: "C", min: 45 },
-  { label: "C-", min: 0 },
+  { label: "B+", min: 64 },
+  { label: "B", min: 58 },
+  { label: "B-", min: 52 },
+  { label: "C+", min: 45 },
+  { label: "C", min: 38 },
+  { label: "C-", min: 30 },
+  { label: "D", min: 20 },
+  { label: "F", min: 0 },
 ];
 
 // Full label including the +/- modifier — used only in the player-voted tier.
@@ -111,6 +113,8 @@ export const GRADE_TIER_COLORS: Record<Grade, string> = {
   A: "#7cb342", // lime-green
   B: "#e0a92e", // amber
   C: "#d1573a", // red-orange
+  D: "#b23b28", // deep red (extends the existing red end — S/A/B/C unchanged)
+  F: "#8a2015", // darkest red
 };
 
 // Tier color for a grade letter OR a full label (S+, A-, … → its tier color).

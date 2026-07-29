@@ -38,7 +38,12 @@ export function summarizeMap(
   let scoreSum = 0;
 
   for (const p of peeks) {
-    grades[rating(p.base_success_rate, p.worked_votes, p.vote_count).grade] += 1;
+    // The comparison mix bar is a 4-tier S/A/B/C overview; fold the new D/F
+    // tiers into C so the bucket stays exhaustive (same as the map page).
+    const g = rating(p.base_success_rate, p.worked_votes, p.vote_count).grade;
+    const bucket: keyof MapGrades =
+      g === "S" || g === "A" || g === "B" ? g : "C";
+    grades[bucket] += 1;
     totalVotes += p.vote_count ?? 0;
     scoreSum += ratingScore(p.base_success_rate, p.worked_votes, p.vote_count);
   }
