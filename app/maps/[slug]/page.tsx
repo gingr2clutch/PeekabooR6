@@ -28,6 +28,7 @@ import {
   TREND_LINE_COLORS,
 } from "@/lib/trends";
 import { coverThumb } from "@/lib/cover-image";
+import { MAP_GUIDES } from "@/content/map-guides";
 
 export const dynamic = "force-dynamic";
 
@@ -38,9 +39,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const map = await getMapBySlug(params.slug);
   if (!map) return { title: "Not found" };
+  const guide = MAP_GUIDES[params.slug];
   return {
-    title: map.name,
-    description: `Spawn peek locations on ${map.name} — Rainbow Six Siege.`,
+    title: guide?.seoTitle ?? map.name,
+    description:
+      guide?.seoDescription ??
+      `Spawn peek locations on ${map.name} — Rainbow Six Siege.`,
   };
 }
 
@@ -351,6 +355,30 @@ export default async function MapPage({
               </div>
             </div>
           </div>
+        )}
+
+        {/* Per-map guide text (SEO + in-content ad anchors). Renders ONLY for
+            maps with an entry in content/map-guides.ts — other maps unchanged.
+            Sits below the trends card so nothing above it moves. */}
+        {MAP_GUIDES[map.slug] && (
+          <section className="mx-auto mt-12 max-w-2xl">
+            <h2 className="mb-3 text-xl font-bold tracking-tight text-ink">
+              {MAP_GUIDES[map.slug].heading}
+            </h2>
+            <p className="text-[15px] leading-relaxed text-ink/80">
+              {MAP_GUIDES[map.slug].intro}
+            </p>
+            {MAP_GUIDES[map.slug].sections.map((s) => (
+              <div key={s.heading} className="mt-6">
+                <h3 className="mb-2 text-base font-bold tracking-tight text-ink">
+                  {s.heading}
+                </h3>
+                <p className="text-[15px] leading-relaxed text-ink/80">
+                  {s.body}
+                </p>
+              </div>
+            ))}
+          </section>
         )}
 
         {/* Descriptive blurb — moved to the very bottom as small, secondary
