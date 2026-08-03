@@ -24,7 +24,10 @@ export function HowItEndsBanner() {
           </svg>
           <p className={styles.title}>HowItEnds</p>
         </div>
-        <p className={styles.sub1}>DAILY RAINBOW SIX SIEGE</p>
+        <p className={styles.sub1}>
+          <span className={styles.tag}>DAILY RAINBOW</span>
+          <span className={styles.tag}>SIX SIEGE</span>
+        </p>
         <p className={styles.sub2}>DAILY PREDICT-THE-CLIP GAME</p>
       </div>
 

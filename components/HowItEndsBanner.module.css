@@ -221,6 +221,11 @@
   line-height: 1.05;
   color: #6d6de0;
 }
+/* Desktop keeps the two words inline as one line ("DAILY RAINBOW SIX SIEGE");
+   the mobile rules below turn them into stacked badges. */
+.sub1 .tag:first-child {
+  margin-right: 0.35em;
+}
 .sub2 {
   margin: 2px 0 0;
   font-weight: 800;
@@ -348,6 +353,20 @@
     margin-top: 9px;
     font-size: 15px;
     line-height: 1.12;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  /* "DAILY RAINBOW" / "SIX SIEGE" as stacked mini-badges with a slight blue bg. */
+  .sub1 .tag {
+    background: rgba(109, 109, 224, 0.13);
+    padding: 3px 9px;
+    border-radius: 6px;
+    line-height: 1.15;
+  }
+  .sub1 .tag:first-child {
+    margin-right: 0;
   }
   .sub2 {
     margin-top: 9px;
