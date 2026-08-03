@@ -63,7 +63,6 @@
   grid-row: 1 / 3;
   position: relative;
   z-index: 1;
-  min-height: 0;
   background: #16181d;
   border-radius: 10px;
   overflow: hidden;
@@ -213,6 +212,7 @@
   line-height: 1;
   color: #16181d;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 .sub1 {
   margin: 12px 0 0;
@@ -283,38 +283,74 @@
 /* ===== Mobile: single column, stacked in DOM order (title, panel, chips),
    full-width CTA. ===== */
 @media (max-width: 480px) {
+  /* Horizontal layout matching the desktop feel: Row 1 = panel (~38%, 3:4)
+     beside logo+title+subtitles; Row 2 = the two feature chips (equal width);
+     Row 3 = full-width CTA. */
   .card {
-    grid-template-columns: 1fr;
-    grid-template-rows: none;
-    column-gap: 0;
+    grid-template-columns: 38% 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 12px;
     row-gap: 12px;
   }
-  .head,
-  .body,
   .panel {
-    grid-column: auto;
-    grid-row: auto;
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start; /* hold 3:4; don't stretch to the text height */
   }
-  .head,
+  .head {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
   .body {
-    align-self: auto;
+    grid-column: 1 / 3;
+    grid-row: 2;
   }
-  .panel::before {
-    padding-top: 62.5%; /* landscape when full-width */
+  /* panel keeps the base 3:4 floor (padding-top: 133%) on mobile too */
+  .logo {
+    width: 26px;
+    height: 26px;
+  }
+  .titleRow {
+    gap: 7px;
   }
   .title {
-    font-size: 28px;
+    font-size: clamp(18px, 6.2vw, 24px); /* shrink to stay on one line at 320 */
   }
-  .sub1,
+  .sub1 {
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.12;
+  }
   .sub2 {
-    font-size: 17px;
+    font-size: 13px;
+    line-height: 1.12;
+  }
+  .features {
+    margin-top: 0;
+    gap: 10px;
+  }
+  .feature {
+    flex: 1;
+    min-width: 0;
+  }
+  .feature svg {
+    width: 15px;
+    height: 15px;
+  }
+  .featText {
+    font-size: 9.5px;
+  }
+  .featText small {
+    font-size: 8.5px;
   }
   .cta {
     width: 100%;
     justify-content: center;
+    margin-top: 12px;
   }
   .watermark {
-    font-size: 150px;
+    font-size: 130px;
   }
 }
 
