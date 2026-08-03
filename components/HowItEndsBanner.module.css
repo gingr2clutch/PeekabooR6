@@ -200,9 +200,16 @@
 }
 
 @media (max-width: 480px) {
-  /* The compact row is too tight for the corner mark — hide it under 480px. */
+  /* Keep the corner mark on mobile, just smaller + tighter, and reserve room on
+     the text's right edge so the title/subtitle never run under it. */
   .logo {
-    display: none;
+    width: 24px;
+    height: 24px;
+    top: 10px;
+    right: 10px;
+  }
+  .text {
+    padding-right: 26px;
   }
   /* Compact row: keep the player a SMALL thumbnail on the LEFT of the text
      (not stacked/full-width). Desktop base is untouched; these only shrink the
