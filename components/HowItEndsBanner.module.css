@@ -1,7 +1,7 @@
 .card {
   display: flex;
   gap: 14px;
-  align-items: center;
+  align-items: stretch;
   width: 86%;
   max-width: 24rem;
   margin: 0 auto;
@@ -16,16 +16,17 @@
 .panel {
   position: relative;
   flex: 0 0 42%;
-  aspect-ratio: 16 / 10;
+  min-height: 0;
   background: #16181d;
   border-radius: 10px;
   overflow: hidden;
 }
 
-/* Height fallback: a padding spacer forces the panel's intrinsic height from
-   its (always-definite) width, so it can't collapse on browsers/iOS Safari
-   versions that mis-handle aspect-ratio on a flex child. Matches 16/10 (=62.5%)
-   and agrees with aspect-ratio where that works — no double sizing, no CLS. */
+/* The card stretches its children (align-items: stretch), so the panel grows to
+   the text's height and fills any empty room. This padding spacer sets a 16:10
+   FLOOR from the panel's (always-definite) width so it can never collapse —
+   even on browsers/iOS Safari that mishandle aspect-ratio on a flex child. No
+   fixed aspect-ratio, so the panel is free to stretch past it. No CLS. */
 .panel::before {
   content: "";
   display: block;

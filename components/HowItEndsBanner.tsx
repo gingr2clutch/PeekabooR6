@@ -24,7 +24,7 @@ export function HowItEndsBanner() {
 
       <div className={styles.text}>
         <p className={styles.title}>HowItEnds</p>
-        <p className={styles.subtitle}>Daily predict-the-clip game</p>
+        <p className={styles.subtitle}>Daily Rainbow Six Siege predict-the-clip game</p>
         <a
           className={styles.cta}
           href="https://how-it-ends.com"
