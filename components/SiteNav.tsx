@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ArrowUpRight,
   BookOpen,
   ChevronRight,
   Flame,
@@ -307,6 +308,44 @@ export function SiteNav({ version }: { version?: string }) {
                   );
                 })}
 
+                {/* More from us — cross-promo to the sister site. Same section
+                    label + divider + item styling as above; NEW pill is the
+                    only accent. */}
+                <div className="mb-5">
+                  <div
+                    className="mb-2.5 flex items-center gap-3"
+                    style={revealStyle(stagger++)}
+                  >
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-teal">
+                      More from us
+                    </span>
+                    <hr className="h-px flex-1 border-0 bg-border" />
+                  </div>
+                  <div className="space-y-2">
+                    <a
+                      href="https://how-it-ends.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={closeDrawer}
+                      style={revealStyle(stagger++)}
+                      className="relative flex min-h-[44px] items-center gap-3 rounded-xl border border-border bg-card p-2.5 transition-[transform,background-color] duration-[120ms] ease-out active:scale-[0.98] active:bg-ink/[0.04]"
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink/[0.04]">
+                        <HowItEndsLogo size={22} />
+                      </span>
+                      <span className="flex min-w-0 flex-1 items-center gap-2">
+                        <span className="truncate text-[16px] font-semibold text-ink">
+                          HowItEnds
+                        </span>
+                        <span className="shrink-0 rounded-full bg-[#6d6de0] px-1.5 py-0.5 text-[9px] font-bold uppercase leading-none tracking-wide text-white">
+                          New
+                        </span>
+                      </span>
+                      <ArrowUpRight size={18} className="shrink-0 text-muted" aria-hidden />
+                    </a>
+                  </div>
+                </div>
+
                 {/* Footer — pinned to the bottom of the scroll content */}
                 <div className="mt-auto" style={revealStyle(stagger++)}>
                   <hr className="my-5 h-px border-0 bg-border" />
@@ -411,6 +450,18 @@ function MenuCard({
       </span>
       <ChevronRight size={18} className="shrink-0 text-muted" aria-hidden />
     </Link>
+  );
+}
+
+// HowItEnds "Timeline" logo mark (shared with the promo card).
+function HowItEndsLogo({ size = 20 }: { size?: number | string }) {
+  return (
+    <svg viewBox="0 0 100 100" width={size} height={size} fill="none" aria-hidden>
+      <rect x="14" y="18" width="72" height="48" rx="12" stroke="#16181d" strokeWidth="6" />
+      <path d="M44 32 L44 52 L60 42 Z" fill="#6d6de0" />
+      <rect x="14" y="78" width="52" height="6" rx="3" fill="#16181d" />
+      <rect x="70" y="78" width="16" height="6" rx="3" fill="#6d6de0" />
+    </svg>
   );
 }
 
