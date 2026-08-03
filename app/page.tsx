@@ -1,4 +1,5 @@
 import { DiscordBanner } from "@/components/DiscordButton";
+import { HowItEndsBanner } from "@/components/HowItEndsBanner";
 import { MapCardImage } from "@/components/MapCardImage";
 import { MapCardLink } from "@/components/MapCardLink";
 import { LiveStats } from "@/components/LiveStats";
@@ -59,6 +60,9 @@ export default async function Home() {
               { label: "S/A+ Tier", value: stats.saTierPeeks, icon: "trophy", cellClass: "order-4 border-l sm:order-none" },
             ]}
           />
+        </div>
+        <div data-reveal className="mb-6">
+          <HowItEndsBanner />
         </div>
         <div data-reveal className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
