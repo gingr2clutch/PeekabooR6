@@ -1,51 +1,79 @@
 .card {
   position: relative;
-  display: flex;
-  gap: 14px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 30% 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 16px;
   align-items: stretch;
   width: 86%;
-  max-width: 24rem;
+  max-width: 30rem;
   margin: 0 auto;
   background: #fff;
   border: 1px solid #e2e0d5;
   border-left: 4px solid #6d6de0;
   border-radius: 14px;
-  padding: 14px;
+  padding: 16px;
   box-sizing: border-box;
 }
 
-/* HowItEnds "Timeline" logo mark, top-right corner over the padding. Subtle,
-   decorative (pointer-events: none), hidden on the tight mobile row. */
-.logo {
+/* Subtle diagonal purple accents poking into two corners; clipped by the
+   card's overflow: hidden. Decorative. */
+.card::before,
+.card::after {
+  content: "";
   position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 34px;
-  height: 34px;
-  opacity: 0.85;
+  z-index: 0;
+  width: 130px;
+  height: 130px;
+  background: #6d6de0;
+  opacity: 0.06;
+  transform: rotate(45deg);
   pointer-events: none;
 }
+.card::before {
+  top: -78px;
+  left: -46px;
+}
+.card::after {
+  bottom: -78px;
+  right: -46px;
+}
 
+/* Giant ghost "?" watermark behind the right-side content, clipped by the card. */
+.watermark {
+  position: absolute;
+  z-index: 0;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-12deg);
+  font-size: 180px;
+  font-weight: 900;
+  line-height: 1;
+  color: #16181d;
+  opacity: 0.055;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ===== Player panel (left column). Animation internals + keyframes are
+   unchanged from before; only the container shape (3:4 portrait) differs. ===== */
 .panel {
+  grid-column: 1;
+  grid-row: 1 / 3;
   position: relative;
-  flex: 0 0 42%;
+  z-index: 1;
   min-height: 0;
   background: #16181d;
   border-radius: 10px;
   overflow: hidden;
 }
-
-/* The card stretches its children (align-items: stretch), so the panel grows to
-   the text's height and fills any empty room. This padding spacer sets a 16:10
-   FLOOR from the panel's (always-definite) width so it can never collapse —
-   even on browsers/iOS Safari that mishandle aspect-ratio on a flex child. No
-   fixed aspect-ratio, so the panel is free to stretch past it. No CLS. */
+/* 3:4 portrait floor; the panel also stretches to the full grid height. */
 .panel::before {
   content: "";
   display: block;
-  padding-top: 62.5%;
+  padding-top: 133%;
 }
-
 .playTri {
   position: absolute;
   top: 50%;
@@ -58,7 +86,6 @@
   transform: translate(-40%, -50%);
   animation: play 5s ease-in-out infinite;
 }
-
 .track {
   position: absolute;
   left: 8%;
@@ -69,7 +96,6 @@
   background: rgba(255, 255, 255, 0.14);
   overflow: hidden;
 }
-
 .fill {
   display: block;
   height: 100%;
@@ -80,7 +106,6 @@
   transform: scaleX(0);
   animation: fill 5s ease-in-out infinite;
 }
-
 .scanlines {
   position: absolute;
   inset: 0;
@@ -89,7 +114,6 @@
   background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0, 0, 0, 0.35) 3px 5px);
   animation: scan 5s ease-in-out infinite;
 }
-
 .chip {
   position: absolute;
   top: 6px;
@@ -103,7 +127,6 @@
   opacity: 0;
   animation: chip 5s ease-in-out infinite;
 }
-
 .pills {
   position: absolute;
   left: 0;
@@ -116,7 +139,6 @@
   transform: translateY(6px);
   animation: pills 5s ease-in-out infinite;
 }
-
 .pill {
   font: 700 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   color: #16181d;
@@ -125,11 +147,9 @@
   border-radius: 4px;
   white-space: nowrap;
 }
-
 .pillClutch {
   border-left: 3px solid #f2640e;
 }
-
 .pillDies {
   border-left: 3px solid #16181d;
 }
@@ -161,36 +181,97 @@
   100% { opacity: 0; }
 }
 
-.text {
-  flex: 1 1 auto;
-  min-width: 0;
+/* ===== Right side ===== */
+.head {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  position: relative;
+  z-index: 1;
 }
-
+.body {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  position: relative;
+  z-index: 1;
+}
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+}
 .title {
   margin: 0;
   font-weight: 800;
-  font-size: 22px;
-  line-height: 1.05;
-  color: #1e211d;
+  font-size: 34px;
+  line-height: 1;
+  color: #16181d;
+  letter-spacing: -0.01em;
 }
-
-.subtitle {
-  margin: 4px 0 0;
-  font-size: 12.5px;
+.sub1 {
+  margin: 12px 0 0;
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1.05;
+  color: #6d6de0;
+}
+.sub2 {
+  margin: 2px 0 0;
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1.05;
+  color: #16181d;
+}
+.features {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  margin-top: 14px;
+}
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.feature svg {
+  flex: 0 0 auto;
+  color: #6d6de0;
+}
+.featText {
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #16181d;
+}
+.featText small {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
   color: #8b8d86;
 }
-
+.featDivider {
+  width: 1px;
+  background: #e2e0d5;
+}
 .cta {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 10px;
-  padding: 7px 12px;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 10px 16px;
   border-radius: 8px;
   background: #f2640e;
   color: #fff;
-  font-weight: 700;
-  font-size: 12px;
+  font-weight: 800;
+  font-size: 13px;
   text-decoration: none;
   white-space: nowrap;
   transition: background-color 0.15s ease;
@@ -199,51 +280,41 @@
   background: #d9560b;
 }
 
+/* ===== Mobile: single column, stacked in DOM order (title, panel, chips),
+   full-width CTA. ===== */
 @media (max-width: 480px) {
-  /* Keep the corner mark on mobile, just smaller + tighter, and reserve room on
-     the text's right edge so the title/subtitle never run under it. */
-  .logo {
-    width: 24px;
-    height: 24px;
-    top: 10px;
-    right: 10px;
+  .card {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    column-gap: 0;
+    row-gap: 12px;
   }
-  .text {
-    padding-right: 26px;
-  }
-  /* Compact row: keep the player a SMALL thumbnail on the LEFT of the text
-     (not stacked/full-width). Desktop base is untouched; these only shrink the
-     panel + its overlay bits and let the CTA wrap in the narrower column. */
+  .head,
+  .body,
   .panel {
-    flex: 0 0 92px;
+    grid-column: auto;
+    grid-row: auto;
   }
-  .playTri {
-    border-width: 6px 0 6px 10px;
+  .head,
+  .body {
+    align-self: auto;
   }
-  .track {
-    height: 5px;
-  }
-  .chip {
-    top: 5px;
-    left: 5px;
-    font-size: 7px;
-    letter-spacing: 0.15em;
-  }
-  .pills {
-    bottom: 20%;
-    gap: 4px;
-  }
-  .pill {
-    font-size: 7.5px;
-    padding: 2px 4px;
+  .panel::before {
+    padding-top: 62.5%; /* landscape when full-width */
   }
   .title {
-    font-size: 18px;
+    font-size: 28px;
+  }
+  .sub1,
+  .sub2 {
+    font-size: 17px;
   }
   .cta {
-    white-space: normal;
-    padding: 7px 10px;
-    font-size: 11.5px;
+    width: 100%;
+    justify-content: center;
+  }
+  .watermark {
+    font-size: 150px;
   }
 }
 
