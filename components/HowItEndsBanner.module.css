@@ -301,7 +301,7 @@
   .head {
     grid-column: 2;
     grid-row: 1;
-    align-self: center;
+    align-self: start; /* top-align the title next to the panel */
     text-align: center; /* center the title + subtitles */
   }
   .body {
