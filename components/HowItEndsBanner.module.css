@@ -194,23 +194,39 @@
 }
 
 @media (max-width: 480px) {
-  .card {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
+  /* Compact row: keep the player a SMALL thumbnail on the LEFT of the text
+     (not stacked/full-width). Desktop base is untouched; these only shrink the
+     panel + its overlay bits and let the CTA wrap in the narrower column. */
   .panel {
-    flex: none; /* fully drop the desktop `0 0 42%` basis */
-    width: 100%;
+    flex: 0 0 92px;
   }
-  .text {
-    width: 100%;
+  .playTri {
+    border-width: 6px 0 6px 10px;
+  }
+  .track {
+    height: 5px;
+  }
+  .chip {
+    top: 5px;
+    left: 5px;
+    font-size: 7px;
+    letter-spacing: 0.15em;
+  }
+  .pills {
+    bottom: 20%;
+    gap: 4px;
+  }
+  .pill {
+    font-size: 7.5px;
+    padding: 2px 4px;
+  }
+  .title {
+    font-size: 18px;
   }
   .cta {
-    display: flex;
-    width: 100%;
-    justify-content: center;
-    margin-top: 12px;
+    white-space: normal;
+    padding: 7px 10px;
+    font-size: 11.5px;
   }
 }
 
