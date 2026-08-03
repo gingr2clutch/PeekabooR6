@@ -1,4 +1,5 @@
 .card {
+  position: relative;
   display: flex;
   gap: 14px;
   align-items: stretch;
@@ -11,6 +12,18 @@
   border-radius: 14px;
   padding: 14px;
   box-sizing: border-box;
+}
+
+/* HowItEnds "Timeline" logo mark, top-right corner over the padding. Subtle,
+   decorative (pointer-events: none), hidden on the tight mobile row. */
+.logo {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  opacity: 0.85;
+  pointer-events: none;
 }
 
 .panel {
@@ -187,6 +200,10 @@
 }
 
 @media (max-width: 480px) {
+  /* The compact row is too tight for the corner mark — hide it under 480px. */
+  .logo {
+    display: none;
+  }
   /* Compact row: keep the player a SMALL thumbnail on the LEFT of the text
      (not stacked/full-width). Desktop base is untouched; these only shrink the
      panel + its overlay bits and let the CTA wrap in the narrower column. */
