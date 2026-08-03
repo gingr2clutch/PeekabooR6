@@ -152,14 +152,6 @@
   min-width: 0;
 }
 
-.eyebrow {
-  margin: 0 0 5px;
-  font: 700 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #6d6de0;
-}
-
 .title {
   margin: 0;
   font-weight: 800;

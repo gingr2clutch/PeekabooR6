@@ -23,9 +23,8 @@ export function HowItEndsBanner() {
       </div>
 
       <div className={styles.text}>
-        <p className={styles.eyebrow}>New clip daily</p>
         <p className={styles.title}>HowItEnds</p>
-        <p className={styles.subtitle}>Watch the clip. Call the ending.</p>
+        <p className={styles.subtitle}>Daily predict-the-clip game</p>
         <a
           className={styles.cta}
           href="https://how-it-ends.com"
