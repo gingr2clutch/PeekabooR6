@@ -22,6 +22,16 @@
   overflow: hidden;
 }
 
+/* Height fallback: a padding spacer forces the panel's intrinsic height from
+   its (always-definite) width, so it can't collapse on browsers/iOS Safari
+   versions that mis-handle aspect-ratio on a flex child. Matches 16/10 (=62.5%)
+   and agrees with aspect-ratio where that works — no double sizing, no CLS. */
+.panel::before {
+  content: "";
+  display: block;
+  padding-top: 62.5%;
+}
+
 .playTri {
   position: absolute;
   top: 50%;
@@ -187,13 +197,20 @@
   .card {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
   .panel {
-    flex-basis: auto;
+    flex: none; /* fully drop the desktop `0 0 42%` basis */
+    width: 100%;
+  }
+  .text {
     width: 100%;
   }
   .cta {
-    align-self: flex-start;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    margin-top: 12px;
   }
 }
 
