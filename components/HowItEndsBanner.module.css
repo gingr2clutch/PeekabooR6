@@ -208,27 +208,27 @@
   animation: hit 5s ease-in-out infinite;
 }
 @keyframes flash {
-  0%, 40% { opacity: 0; }
-  42% { opacity: 0.9; }
-  44% { opacity: 0.15; }
-  47% { opacity: 0.8; }
-  49% { opacity: 0.15; }
-  52% { opacity: 0.7; }
-  55% { opacity: 0; }
+  0%, 59% { opacity: 0; }
+  61% { opacity: 0.9; }
+  63% { opacity: 0.15; }
+  66% { opacity: 0.8; }
+  68% { opacity: 0.15; }
+  71% { opacity: 0.7; }
+  74% { opacity: 0; }
   100% { opacity: 0; }
 }
 @keyframes reticle {
-  0%, 37% { opacity: 0; transform: translate(-50%, -50%) scale(1.7) rotate(-25deg); }
-  45% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-  53% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-  58% { opacity: 0; transform: translate(-50%, -50%) scale(0.92) rotate(0deg); }
+  0%, 56% { opacity: 0; transform: translate(-50%, -50%) scale(1.7) rotate(-25deg); }
+  64% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  70% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  75% { opacity: 0; transform: translate(-50%, -50%) scale(0.92) rotate(0deg); }
   100% { opacity: 0; }
 }
 @keyframes hit {
-  0%, 51% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
-  55% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  61% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  67% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  0%, 70% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
+  74% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  82% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  88% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
   100% { opacity: 0; }
 }
 
@@ -254,8 +254,9 @@
   100% { opacity: 0; }
 }
 @keyframes pills {
-  0%, 58% { opacity: 0; transform: translateY(5px); }
-  66%, 88% { opacity: 1; transform: translateY(0); }
+  0%, 38% { opacity: 0; transform: translateY(5px); }
+  46%, 54% { opacity: 1; transform: translateY(0); }
+  60% { opacity: 0; transform: translateY(0); }
   100% { opacity: 0; }
 }
 
