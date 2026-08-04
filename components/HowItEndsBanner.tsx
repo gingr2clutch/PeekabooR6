@@ -31,7 +31,7 @@ export function HowItEndsBanner() {
           <p className={styles.title}>HowItEnds</p>
         </div>
         <p className={styles.sub1}>DAILY RAINBOW SIX SIEGE</p>
-        <p className={styles.sub2}>DAILY PREDICT-THE-CLIP GAME</p>
+        <p className={styles.sub2}>PREDICT-THE-CLIP GAME</p>
       </div>
 
       <div className={styles.body}>
