@@ -31,6 +31,16 @@ export function HowItEndsBanner() {
           <span className={`${styles.pill} ${styles.pillClutch}`}>CLUTCH?</span>
           <span className={`${styles.pill} ${styles.pillDies}`}>DIES?</span>
         </div>
+        {/* Tactical lock-on reticle + glitch flash at the freeze moment. */}
+        <span className={styles.flash} />
+        <svg className={styles.reticle} viewBox="0 0 100 100" fill="none" aria-hidden>
+          <circle cx="50" cy="50" r="28" stroke="#f2640e" strokeWidth="4" />
+          <line x1="50" y1="8" x2="50" y2="24" stroke="#f2640e" strokeWidth="4" />
+          <line x1="50" y1="76" x2="50" y2="92" stroke="#f2640e" strokeWidth="4" />
+          <line x1="8" y1="50" x2="24" y2="50" stroke="#f2640e" strokeWidth="4" />
+          <line x1="78" y1="50" x2="92" y2="50" stroke="#f2640e" strokeWidth="4" />
+          <circle cx="50" cy="50" r="3" fill="#f2640e" />
+        </svg>
       </div>
 
       <div className={styles.head}>

@@ -169,6 +169,41 @@
 .pillDies {
   border-left: 3px solid #16181d;
 }
+/* Glitch flash at the freeze instant. */
+.flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  animation: flash 5s ease-in-out infinite;
+}
+/* Tactical lock-on reticle: scans in, snaps to center on freeze, fades as the
+   CLUTCH?/DIES? pills appear. */
+.reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 64%;
+  height: 64%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(1.7) rotate(-25deg);
+  filter: drop-shadow(0 0 3px rgba(242, 100, 14, 0.6));
+  animation: reticle 5s ease-in-out infinite;
+}
+@keyframes flash {
+  0%, 39% { opacity: 0; }
+  41% { opacity: 0.55; }
+  45% { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes reticle {
+  0%, 38% { opacity: 0; transform: translate(-50%, -50%) scale(1.7) rotate(-25deg); }
+  47% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  56% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  64% { opacity: 0; transform: translate(-50%, -50%) scale(0.92) rotate(0deg); }
+  100% { opacity: 0; }
+}
 
 @keyframes play {
   0%, 35% { opacity: 1; }
@@ -352,5 +387,10 @@
     animation: none;
     opacity: 1;
     transform: none;
+  }
+  .reticle,
+  .flash {
+    animation: none;
+    opacity: 0;
   }
 }
