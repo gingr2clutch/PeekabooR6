@@ -262,8 +262,8 @@
   .cta {
     width: 100%;
     justify-content: center;
-    margin-top: 9px;
-    padding: 10px;
+    margin-top: 0; /* feature row removed; row-gap handles the spacing */
+    padding: 11px;
     border-radius: 10px;
     font-size: 13px;
   }
