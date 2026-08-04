@@ -137,13 +137,6 @@
   line-height: 1.05;
   color: #6d6de0;
 }
-.sub2 {
-  margin: 2px 0 0;
-  font-weight: 800;
-  font-size: 20px;
-  line-height: 1.05;
-  color: #16181d;
-}
 .features {
   display: flex;
   align-items: stretch;
@@ -208,13 +201,19 @@
   .tile {
     grid-column: 1;
     grid-row: 1;
-    align-self: start;
+    align-self: stretch; /* fill the text height so there's no empty space */
     border-radius: 16px;
+  }
+  .tile::before {
+    padding-top: 0; /* match the text block, not a forced square */
   }
   .head {
     grid-column: 2;
     grid-row: 1;
-    align-self: center;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
   .body {
     grid-column: 1 / 3;
@@ -227,23 +226,19 @@
     right: 10px;
   }
   .title {
-    font-size: clamp(19px, 5.6vw, 22px);
+    font-size: clamp(24px, 8vw, 32px); /* bigger */
   }
   /* sub1 = purple pill badge */
   .sub1 {
-    margin-top: 5px;
+    margin-top: 7px;
+    align-self: flex-start; /* pill hugs its content in the flex-column head */
     display: inline-block;
     background: rgba(109, 109, 224, 0.15);
     color: #6d6de0;
-    font-size: 10.5px;
+    font-size: 11px;
     line-height: 1;
-    padding: 3px 7px;
+    padding: 4px 8px;
     border-radius: 5px;
-  }
-  .sub2 {
-    margin-top: 5px;
-    font-size: clamp(13px, 4vw, 15px);
-    line-height: 1.08;
   }
   .features {
     margin-top: 0;

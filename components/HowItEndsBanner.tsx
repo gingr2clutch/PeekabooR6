@@ -30,7 +30,6 @@ export function HowItEndsBanner() {
       <div className={styles.head}>
         <p className={styles.title}>HowItEnds</p>
         <p className={styles.sub1}>DAILY RAINBOW SIX SIEGE</p>
-        <p className={styles.sub2}>PREDICT-THE-CLIP GAME</p>
       </div>
 
       <div className={styles.body}>
