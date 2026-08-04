@@ -1,11 +1,9 @@
 import styles from "./HowItEndsBanner.module.css";
 
-// Homepage cross-promo: a showcase card for the daily clip game. Left column is
-// a CSS-only animated player panel; right column has the branding, feature
-// chips, and CTA. CSS grid gives the desktop (panel left / content right) and
-// mobile (title → subtitles → panel → chips → CTA) orders from one DOM.
-// Deterministic height = zero CLS; animation is transform/opacity-only and
-// collapses to a static frozen frame under reduced-motion.
+// Homepage cross-promo showcase card for the daily clip game. The left tile is
+// a static app-icon (the CSS animation is paused — its keyframes are kept,
+// commented, in the stylesheet to re-attach later). Deterministic height = zero
+// CLS. Desktop keeps its structure; mobile (<480px) restacks.
 export function HowItEndsBanner() {
   return (
     <div className={styles.card}>
@@ -13,9 +11,17 @@ export function HowItEndsBanner() {
         ?
       </span>
 
+      {/* Static app-icon tile (animation removed for now). */}
+      <div className={styles.tile} aria-hidden>
+        <svg className={styles.tileGlyph} viewBox="0 0 100 100" fill="none">
+          <rect x="16" y="28" width="68" height="44" rx="13" stroke="#fff" strokeWidth="8" />
+          <path d="M42 40 L42 60 L62 50 Z" fill="#fff" />
+        </svg>
+      </div>
+
       <div className={styles.head}>
         <div className={styles.titleRow}>
-          {/* HowItEnds "Timeline" logo mark. */}
+          {/* Small logo mark — desktop only (hidden on mobile, where the tile is the mark). */}
           <svg className={styles.logo} viewBox="0 0 100 100" fill="none" aria-hidden>
             <rect x="14" y="18" width="72" height="48" rx="12" stroke="#16181d" strokeWidth="6" />
             <path d="M44 32 L44 52 L60 42 Z" fill="#6d6de0" />
@@ -24,31 +30,14 @@ export function HowItEndsBanner() {
           </svg>
           <p className={styles.title}>HowItEnds</p>
         </div>
-        <p className={styles.sub1}>
-          <span className={styles.tag}>DAILY RAINBOW</span>
-          <span className={styles.tag}>SIX SIEGE</span>
-        </p>
+        <p className={styles.sub1}>DAILY RAINBOW SIX SIEGE</p>
         <p className={styles.sub2}>DAILY PREDICT-THE-CLIP GAME</p>
-      </div>
-
-      {/* Decorative CSS-only player animation. */}
-      <div className={styles.panel} aria-hidden>
-        <span className={styles.playTri} />
-        <div className={styles.track}>
-          <span className={styles.fill} />
-        </div>
-        <div className={styles.scanlines} />
-        <span className={styles.chip}>FROZEN</span>
-        <div className={styles.pills}>
-          <span className={`${styles.pill} ${styles.pillClutch}`}>CLUTCH?</span>
-          <span className={`${styles.pill} ${styles.pillDies}`}>DIES?</span>
-        </div>
       </div>
 
       <div className={styles.body}>
         <div className={styles.features}>
           <div className={styles.feature}>
-            {/* clock-arrow */}
+            {/* clock */}
             <svg
               width={17}
               height={17}
@@ -72,7 +61,7 @@ export function HowItEndsBanner() {
           <div className={styles.featDivider} />
 
           <div className={styles.feature}>
-            {/* head outline */}
+            {/* person */}
             <svg
               width={17}
               height={17}
