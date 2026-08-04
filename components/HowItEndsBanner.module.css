@@ -94,6 +94,28 @@
   height: 54%;
   transform: translate(-50%, -50%);
 }
+/* Looping progress-bar "playing" animation on the tile glyph. */
+.tileFill {
+  transform-box: fill-box;
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: tileFill 2.6s ease-in-out infinite;
+}
+@keyframes tileFill {
+  0% {
+    transform: scaleX(0);
+  }
+  70%,
+  100% {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tileFill {
+    animation: none;
+    transform: scaleX(0.6);
+  }
+}
 
 /* ===== Right side ===== */
 .head {

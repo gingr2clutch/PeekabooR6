@@ -19,11 +19,14 @@ export function HowItEndsBanner() {
         <rect x="70" y="78" width="16" height="6" rx="3" fill="#6d6de0" />
       </svg>
 
-      {/* Static app-icon tile (animation removed for now). */}
+      {/* Video-player tile with a looping progress-bar "playing" animation. */}
       <div className={styles.tile} aria-hidden>
         <svg className={styles.tileGlyph} viewBox="0 0 100 100" fill="none">
-          <rect x="16" y="28" width="68" height="44" rx="13" stroke="#fff" strokeWidth="8" />
-          <path d="M42 40 L42 60 L62 50 Z" fill="#fff" />
+          <rect x="16" y="22" width="68" height="42" rx="12" stroke="#fff" strokeWidth="8" />
+          <path d="M43 35 L43 51 L61 43 Z" fill="#fff" />
+          {/* progress track + animated fill */}
+          <rect x="22" y="74" width="56" height="6" rx="3" fill="#fff" opacity="0.28" />
+          <rect className={styles.tileFill} x="22" y="74" width="56" height="6" rx="3" fill="#fff" />
         </svg>
       </div>
 
