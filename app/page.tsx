@@ -47,6 +47,9 @@ export default async function Home() {
           <div data-reveal className="mb-6">
             <DiscordBanner />
         </div>
+        <div data-reveal className="mb-6">
+          <HowItEndsBanner />
+        </div>
         <div className="mb-5">
           {/* DOM/source order stays Maps, Peeks, Votes, S-Tier (keeps the
               desktop single-row order); the `order-*` classes reshuffle the
@@ -60,9 +63,6 @@ export default async function Home() {
               { label: "S/A+ Tier", value: stats.saTierPeeks, icon: "trophy", cellClass: "order-4 border-l sm:order-none" },
             ]}
           />
-        </div>
-        <div data-reveal className="mb-6">
-          <HowItEndsBanner />
         </div>
         <div data-reveal className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Maps</h1>
