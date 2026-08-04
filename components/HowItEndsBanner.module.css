@@ -17,8 +17,7 @@
   box-sizing: border-box;
 }
 
-/* Subtle purple diagonal accent streaks in the top-right and bottom-left
-   corners, clipped by the card's overflow: hidden. */
+/* Subtle purple diagonal accent streaks in the top-right / bottom-left corners. */
 .card::before,
 .card::after {
   content: "";
@@ -61,8 +60,22 @@
   user-select: none;
 }
 
-/* ===== Static app-icon tile (replaces the animated player panel). The
-   animation CSS is kept, commented out, at the bottom to re-attach later. ===== */
+/* Timeline logo mark in the top-right corner. */
+.cornerLogo {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* ===== Animated video tile: play -> freeze (FROZEN) -> CLUTCH?/DIES? -> loop.
+   transform/opacity-only; collapses to a static frozen frame under
+   reduced-motion. Sizes below suit the desktop tile; the mobile query scales
+   them down for the small tile. ===== */
 .tile {
   grid-column: 1;
   grid-row: 1 / 3;
@@ -70,51 +83,118 @@
   z-index: 1;
   border-radius: 20px;
   overflow: hidden;
-  background:
-    linear-gradient(
-      125deg,
-      transparent 30%,
-      rgba(109, 109, 224, 0.75) 42%,
-      rgba(109, 109, 224, 0.75) 55%,
-      transparent 67%
-    ),
-    #16181d;
+  background: #16181d;
 }
-/* Square floor; on desktop the tile stretches to the full grid height. */
 .tile::before {
   content: "";
   display: block;
   padding-top: 100%;
 }
-.tileGlyph {
+.playTri {
   position: absolute;
-  top: 50%;
+  top: 44%;
   left: 50%;
-  width: 54%;
-  height: 54%;
-  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 9px 0 9px 15px;
+  border-color: transparent transparent transparent #6d6de0;
+  transform: translate(-40%, -50%);
+  animation: play 5s ease-in-out infinite;
 }
-/* Looping progress-bar "playing" animation on the tile glyph. */
-.tileFill {
-  transform-box: fill-box;
+.track {
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  bottom: 9%;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+.fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: #6d6de0;
+  border-radius: 3px;
   transform-origin: left center;
   transform: scaleX(0);
-  animation: tileFill 2.6s ease-in-out infinite;
+  animation: fill 5s ease-in-out infinite;
 }
-@keyframes tileFill {
-  0% {
-    transform: scaleX(0);
-  }
-  70%,
-  100% {
-    transform: scaleX(1);
-  }
+.scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0, 0, 0, 0.35) 2px 4px);
+  animation: scan 5s ease-in-out infinite;
 }
-@media (prefers-reduced-motion: reduce) {
-  .tileFill {
-    animation: none;
-    transform: scaleX(0.6);
-  }
+.chip {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font: 700 8px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.12em;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  animation: chip 5s ease-in-out infinite;
+}
+.pills {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 26%;
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(5px);
+  animation: pills 5s ease-in-out infinite;
+}
+.pill {
+  font: 700 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #16181d;
+  background: #fff;
+  padding: 3px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.pillClutch {
+  border-left: 3px solid #f2640e;
+}
+.pillDies {
+  border-left: 3px solid #16181d;
+}
+
+@keyframes play {
+  0%, 35% { opacity: 1; }
+  45% { opacity: 0.25; }
+  88% { opacity: 0.25; }
+  100% { opacity: 0; }
+}
+@keyframes fill {
+  0% { transform: scaleX(0); }
+  40%, 92% { transform: scaleX(0.7); }
+  100% { transform: scaleX(0.7); }
+}
+@keyframes scan {
+  0%, 35% { opacity: 0; }
+  45%, 88% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes chip {
+  0%, 35% { opacity: 0; }
+  45%, 88% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes pills {
+  0%, 50% { opacity: 0; transform: translateY(5px); }
+  60%, 88% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; }
 }
 
 /* ===== Right side ===== */
@@ -132,17 +212,6 @@
   position: relative;
   z-index: 1;
 }
-/* Timeline logo mark in the top-right corner. */
-.cornerLogo {
-  position: absolute;
-  z-index: 2;
-  top: 12px;
-  right: 12px;
-  width: 30px;
-  height: 30px;
-  opacity: 0.9;
-  pointer-events: none;
-}
 .title {
   margin: 0;
   font-weight: 800;
@@ -158,39 +227,6 @@
   font-size: 20px;
   line-height: 1.05;
   color: #6d6de0;
-}
-.features {
-  display: flex;
-  align-items: stretch;
-  gap: 14px;
-  margin-top: 14px;
-}
-.feature {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.feature svg {
-  flex: 0 0 auto;
-  color: #6d6de0;
-}
-.featText {
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1.25;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: #16181d;
-}
-.featText small {
-  display: block;
-  font-size: 9px;
-  font-weight: 700;
-  color: #8b8d86;
-}
-.featDivider {
-  width: 1px;
-  background: #e2e0d5;
 }
 .cta {
   display: inline-flex;
@@ -211,28 +247,57 @@
   background: #d9560b;
 }
 
-/* ===== Mobile (<480px): static tile left, stacked left-aligned text right ===== */
+/* ===== Mobile (<480px): animated tile left + big title/pill right + CTA ===== */
 @media (max-width: 480px) {
-  /* Compact layout — roughly half the previous height. */
   .card {
-    grid-template-columns: 26% 1fr;
+    grid-template-columns: 34% 1fr;
     column-gap: 12px;
-    row-gap: 9px;
+    row-gap: 10px;
     padding: 12px;
+  }
+  .cornerLogo {
+    width: 24px;
+    height: 24px;
+    top: 10px;
+    right: 10px;
   }
   .tile {
     grid-column: 1;
     grid-row: 1;
-    align-self: stretch; /* fill the text height so there's no empty space */
+    align-self: center;
     border-radius: 16px;
   }
-  .tile::before {
-    padding-top: 0; /* match the text block, not a forced square */
+  /* Scale the animation down for the small mobile tile. */
+  .playTri {
+    border-width: 6px 0 6px 10px;
+  }
+  .track {
+    left: 10%;
+    right: 10%;
+    height: 4px;
+  }
+  .chip {
+    top: 4px;
+    left: 4px;
+    padding: 1px 3px;
+    font-size: 6px;
+    letter-spacing: 0.08em;
+  }
+  .pills {
+    gap: 3px;
+  }
+  .pill {
+    font-size: 6.5px;
+    padding: 2px 3px;
+  }
+  .pillClutch,
+  .pillDies {
+    border-left-width: 2px;
   }
   .head {
     grid-column: 2;
     grid-row: 1;
-    align-self: stretch;
+    align-self: center;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -241,19 +306,12 @@
     grid-column: 1 / 3;
     grid-row: 2;
   }
-  .cornerLogo {
-    width: 24px;
-    height: 24px;
-    top: 10px;
-    right: 10px;
-  }
   .title {
-    font-size: clamp(24px, 8vw, 32px); /* bigger */
+    font-size: clamp(23px, 7.5vw, 30px);
   }
-  /* sub1 = purple pill badge */
   .sub1 {
     margin-top: 7px;
-    align-self: flex-start; /* pill hugs its content in the flex-column head */
+    align-self: flex-start;
     display: inline-block;
     background: rgba(109, 109, 224, 0.15);
     color: #6d6de0;
@@ -262,29 +320,10 @@
     padding: 4px 8px;
     border-radius: 5px;
   }
-  .features {
-    margin-top: 0;
-    gap: 8px;
-  }
-  .feature {
-    flex: 1;
-    min-width: 0;
-  }
-  .feature svg {
-    width: 14px;
-    height: 14px;
-  }
-  .featText {
-    font-size: 10.5px;
-  }
-  .featText small {
-    font-size: 9px;
-    font-weight: 600;
-  }
   .cta {
     width: 100%;
     justify-content: center;
-    margin-top: 0; /* feature row removed; row-gap handles the spacing */
+    margin-top: 0;
     padding: 11px;
     border-radius: 10px;
     font-size: 13px;
@@ -294,23 +333,24 @@
   }
 }
 
-/* =====================================================================
-   PAUSED — animated player CSS (keyframes + element styles). To re-attach:
-   restore the animated markup inside the tile in HowItEndsBanner.tsx
-   (playTri / track+fill / scanlines / chip / pills) and uncomment this block.
-   =====================================================================
-.playTri { position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-style: solid; border-width: 7px 0 7px 12px; border-color: transparent transparent transparent #6d6de0; transform: translate(-40%, -50%); animation: play 5s ease-in-out infinite; }
-.track { position: absolute; left: 8%; right: 8%; bottom: 8%; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.14); overflow: hidden; }
-.fill { display: block; height: 100%; width: 100%; background: #6d6de0; border-radius: 3px; transform-origin: left center; transform: scaleX(0); animation: fill 5s ease-in-out infinite; }
-.scanlines { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0, 0, 0, 0.35) 3px 5px); animation: scan 5s ease-in-out infinite; }
-.chip { position: absolute; top: 6px; left: 6px; padding: 2px 4px; border-radius: 3px; font: 700 8px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.2em; color: #fff; background: rgba(0, 0, 0, 0.55); opacity: 0; animation: chip 5s ease-in-out infinite; }
-.pills { position: absolute; left: 0; right: 0; bottom: 22%; display: flex; gap: 5px; justify-content: center; opacity: 0; transform: translateY(6px); animation: pills 5s ease-in-out infinite; }
-.pill { font: 700 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: #16181d; background: #fff; padding: 3px 5px; border-radius: 4px; white-space: nowrap; }
-.pillClutch { border-left: 3px solid #f2640e; }
-.pillDies { border-left: 3px solid #16181d; }
-@keyframes play { 0%, 35% { opacity: 1; } 45% { opacity: 0.25; } 88% { opacity: 0.25; } 100% { opacity: 0; } }
-@keyframes fill { 0% { transform: scaleX(0); } 40%, 92% { transform: scaleX(0.7); } 100% { transform: scaleX(0.7); } }
-@keyframes scan { 0%, 35% { opacity: 0; } 45%, 88% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes chip { 0%, 35% { opacity: 0; } 45%, 88% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes pills { 0%, 50% { opacity: 0; transform: translateY(6px); } 60%, 88% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; } }
-   ===================================================================== */
+/* Reduced motion: hold the static "frozen" frame (no animation). */
+@media (prefers-reduced-motion: reduce) {
+  .playTri {
+    animation: none;
+    opacity: 0.25;
+  }
+  .fill {
+    animation: none;
+    transform: scaleX(0.7);
+  }
+  .scanlines,
+  .chip {
+    animation: none;
+    opacity: 1;
+  }
+  .pills {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
