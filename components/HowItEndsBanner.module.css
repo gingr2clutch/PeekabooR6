@@ -169,39 +169,66 @@
 .pillDies {
   border-left: 3px solid #16181d;
 }
-/* Glitch flash at the freeze instant. */
+/* Muzzle-flash burst (gunfire flicker) at the freeze instant. */
 .flash {
   position: absolute;
   inset: 0;
-  background: #fff;
-  opacity: 0;
   pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 46%,
+    rgba(255, 214, 140, 0.95),
+    rgba(242, 100, 14, 0.5) 32%,
+    transparent 62%
+  );
   animation: flash 5s ease-in-out infinite;
 }
-/* Tactical lock-on reticle: scans in, snaps to center on freeze, fades as the
-   CLUTCH?/DIES? pills appear. */
+/* Lock-on reticle: scans in and snaps to center as it fires. */
 .reticle {
   position: absolute;
-  top: 50%;
+  top: 46%;
   left: 50%;
-  width: 64%;
-  height: 64%;
+  width: 62%;
+  height: 62%;
   opacity: 0;
   transform: translate(-50%, -50%) scale(1.7) rotate(-25deg);
   filter: drop-shadow(0 0 3px rgba(242, 100, 14, 0.6));
   animation: reticle 5s ease-in-out infinite;
 }
+/* Hitmarker "X" that pops when the shot lands. */
+.hit {
+  position: absolute;
+  top: 46%;
+  left: 50%;
+  width: 52%;
+  height: 52%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(1.7);
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
+  animation: hit 5s ease-in-out infinite;
+}
 @keyframes flash {
-  0%, 39% { opacity: 0; }
-  41% { opacity: 0.55; }
-  45% { opacity: 0; }
+  0%, 40% { opacity: 0; }
+  42% { opacity: 0.9; }
+  44% { opacity: 0.15; }
+  47% { opacity: 0.8; }
+  49% { opacity: 0.15; }
+  52% { opacity: 0.7; }
+  55% { opacity: 0; }
   100% { opacity: 0; }
 }
 @keyframes reticle {
-  0%, 38% { opacity: 0; transform: translate(-50%, -50%) scale(1.7) rotate(-25deg); }
-  47% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-  56% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-  64% { opacity: 0; transform: translate(-50%, -50%) scale(0.92) rotate(0deg); }
+  0%, 37% { opacity: 0; transform: translate(-50%, -50%) scale(1.7) rotate(-25deg); }
+  45% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  53% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  58% { opacity: 0; transform: translate(-50%, -50%) scale(0.92) rotate(0deg); }
+  100% { opacity: 0; }
+}
+@keyframes hit {
+  0%, 51% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
+  55% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  61% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  67% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
   100% { opacity: 0; }
 }
 
@@ -227,8 +254,8 @@
   100% { opacity: 0; }
 }
 @keyframes pills {
-  0%, 50% { opacity: 0; transform: translateY(5px); }
-  60%, 88% { opacity: 1; transform: translateY(0); }
+  0%, 58% { opacity: 0; transform: translateY(5px); }
+  66%, 88% { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; }
 }
 
@@ -389,7 +416,8 @@
     transform: none;
   }
   .reticle,
-  .flash {
+  .flash,
+  .hit {
     animation: none;
     opacity: 0;
   }

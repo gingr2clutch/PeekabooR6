@@ -31,7 +31,7 @@ export function HowItEndsBanner() {
           <span className={`${styles.pill} ${styles.pillClutch}`}>CLUTCH?</span>
           <span className={`${styles.pill} ${styles.pillDies}`}>DIES?</span>
         </div>
-        {/* Tactical lock-on reticle + glitch flash at the freeze moment. */}
+        {/* Combat beat: muzzle-flash + lock-on reticle (firing) -> hitmarker. */}
         <span className={styles.flash} />
         <svg className={styles.reticle} viewBox="0 0 100 100" fill="none" aria-hidden>
           <circle cx="50" cy="50" r="28" stroke="#f2640e" strokeWidth="4" />
@@ -40,6 +40,12 @@ export function HowItEndsBanner() {
           <line x1="8" y1="50" x2="24" y2="50" stroke="#f2640e" strokeWidth="4" />
           <line x1="78" y1="50" x2="92" y2="50" stroke="#f2640e" strokeWidth="4" />
           <circle cx="50" cy="50" r="3" fill="#f2640e" />
+        </svg>
+        <svg className={styles.hit} viewBox="0 0 100 100" fill="none" aria-hidden>
+          <line x1="26" y1="26" x2="40" y2="40" stroke="#fff" strokeWidth="7" strokeLinecap="round" />
+          <line x1="74" y1="26" x2="60" y2="40" stroke="#fff" strokeWidth="7" strokeLinecap="round" />
+          <line x1="26" y1="74" x2="40" y2="60" stroke="#fff" strokeWidth="7" strokeLinecap="round" />
+          <line x1="74" y1="74" x2="60" y2="60" stroke="#fff" strokeWidth="7" strokeLinecap="round" />
         </svg>
       </div>
 
