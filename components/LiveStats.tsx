@@ -93,11 +93,11 @@ function Odometer({
   const atZero = phase === "reset";
   const animate = phase === "roll";
   let d = 0;
-  // lg: (>=1024px) takes the number to 1.5x the mobile 1.125rem so the row
-  // doesn't read as a thin strip on wide screens. The digit wheels are sized in
-  // `em`, so they scale with the font-size automatically.
+  // lg: (>=1024px) takes the number to 2x the mobile 1.125rem so the row holds
+  // its own in a full-width card. The digit wheels are sized in `em`, so they
+  // scale with the font-size automatically.
   return (
-    <span className="text-lg font-bold tabular-nums tracking-tight text-ink sm:text-xl lg:text-[1.6875rem]">
+    <span className="text-lg font-bold tabular-nums tracking-tight text-ink sm:text-xl lg:text-[2.25rem]">
       {/* Real value for screen readers + crawlers; the rolling glyphs below are
           decorative. */}
       <span className="sr-only">
@@ -180,7 +180,7 @@ export function LiveStats({ cells }: Props) {
                   </span>
                 )}
               </div>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand lg:text-[12px]">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand lg:text-[13px]">
                 {c.label}
               </span>
             </>
@@ -188,7 +188,7 @@ export function LiveStats({ cells }: Props) {
           const wrapClass =
             // py-[5px] keeps the mobile card trimmed; lg: adds real vertical
             // breathing room so the desktop row reads as a stats bar.
-            "flex h-full flex-col items-center justify-center gap-1 px-4 py-[5px] text-center lg:py-3";
+            "flex h-full flex-col items-center justify-center gap-1 px-4 py-[5px] text-center lg:py-4";
           return (
             <div
               key={c.label}
