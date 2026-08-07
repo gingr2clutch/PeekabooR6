@@ -12,16 +12,24 @@ export function HowItEndsBanner() {
     <div className={styles.card}>
       {/* Ambient purple dot-grid: one even 26px lattice, scattered across five
           phase groups so the shimmer reads as individual dots catching light
-          rather than a sheet pulsing in unison. The wrapper's radial mask fades
-          the grid out before the card edge. Opacity-only (composited, no
-          repaint) and absolutely positioned, so it can neither jank nor shift
-          layout. */}
+          rather than a sheet pulsing in unison.
+
+          Two nested wrappers on purpose. A single radial mask cannot hug all
+          four edges of a rectangle — the corners sit ~41% further from centre
+          than the side midpoints, so any radius that fills the corners spills
+          dots through the sides. Instead the outer element fades horizontally
+          and the inner fades vertically; masks on nested elements multiply, so
+          the result dims toward every edge and every corner without needing
+          mask-composite. Opacity-only (composited, no repaint) and absolutely
+          positioned, so it can neither jank nor shift layout. */}
       <div className={styles.dots} aria-hidden>
-        <span className={styles.dots1} />
-        <span className={styles.dots2} />
-        <span className={styles.dots3} />
-        <span className={styles.dots4} />
-        <span className={styles.dots5} />
+        <div className={styles.dotsInner}>
+          <span className={styles.dots1} />
+          <span className={styles.dots2} />
+          <span className={styles.dots3} />
+          <span className={styles.dots4} />
+          <span className={styles.dots5} />
+        </div>
       </div>
 
       {/* Timeline logo mark, top-right corner. */}

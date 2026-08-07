@@ -37,52 +37,115 @@
 
    Only `opacity` animates, so this stays on the compositor — no repaint, no
    layout, nothing that touches scroll performance. ======================== */
+/* Outer wrapper: the horizontal half of the vignette.
+
+   Why two crossed linear fades instead of one radial. A radial mask cannot hug
+   a rectangle: its corners are ~41% further from centre than its side midpoints
+   (sqrt(2)), so a radius large enough to reach the corners leaves the sides
+   still opaque at the boundary, where the layer clips its own repeating
+   background and slices dots in half. Every previous version therefore had
+   empty corners. Fading X on this element and Y on the child multiplies the two
+   masks — a rectangular vignette that reaches every edge and every corner, dims
+   steadily outward in all directions, and needs no mask-composite (still patchy
+   across browsers).
+
+   The ramp is symmetric and monotonic from the centre out, holding full
+   strength only across the middle ~10% and decaying through eight steps to each
+   side. Both ends sit fully transparent for the outer 2%, which is the margin
+   that keeps dots whole. */
 .dots {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* Reach vs. clipping. Radii stay at 50%/50% — exactly half the box, so 100%
-     of this gradient lands on the edge — and the ramp is stretched across
-     eleven stops that decay steadily from the centre outward. Dots stay visible
-     nearly the whole way out, each fainter than the one inside it, so average
-     opacity falls with distance rather than the field simply ending.
-
-     The full-strength core is deliberately small (16%): if the plateau is wide,
-     the remaining distance has to dump from opaque to nothing quickly, which
-     reads as a ring. A small core buys a long, even decay.
-
-     Transparency completes at 96%, not 100%. That last 4% is the margin that
-     keeps dots whole — the layer clips its repeating background at its own
-     bounds, so any dot still carrying alpha at the boundary gets sliced. 4% of
-     the half-height is comfortably more than the 2.2px a dot needs. */
-  -webkit-mask-image: radial-gradient(
-    ellipse 50% 50% at 50% 50%,
-    #000 0%,
-    #000 16%,
-    rgba(0, 0, 0, 0.94) 30%,
-    rgba(0, 0, 0, 0.84) 42%,
-    rgba(0, 0, 0, 0.7) 53%,
-    rgba(0, 0, 0, 0.55) 63%,
-    rgba(0, 0, 0, 0.4) 72%,
-    rgba(0, 0, 0, 0.27) 80%,
-    rgba(0, 0, 0, 0.16) 87%,
-    rgba(0, 0, 0, 0.07) 92%,
-    transparent 96%
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    transparent 2%,
+    rgba(0, 0, 0, 0.12) 6%,
+    rgba(0, 0, 0, 0.3) 11%,
+    rgba(0, 0, 0, 0.5) 16%,
+    rgba(0, 0, 0, 0.68) 22%,
+    rgba(0, 0, 0, 0.84) 29%,
+    rgba(0, 0, 0, 0.94) 37%,
+    #000 45%,
+    #000 55%,
+    rgba(0, 0, 0, 0.94) 63%,
+    rgba(0, 0, 0, 0.84) 71%,
+    rgba(0, 0, 0, 0.68) 78%,
+    rgba(0, 0, 0, 0.5) 84%,
+    rgba(0, 0, 0, 0.3) 89%,
+    rgba(0, 0, 0, 0.12) 94%,
+    transparent 98%,
+    transparent 100%
   );
-  mask-image: radial-gradient(
-    ellipse 50% 50% at 50% 50%,
-    #000 0%,
-    #000 16%,
-    rgba(0, 0, 0, 0.94) 30%,
-    rgba(0, 0, 0, 0.84) 42%,
-    rgba(0, 0, 0, 0.7) 53%,
-    rgba(0, 0, 0, 0.55) 63%,
-    rgba(0, 0, 0, 0.4) 72%,
-    rgba(0, 0, 0, 0.27) 80%,
-    rgba(0, 0, 0, 0.16) 87%,
-    rgba(0, 0, 0, 0.07) 92%,
-    transparent 96%
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    transparent 2%,
+    rgba(0, 0, 0, 0.12) 6%,
+    rgba(0, 0, 0, 0.3) 11%,
+    rgba(0, 0, 0, 0.5) 16%,
+    rgba(0, 0, 0, 0.68) 22%,
+    rgba(0, 0, 0, 0.84) 29%,
+    rgba(0, 0, 0, 0.94) 37%,
+    #000 45%,
+    #000 55%,
+    rgba(0, 0, 0, 0.94) 63%,
+    rgba(0, 0, 0, 0.84) 71%,
+    rgba(0, 0, 0, 0.68) 78%,
+    rgba(0, 0, 0, 0.5) 84%,
+    rgba(0, 0, 0, 0.3) 89%,
+    rgba(0, 0, 0, 0.12) 94%,
+    transparent 98%,
+    transparent 100%
+  );
+}
+/* Inner wrapper: the vertical half. Same profile, rotated. */
+.dotsInner {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 2%,
+    rgba(0, 0, 0, 0.12) 6%,
+    rgba(0, 0, 0, 0.3) 11%,
+    rgba(0, 0, 0, 0.5) 16%,
+    rgba(0, 0, 0, 0.68) 22%,
+    rgba(0, 0, 0, 0.84) 29%,
+    rgba(0, 0, 0, 0.94) 37%,
+    #000 45%,
+    #000 55%,
+    rgba(0, 0, 0, 0.94) 63%,
+    rgba(0, 0, 0, 0.84) 71%,
+    rgba(0, 0, 0, 0.68) 78%,
+    rgba(0, 0, 0, 0.5) 84%,
+    rgba(0, 0, 0, 0.3) 89%,
+    rgba(0, 0, 0, 0.12) 94%,
+    transparent 98%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 2%,
+    rgba(0, 0, 0, 0.12) 6%,
+    rgba(0, 0, 0, 0.3) 11%,
+    rgba(0, 0, 0, 0.5) 16%,
+    rgba(0, 0, 0, 0.68) 22%,
+    rgba(0, 0, 0, 0.84) 29%,
+    rgba(0, 0, 0, 0.94) 37%,
+    #000 45%,
+    #000 55%,
+    rgba(0, 0, 0, 0.94) 63%,
+    rgba(0, 0, 0, 0.84) 71%,
+    rgba(0, 0, 0, 0.68) 78%,
+    rgba(0, 0, 0, 0.5) 84%,
+    rgba(0, 0, 0, 0.3) 89%,
+    rgba(0, 0, 0, 0.12) 94%,
+    transparent 98%,
+    transparent 100%
   );
 }
 .dots span {
