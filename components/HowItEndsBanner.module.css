@@ -110,13 +110,10 @@
     to bottom,
     transparent 0%,
     transparent 2%,
-    rgba(0, 0, 0, 0.12) 4%,
-    rgba(0, 0, 0, 0.34) 7%,
-    rgba(0, 0, 0, 0.56) 10%,
-    rgba(0, 0, 0, 0.74) 13%,
-    rgba(0, 0, 0, 0.88) 16%,
-    rgba(0, 0, 0, 0.96) 19%,
-    #000 23%,
+    rgba(0, 0, 0, 0.42) 4%,
+    rgba(0, 0, 0, 0.72) 6%,
+    rgba(0, 0, 0, 0.92) 9%,
+    #000 12%,
     #000 77%,
     rgba(0, 0, 0, 0.96) 81%,
     rgba(0, 0, 0, 0.88) 84%,
@@ -131,13 +128,10 @@
     to bottom,
     transparent 0%,
     transparent 2%,
-    rgba(0, 0, 0, 0.12) 4%,
-    rgba(0, 0, 0, 0.34) 7%,
-    rgba(0, 0, 0, 0.56) 10%,
-    rgba(0, 0, 0, 0.74) 13%,
-    rgba(0, 0, 0, 0.88) 16%,
-    rgba(0, 0, 0, 0.96) 19%,
-    #000 23%,
+    rgba(0, 0, 0, 0.42) 4%,
+    rgba(0, 0, 0, 0.72) 6%,
+    rgba(0, 0, 0, 0.92) 9%,
+    #000 12%,
     #000 77%,
     rgba(0, 0, 0, 0.96) 81%,
     rgba(0, 0, 0, 0.88) 84%,
@@ -312,24 +306,24 @@
   position: relative;
   z-index: 1;
 }
-/* Keeps the grid off the wordmark and the tag. A soft clearing painted in the
-   page cream, sitting above the dots but below the type — soft-edged, so the
-   dots thin out around the words instead of stopping at a visible rectangle.
-   Colour is the page background (globals.css `body`), so this only works while
-   the card is transparent on that cream; it would need revisiting if the card
-   ever moved onto a different surface. */
-.head::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: -14px -18px -10px -16px;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 76% 68% at 50% 50%,
-    #f6f3ea 0%,
-    #f6f3ea 52%,
-    rgba(246, 243, 234, 0) 100%
-  );
+/* Keeping the grid off the type without also clearing the space around it.
+   A block-level clearing (the ellipse that used to live on .head::before) blanks
+   the whole bounding box, so the gaps beside a short line — the area under
+   "Ends", past the end of "DAILY RAINBOW" — lost their dots too. Stacked
+   background-coloured text-shadows instead: they hug the glyph outlines, so
+   dots run right up to the letters and fill every gap between them.
+
+   Not a glow. The colour is the page cream, identical to what is behind it, so
+   it is invisible in its own right — purely a stencil that keeps dots off the
+   letterforms. Several small radii rather than one large blur, which gives an
+   opaque edge close in rather than a soft halo reaching outwards.
+
+   Tied to the page background (globals.css `body`); would need revisiting if
+   the card ever moved onto a different surface. */
+.title,
+.sub1 {
+  text-shadow: 0 0 2px #f6f3ea, 0 0 3px #f6f3ea, 0 0 5px #f6f3ea,
+    0 0 7px #f6f3ea;
 }
 .body {
   grid-column: 2;
