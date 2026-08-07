@@ -200,7 +200,7 @@ export function SiteNav({ version }: { version?: string }) {
           <div
             aria-hidden
             onClick={closeDrawer}
-            className="fixed inset-0 z-40 md:hidden"
+            className="fixed inset-0 z-40"
             style={{
               backgroundColor: "rgba(20,20,18,0.45)",
               backdropFilter: "blur(8px)",
@@ -218,7 +218,7 @@ export function SiteNav({ version }: { version?: string }) {
             aria-modal="true"
             aria-label="Site navigation"
             tabIndex={-1}
-            className="fixed inset-y-0 right-0 z-50 flex w-[85vw] max-w-[400px] flex-col rounded-l-2xl bg-bg shadow-[-8px_0_30px_rgba(0,0,0,0.14)] outline-none md:hidden"
+            className="fixed inset-y-0 right-0 z-50 flex w-[85vw] max-w-[400px] flex-col rounded-l-2xl bg-bg shadow-[-8px_0_30px_rgba(0,0,0,0.14)] outline-none"
             style={{
               transform: reduce ? "none" : show ? "translateX(0)" : "translateX(100%)",
               opacity: reduce ? (show ? 1 : 0) : 1,
