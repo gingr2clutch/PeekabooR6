@@ -209,15 +209,29 @@
 }
 
 /* Timeline logo mark in the top-right corner. */
+/* The mark gets the same treatment as the type: dots run up to it but never
+   touch it. An <svg> is a replaced element, so ::before is unreliable on it —
+   instead the padding widens the element's own box beyond the drawn mark
+   (content-box keeps the artwork at 30px) and a cream radial fills that box,
+   solid across the mark and fading out through the padding. The offsets are
+   reduced by the padding so the mark stays put visually. */
 .cornerLogo {
   position: absolute;
   z-index: 2;
-  top: 12px;
-  right: 12px;
+  top: 3px;
+  right: 3px;
   width: 30px;
   height: 30px;
+  padding: 9px;
+  box-sizing: content-box;
   opacity: 0.9;
   pointer-events: none;
+  background: radial-gradient(
+    circle closest-side,
+    #f6f3ea 0%,
+    #f6f3ea 80%,
+    rgba(246, 243, 234, 0) 100%
+  );
 }
 
 /* ===== Gameplay-still tile =================================================
@@ -381,8 +395,9 @@
   .cornerLogo {
     width: 24px;
     height: 24px;
-    top: 10px;
-    right: 10px;
+    padding: 8px;
+    top: 2px;
+    right: 2px;
   }
   .tile {
     grid-column: 1;
