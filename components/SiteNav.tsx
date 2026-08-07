@@ -22,22 +22,10 @@ import { AuthNavIcon } from "./AuthNavIcon";
 import { SiteSearch } from "./SiteSearch";
 import { DISCORD_INVITE } from "./DiscordButton";
 
-const ICON_SIZE = 16;
-const ICON_STROKE = 2;
 const ENTER_MS = 320;
 const EXIT_MS = 220;
 
 const TIKTOK_URL = "https://www.tiktok.com/@peekaboo_r6";
-
-// Desktop inline nav (unchanged) — a lean subset. The full grouped list lives
-// in the mobile drawer below.
-type NavItem = { href: string; label: string; Icon: typeof Map };
-const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "Maps", Icon: Map },
-  { href: "/top", label: "Top", Icon: Flame },
-  { href: "/underrated", label: "Underrated", Icon: Gem },
-  { href: "/sponsor", label: "Partner", Icon: Handshake },
-];
 
 type IconType = ComponentType<{ size?: number | string }>;
 
@@ -79,9 +67,6 @@ const SECTIONS: { label: string; items: MenuItem[] }[] = [
     ],
   },
 ];
-
-const desktopLinkCls =
-  "inline-flex items-center gap-1.5 text-sm font-medium text-ink transition-colors duration-150 ease-out hover:text-brand sm:text-base";
 
 const FOCUSABLE_SELECTOR =
   "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])";
@@ -176,14 +161,11 @@ export function SiteNav({ version }: { version?: string }) {
 
   return (
     <>
-      {/* Desktop inline nav — unchanged. */}
-      <nav className="hidden items-center gap-4 sm:gap-6 md:flex">
-        {NAV_ITEMS.map(({ href, label, Icon }) => (
-          <Link key={href} href={href} className={desktopLinkCls}>
-            <Icon size={ICON_SIZE} strokeWidth={ICON_STROKE} aria-hidden />
-            <span>{label}</span>
-          </Link>
-        ))}
+      {/* One nav row at every width: the drawer is now the only link surface,
+          so the inline desktop list is gone. Everything it held (Maps, Top,
+          Underrated, Partner) already appears in SECTIONS below, so nothing is
+          lost. Order puts the hamburger last, i.e. hard right. */}
+      <div className="flex items-center gap-0.5">
         {/* Compact Discord button, desktop only. Below lg: the homepage keeps
             its full-width Discord bar instead (app/page.tsx hides that bar at
             lg:), so the two never both appear. */}
@@ -193,17 +175,11 @@ export function SiteNav({ version }: { version?: string }) {
           rel="noopener noreferrer"
           aria-label="Join the peekabooR6 Discord (opens in new tab)"
           title="Join our Discord"
-          className="hidden items-center gap-1.5 rounded-btn bg-gradient-to-r from-[#57938b] to-[#497f75] px-2.5 py-1.5 text-xs font-semibold text-white transition-[filter] duration-150 ease-out hover:brightness-95 lg:inline-flex"
+          className="mr-1.5 hidden items-center gap-1.5 rounded-btn bg-gradient-to-r from-[#57938b] to-[#497f75] px-2.5 py-1.5 text-xs font-semibold text-white transition-[filter] duration-150 ease-out hover:brightness-95 lg:inline-flex"
         >
           <DiscordGlyph size={15} />
           <span>Join</span>
         </a>
-        <AuthNavIcon iconSize={20} />
-        <SiteSearch />
-      </nav>
-
-      {/* Mobile: profile icon + search + hamburger, top-right (menu rightmost). */}
-      <div className="flex items-center gap-0.5 md:hidden">
         <AuthNavIcon />
         <SiteSearch />
         <button
