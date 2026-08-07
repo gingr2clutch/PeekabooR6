@@ -83,7 +83,14 @@ export function HowItEndsBanner() {
         <p className={styles.title}>
           How<span className={styles.titleAccent}>It</span>Ends
         </p>
-        <p className={styles.sub1}>DAILY RAINBOW SIX SIEGE</p>
+        {/* Broken 2-and-2 — "DAILY RAINBOW" over "SIX SIEGE" — rather than left
+            to wrap, so the break holds at every width. The <br> is a line break
+            only: the text still reads as one phrase to screen readers. */}
+        <p className={styles.sub1}>
+          DAILY RAINBOW
+          <br />
+          SIX SIEGE
+        </p>
       </div>
 
       <div className={styles.body}>
