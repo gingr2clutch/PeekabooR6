@@ -20,33 +20,6 @@
   box-sizing: border-box;
 }
 
-/* Purple diagonal accent streaks in the top-right / bottom-left corners. */
-.card::before,
-.card::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  width: 170px;
-  height: 34px;
-  pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    rgba(109, 109, 224, 0),
-    rgba(109, 109, 224, 0.28) 45%,
-    rgba(109, 109, 224, 0.28) 55%,
-    rgba(109, 109, 224, 0)
-  );
-  transform: rotate(-40deg);
-}
-.card::before {
-  top: 2px;
-  right: -40px;
-}
-.card::after {
-  bottom: 2px;
-  left: -40px;
-}
-
 /* ===== Ambient purple dot-grid =============================================
    Three interleaved dot layers, each on its own slow cycle, sitting behind all
    content. The radial mask on the wrapper is the important part: it keeps dots
