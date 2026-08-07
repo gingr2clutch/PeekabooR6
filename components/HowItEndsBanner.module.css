@@ -42,29 +42,33 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* Long, many-stopped falloff. Extra stops are the whole point: a two-stop
-     ramp bands visibly across a low-contrast field, and the eye reads the
-     banding as an edge. This eases out gradually enough that the grid has no
-     discernible boundary. */
+  /* Radii are 50%/50%, i.e. exactly half the box, and the ramp reaches full
+     transparency at 90% of that — so the grid is already invisible ~5% of the
+     box short of every edge. That margin is what stops half-drawn dots: the
+     element clips its own repeating background at its bounds, so anything still
+     faintly visible at the boundary gets sliced. The previous 104%/112% radii
+     put the entire falloff *outside* the box, which is why dots were arriving
+     at the edge at near-full strength and being cut.
+
+     Many stops rather than two: a short ramp bands visibly across a
+     low-contrast field and the eye reads the banding as an edge. */
   -webkit-mask-image: radial-gradient(
-    ellipse 104% 112% at 50% 50%,
-    #000 22%,
-    rgba(0, 0, 0, 0.94) 40%,
-    rgba(0, 0, 0, 0.82) 54%,
-    rgba(0, 0, 0, 0.62) 67%,
-    rgba(0, 0, 0, 0.38) 79%,
-    rgba(0, 0, 0, 0.16) 90%,
-    transparent 100%
+    ellipse 50% 50% at 50% 50%,
+    #000 0%,
+    #000 38%,
+    rgba(0, 0, 0, 0.88) 54%,
+    rgba(0, 0, 0, 0.6) 68%,
+    rgba(0, 0, 0, 0.3) 80%,
+    transparent 90%
   );
   mask-image: radial-gradient(
-    ellipse 104% 112% at 50% 50%,
-    #000 22%,
-    rgba(0, 0, 0, 0.94) 40%,
-    rgba(0, 0, 0, 0.82) 54%,
-    rgba(0, 0, 0, 0.62) 67%,
-    rgba(0, 0, 0, 0.38) 79%,
-    rgba(0, 0, 0, 0.16) 90%,
-    transparent 100%
+    ellipse 50% 50% at 50% 50%,
+    #000 0%,
+    #000 38%,
+    rgba(0, 0, 0, 0.88) 54%,
+    rgba(0, 0, 0, 0.6) 68%,
+    rgba(0, 0, 0, 0.3) 80%,
+    transparent 90%
   );
 }
 .dots span {
@@ -75,8 +79,8 @@
      apart by anything but its phase. */
   --dot: radial-gradient(
     circle at center,
-    rgba(109, 109, 224, 0.95) 0 1.9px,
-    transparent 2px
+    rgba(109, 109, 224, 1) 0 2.2px,
+    transparent 2.35px
   );
   /* Single values apply to every background layer on the element. */
   background-repeat: repeat;
@@ -119,23 +123,23 @@
    the dots lingering near their extremes rather than snapping — that is the
    difference between a shimmer and a blink. */
 @keyframes twinkle1 {
-  0%, 100% { opacity: 0.34; }
+  0%, 100% { opacity: 0.18; }
   50% { opacity: 1; }
 }
 @keyframes twinkle2 {
   0%, 100% { opacity: 1; }
-  46% { opacity: 0.36; }
+  46% { opacity: 0.2; }
 }
 @keyframes twinkle3 {
-  0%, 100% { opacity: 0.42; }
-  54% { opacity: 0.98; }
+  0%, 100% { opacity: 0.24; }
+  54% { opacity: 1; }
 }
 @keyframes twinkle4 {
-  0%, 100% { opacity: 0.95; }
-  42% { opacity: 0.34; }
+  0%, 100% { opacity: 1; }
+  42% { opacity: 0.18; }
 }
 @keyframes twinkle5 {
-  0%, 100% { opacity: 0.38; }
+  0%, 100% { opacity: 0.22; }
   58% { opacity: 1; }
 }
 
