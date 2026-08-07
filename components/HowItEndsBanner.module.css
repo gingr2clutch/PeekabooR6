@@ -276,19 +276,6 @@
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
-/* "TODAY" badge overlay, top-left. */
-.chip {
-  position: absolute;
-  z-index: 2;
-  top: 6px;
-  left: 6px;
-  padding: 2px 5px;
-  border-radius: 3px;
-  font: 700 8px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-  letter-spacing: 0.12em;
-  color: #fff;
-  background: rgba(74, 74, 181, 0.9);
-}
 /* Little video-player icon, bottom-right corner accent. */
 .playerIcon {
   position: absolute;
@@ -404,13 +391,6 @@
     grid-row: 1;
     align-self: center;
     border-radius: 16px;
-  }
-  .chip {
-    top: 4px;
-    left: 4px;
-    padding: 1px 4px;
-    font-size: 6px;
-    letter-spacing: 0.08em;
   }
   .playerIcon {
     right: 4px;

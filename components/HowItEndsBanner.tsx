@@ -40,10 +40,10 @@ export function HowItEndsBanner() {
         <rect x="70" y="78" width="16" height="6" rx="3" fill="#6d6de0" />
       </svg>
 
-      {/* Gameplay still, framed like a video poster: TODAY badge, translucent
-          "?" over the action, player-icon corner accent. Decorative, so the
-          still is a CSS background — if the screenshot is ever missing the tile
-          degrades to its dark poster treatment, not a broken-image glyph. */}
+      {/* Gameplay still, framed like a video poster: translucent "?" over the
+          action, player-icon corner accent. Decorative, so the still is a CSS
+          background — if the screenshot is ever missing the tile degrades to
+          its dark poster treatment, not a broken-image glyph. */}
       <div className={styles.tile} aria-hidden>
         {/* Drawn in a 100x100 viewBox so the mark scales with the tile at every
             breakpoint instead of needing a per-size font-size. The thin dark
@@ -67,7 +67,6 @@ export function HowItEndsBanner() {
             ?
           </text>
         </svg>
-        <span className={styles.chip}>TODAY</span>
         <span className={styles.playerIcon}>
           <svg viewBox="0 0 24 24" fill="none">
             <rect x="2.5" y="5" width="19" height="14" rx="3" fill="rgba(74,74,181,0.82)" />
