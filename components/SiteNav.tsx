@@ -278,7 +278,12 @@ export function SiteNav({ version }: { version?: string }) {
             {/* Scrollable content (sections + footer) */}
             <div
               className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain px-5"
-              style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)" }}
+              // Extra bottom padding so the list scrolls past its last item
+              // rather than stopping flush against it — "More from us" ends
+              // with room below instead of hard against the drawer edge. Still
+              // adds the safe-area inset on top, so it clears the home
+              // indicator on iOS exactly once.
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 5rem)" }}
             >
               <div className="flex min-h-full flex-col">
                 {SECTIONS.map((section) => {
