@@ -33,7 +33,7 @@
    Every layer shares a 104px tile (a 4x4 block of lattice points) and places
    its dots at whole multiples of 26px inside it, so the union of all five is an
    exact 26px grid. All dots use the same --dot gradient, so no group is ever
-   distinguishable by size or colour — only by phase. Durations are 3.2-3.9s
+   distinguishable by size or colour — only by phase. Durations are 9.7-14.9s
    with negative delays, so the groups start mid-cycle, never sync up, and never
    sweep in a visible wave.
 
@@ -157,31 +157,31 @@
 .dots1 {
   background-image: var(--dot), var(--dot), var(--dot);
   background-position: -6px -6px, 46px 20px, 20px 72px;
-  animation: twinkle1 3.2s ease-in-out infinite;
+  animation: twinkle1 9.7s ease-in-out infinite;
 }
 .dots2 {
   background-image: var(--dot), var(--dot), var(--dot);
   background-position: 20px -6px, 72px 46px, -6px 46px;
-  animation: twinkle2 3.6s ease-in-out infinite;
-  animation-delay: -0.7s;
+  animation: twinkle2 11.3s ease-in-out infinite;
+  animation-delay: -2.3s;
 }
 .dots3 {
   background-image: var(--dot), var(--dot), var(--dot);
   background-position: 46px -6px, -6px 20px, 72px 72px;
-  animation: twinkle3 3.4s ease-in-out infinite;
-  animation-delay: -1.5s;
+  animation: twinkle3 12.1s ease-in-out infinite;
+  animation-delay: -4.8s;
 }
 .dots4 {
   background-image: var(--dot), var(--dot), var(--dot);
   background-position: 72px -6px, 20px 20px, 46px 46px;
-  animation: twinkle4 3.9s ease-in-out infinite;
-  animation-delay: -2.2s;
+  animation: twinkle4 13.7s ease-in-out infinite;
+  animation-delay: -7.1s;
 }
 .dots5 {
   background-image: var(--dot), var(--dot), var(--dot), var(--dot);
   background-position: 72px 20px, 20px 46px, -6px 72px, 46px 72px;
-  animation: twinkle5 3.5s ease-in-out infinite;
-  animation-delay: -2.9s;
+  animation: twinkle5 14.9s ease-in-out infinite;
+  animation-delay: -9.4s;
 }
 /* Full 0.34 -> 1.0 swing, but eased and with the peak placed at a different
    point in each cycle, so groups crest at different moments. ease-in-out keeps
