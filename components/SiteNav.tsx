@@ -95,8 +95,23 @@ export function SiteNav({ version }: { version?: string }) {
 
   function openDrawer() {
     setOpen(true);
-    requestAnimationFrame(() => requestAnimationFrame(() => setShow(true)));
   }
+
+  // Flip `show` once the panel has mounted, so the entry transition animates
+  // from closed instead of mounting already-open. This used to be a nested
+  // requestAnimationFrame inside openDrawer; the timeout is a guarantee that
+  // `show` becomes true even if rAF is throttled or coalesced, which would
+  // otherwise strand the panel at translateX(100%) — mounted and focus-trapping,
+  // but parked off-screen with nothing visible.
+  useEffect(() => {
+    if (!open) return;
+    const raf = requestAnimationFrame(() => setShow(true));
+    const fallback = window.setTimeout(() => setShow(true), 60);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(fallback);
+    };
+  }, [open]);
 
   function closeDrawer() {
     setShow(false);
@@ -200,7 +215,7 @@ export function SiteNav({ version }: { version?: string }) {
           <div
             aria-hidden
             onClick={closeDrawer}
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[90]"
             style={{
               backgroundColor: "rgba(20,20,18,0.45)",
               backdropFilter: "blur(8px)",
@@ -218,7 +233,7 @@ export function SiteNav({ version }: { version?: string }) {
             aria-modal="true"
             aria-label="Site navigation"
             tabIndex={-1}
-            className="fixed inset-y-0 right-0 z-50 flex w-[85vw] max-w-[400px] flex-col rounded-l-2xl bg-bg shadow-[-8px_0_30px_rgba(0,0,0,0.14)] outline-none"
+            className="fixed inset-y-0 right-0 z-[100] flex w-[85vw] max-w-[400px] flex-col rounded-l-2xl bg-bg shadow-[-8px_0_30px_rgba(0,0,0,0.14)] outline-none"
             style={{
               transform: reduce ? "none" : show ? "translateX(0)" : "translateX(100%)",
               opacity: reduce ? (show ? 1 : 0) : 1,
