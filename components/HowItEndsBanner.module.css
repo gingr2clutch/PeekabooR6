@@ -149,38 +149,38 @@
   );
   /* Single values apply to every background layer on the element. */
   background-repeat: repeat;
-  background-size: 104px 104px;
+  background-size: 88px 88px;
   will-change: opacity;
 }
 /* The five groups. Positions are whole multiples of 26px inside the 104px
    tile; together the sixteen points form the complete lattice. */
 .dots1 {
   background-image: var(--dot), var(--dot), var(--dot);
-  background-position: -6px -6px, 46px 20px, 20px 72px;
-  animation: twinkle1 3.2s ease-in-out infinite;
+  background-position: -6px -6px, 38px 16px, 16px 60px;
+  animation: twinkle1 3.2s linear infinite;
 }
 .dots2 {
   background-image: var(--dot), var(--dot), var(--dot);
-  background-position: 20px -6px, 72px 46px, -6px 46px;
-  animation: twinkle2 3.6s ease-in-out infinite;
+  background-position: 16px -6px, 60px 38px, -6px 38px;
+  animation: twinkle2 3.6s linear infinite;
   animation-delay: -0.7s;
 }
 .dots3 {
   background-image: var(--dot), var(--dot), var(--dot);
-  background-position: 46px -6px, -6px 20px, 72px 72px;
-  animation: twinkle3 3.4s ease-in-out infinite;
+  background-position: 38px -6px, -6px 16px, 60px 60px;
+  animation: twinkle3 3.4s linear infinite;
   animation-delay: -1.5s;
 }
 .dots4 {
   background-image: var(--dot), var(--dot), var(--dot);
-  background-position: 72px -6px, 20px 20px, 46px 46px;
-  animation: twinkle4 3.9s ease-in-out infinite;
+  background-position: 60px -6px, 16px 16px, 38px 38px;
+  animation: twinkle4 3.9s linear infinite;
   animation-delay: -2.2s;
 }
 .dots5 {
   background-image: var(--dot), var(--dot), var(--dot), var(--dot);
-  background-position: 72px 20px, 20px 46px, -6px 72px, 46px 72px;
-  animation: twinkle5 3.5s ease-in-out infinite;
+  background-position: 60px 16px, 16px 38px, -6px 60px, 38px 60px;
+  animation: twinkle5 3.5s linear infinite;
   animation-delay: -2.9s;
 }
 /* Full 0.34 -> 1.0 swing, but eased and with the peak placed at a different
@@ -188,24 +188,59 @@
    the dots lingering near their extremes rather than snapping — that is the
    difference between a shimmer and a blink. */
 @keyframes twinkle1 {
-  0%, 100% { opacity: 0.18; }
+  0%,
+  100% { opacity: 0.18; }
+  12.5% { opacity: 0.3; }
+  25% { opacity: 0.59; }
+  37.5% { opacity: 0.88; }
   50% { opacity: 1; }
+  62.5% { opacity: 0.88; }
+  75% { opacity: 0.59; }
+  87.5% { opacity: 0.3; }
 }
 @keyframes twinkle2 {
-  0%, 100% { opacity: 1; }
-  46% { opacity: 0.2; }
+  0%,
+  100% { opacity: 1; }
+  12.5% { opacity: 0.883; }
+  25% { opacity: 0.6; }
+  37.5% { opacity: 0.317; }
+  50% { opacity: 0.2; }
+  62.5% { opacity: 0.317; }
+  75% { opacity: 0.6; }
+  87.5% { opacity: 0.883; }
 }
 @keyframes twinkle3 {
-  0%, 100% { opacity: 0.24; }
-  54% { opacity: 1; }
+  0%,
+  100% { opacity: 0.24; }
+  12.5% { opacity: 0.351; }
+  25% { opacity: 0.62; }
+  37.5% { opacity: 0.889; }
+  50% { opacity: 1; }
+  62.5% { opacity: 0.889; }
+  75% { opacity: 0.62; }
+  87.5% { opacity: 0.351; }
 }
 @keyframes twinkle4 {
-  0%, 100% { opacity: 1; }
-  42% { opacity: 0.18; }
+  0%,
+  100% { opacity: 1; }
+  12.5% { opacity: 0.88; }
+  25% { opacity: 0.59; }
+  37.5% { opacity: 0.3; }
+  50% { opacity: 0.18; }
+  62.5% { opacity: 0.3; }
+  75% { opacity: 0.59; }
+  87.5% { opacity: 0.88; }
 }
 @keyframes twinkle5 {
-  0%, 100% { opacity: 0.22; }
-  58% { opacity: 1; }
+  0%,
+  100% { opacity: 0.22; }
+  12.5% { opacity: 0.334; }
+  25% { opacity: 0.61; }
+  37.5% { opacity: 0.886; }
+  50% { opacity: 1; }
+  62.5% { opacity: 0.886; }
+  75% { opacity: 0.61; }
+  87.5% { opacity: 0.334; }
 }
 
 /* Timeline logo mark in the top-right corner. */
