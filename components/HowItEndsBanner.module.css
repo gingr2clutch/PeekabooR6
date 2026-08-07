@@ -9,9 +9,10 @@
   width: 86%;
   max-width: 30rem;
   margin: 0 auto;
-  /* Near-white, drifting a touch violet at the foot — still reads as a clean
-     raised surface against the cream page, but no longer neutral. */
-  background: linear-gradient(180deg, #fff 0%, #fff 42%, #f5f5fd 100%);
+  /* No fill of its own — the card sits directly on the page cream (#f6f3ea)
+     so there is no lighter panel behind the content. The dot-grid and the
+     purple rules are the only things marking the card out. */
+  background: transparent;
   border: 1px solid rgba(109, 109, 224, 0.3);
   border-left: 5px solid #5a5ac9;
   border-radius: 16px;
