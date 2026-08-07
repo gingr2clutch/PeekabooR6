@@ -46,7 +46,10 @@ export function DiscordBanner() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Join the peekabooR6 Discord (opens in new tab)"
-      className="elev-sm group mx-auto flex w-[86%] max-w-sm items-center gap-2.5 rounded-card bg-gradient-to-r from-[#57938b] to-[#497f75] px-3.5 py-1.5 transition-[filter] duration-150 ease-out hover:brightness-95"
+      // lg: (>=1024px) drops the full-width centred banner for a compact pill
+      // pushed to the top-right — w-auto so it shrinks to its content and mr-0
+      // so the auto left margin pushes it over. Mobile keeps the centred bar.
+      className="elev-sm group mx-auto flex w-[86%] max-w-sm items-center gap-2.5 rounded-card bg-gradient-to-r from-[#57938b] to-[#497f75] px-3.5 py-1.5 transition-[filter] duration-150 ease-out hover:brightness-95 lg:mr-0 lg:w-auto lg:max-w-none lg:gap-2 lg:px-3 lg:py-1"
     >
       <span className="shrink-0 text-white">
         <DiscordIcon size={20} />
@@ -54,10 +57,12 @@ export function DiscordBanner() {
       {/* Single hook line, centered between the icon and the button. min-w-0 +
           truncate so on a narrow screen it shortens with an ellipsis rather
           than wrapping to a second line. */}
-      <span className="min-w-0 flex-1 truncate text-center text-xs font-semibold text-white sm:text-sm">
+      {/* flex-1 + truncate keeps the mobile bar to one line. At lg: the pill is
+          content-width, so the label sizes to itself instead of stretching. */}
+      <span className="min-w-0 flex-1 truncate text-center text-xs font-semibold text-white sm:text-sm lg:flex-none lg:text-xs">
         Be the first to see new peeks
       </span>
-      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-3 py-1 text-xs font-semibold text-[#3f978b] transition-colors group-hover:bg-white/90">
+      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-3 py-1 text-xs font-semibold text-[#3f978b] transition-colors group-hover:bg-white/90 lg:px-2.5 lg:py-0.5">
         Join
       </span>
     </a>

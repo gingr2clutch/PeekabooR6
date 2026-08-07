@@ -446,3 +446,49 @@
     opacity: 0.86;
   }
 }
+
+/* ===== Desktop (>=1024px): a bounded, deliberately-sized card =============
+   On wide screens this was a mobile layout stretched out. Two things caused
+   that. The grid columns are percentages, so the text column grew with the
+   viewport and left the type floating against a large empty gap on the right.
+   And the dot field sits at inset -26px on a card with no overflow clip, so it
+   spilled past the card with nothing to bound it — fine at phone widths where
+   the card fills the screen, but on desktop it reads as the background leaking
+   into the page.
+
+   Here the tile takes a fixed 176px, the type scales up to fill its column
+   rather than float in it, and the field is pulled back inside the card
+   (inset: 0) with the card clipping it, so the grid fades out at the card's
+   own edges. Card stays centred at a deliberate 32rem. ==================== */
+@media (min-width: 1024px) {
+  .card {
+    width: 100%;
+    max-width: 32rem;
+    /* Restores the clip only at this breakpoint: the field is inset 0 here, so
+       there is nothing to bleed, and the clip guarantees it. */
+    overflow: hidden;
+    grid-template-columns: 176px 1fr;
+    column-gap: 20px;
+    padding: 18px;
+  }
+  .dots {
+    inset: 0;
+  }
+  .tile {
+    border-radius: 22px;
+  }
+  .title {
+    font-size: 42px;
+  }
+  .sub1 {
+    margin-top: 10px;
+    font-size: 26px;
+  }
+  .body {
+    margin-top: 18px;
+  }
+  .cta {
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+}
