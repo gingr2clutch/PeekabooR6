@@ -1,15 +1,24 @@
 import styles from "./HowItEndsBanner.module.css";
 
-// Homepage cross-promo showcase card for the daily clip game. The left tile is
-// a static app-icon (the CSS animation is paused — its keyframes are kept,
-// commented, in the stylesheet to re-attach later). Deterministic height = zero
-// CLS. Desktop keeps its structure; mobile (<480px) restacks.
+// Homepage cross-promo showcase card for the daily clip game. HowItEnds purple
+// on a raised white surface so it reads as a product feature against peekaboo's
+// cream page, not an ad banner. The left tile is a real gameplay still
+// (public/howitends-promo-thumb.jpg) dressed as a poster frame; the ambient
+// dot-grid behind the content is radially masked so it dissolves at the card
+// edges. Deterministic height = zero CLS.
 export function HowItEndsBanner() {
   return (
     <div className={styles.card}>
-      <span className={styles.watermark} aria-hidden>
-        ?
-      </span>
+      {/* Ambient purple dot-grid. Three interleaved layers twinkle on their own
+          slow, mutually-prime cycles so no pulse is ever in lockstep. The
+          wrapper's radial mask fades every layer to nothing before the borders,
+          so the grid has no hard edge. Opacity-only (composited, no repaint)
+          and absolutely positioned, so it can neither jank nor shift layout. */}
+      <div className={styles.dots} aria-hidden>
+        <span className={styles.dotsA} />
+        <span className={styles.dotsB} />
+        <span className={styles.dotsC} />
+      </div>
 
       {/* Timeline logo mark, top-right corner. */}
       <svg className={styles.cornerLogo} viewBox="0 0 100 100" fill="none" aria-hidden>
@@ -19,34 +28,18 @@ export function HowItEndsBanner() {
         <rect x="70" y="78" width="16" height="6" rx="3" fill="#6d6de0" />
       </svg>
 
-      {/* Animated video tile: play -> freeze -> CLUTCH?/DIES? -> loop. */}
+      {/* Gameplay still, framed like a video poster: TODAY badge + player-icon
+          corner accent. Decorative, so the still is a CSS background — if the
+          screenshot is ever missing the tile degrades to its dark poster
+          treatment instead of a broken-image glyph. */}
       <div className={styles.tile} aria-hidden>
-        <span className={styles.playTri} />
-        <div className={styles.track}>
-          <span className={styles.fill} />
-        </div>
-        <div className={styles.scanlines} />
-        <span className={styles.chip}>FROZEN</span>
-        <div className={styles.pills}>
-          <span className={`${styles.pill} ${styles.pillClutch}`}>CLUTCH?</span>
-          <span className={`${styles.pill} ${styles.pillDies}`}>DIES?</span>
-        </div>
-        {/* Combat beat: muzzle-flash + lock-on reticle (firing) -> hitmarker. */}
-        <span className={styles.flash} />
-        <svg className={styles.reticle} viewBox="0 0 100 100" fill="none" aria-hidden>
-          <circle cx="50" cy="50" r="28" stroke="#f2640e" strokeWidth="4" />
-          <line x1="50" y1="8" x2="50" y2="24" stroke="#f2640e" strokeWidth="4" />
-          <line x1="50" y1="76" x2="50" y2="92" stroke="#f2640e" strokeWidth="4" />
-          <line x1="8" y1="50" x2="24" y2="50" stroke="#f2640e" strokeWidth="4" />
-          <line x1="78" y1="50" x2="92" y2="50" stroke="#f2640e" strokeWidth="4" />
-          <circle cx="50" cy="50" r="3" fill="#f2640e" />
-        </svg>
-        <svg className={styles.hit} viewBox="0 0 100 100" fill="none" aria-hidden>
-          <line x1="26" y1="26" x2="40" y2="40" stroke="#fff" strokeWidth="7" strokeLinecap="round" />
-          <line x1="74" y1="26" x2="60" y2="40" stroke="#fff" strokeWidth="7" strokeLinecap="round" />
-          <line x1="26" y1="74" x2="40" y2="60" stroke="#fff" strokeWidth="7" strokeLinecap="round" />
-          <line x1="74" y1="74" x2="60" y2="60" stroke="#fff" strokeWidth="7" strokeLinecap="round" />
-        </svg>
+        <span className={styles.chip}>TODAY</span>
+        <span className={styles.playerIcon}>
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="2.5" y="5" width="19" height="14" rx="3" fill="rgba(0,0,0,0.55)" />
+            <path d="M10.4 9.6 L15.2 12 L10.4 14.4 Z" fill="#fff" />
+          </svg>
+        </span>
       </div>
 
       <div className={styles.head}>
@@ -63,6 +56,9 @@ export function HowItEndsBanner() {
         >
           PLAY TODAY&apos;S CLIP →
         </a>
+        <span className={styles.streak}>
+          <span aria-hidden>🔥</span> 1 DAY STREAK
+        </span>
       </div>
     </div>
   );
