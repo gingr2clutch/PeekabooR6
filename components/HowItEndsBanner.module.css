@@ -1,6 +1,8 @@
+/* No overflow clip: the dot-grid deliberately extends past these bounds (see
+   .dots). Nothing else needs clipping — the tile carries its own overflow and
+   radius, and the card itself has no fill or frame to contain. */
 .card {
   position: relative;
-  overflow: hidden;
   display: grid;
   grid-template-columns: 30% 1fr;
   grid-template-rows: auto auto;
@@ -49,34 +51,37 @@
    steadily outward in all directions, and needs no mask-composite (still patchy
    across browsers).
 
-   The ramp is symmetric and monotonic from the centre out. It holds full
-   strength across the middle 54% and squeezes the decay into the outer ~20% of
-   each axis, so the grid is at or near full opacity over most of the card and
-   only gives way close to the edges. Both ends sit fully transparent for the
-   outer 2%, which is the margin that keeps dots whole. */
+   The field is deliberately larger than the card: two 26px rows above, one
+   below, one to each side (inset -52px -26px -26px -26px). The card drops its
+   overflow clip so this can spill out.
+
+   z-index: -1 is what makes that safe. It puts the grid behind everything else
+   on the page rather than over it, so where the field runs past the card it
+   tucks under whatever is there — the Discord banner above (only 24px of clear
+   gap, less than the two rows), the stats card below, and anything Grow by
+   Mediavine injects into the flow. Dots therefore show only in genuinely empty
+   cream, and can never sit on top of an ad. pointer-events stays none besides.
+
+   The ramps are monotonic from the centre out and fully transparent for the
+   outer 2% of each axis — the margin that keeps dots whole now that the layer,
+   not the card, is what bounds them. */
 .dots {
   position: absolute;
-  inset: 0;
-  z-index: 0;
+  inset: -52px -26px -26px -26px;
+  z-index: -1;
   pointer-events: none;
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0%,
     transparent 2%,
-    rgba(0, 0, 0, 0.12) 4%,
-    rgba(0, 0, 0, 0.34) 7%,
-    rgba(0, 0, 0, 0.56) 10%,
-    rgba(0, 0, 0, 0.74) 13%,
-    rgba(0, 0, 0, 0.88) 16%,
-    rgba(0, 0, 0, 0.96) 19%,
-    #000 23%,
-    #000 77%,
-    rgba(0, 0, 0, 0.96) 81%,
-    rgba(0, 0, 0, 0.88) 84%,
-    rgba(0, 0, 0, 0.74) 87%,
-    rgba(0, 0, 0, 0.56) 90%,
-    rgba(0, 0, 0, 0.34) 93%,
-    rgba(0, 0, 0, 0.12) 96%,
+    rgba(0, 0, 0, 0.38) 4%,
+    rgba(0, 0, 0, 0.7) 7%,
+    rgba(0, 0, 0, 0.92) 10%,
+    #000 13%,
+    #000 87%,
+    rgba(0, 0, 0, 0.92) 90%,
+    rgba(0, 0, 0, 0.7) 93%,
+    rgba(0, 0, 0, 0.38) 96%,
     transparent 98%,
     transparent 100%
   );
@@ -84,20 +89,14 @@
     to right,
     transparent 0%,
     transparent 2%,
-    rgba(0, 0, 0, 0.12) 4%,
-    rgba(0, 0, 0, 0.34) 7%,
-    rgba(0, 0, 0, 0.56) 10%,
-    rgba(0, 0, 0, 0.74) 13%,
-    rgba(0, 0, 0, 0.88) 16%,
-    rgba(0, 0, 0, 0.96) 19%,
-    #000 23%,
-    #000 77%,
-    rgba(0, 0, 0, 0.96) 81%,
-    rgba(0, 0, 0, 0.88) 84%,
-    rgba(0, 0, 0, 0.74) 87%,
-    rgba(0, 0, 0, 0.56) 90%,
-    rgba(0, 0, 0, 0.34) 93%,
-    rgba(0, 0, 0, 0.12) 96%,
+    rgba(0, 0, 0, 0.38) 4%,
+    rgba(0, 0, 0, 0.7) 7%,
+    rgba(0, 0, 0, 0.92) 10%,
+    #000 13%,
+    #000 87%,
+    rgba(0, 0, 0, 0.92) 90%,
+    rgba(0, 0, 0, 0.7) 93%,
+    rgba(0, 0, 0, 0.38) 96%,
     transparent 98%,
     transparent 100%
   );
@@ -111,16 +110,13 @@
     transparent 0%,
     transparent 2%,
     rgba(0, 0, 0, 0.42) 4%,
-    rgba(0, 0, 0, 0.72) 6%,
-    rgba(0, 0, 0, 0.92) 9%,
-    #000 12%,
-    #000 77%,
-    rgba(0, 0, 0, 0.96) 81%,
-    rgba(0, 0, 0, 0.88) 84%,
-    rgba(0, 0, 0, 0.74) 87%,
-    rgba(0, 0, 0, 0.56) 90%,
-    rgba(0, 0, 0, 0.34) 93%,
-    rgba(0, 0, 0, 0.12) 96%,
+    rgba(0, 0, 0, 0.74) 6%,
+    rgba(0, 0, 0, 0.93) 8%,
+    #000 11%,
+    #000 88%,
+    rgba(0, 0, 0, 0.9) 91%,
+    rgba(0, 0, 0, 0.66) 94%,
+    rgba(0, 0, 0, 0.34) 96%,
     transparent 98%,
     transparent 100%
   );
@@ -129,16 +125,13 @@
     transparent 0%,
     transparent 2%,
     rgba(0, 0, 0, 0.42) 4%,
-    rgba(0, 0, 0, 0.72) 6%,
-    rgba(0, 0, 0, 0.92) 9%,
-    #000 12%,
-    #000 77%,
-    rgba(0, 0, 0, 0.96) 81%,
-    rgba(0, 0, 0, 0.88) 84%,
-    rgba(0, 0, 0, 0.74) 87%,
-    rgba(0, 0, 0, 0.56) 90%,
-    rgba(0, 0, 0, 0.34) 93%,
-    rgba(0, 0, 0, 0.12) 96%,
+    rgba(0, 0, 0, 0.74) 6%,
+    rgba(0, 0, 0, 0.93) 8%,
+    #000 11%,
+    #000 88%,
+    rgba(0, 0, 0, 0.9) 91%,
+    rgba(0, 0, 0, 0.66) 94%,
+    rgba(0, 0, 0, 0.34) 96%,
     transparent 98%,
     transparent 100%
   );
