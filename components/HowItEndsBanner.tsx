@@ -100,7 +100,7 @@ export function HowItEndsBanner() {
           target="_blank"
           rel="noopener"
         >
-          PLAY TODAY&apos;S CLIP →
+          WATCH &amp; GUESS →
         </a>
       </div>
     </div>
