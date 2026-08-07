@@ -9,12 +9,10 @@
   width: 86%;
   max-width: 30rem;
   margin: 0 auto;
-  /* No fill of its own — the card sits directly on the page cream (#f6f3ea)
-     so there is no lighter panel behind the content. The dot-grid and the
-     purple rules are the only things marking the card out. */
+  /* No fill and no frame — the card sits directly on the page cream (#f6f3ea).
+     The dot-grid is the only thing painted behind the content; the tile and
+     type carry the card on their own. */
   background: transparent;
-  border: 1px solid rgba(109, 109, 224, 0.3);
-  border-left: 5px solid #5a5ac9;
   border-radius: 16px;
   padding: 16px;
   box-sizing: border-box;
@@ -118,11 +116,11 @@
 }
 
 /* ===== Gameplay-still tile =================================================
-   Square poster frame. Layer order (topmost first): a purple wash that tints
-   the frame toward the brand and darkens to a scrim at the foot for badge
-   legibility, the screenshot itself, then a deeper purple fallback that only
-   shows if the screenshot is missing — so an absent file reads as a deliberate
-   poster rather than a broken image. ====================================== */
+   Square poster frame, no colour cast — the screenshot shows as shot. Layer
+   order (topmost first): a neutral scrim at the foot so the corner icon stays
+   legible over bright frames, the screenshot itself, then a plain dark fill
+   that only shows if the screenshot is missing, so an absent file reads as a
+   deliberate poster rather than a broken image. ========================== */
 .tile {
   grid-column: 1;
   grid-row: 1 / 3;
@@ -130,18 +128,16 @@
   z-index: 1;
   border-radius: 20px;
   overflow: hidden;
-  background-color: #191a2c;
+  background-color: #16181d;
   background-image: linear-gradient(
       180deg,
-      rgba(109, 109, 224, 0.26) 0%,
-      rgba(109, 109, 224, 0.12) 46%,
-      rgba(25, 26, 44, 0.78) 100%
+      rgba(22, 24, 29, 0) 58%,
+      rgba(22, 24, 29, 0.62) 100%
     ),
-    url("/howitends-promo-thumb.jpg"),
-    radial-gradient(circle at 50% 42%, rgba(109, 109, 224, 0.42), transparent 64%);
-  background-size: cover, cover, cover;
-  background-position: center, center, center;
-  background-repeat: no-repeat, no-repeat, no-repeat;
+    url("/howitends-promo-thumb.jpg");
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
 }
 /* Reserves the square before the image loads — deterministic height, zero CLS. */
 .tile::before {
