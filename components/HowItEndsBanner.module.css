@@ -449,16 +449,12 @@
   .title {
     font-size: clamp(23px, 7.5vw, 30px);
   }
+  /* Plain purple type, no pill — same treatment as desktop, just smaller. */
   .sub1 {
     margin-top: 7px;
     align-self: flex-start;
-    display: inline-block;
-    background: rgba(109, 109, 224, 0.2);
-    color: #4a4ab5;
     font-size: 11px;
-    line-height: 1;
-    padding: 4px 8px;
-    border-radius: 5px;
+    line-height: 1.1;
   }
   .cta {
     width: 100%;
