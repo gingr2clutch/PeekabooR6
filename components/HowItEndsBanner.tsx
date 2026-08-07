@@ -89,7 +89,7 @@ export function HowItEndsBanner() {
         <p className={styles.sub1}>
           DAILY RAINBOW
           <br />
-          SIX SIEGE
+          SIX SIEGE GAME
         </p>
       </div>
 
