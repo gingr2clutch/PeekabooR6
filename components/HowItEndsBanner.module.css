@@ -253,11 +253,11 @@
 .cornerLogo {
   position: absolute;
   z-index: 2;
-  top: 3px;
-  right: 3px;
+  top: 0;
+  right: 0;
   width: 30px;
   height: 30px;
-  padding: 9px;
+  padding: 12px;
   box-sizing: content-box;
   opacity: 0.9;
   pointer-events: none;
@@ -362,10 +362,16 @@
 
    Tied to the page background (globals.css `body`); would need revisiting if
    the card ever moved onto a different surface. */
+/* Radii repeat on purpose. A single blurred shadow is a gradient — faint at its
+   outer edge — so one 4px shadow leaves a dot 4px from a glyph half-visible.
+   Compositing the same radius several times drives that region fully opaque,
+   giving a solid clearing out to ~6px, then a fade to 14px. That is more than
+   the 2.2px dot radius plus the gap needed for a dot to read as "not touching",
+   at the 22px pitch. */
 .title,
 .sub1 {
-  text-shadow: 0 0 2px #f6f3ea, 0 0 3px #f6f3ea, 0 0 5px #f6f3ea,
-    0 0 7px #f6f3ea;
+  text-shadow: 0 0 4px #f6f3ea, 0 0 4px #f6f3ea, 0 0 4px #f6f3ea,
+    0 0 7px #f6f3ea, 0 0 7px #f6f3ea, 0 0 10px #f6f3ea, 0 0 14px #f6f3ea;
 }
 .body {
   grid-column: 2;
@@ -430,9 +436,9 @@
   .cornerLogo {
     width: 24px;
     height: 24px;
-    padding: 8px;
-    top: 2px;
-    right: 2px;
+    padding: 10px;
+    top: 0;
+    right: 0;
   }
   .tile {
     grid-column: 1;
