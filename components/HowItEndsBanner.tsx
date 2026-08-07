@@ -10,15 +10,18 @@ import styles from "./HowItEndsBanner.module.css";
 export function HowItEndsBanner() {
   return (
     <div className={styles.card}>
-      {/* Ambient purple dot-grid. One evenly-spaced lattice split across two
-          layers in a checkerboard, so every dot sits on the same pitch while
-          the two halves twinkle on separate cycles — even spacing, but not one
-          sheet pulsing in unison. The wrapper's radial mask fades the grid out
-          before the card edge. Opacity-only (composited, no repaint) and
-          absolutely positioned, so it can neither jank nor shift layout. */}
+      {/* Ambient purple dot-grid: one even 26px lattice, scattered across five
+          phase groups so the shimmer reads as individual dots catching light
+          rather than a sheet pulsing in unison. The wrapper's radial mask fades
+          the grid out before the card edge. Opacity-only (composited, no
+          repaint) and absolutely positioned, so it can neither jank nor shift
+          layout. */}
       <div className={styles.dots} aria-hidden>
-        <span className={styles.dotsA} />
-        <span className={styles.dotsB} />
+        <span className={styles.dots1} />
+        <span className={styles.dots2} />
+        <span className={styles.dots3} />
+        <span className={styles.dots4} />
+        <span className={styles.dots5} />
       </div>
 
       {/* Timeline logo mark, top-right corner. */}

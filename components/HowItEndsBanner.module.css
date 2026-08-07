@@ -19,19 +19,24 @@
 }
 
 /* ===== Ambient purple dot-grid =============================================
-   ONE lattice, 26px pitch, drawn by two layers.
+   ONE even lattice, 26px pitch, scattered across FIVE phase groups.
 
-   Even spacing is the constraint: layers on different pitches read as clutter,
-   so both layers here use the same 52px tile and place two dots each, at the
-   tile corner and its centre. Their four positions land exactly on a uniform
-   26px grid — A takes one diagonal of the checkerboard, B the other. Every dot
-   is therefore equidistant from its neighbours, while the two halves still
-   twinkle on separate cycles, so the grid breathes instead of pulsing as one
-   sheet. Identical dot size and colour across both layers, or the checkerboard
-   itself would become visible.
+   Two constraints pull against each other here. Spacing must stay perfectly
+   even (layers on different pitches read as clutter), but the twinkle swings a
+   long way — 0.34 to 1.0 — and a deep swing spread over only two groups makes
+   the grouping itself legible as alternating diagonals. Five groups, assigned
+   to lattice points in a deliberately scattered order rather than a regular
+   one, keep the shimmer reading as individual dots catching light.
+
+   Every layer shares a 104px tile (a 4x4 block of lattice points) and places
+   its dots at whole multiples of 26px inside it, so the union of all five is an
+   exact 26px grid. All dots use the same --dot gradient, so no group is ever
+   distinguishable by size or colour — only by phase. Durations are 3.2-3.9s
+   with negative delays, so the groups start mid-cycle, never sync up, and never
+   sweep in a visible wave.
 
    Only `opacity` animates, so this stays on the compositor — no repaint, no
-   layout. ================================================================= */
+   layout, nothing that touches scroll performance. ======================== */
 .dots {
   position: absolute;
   inset: 0;
@@ -66,53 +71,72 @@
   position: absolute;
   inset: 0;
   display: block;
-  background-repeat: repeat, repeat;
-  background-size: 52px 52px, 52px 52px;
+  /* One dot definition shared by every group — guarantees no group can be told
+     apart by anything but its phase. */
+  --dot: radial-gradient(
+    circle at center,
+    rgba(109, 109, 224, 0.95) 0 1.9px,
+    transparent 2px
+  );
+  /* Single values apply to every background layer on the element. */
+  background-repeat: repeat;
+  background-size: 104px 104px;
   will-change: opacity;
 }
-/* Checkerboard half A: tile corners + tile centres. */
-.dotsA {
-  background-image: radial-gradient(
-      circle at center,
-      rgba(109, 109, 224, 0.92) 0 1.9px,
-      transparent 2px
-    ),
-    radial-gradient(
-      circle at center,
-      rgba(109, 109, 224, 0.92) 0 1.9px,
-      transparent 2px
-    );
-  background-position: 0 0, 26px 26px;
-  opacity: 0.92;
-  animation: twinkleA 9s ease-in-out infinite;
+/* The five groups. Positions are whole multiples of 26px inside the 104px
+   tile; together the sixteen points form the complete lattice. */
+.dots1 {
+  background-image: var(--dot), var(--dot), var(--dot);
+  background-position: 0 0, 52px 26px, 26px 78px;
+  animation: twinkle1 3.2s ease-in-out infinite;
 }
-/* Checkerboard half B: the two remaining lattice points. Same size and colour
-   as A — only the cycle differs. */
-.dotsB {
-  background-image: radial-gradient(
-      circle at center,
-      rgba(109, 109, 224, 0.92) 0 1.9px,
-      transparent 2px
-    ),
-    radial-gradient(
-      circle at center,
-      rgba(109, 109, 224, 0.92) 0 1.9px,
-      transparent 2px
-    );
-  background-position: 26px 0, 0 26px;
-  opacity: 0.92;
-  animation: twinkleB 13s ease-in-out infinite;
-  animation-delay: -5s;
+.dots2 {
+  background-image: var(--dot), var(--dot), var(--dot);
+  background-position: 26px 0, 78px 52px, 0 52px;
+  animation: twinkle2 3.6s ease-in-out infinite;
+  animation-delay: -0.7s;
 }
-/* Shallow swings — ambient breathing, never blinking. Kept close together so
-   neither half of the checkerboard is ever obviously dimmer than the other. */
-@keyframes twinkleA {
-  0%, 100% { opacity: 0.86; }
+.dots3 {
+  background-image: var(--dot), var(--dot), var(--dot);
+  background-position: 52px 0, 0 26px, 78px 78px;
+  animation: twinkle3 3.4s ease-in-out infinite;
+  animation-delay: -1.5s;
+}
+.dots4 {
+  background-image: var(--dot), var(--dot), var(--dot);
+  background-position: 78px 0, 26px 26px, 52px 52px;
+  animation: twinkle4 3.9s ease-in-out infinite;
+  animation-delay: -2.2s;
+}
+.dots5 {
+  background-image: var(--dot), var(--dot), var(--dot), var(--dot);
+  background-position: 78px 26px, 26px 52px, 0 78px, 52px 78px;
+  animation: twinkle5 3.5s ease-in-out infinite;
+  animation-delay: -2.9s;
+}
+/* Full 0.34 -> 1.0 swing, but eased and with the peak placed at a different
+   point in each cycle, so groups crest at different moments. ease-in-out keeps
+   the dots lingering near their extremes rather than snapping — that is the
+   difference between a shimmer and a blink. */
+@keyframes twinkle1 {
+  0%, 100% { opacity: 0.34; }
   50% { opacity: 1; }
 }
-@keyframes twinkleB {
+@keyframes twinkle2 {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.84; }
+  46% { opacity: 0.36; }
+}
+@keyframes twinkle3 {
+  0%, 100% { opacity: 0.42; }
+  54% { opacity: 0.98; }
+}
+@keyframes twinkle4 {
+  0%, 100% { opacity: 0.95; }
+  42% { opacity: 0.34; }
+}
+@keyframes twinkle5 {
+  0%, 100% { opacity: 0.38; }
+  58% { opacity: 1; }
 }
 
 /* Timeline logo mark in the top-right corner. */
@@ -366,10 +390,14 @@
 /* Reduced motion: hold the dots static (still masked, still visible) — the
    twinkle is the only motion left on this card. */
 @media (prefers-reduced-motion: reduce) {
-  .dotsA,
-  .dotsB {
+  .dots1,
+  .dots2,
+  .dots3,
+  .dots4,
+  .dots5 {
     animation: none;
-    /* Both halves at the same value, so the static grid is perfectly even. */
-    opacity: 0.92;
+    /* Every group pinned to the same value, so the static grid is perfectly
+       even — no group frozen mid-fade. */
+    opacity: 0.86;
   }
 }
