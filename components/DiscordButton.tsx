@@ -46,10 +46,7 @@ export function DiscordBanner() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Join the peekabooR6 Discord (opens in new tab)"
-      // lg: (>=1024px) drops the full-width centred banner for a compact pill
-      // pushed to the top-right — w-auto so it shrinks to its content and mr-0
-      // so the auto left margin pushes it over. Mobile keeps the centred bar.
-      className="elev-sm group mx-auto flex w-[86%] max-w-sm items-center gap-2.5 rounded-card bg-gradient-to-r from-[#57938b] to-[#497f75] px-3.5 py-1.5 transition-[filter] duration-150 ease-out hover:brightness-95 lg:mr-0 lg:w-auto lg:max-w-none lg:gap-2 lg:px-3 lg:py-1"
+      className="elev-sm group mx-auto flex w-[86%] max-w-sm items-center gap-2.5 rounded-card bg-gradient-to-r from-[#57938b] to-[#497f75] px-3.5 py-1.5 transition-[filter] duration-150 ease-out hover:brightness-95"
     >
       <span className="shrink-0 text-white">
         <DiscordIcon size={20} />
@@ -57,17 +54,11 @@ export function DiscordBanner() {
       {/* Single hook line, centered between the icon and the button. min-w-0 +
           truncate so on a narrow screen it shortens with an ellipsis rather
           than wrapping to a second line. */}
-      {/* Below lg: the hook line plus a white Join pill, as a full-width bar.
-          At lg: both are dropped and replaced by a single "Join Discord" label,
-          so the whole thing is just an icon and a label — nothing else. */}
-      <span className="min-w-0 flex-1 truncate text-center text-xs font-semibold text-white sm:text-sm lg:hidden">
+      <span className="min-w-0 flex-1 truncate text-center text-xs font-semibold text-white sm:text-sm">
         Be the first to see new peeks
       </span>
-      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-3 py-1 text-xs font-semibold text-[#3f978b] transition-colors group-hover:bg-white/90 lg:hidden">
+      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-3 py-1 text-xs font-semibold text-[#3f978b] transition-colors group-hover:bg-white/90">
         Join
-      </span>
-      <span className="hidden shrink-0 whitespace-nowrap text-xs font-semibold text-white lg:inline">
-        Join Discord
       </span>
     </a>
   );

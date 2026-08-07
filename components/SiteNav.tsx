@@ -184,6 +184,20 @@ export function SiteNav({ version }: { version?: string }) {
             <span>{label}</span>
           </Link>
         ))}
+        {/* Compact Discord button, desktop only. Below lg: the homepage keeps
+            its full-width Discord bar instead (app/page.tsx hides that bar at
+            lg:), so the two never both appear. */}
+        <a
+          href={DISCORD_INVITE}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Join the peekabooR6 Discord (opens in new tab)"
+          title="Join our Discord"
+          className="hidden items-center gap-1.5 rounded-btn bg-gradient-to-r from-[#57938b] to-[#497f75] px-2.5 py-1.5 text-xs font-semibold text-white transition-[filter] duration-150 ease-out hover:brightness-95 lg:inline-flex"
+        >
+          <DiscordGlyph size={15} />
+          <span>Join</span>
+        </a>
         <AuthNavIcon iconSize={20} />
         <SiteSearch />
       </nav>

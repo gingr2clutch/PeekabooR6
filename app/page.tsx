@@ -44,7 +44,9 @@ export default async function Home() {
         {/* Homepage hero. The drifting map filmstrip is anchored to the Maps
             heading below (not here) so it stays clear of the stats card. */}
         <div>
-          <div data-reveal className="mb-6">
+          {/* lg: hides this bar — on desktop the Discord link lives in the top
+              nav next to the profile icon (components/SiteNav.tsx) instead. */}
+          <div data-reveal className="mb-6 lg:hidden">
             <DiscordBanner />
         </div>
         <div data-reveal className="mb-6">
