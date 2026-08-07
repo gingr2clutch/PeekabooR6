@@ -51,9 +51,11 @@
    steadily outward in all directions, and needs no mask-composite (still patchy
    across browsers).
 
-   The field is deliberately larger than the card: two 26px rows above, one
-   below, one to each side (inset -52px -26px -26px -26px). The card drops its
-   overflow clip so this can spill out.
+   The field is deliberately larger than the card: one 26px row past every edge
+   (inset: -26px), so the overhang is uniform on all four sides. The card drops
+   its overflow clip so this can spill out. The lattice itself is nudged 6px up
+   and left via background-position — applied identically to all sixteen points,
+   so the grid shifts as a whole and its spacing stays exact.
 
    z-index: -1 is what makes that safe. It puts the grid behind everything else
    on the page rather than over it, so where the field runs past the card it
@@ -67,7 +69,7 @@
    not the card, is what bounds them. */
 .dots {
   position: absolute;
-  inset: -52px -26px -26px -26px;
+  inset: -26px;
   z-index: -1;
   pointer-events: none;
   -webkit-mask-image: linear-gradient(
@@ -109,10 +111,9 @@
     to bottom,
     transparent 0%,
     transparent 2%,
-    rgba(0, 0, 0, 0.42) 4%,
-    rgba(0, 0, 0, 0.74) 6%,
-    rgba(0, 0, 0, 0.93) 8%,
-    #000 11%,
+    rgba(0, 0, 0, 0.48) 4%,
+    rgba(0, 0, 0, 0.84) 6%,
+    #000 8%,
     #000 88%,
     rgba(0, 0, 0, 0.9) 91%,
     rgba(0, 0, 0, 0.66) 94%,
@@ -124,10 +125,9 @@
     to bottom,
     transparent 0%,
     transparent 2%,
-    rgba(0, 0, 0, 0.42) 4%,
-    rgba(0, 0, 0, 0.74) 6%,
-    rgba(0, 0, 0, 0.93) 8%,
-    #000 11%,
+    rgba(0, 0, 0, 0.48) 4%,
+    rgba(0, 0, 0, 0.84) 6%,
+    #000 8%,
     #000 88%,
     rgba(0, 0, 0, 0.9) 91%,
     rgba(0, 0, 0, 0.66) 94%,
@@ -156,30 +156,30 @@
    tile; together the sixteen points form the complete lattice. */
 .dots1 {
   background-image: var(--dot), var(--dot), var(--dot);
-  background-position: 0 0, 52px 26px, 26px 78px;
+  background-position: -6px -6px, 46px 20px, 20px 72px;
   animation: twinkle1 3.2s ease-in-out infinite;
 }
 .dots2 {
   background-image: var(--dot), var(--dot), var(--dot);
-  background-position: 26px 0, 78px 52px, 0 52px;
+  background-position: 20px -6px, 72px 46px, -6px 46px;
   animation: twinkle2 3.6s ease-in-out infinite;
   animation-delay: -0.7s;
 }
 .dots3 {
   background-image: var(--dot), var(--dot), var(--dot);
-  background-position: 52px 0, 0 26px, 78px 78px;
+  background-position: 46px -6px, -6px 20px, 72px 72px;
   animation: twinkle3 3.4s ease-in-out infinite;
   animation-delay: -1.5s;
 }
 .dots4 {
   background-image: var(--dot), var(--dot), var(--dot);
-  background-position: 78px 0, 26px 26px, 52px 52px;
+  background-position: 72px -6px, 20px 20px, 46px 46px;
   animation: twinkle4 3.9s ease-in-out infinite;
   animation-delay: -2.2s;
 }
 .dots5 {
   background-image: var(--dot), var(--dot), var(--dot), var(--dot);
-  background-position: 78px 26px, 26px 52px, 0 78px, 52px 78px;
+  background-position: 72px 20px, 20px 46px, -6px 72px, 46px 72px;
   animation: twinkle5 3.5s ease-in-out infinite;
   animation-delay: -2.9s;
 }
