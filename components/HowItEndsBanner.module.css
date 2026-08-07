@@ -42,33 +42,47 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* Radii are 50%/50%, i.e. exactly half the box, and the ramp reaches full
-     transparency at 90% of that — so the grid is already invisible ~5% of the
-     box short of every edge. That margin is what stops half-drawn dots: the
-     element clips its own repeating background at its bounds, so anything still
-     faintly visible at the boundary gets sliced. The previous 104%/112% radii
-     put the entire falloff *outside* the box, which is why dots were arriving
-     at the edge at near-full strength and being cut.
+  /* Reach vs. clipping. Radii stay at 50%/50% — exactly half the box, so 100%
+     of this gradient lands on the edge — and the ramp is stretched across
+     eleven stops that decay steadily from the centre outward. Dots stay visible
+     nearly the whole way out, each fainter than the one inside it, so average
+     opacity falls with distance rather than the field simply ending.
 
-     Many stops rather than two: a short ramp bands visibly across a
-     low-contrast field and the eye reads the banding as an edge. */
+     The full-strength core is deliberately small (16%): if the plateau is wide,
+     the remaining distance has to dump from opaque to nothing quickly, which
+     reads as a ring. A small core buys a long, even decay.
+
+     Transparency completes at 96%, not 100%. That last 4% is the margin that
+     keeps dots whole — the layer clips its repeating background at its own
+     bounds, so any dot still carrying alpha at the boundary gets sliced. 4% of
+     the half-height is comfortably more than the 2.2px a dot needs. */
   -webkit-mask-image: radial-gradient(
     ellipse 50% 50% at 50% 50%,
     #000 0%,
-    #000 38%,
-    rgba(0, 0, 0, 0.88) 54%,
-    rgba(0, 0, 0, 0.6) 68%,
-    rgba(0, 0, 0, 0.3) 80%,
-    transparent 90%
+    #000 16%,
+    rgba(0, 0, 0, 0.94) 30%,
+    rgba(0, 0, 0, 0.84) 42%,
+    rgba(0, 0, 0, 0.7) 53%,
+    rgba(0, 0, 0, 0.55) 63%,
+    rgba(0, 0, 0, 0.4) 72%,
+    rgba(0, 0, 0, 0.27) 80%,
+    rgba(0, 0, 0, 0.16) 87%,
+    rgba(0, 0, 0, 0.07) 92%,
+    transparent 96%
   );
   mask-image: radial-gradient(
     ellipse 50% 50% at 50% 50%,
     #000 0%,
-    #000 38%,
-    rgba(0, 0, 0, 0.88) 54%,
-    rgba(0, 0, 0, 0.6) 68%,
-    rgba(0, 0, 0, 0.3) 80%,
-    transparent 90%
+    #000 16%,
+    rgba(0, 0, 0, 0.94) 30%,
+    rgba(0, 0, 0, 0.84) 42%,
+    rgba(0, 0, 0, 0.7) 53%,
+    rgba(0, 0, 0, 0.55) 63%,
+    rgba(0, 0, 0, 0.4) 72%,
+    rgba(0, 0, 0, 0.27) 80%,
+    rgba(0, 0, 0, 0.16) 87%,
+    rgba(0, 0, 0, 0.07) 92%,
+    transparent 96%
   );
 }
 .dots span {
