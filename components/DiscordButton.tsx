@@ -57,13 +57,17 @@ export function DiscordBanner() {
       {/* Single hook line, centered between the icon and the button. min-w-0 +
           truncate so on a narrow screen it shortens with an ellipsis rather
           than wrapping to a second line. */}
-      {/* flex-1 + truncate keeps the mobile bar to one line. At lg: the pill is
-          content-width, so the label sizes to itself instead of stretching. */}
-      <span className="min-w-0 flex-1 truncate text-center text-xs font-semibold text-white sm:text-sm lg:flex-none lg:text-xs">
+      {/* Below lg: the hook line plus a white Join pill, as a full-width bar.
+          At lg: both are dropped and replaced by a single "Join Discord" label,
+          so the whole thing is just an icon and a label — nothing else. */}
+      <span className="min-w-0 flex-1 truncate text-center text-xs font-semibold text-white sm:text-sm lg:hidden">
         Be the first to see new peeks
       </span>
-      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-3 py-1 text-xs font-semibold text-[#3f978b] transition-colors group-hover:bg-white/90 lg:px-2.5 lg:py-0.5">
+      <span className="inline-flex shrink-0 items-center justify-center rounded-btn bg-white px-3 py-1 text-xs font-semibold text-[#3f978b] transition-colors group-hover:bg-white/90 lg:hidden">
         Join
+      </span>
+      <span className="hidden shrink-0 whitespace-nowrap text-xs font-semibold text-white lg:inline">
+        Join Discord
       </span>
     </a>
   );
