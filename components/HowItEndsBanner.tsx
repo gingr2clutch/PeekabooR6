@@ -102,9 +102,6 @@ export function HowItEndsBanner() {
         >
           PLAY TODAY&apos;S CLIP →
         </a>
-        <span className={styles.streak}>
-          <span aria-hidden>🔥</span> 1 DAY STREAK
-        </span>
       </div>
     </div>
   );

@@ -383,25 +383,7 @@
 .cta:hover {
   background: #4a4ab5;
 }
-/* Streak hook — quiet purple pill, deliberately lighter than the CTA so it
-   reads as supporting detail and never competes with the action. The fill is
-   the opaque equivalent of an 18% purple tint over the page cream: same colour
-   as before, but solid, so dots can't show through behind the text. */
-.streak {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 9px;
-  border-radius: 999px;
-  background: #dddbe8;
-  color: #4a4ab5;
-  font-weight: 800;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-}
-
-/* ===== Mobile (<480px): tile left + title/tag right, CTA + streak below ===== */
+/* ===== Mobile (<480px): tile left + title/tag right, CTA below ===== */
 @media (max-width: 480px) {
   .card {
     grid-template-columns: 34% 1fr;
