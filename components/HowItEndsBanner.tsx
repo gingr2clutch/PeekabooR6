@@ -1,9 +1,10 @@
 import styles from "./HowItEndsBanner.module.css";
 
-// Homepage cross-promo showcase card for the daily clip game. HowItEnds purple
-// on a raised white surface so it reads as a product feature against peekaboo's
-// cream page, not an ad banner. The left tile is a real gameplay still
-// (public/howitends-promo-thumb.jpg) dressed as a poster frame; the ambient
+// Homepage cross-promo showcase card for the daily clip game. Leans hard on the
+// HowItEnds purple over a raised near-white surface so it reads as a product
+// feature against peekaboo's cream page, not an ad banner. The left tile is a
+// real gameplay still (public/howitends-promo-thumb.jpg) under a translucent "?"
+// — the outcome is the thing you're being invited to guess. The ambient
 // dot-grid behind the content is radially masked so it dissolves at the card
 // edges. Deterministic height = zero CLS.
 export function HowItEndsBanner() {
@@ -28,22 +29,49 @@ export function HowItEndsBanner() {
         <rect x="70" y="78" width="16" height="6" rx="3" fill="#6d6de0" />
       </svg>
 
-      {/* Gameplay still, framed like a video poster: TODAY badge + player-icon
-          corner accent. Decorative, so the still is a CSS background — if the
-          screenshot is ever missing the tile degrades to its dark poster
-          treatment instead of a broken-image glyph. */}
+      {/* Gameplay still, framed like a video poster: TODAY badge, translucent
+          "?" over the action, player-icon corner accent. Decorative, so the
+          still is a CSS background — if the screenshot is ever missing the tile
+          degrades to its dark poster treatment, not a broken-image glyph. */}
       <div className={styles.tile} aria-hidden>
+        {/* Drawn in a 100x100 viewBox so the mark scales with the tile at every
+            breakpoint instead of needing a per-size font-size. The thin dark
+            stroke keeps it legible over bright frames without resorting to a
+            glow. */}
+        <svg className={styles.mysteryMark} viewBox="0 0 100 100" aria-hidden>
+          <text
+            x="50"
+            y="53"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontFamily="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif"
+            fontSize="88"
+            fontWeight="900"
+            fill="#6d6de0"
+            fillOpacity="0.78"
+            stroke="rgba(16,17,24,0.38)"
+            strokeWidth="2.5"
+            paintOrder="stroke"
+          >
+            ?
+          </text>
+        </svg>
         <span className={styles.chip}>TODAY</span>
         <span className={styles.playerIcon}>
           <svg viewBox="0 0 24 24" fill="none">
-            <rect x="2.5" y="5" width="19" height="14" rx="3" fill="rgba(0,0,0,0.55)" />
+            <rect x="2.5" y="5" width="19" height="14" rx="3" fill="rgba(74,74,181,0.82)" />
             <path d="M10.4 9.6 L15.2 12 L10.4 14.4 Z" fill="#fff" />
           </svg>
         </span>
       </div>
 
       <div className={styles.head}>
-        <p className={styles.title}>HowItEnds</p>
+        {/* Two-tone wordmark, matching how-it-ends.com: the middle "It" carries
+            the purple. The spans add no whitespace, so the accessible name is
+            still the single word "HowItEnds". */}
+        <p className={styles.title}>
+          How<span className={styles.titleAccent}>It</span>Ends
+        </p>
         <p className={styles.sub1}>DAILY RAINBOW SIX SIEGE</p>
       </div>
 
