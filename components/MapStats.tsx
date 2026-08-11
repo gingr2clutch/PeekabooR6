@@ -30,14 +30,18 @@ export function MapStats({ peeks, votes, grades, topPeek }: Props) {
         Map Stats
       </div>
 
-      {/* Stat line — bold black numbers + muted mono labels. */}
-      <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-2 sm:gap-x-10">
+      {/* Stat line — bold black numbers + muted mono labels.
+          lg: (>=1024px) the card is ~976px wide inside max-w-5xl, so three
+          centred stats leave a lot of dead space either side. Spreading them
+          evenly also lines the row up with the full-width grade bar below,
+          rather than floating as a short cluster above it. */}
+      <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-2 sm:gap-x-10 lg:justify-evenly lg:gap-x-16">
         {stats.map((s) => (
           <div key={s.label} className="inline-flex items-baseline gap-1.5">
-            <span className="text-xl font-bold tabular-nums tracking-tight text-ink sm:text-2xl">
+            <span className="text-xl font-bold tabular-nums tracking-tight text-ink sm:text-2xl lg:text-4xl">
               {s.value.toLocaleString("en-US")}
             </span>
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-muted lg:text-[11px]">
               {s.label}
             </span>
           </div>
