@@ -98,10 +98,83 @@ const EDGE_FADE =
 // nothing in the centre. The centre stays clear so the heading and the card's
 // text never sit over a motif.
 //
-// Drawn as tiled SVG patterns rather than shipped images: crisp at any size, no
-// extra request. Both colours are the two brand hues already in this file, and
-// nothing here animates — there is no motion for prefers-reduced-motion to
-// suppress. Absolutely positioned, so it cannot shift layout.
+// Placement is scattered, not gridded. Each column is still one tiled SVG
+// pattern — that is what lets it cover any section height — but the tile is
+// large (340x420) and holds a dozen-odd marks at varied position, size and
+// rotation, so the repeat period is bigger than the area on screen and never
+// reads as a grid. Positions come from a one-off jittered sample with a minimum
+// separation, so nothing clumps or lines up; the values are baked in below
+// rather than generated at runtime, so every visitor sees the same layout.
+//
+// Marks that fall near a tile edge are duplicated on the opposite side, which
+// is why some coordinates sit outside 0..340 / 0..420. Without those wraps a
+// glyph would be sliced at the seam, or an inset margin would leave regular
+// empty gutters — either one gives the grid away.
+//
+// Nothing animates: this is placement only, so there is no motion for
+// prefers-reduced-motion to suppress. Absolutely positioned, so it cannot shift
+// layout.
+const TILE_W = 340;
+const TILE_H = 420;
+
+const Q_MARKS = [
+  { x: 337, y: 117, size: 20, rot: -5, o: 0.18 },
+  { x: -3, y: 117, size: 20, rot: -5, o: 0.18 },
+  { x: 303, y: 190, size: 28, rot: -2, o: 0.18 },
+  { x: -37, y: 190, size: 28, rot: -2, o: 0.18 },
+  { x: 46, y: 46, size: 24, rot: 6, o: 0.18 },
+  { x: 46, y: 466, size: 24, rot: 6, o: 0.18 },
+  { x: 386, y: 46, size: 24, rot: 6, o: 0.18 },
+  { x: 323, y: 419, size: 28, rot: -17, o: 0.18 },
+  { x: 323, y: -1, size: 28, rot: -17, o: 0.18 },
+  { x: -17, y: 419, size: 28, rot: -17, o: 0.18 },
+  { x: -17, y: -1, size: 28, rot: -17, o: 0.18 },
+  { x: 215, y: 131, size: 20, rot: 14, o: 0.26 },
+  { x: 186, y: 332, size: 40, rot: 16, o: 0.22 },
+  { x: 84, y: 372, size: 40, rot: 9, o: 0.18 },
+  { x: 84, y: -48, size: 40, rot: 9, o: 0.18 },
+  { x: 141, y: 190, size: 32, rot: -9, o: 0.26 },
+  { x: 317, y: 324, size: 28, rot: 14, o: 0.18 },
+  { x: -23, y: 324, size: 28, rot: 14, o: 0.18 },
+  { x: 49, y: 188, size: 40, rot: 20, o: 0.26 },
+  { x: 389, y: 188, size: 40, rot: 20, o: 0.26 },
+  { x: 180, y: 35, size: 44, rot: -15, o: 0.26 },
+  { x: 180, y: 455, size: 44, rot: -15, o: 0.26 },
+  { x: 218, y: 240, size: 24, rot: -21, o: 0.18 },
+  { x: 54, y: 270, size: 20, rot: 8, o: 0.18 },
+];
+
+const CROSSHAIRS = [
+  { x: 317, y: 77, r: 7, o: 0.22 },
+  { x: -23, y: 77, r: 7, o: 0.22 },
+  { x: 286, y: 177, r: 9, o: 0.22 },
+  { x: 275, y: 335, r: 13, o: 0.18 },
+  { x: 89, y: 104, r: 15, o: 0.18 },
+  { x: 152, y: 218, r: 13, o: 0.26 },
+  { x: 48, y: 408, r: 13, o: 0.22 },
+  { x: 48, y: -12, r: 13, o: 0.22 },
+  { x: 167, y: 409, r: 15, o: 0.22 },
+  { x: 167, y: -11, r: 15, o: 0.22 },
+  { x: 41, y: 187, r: 9, o: 0.26 },
+  { x: 57, y: 305, r: 7, o: 0.26 },
+  { x: 157, y: 317, r: 15, o: 0.18 },
+];
+
+function Crosshair({ x, y, r, o }: { x: number; y: number; r: number; o: number }) {
+  const tick = Math.max(5, Math.round(r * 0.55));
+  const gap = 2;
+  return (
+    <g stroke={RED} strokeWidth="2" fill="none" opacity={o}>
+      <circle cx={x} cy={y} r={r} />
+      <circle cx={x} cy={y} r={Math.max(2, r * 0.24)} fill={RED} stroke="none" />
+      <line x1={x} y1={y - r - gap - tick} x2={x} y2={y - r - gap} />
+      <line x1={x} y1={y + r + gap} x2={x} y2={y + r + gap + tick} />
+      <line x1={x - r - gap - tick} y1={y} x2={x - r - gap} y2={y} />
+      <line x1={x + r + gap} y1={y} x2={x + r + gap + tick} y2={y} />
+    </g>
+  );
+}
+
 function MarksField() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
@@ -114,24 +187,24 @@ function MarksField() {
           <defs>
             <pattern
               id="mfu-q"
-              width="86"
-              height="130"
+              width={TILE_W}
+              height={TILE_H}
               patternUnits="userSpaceOnUse"
             >
-              <text x="10" y="44" fontSize="38" fontWeight="800" fill={PURPLE} opacity="0.26">
-                ?
-              </text>
-              <text
-                x="52"
-                y="104"
-                fontSize="26"
-                fontWeight="800"
-                fill={PURPLE}
-                opacity="0.18"
-                transform="rotate(12 52 104)"
-              >
-                ?
-              </text>
+              {Q_MARKS.map((m, i) => (
+                <text
+                  key={i}
+                  x={m.x}
+                  y={m.y}
+                  fontSize={m.size}
+                  fontWeight="800"
+                  fill={PURPLE}
+                  opacity={m.o}
+                  transform={`rotate(${m.rot} ${m.x} ${m.y})`}
+                >
+                  ?
+                </text>
+              ))}
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#mfu-q)" />
@@ -147,26 +220,13 @@ function MarksField() {
           <defs>
             <pattern
               id="mfu-x"
-              width="86"
-              height="130"
+              width={TILE_W}
+              height={TILE_H}
               patternUnits="userSpaceOnUse"
             >
-              <g stroke={RED} strokeWidth="2" fill="none" opacity="0.26">
-                <circle cx="26" cy="34" r="11" />
-                <circle cx="26" cy="34" r="3" fill={RED} stroke="none" />
-                <line x1="26" y1="17" x2="26" y2="24" />
-                <line x1="26" y1="44" x2="26" y2="51" />
-                <line x1="9" y1="34" x2="16" y2="34" />
-                <line x1="36" y1="34" x2="43" y2="34" />
-              </g>
-              <g stroke={RED} strokeWidth="2" fill="none" opacity="0.18">
-                <circle cx="64" cy="98" r="8" />
-                <circle cx="64" cy="98" r="2.2" fill={RED} stroke="none" />
-                <line x1="64" y1="85" x2="64" y2="91" />
-                <line x1="64" y1="105" x2="64" y2="111" />
-                <line x1="51" y1="98" x2="57" y2="98" />
-                <line x1="71" y1="98" x2="77" y2="98" />
-              </g>
+              {CROSSHAIRS.map((c, i) => (
+                <Crosshair key={i} {...c} />
+              ))}
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#mfu-x)" />
