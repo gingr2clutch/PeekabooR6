@@ -195,7 +195,7 @@ export function MoreFromUs() {
       <div className="relative z-10 px-2 py-8 sm:px-4 sm:py-14">
         <h2
           id="more-from-us-heading"
-          className="text-center font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-brand sm:text-[13px] sm:tracking-[0.3em]"
+          className="text-center font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-brand sm:text-[18px] sm:tracking-[0.3em]"
         >
           More from us
         </h2>
