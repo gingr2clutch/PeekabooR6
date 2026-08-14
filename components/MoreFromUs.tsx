@@ -182,12 +182,17 @@ export function MoreFromUs() {
       aria-labelledby="more-from-us-heading"
       className="relative isolate overflow-hidden rounded-card"
     >
-      {/* Layer order, back to front: the side motifs (-z-10), the ghost-mosaic
-          ambient (z-0, from globals.css), then content (z-10). `isolate` on the
-          section keeps the negative z-index contained here rather than letting
-          it fall behind the page. */}
+      {/* No ghost-mosaic here. That layer is greyscale map thumbnails, so at any
+          opacity it reads as a grey wash rather than neutral texture, and this
+          section sat visibly darker than the cream page around it. Removed from
+          this section only — the class and its rule in globals.css are
+          untouched, and /dev/mosaic still uses them.
+
+          The section itself sets no background, so the page cream shows
+          straight through. Layer order is now just the side motifs (-z-10)
+          behind the content (z-10); `isolate` keeps that negative z-index
+          contained here rather than letting it fall behind the page. */}
       <MarksField />
-      <div aria-hidden className="ghost-mosaic" />
 
       {/* Tight horizontal padding at phone widths: the two columns have to fit
           a 320px screen, which leaves ~103px of content per side once the page
