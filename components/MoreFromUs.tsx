@@ -118,7 +118,7 @@ function MarksField() {
               height="130"
               patternUnits="userSpaceOnUse"
             >
-              <text x="10" y="44" fontSize="38" fontWeight="800" fill={PURPLE} opacity="0.84">
+              <text x="10" y="44" fontSize="38" fontWeight="800" fill={PURPLE} opacity="0.26">
                 ?
               </text>
               <text
@@ -127,7 +127,7 @@ function MarksField() {
                 fontSize="26"
                 fontWeight="800"
                 fill={PURPLE}
-                opacity="0.6"
+                opacity="0.18"
                 transform="rotate(12 52 104)"
               >
                 ?
@@ -151,7 +151,7 @@ function MarksField() {
               height="130"
               patternUnits="userSpaceOnUse"
             >
-              <g stroke={RED} strokeWidth="2" fill="none" opacity="0.84">
+              <g stroke={RED} strokeWidth="2" fill="none" opacity="0.26">
                 <circle cx="26" cy="34" r="11" />
                 <circle cx="26" cy="34" r="3" fill={RED} stroke="none" />
                 <line x1="26" y1="17" x2="26" y2="24" />
@@ -159,7 +159,7 @@ function MarksField() {
                 <line x1="9" y1="34" x2="16" y2="34" />
                 <line x1="36" y1="34" x2="43" y2="34" />
               </g>
-              <g stroke={RED} strokeWidth="2" fill="none" opacity="0.6">
+              <g stroke={RED} strokeWidth="2" fill="none" opacity="0.18">
                 <circle cx="64" cy="98" r="8" />
                 <circle cx="64" cy="98" r="2.2" fill={RED} stroke="none" />
                 <line x1="64" y1="85" x2="64" y2="91" />
