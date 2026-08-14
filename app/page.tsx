@@ -1,5 +1,4 @@
 import { DiscordBanner } from "@/components/DiscordButton";
-import { HowItEndsBanner } from "@/components/HowItEndsBanner";
 import { MapCardImage } from "@/components/MapCardImage";
 import { MoreFromUs } from "@/components/MoreFromUs";
 import { MapCardLink } from "@/components/MapCardLink";
@@ -51,7 +50,7 @@ export default async function Home() {
             <DiscordBanner />
         </div>
         <div data-reveal className="mb-6">
-          <HowItEndsBanner />
+          <MoreFromUs />
         </div>
         <div className="mb-5">
           {/* DOM/source order stays Maps, Peeks, Votes, S-Tier (keeps the
@@ -167,12 +166,6 @@ export default async function Home() {
             ✓ You&apos;ve explored all {stats.mapsLive} maps
           </p>
           <p className="mt-1 text-muted">More peeks added every week.</p>
-        </div>
-
-        {/* Network cross-promo — sits after the grid and the completion note,
-            so it reads as a next step once you've finished browsing maps. */}
-        <div data-reveal>
-          <MoreFromUs />
         </div>
       </main>
       <BackToTop />

@@ -33,8 +33,8 @@ type CardProps = {
   cta: string;
   btnClass: string;
   ariaLabel: string;
-  /* Divider between the two halves: a top rule while stacked, a left rule once
-     they sit side by side. */
+  /* Vertical rule between the two halves. They are side by side at every
+     width, so this is always a left border. */
   divider?: boolean;
 };
 
@@ -49,12 +49,12 @@ function PromoCard({
 }: CardProps) {
   return (
     <div
-      className={`flex flex-col items-center gap-3 px-6 py-8 text-center ${
-        divider ? "border-t border-border sm:border-l sm:border-t-0" : ""
+      className={`flex min-w-0 flex-col items-center gap-2 px-3 py-5 text-center sm:gap-3 sm:px-6 sm:py-8 ${
+        divider ? "border-l border-border" : ""
       }`}
     >
       {wordmark}
-      <p className="text-sm text-muted">{blurb}</p>
+      <p className="text-[10px] leading-snug text-muted sm:text-sm">{blurb}</p>
       <a
         href={href}
         target="_blank"
@@ -62,7 +62,7 @@ function PromoCard({
         aria-label={ariaLabel}
         // Flat fill + elev-sm, matching the site's own buttons — deliberately
         // not the raised/3D treatment in the mock.
-        className={`elev-sm mt-1 inline-flex items-center gap-2 rounded-btn px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-150 ease-out ${btnClass}`}
+        className={`elev-sm mt-0.5 inline-flex items-center gap-1.5 whitespace-nowrap rounded-btn px-3 py-1.5 text-[11px] font-semibold text-white transition-colors duration-150 ease-out sm:mt-1 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm ${btnClass}`}
       >
         {cta}
         <span aria-hidden>→</span>
@@ -75,19 +75,23 @@ export function MoreFromUs() {
   return (
     <section
       aria-labelledby="more-from-us-heading"
-      className="relative isolate mt-12 overflow-hidden rounded-card"
+      className="relative isolate overflow-hidden rounded-card"
     >
       <div aria-hidden className="ghost-mosaic" />
 
-      <div className="relative z-10 px-4 py-10 sm:py-12">
+      {/* Tight horizontal padding at phone widths: the two columns have to fit
+          a 320px screen, which leaves ~103px of content per side once the page
+          gutter, this padding and the card padding are taken out. */}
+      <div className="relative z-10 px-2 py-6 sm:px-4 sm:py-12">
         <h2
           id="more-from-us-heading"
-          className="text-center font-mono text-[11px] font-bold uppercase tracking-[0.28em] text-brand"
+          className="text-center font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-brand sm:text-[11px] sm:tracking-[0.28em]"
         >
           More from us
         </h2>
 
-        <div className="elev-card mx-auto mt-6 grid max-w-2xl grid-cols-1 overflow-hidden rounded-card border border-border bg-card sm:grid-cols-2">
+        {/* Two-up at every width — never stacked. */}
+        <div className="elev-card mx-auto mt-4 grid max-w-2xl grid-cols-2 overflow-hidden rounded-card border border-border bg-card sm:mt-6">
           <PromoCard
             href={HOW_IT_ENDS_URL}
             ariaLabel="HowItEnds — watch today's clip (opens in new tab)"
@@ -95,15 +99,15 @@ export function MoreFromUs() {
             cta="Watch"
             btnClass={BTN_PURPLE}
             wordmark={
-              <span className="flex items-center gap-2">
-                <span className="text-2xl font-extrabold tracking-tight text-ink">
+              <span className="flex items-center gap-1 sm:gap-2">
+                <span className="text-[13px] font-extrabold tracking-tight text-ink sm:text-2xl">
                   HowItEnds
                 </span>
                 <span
                   aria-hidden
-                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-inner bg-[#5a5ac9]"
+                  className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[5px] bg-[#5a5ac9] sm:h-7 sm:w-7 sm:rounded-inner"
                 >
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden>
+                  <svg viewBox="0 0 24 24" className="h-2 w-2 sm:h-3.5 sm:w-3.5" aria-hidden>
                     <path d="M9 6.5 L17 12 L9 17.5 Z" fill="#fff" />
                   </svg>
                 </span>
@@ -118,16 +122,19 @@ export function MoreFromUs() {
             btnClass={BTN_RED}
             divider
             wordmark={
-              <span className="flex items-center gap-2">
-                {/* MF monogram — serif, black M against a red F, as in the mock. */}
+              <span className="flex items-center gap-1 sm:gap-2">
+                {/* MF monogram — serif, black M against a red F, as in the mock.
+                    Hidden at phone widths: "MainFinder" plus the monogram will
+                    not fit ~103px, and the wordmark is the part that has to
+                    survive. */}
                 <span
                   aria-hidden
-                  className="font-serif text-2xl font-bold leading-none tracking-tight"
+                  className="hidden font-serif text-2xl font-bold leading-none tracking-tight sm:inline"
                 >
                   <span className="text-ink">M</span>
                   <span className="text-[#d92d20]">F</span>
                 </span>
-                <span className="text-2xl font-extrabold tracking-tight">
+                <span className="text-[13px] font-extrabold tracking-tight sm:text-2xl">
                   <span className="text-ink">Main</span>
                   <span className="text-[#d92d20]">Finder</span>
                 </span>
