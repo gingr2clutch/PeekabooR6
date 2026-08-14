@@ -1,6 +1,7 @@
 import { DiscordBanner } from "@/components/DiscordButton";
 import { HowItEndsBanner } from "@/components/HowItEndsBanner";
 import { MapCardImage } from "@/components/MapCardImage";
+import { MoreFromUs } from "@/components/MoreFromUs";
 import { MapCardLink } from "@/components/MapCardLink";
 import { LiveStats } from "@/components/LiveStats";
 import { PageHeader } from "@/components/PageHeader";
@@ -166,6 +167,12 @@ export default async function Home() {
             ✓ You&apos;ve explored all {stats.mapsLive} maps
           </p>
           <p className="mt-1 text-muted">More peeks added every week.</p>
+        </div>
+
+        {/* Network cross-promo — sits after the grid and the completion note,
+            so it reads as a next step once you've finished browsing maps. */}
+        <div data-reveal>
+          <MoreFromUs />
         </div>
       </main>
       <BackToTop />

@@ -1803,3 +1803,32 @@ h4 {
     animation: none !important;
   }
 }
+
+/* --- Ghost mosaic ---------------------------------------------------------
+   The pre-composed map-cover strip at /ghost-mosaic.webp (3072x384, a single
+   row of eight greyscaled covers, built by scripts/build-mosaic.mjs). Purely
+   decorative: it sits behind content at a very low opacity so the covers read
+   as texture rather than as pictures.
+
+   This is the ONLY definition of the class. app/dev/mosaic/page.tsx already
+   markup-referenced `.ghost-mosaic` and `--ghost-mosaic-opacity` but nothing
+   ever defined them, so that preview page rendered no mosaic at all; it now
+   works off this same rule rather than a second, divergent implementation.
+
+   Needs a positioned ancestor with overflow clipped — both call sites use
+   `relative isolate overflow-hidden`. */
+.ghost-mosaic {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("/ghost-mosaic.webp");
+  /* Tiles both ways off a one-row strip: the source is a horizontal band, and
+     repeating it vertically turns it into an even field instead of leaving a
+     single stripe across the middle of a taller block. Fixed 200px height
+     keeps each cover a consistent size regardless of how tall the block is. */
+  background-repeat: repeat;
+  background-size: auto 200px;
+  background-position: center;
+  opacity: var(--ghost-mosaic-opacity, 0.05);
+}
