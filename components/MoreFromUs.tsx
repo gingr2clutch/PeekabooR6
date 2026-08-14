@@ -118,7 +118,7 @@ function MarksField() {
               height="130"
               patternUnits="userSpaceOnUse"
             >
-              <text x="10" y="44" fontSize="38" fontWeight="800" fill={PURPLE} opacity="0.11">
+              <text x="10" y="44" fontSize="38" fontWeight="800" fill={PURPLE} opacity="0.84">
                 ?
               </text>
               <text
@@ -127,7 +127,7 @@ function MarksField() {
                 fontSize="26"
                 fontWeight="800"
                 fill={PURPLE}
-                opacity="0.08"
+                opacity="0.6"
                 transform="rotate(12 52 104)"
               >
                 ?
@@ -151,7 +151,7 @@ function MarksField() {
               height="130"
               patternUnits="userSpaceOnUse"
             >
-              <g stroke={RED} strokeWidth="2" fill="none" opacity="0.11">
+              <g stroke={RED} strokeWidth="2" fill="none" opacity="0.84">
                 <circle cx="26" cy="34" r="11" />
                 <circle cx="26" cy="34" r="3" fill={RED} stroke="none" />
                 <line x1="26" y1="17" x2="26" y2="24" />
@@ -159,7 +159,7 @@ function MarksField() {
                 <line x1="9" y1="34" x2="16" y2="34" />
                 <line x1="36" y1="34" x2="43" y2="34" />
               </g>
-              <g stroke={RED} strokeWidth="2" fill="none" opacity="0.08">
+              <g stroke={RED} strokeWidth="2" fill="none" opacity="0.6">
                 <circle cx="64" cy="98" r="8" />
                 <circle cx="64" cy="98" r="2.2" fill={RED} stroke="none" />
                 <line x1="64" y1="85" x2="64" y2="91" />
@@ -205,12 +205,10 @@ export function MoreFromUs() {
           More from us
         </h2>
 
-        {/* Two-up at every width — never stacked. Radius and shadow follow the
-            mock: a deeper 24px corner and a wide, soft lift. */}
-        <div
-          className="mx-auto mt-5 grid max-w-2xl grid-cols-2 overflow-hidden rounded-[24px] border border-border bg-card sm:mt-8"
-          style={{ boxShadow: "0 18px 40px rgba(0, 0, 0, 0.10)" }}
-        >
+        {/* Two-up at every width — never stacked. No drop shadow: the card is
+            defined by its hairline border against the cream instead, which also
+            stops a dark band sitting under the box. Keeps the 24px corner. */}
+        <div className="mx-auto mt-5 grid max-w-2xl grid-cols-2 overflow-hidden rounded-[24px] border border-border bg-card sm:mt-8">
           <PromoCard
             href={HOW_IT_ENDS_URL}
             ariaLabel="HowItEnds — watch today's clip (opens in new tab)"
