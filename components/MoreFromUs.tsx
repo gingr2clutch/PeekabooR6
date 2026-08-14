@@ -70,7 +70,10 @@ function PromoCard({
         // Raised pill: vertical gradient over a solid darker lip, pressing down
         // on tap. The lip is a hard-edged box-shadow, not a blur, so it reads as
         // a 3D edge rather than a glow.
-        className="mt-0.5 inline-flex translate-y-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-[12px] font-bold text-white transition-transform duration-100 ease-out active:translate-y-[3px] sm:mt-1 sm:gap-2 sm:px-7 sm:py-3 sm:text-[16px]"
+        // motion-safe: the press-down is the only movement in this block, and
+        // it is suppressed entirely under prefers-reduced-motion — those users
+        // get the same button with no transform and no transition.
+        className="mt-0.5 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-[12px] font-bold text-white motion-safe:transition-transform motion-safe:duration-100 motion-safe:ease-out motion-safe:active:translate-y-[3px] sm:mt-1 sm:gap-2 sm:px-7 sm:py-3 sm:text-[16px]"
         style={{
           backgroundImage: `linear-gradient(180deg, ${light} 0%, ${base} 100%)`,
           boxShadow: `0 4px 0 ${dark}, 0 6px 14px rgba(0, 0, 0, 0.18)`,
@@ -83,74 +86,93 @@ function PromoCard({
   );
 }
 
-// The question-mark + crosshair field from the mock, as one tiled SVG pattern.
-// Drawn rather than shipped as an image so it stays crisp at any size and costs
-// no extra request. Both colours are the two brand hues already in this file.
+// Vertical fade so each column of motifs dissolves before the section's top and
+// bottom edges — the top fade is also what keeps them off the "MORE FROM US"
+// heading. Applied to the side wrappers, not the SVGs, so the patterns
+// themselves stay simple.
+const EDGE_FADE =
+  "linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%)";
+
+// The two motifs live in separate columns rather than one mixed field: purple
+// question marks down the left third, red crosshairs down the right third,
+// nothing in the centre. The centre stays clear so the heading and the card's
+// text never sit over a motif.
+//
+// Drawn as tiled SVG patterns rather than shipped images: crisp at any size, no
+// extra request. Both colours are the two brand hues already in this file, and
+// nothing here animates — there is no motion for prefers-reduced-motion to
+// suppress. Absolutely positioned, so it cannot shift layout.
 function MarksField() {
   return (
-    <svg
-      aria-hidden
-      className="pointer-events-none absolute inset-0 h-full w-full"
-    >
-      <defs>
-        <pattern
-          id="mfu-marks"
-          width="150"
-          height="150"
-          patternUnits="userSpaceOnUse"
-        >
-          <text
-            x="14"
-            y="46"
-            fontSize="40"
-            fontWeight="800"
-            fill={PURPLE}
-            opacity="0.16"
-          >
-            ?
-          </text>
-          <text
-            x="86"
-            y="132"
-            fontSize="28"
-            fontWeight="800"
-            fill={PURPLE}
-            opacity="0.12"
-            transform="rotate(14 86 132)"
-          >
-            ?
-          </text>
-          <text
-            x="118"
-            y="66"
-            fontSize="22"
-            fontWeight="800"
-            fill={PURPLE}
-            opacity="0.1"
-          >
-            ?
-          </text>
-          {/* Crosshair / target */}
-          <g stroke={RED} strokeWidth="2" fill="none" opacity="0.14">
-            <circle cx="104" cy="26" r="11" />
-            <circle cx="104" cy="26" r="3" fill={RED} stroke="none" />
-            <line x1="104" y1="9" x2="104" y2="16" />
-            <line x1="104" y1="36" x2="104" y2="43" />
-            <line x1="87" y1="26" x2="94" y2="26" />
-            <line x1="114" y1="26" x2="121" y2="26" />
-          </g>
-          <g stroke={RED} strokeWidth="2" fill="none" opacity="0.1">
-            <circle cx="34" cy="106" r="8" />
-            <circle cx="34" cy="106" r="2.2" fill={RED} stroke="none" />
-            <line x1="34" y1="93" x2="34" y2="99" />
-            <line x1="34" y1="113" x2="34" y2="119" />
-            <line x1="21" y1="106" x2="27" y2="106" />
-            <line x1="41" y1="106" x2="47" y2="106" />
-          </g>
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#mfu-marks)" />
-    </svg>
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+      {/* Left third — purple question marks */}
+      <div
+        className="absolute inset-y-0 left-0 w-1/3"
+        style={{ WebkitMaskImage: EDGE_FADE, maskImage: EDGE_FADE }}
+      >
+        <svg className="h-full w-full">
+          <defs>
+            <pattern
+              id="mfu-q"
+              width="86"
+              height="130"
+              patternUnits="userSpaceOnUse"
+            >
+              <text x="10" y="44" fontSize="38" fontWeight="800" fill={PURPLE} opacity="0.11">
+                ?
+              </text>
+              <text
+                x="52"
+                y="104"
+                fontSize="26"
+                fontWeight="800"
+                fill={PURPLE}
+                opacity="0.08"
+                transform="rotate(12 52 104)"
+              >
+                ?
+              </text>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#mfu-q)" />
+        </svg>
+      </div>
+
+      {/* Right third — red crosshairs */}
+      <div
+        className="absolute inset-y-0 right-0 w-1/3"
+        style={{ WebkitMaskImage: EDGE_FADE, maskImage: EDGE_FADE }}
+      >
+        <svg className="h-full w-full">
+          <defs>
+            <pattern
+              id="mfu-x"
+              width="86"
+              height="130"
+              patternUnits="userSpaceOnUse"
+            >
+              <g stroke={RED} strokeWidth="2" fill="none" opacity="0.11">
+                <circle cx="26" cy="34" r="11" />
+                <circle cx="26" cy="34" r="3" fill={RED} stroke="none" />
+                <line x1="26" y1="17" x2="26" y2="24" />
+                <line x1="26" y1="44" x2="26" y2="51" />
+                <line x1="9" y1="34" x2="16" y2="34" />
+                <line x1="36" y1="34" x2="43" y2="34" />
+              </g>
+              <g stroke={RED} strokeWidth="2" fill="none" opacity="0.08">
+                <circle cx="64" cy="98" r="8" />
+                <circle cx="64" cy="98" r="2.2" fill={RED} stroke="none" />
+                <line x1="64" y1="85" x2="64" y2="91" />
+                <line x1="64" y1="105" x2="64" y2="111" />
+                <line x1="51" y1="98" x2="57" y2="98" />
+                <line x1="71" y1="98" x2="77" y2="98" />
+              </g>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#mfu-x)" />
+        </svg>
+      </div>
+    </div>
   );
 }
 
@@ -160,7 +182,12 @@ export function MoreFromUs() {
       aria-labelledby="more-from-us-heading"
       className="relative isolate overflow-hidden rounded-card"
     >
+      {/* Layer order, back to front: the side motifs (-z-10), the ghost-mosaic
+          ambient (z-0, from globals.css), then content (z-10). `isolate` on the
+          section keeps the negative z-index contained here rather than letting
+          it fall behind the page. */}
       <MarksField />
+      <div aria-hidden className="ghost-mosaic" />
 
       {/* Tight horizontal padding at phone widths: the two columns have to fit
           a 320px screen, which leaves ~103px of content per side once the page
@@ -192,22 +219,14 @@ export function MoreFromUs() {
                 <span className="text-[13px] font-extrabold tracking-tight text-ink sm:text-[26px]">
                   HowItEnds
                 </span>
-                {/* Play triangle back inside a purple chip, as in the mock. */}
-                <span
+                {/* Solid purple play triangle — no square, no circle. */}
+                <svg
+                  viewBox="0 0 24 24"
                   aria-hidden
-                  className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[5px] sm:h-8 sm:w-8 sm:rounded-[10px]"
-                  style={{
-                    backgroundImage: `linear-gradient(180deg, ${PURPLE_LIGHT} 0%, ${PURPLE} 100%)`,
-                  }}
+                  className="h-3.5 w-3.5 shrink-0 sm:h-7 sm:w-7"
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-2 w-2 sm:h-4 sm:w-4"
-                    aria-hidden
-                  >
-                    <path d="M8 5.5 L18 12 L8 18.5 Z" fill="#fff" />
-                  </svg>
-                </span>
+                  <path d="M5 3 L21 12 L5 21 Z" fill={PURPLE} />
+                </svg>
               </span>
             }
           />
@@ -221,13 +240,15 @@ export function MoreFromUs() {
             dark={RED_DARK}
             divider
             wordmark={
-              <span className="flex items-center gap-1 sm:gap-2">
-                {/* MF monogram — serif, dark M against a red F, tucked tight as
-                    in the mock. A step under the wordmark on phones so mark +
-                    wordmark clears the ~103px column at 320px. */}
+              <span className="flex items-center gap-1.5 sm:gap-3.5">
+                {/* MF monogram — serif, dark M against a red F. Set larger than
+                    the wordmark (it reads as a mark, not text) with real space
+                    before it rather than butting up against "MainFinder". The
+                    M/F pair keeps its own tight kerning; the gap-* above is
+                    what separates mark from wordmark. */}
                 <span
                   aria-hidden
-                  className="shrink-0 font-serif text-[12px] font-bold leading-none tracking-[-0.06em] sm:text-[30px]"
+                  className="shrink-0 font-serif text-[16px] font-bold leading-none tracking-[-0.08em] sm:text-[36px]"
                 >
                   <span className="text-ink">M</span>
                   <span className="text-[#d92d20]">F</span>
