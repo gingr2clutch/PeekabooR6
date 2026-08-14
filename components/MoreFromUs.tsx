@@ -160,24 +160,44 @@ const CROSSHAIRS = [
   { x: 157, y: 317, r: 15, o: 0.28 },
 ];
 
-function Crosshair({ x, y, r, o }: { x: number; y: number; r: number; o: number }) {
-  const tick = Math.max(5, Math.round(r * 0.55));
-  const gap = 2;
+function Crosshair({
+  x,
+  y,
+  r,
+  o,
+  s,
+}: {
+  x: number;
+  y: number;
+  r: number;
+  o: number;
+  s: number;
+}) {
+  const cx = x * s;
+  const cy = y * s;
+  const rr = r * s;
+  const tick = Math.max(4, r * 0.55) * s;
+  const gap = 2 * s;
   return (
-    <g stroke={RED} strokeWidth="2" fill="none" opacity={o}>
-      <circle cx={x} cy={y} r={r} />
-      <circle cx={x} cy={y} r={Math.max(2, r * 0.24)} fill={RED} stroke="none" />
-      <line x1={x} y1={y - r - gap - tick} x2={x} y2={y - r - gap} />
-      <line x1={x} y1={y + r + gap} x2={x} y2={y + r + gap + tick} />
-      <line x1={x - r - gap - tick} y1={y} x2={x - r - gap} y2={y} />
-      <line x1={x + r + gap} y1={y} x2={x + r + gap + tick} y2={y} />
+    <g stroke={RED} strokeWidth={2 * s} fill="none" opacity={o}>
+      <circle cx={cx} cy={cy} r={rr} />
+      <circle cx={cx} cy={cy} r={Math.max(1.4, rr * 0.24)} fill={RED} stroke="none" />
+      <line x1={cx} y1={cy - rr - gap - tick} x2={cx} y2={cy - rr - gap} />
+      <line x1={cx} y1={cy + rr + gap} x2={cx} y2={cy + rr + gap + tick} />
+      <line x1={cx - rr - gap - tick} y1={cy} x2={cx - rr - gap} y2={cy} />
+      <line x1={cx + rr + gap} y1={cy} x2={cx + rr + gap + tick} y2={cy} />
     </g>
   );
 }
 
-function MarksField() {
+// One pair of columns at a given scale. `s` shrinks the whole tile — marks and
+// spacing together — so a smaller tile fits proportionally more marks into the
+// same strip of screen. `uid` keeps the two instances' pattern ids distinct.
+function MarkColumns({ s, uid }: { s: number; uid: string }) {
+  const qid = `mfu-q-${uid}`;
+  const xid = `mfu-x-${uid}`;
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+    <>
       {/* Left third — purple question marks */}
       <div
         className="absolute inset-y-0 left-0 w-1/3"
@@ -186,28 +206,28 @@ function MarksField() {
         <svg className="h-full w-full">
           <defs>
             <pattern
-              id="mfu-q"
-              width={TILE_W}
-              height={TILE_H}
+              id={qid}
+              width={TILE_W * s}
+              height={TILE_H * s}
               patternUnits="userSpaceOnUse"
             >
               {Q_MARKS.map((m, i) => (
                 <text
                   key={i}
-                  x={m.x}
-                  y={m.y}
-                  fontSize={m.size}
+                  x={m.x * s}
+                  y={m.y * s}
+                  fontSize={m.size * s}
                   fontWeight="800"
                   fill={PURPLE}
                   opacity={m.o}
-                  transform={`rotate(${m.rot} ${m.x} ${m.y})`}
+                  transform={`rotate(${m.rot} ${m.x * s} ${m.y * s})`}
                 >
                   ?
                 </text>
               ))}
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#mfu-q)" />
+          <rect width="100%" height="100%" fill={`url(#${qid})`} />
         </svg>
       </div>
 
@@ -219,18 +239,36 @@ function MarksField() {
         <svg className="h-full w-full">
           <defs>
             <pattern
-              id="mfu-x"
-              width={TILE_W}
-              height={TILE_H}
+              id={xid}
+              width={TILE_W * s}
+              height={TILE_H * s}
               patternUnits="userSpaceOnUse"
             >
               {CROSSHAIRS.map((c, i) => (
-                <Crosshair key={i} {...c} />
+                <Crosshair key={i} {...c} s={s} />
               ))}
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#mfu-x)" />
+          <rect width="100%" height="100%" fill={`url(#${xid})`} />
         </svg>
+      </div>
+    </>
+  );
+}
+
+// Two instances, one per breakpoint. On a phone the card covers both columns
+// horizontally, so motifs only show in the ~32px bands above and below it — an
+// 85px-wide slice of the full-size tile lands barely one mark there. The mobile
+// instance runs the same scatter at half scale, which fits roughly four times
+// as many marks into that strip. Desktop is unchanged at 1:1.
+function MarksField() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+      <div className="absolute inset-0 sm:hidden">
+        <MarkColumns s={0.5} uid="m" />
+      </div>
+      <div className="absolute inset-0 hidden sm:block">
+        <MarkColumns s={1} uid="d" />
       </div>
     </div>
   );
