@@ -90,8 +90,20 @@ export function MoreFromUs() {
           More from us
         </h2>
 
-        {/* Two-up at every width — never stacked. */}
-        <div className="elev-card mx-auto mt-4 grid max-w-2xl grid-cols-2 overflow-hidden rounded-card border border-border bg-card sm:mt-6">
+        {/* Two-up at every width — never stacked.
+            Shadow is written inline rather than using .elev-card: that token is
+            shared with the map cards, the attacking page and BackToTop, so
+            softening it globally would change all of them. Same geometry as the
+            token (0 6px 20px), alpha eased .09 -> .08, which stays inside the
+            .08–.10 range. Radius nudged 14px (rounded-card) -> 18px. */}
+        <div
+          className="mx-auto mt-4 grid max-w-2xl grid-cols-2 overflow-hidden rounded-[18px] border border-border bg-card sm:mt-6"
+          // Inline rather than a shadow-[...] class: Tailwind did not emit that
+          // arbitrary value (the commas inside rgba() defeat the scanner), which
+          // silently left the card with no shadow at all. An inline style always
+          // applies and is checkable in the served HTML.
+          style={{ boxShadow: "0 6px 20px rgba(0, 0, 0, 0.08)" }}
+        >
           <PromoCard
             href={HOW_IT_ENDS_URL}
             ariaLabel="HowItEnds — watch today's clip (opens in new tab)"
@@ -103,14 +115,15 @@ export function MoreFromUs() {
                 <span className="text-[13px] font-extrabold tracking-tight text-ink sm:text-2xl">
                   HowItEnds
                 </span>
-                <span
+                {/* Bare purple play triangle — no circle or rounded-square
+                    behind it, closer to the real HowItEnds mark. */}
+                <svg
+                  viewBox="0 0 24 24"
                   aria-hidden
-                  className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[5px] bg-[#5a5ac9] sm:h-7 sm:w-7 sm:rounded-inner"
+                  className="h-3 w-3 shrink-0 sm:h-5 sm:w-5"
                 >
-                  <svg viewBox="0 0 24 24" className="h-2 w-2 sm:h-3.5 sm:w-3.5" aria-hidden>
-                    <path d="M9 6.5 L17 12 L9 17.5 Z" fill="#fff" />
-                  </svg>
-                </span>
+                  <path d="M5 3 L21 12 L5 21 Z" fill="#5a5ac9" />
+                </svg>
               </span>
             }
           />
@@ -123,13 +136,14 @@ export function MoreFromUs() {
             divider
             wordmark={
               <span className="flex items-center gap-1 sm:gap-2">
-                {/* MF monogram — serif, black M against a red F, as in the mock.
-                    Hidden at phone widths: "MainFinder" plus the monogram will
-                    not fit ~103px, and the wordmark is the part that has to
-                    survive. */}
+                {/* MF monogram — serif, dark M against a red F. Shown at every
+                    width now, so this side carries a mark like the HowItEnds
+                    side does. Kept a step smaller than the wordmark on phones
+                    (12px vs 13px) with a tighter gap: at 320px the column has
+                    ~103px of content, and mark + wordmark comes to ~91px. */}
                 <span
                   aria-hidden
-                  className="hidden font-serif text-2xl font-bold leading-none tracking-tight sm:inline"
+                  className="shrink-0 font-serif text-[12px] font-bold leading-none tracking-tight sm:text-2xl"
                 >
                   <span className="text-ink">M</span>
                   <span className="text-[#d92d20]">F</span>
