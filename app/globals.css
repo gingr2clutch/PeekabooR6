@@ -1832,3 +1832,39 @@ h4 {
   background-position: center;
   opacity: var(--ghost-mosaic-opacity, 0.05);
 }
+
+/* --- MORE FROM US motif drift ---------------------------------------------
+   A single slow vertical pan for the decorative motif columns in
+   components/MoreFromUs.tsx. Used nowhere else.
+
+   The shift is exactly one pattern tile, so the loop is seamless: after
+   translating a full tile height the field is pixel-identical to where it
+   started, with no jump. The drifting layer is a tile taller than its column
+   (set inline) so nothing empties out at the trailing edge, and the column
+   clips it.
+
+   transform only, on its own compositor layer — no repaint, no per-frame JS,
+   nothing that touches scroll. Distance and duration are passed in per
+   breakpoint, since the mobile tile is half the size.
+
+   Opting out of motion freezes the motifs exactly where they are, in their
+   scattered static positions. */
+@keyframes mfu-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, var(--mfu-shift, -420px), 0);
+  }
+}
+.mfu-drift {
+  animation: mfu-drift var(--mfu-dur, 168s) linear infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mfu-drift {
+    animation: none;
+    transform: none;
+    will-change: auto;
+  }
+}

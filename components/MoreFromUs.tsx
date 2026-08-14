@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 // Cross-promo block for the network's other sites, in the homepage hero. Two
 // cards in one bubble: HowItEnds (daily clip game) and MainFinder (operator
@@ -193,64 +193,82 @@ function Crosshair({
 // One pair of columns at a given scale. `s` shrinks the whole tile — marks and
 // spacing together — so a smaller tile fits proportionally more marks into the
 // same strip of screen. `uid` keeps the two instances' pattern ids distinct.
+//
+// Each column is a masked, clipped box holding a drifting inner layer. The mask
+// stays on the outer box so the top/bottom fade holds still while the motifs
+// pass through it; only the inner layer moves. That inner layer is one tile
+// taller than the column and pans up by exactly one tile, so the loop is
+// seamless and nothing empties out at the bottom.
 function MarkColumns({ s, uid }: { s: number; uid: string }) {
   const qid = `mfu-q-${uid}`;
   const xid = `mfu-x-${uid}`;
+  const tileH = TILE_H * s;
+  // ~2.5px/second at either scale — one tile every few minutes.
+  const driftStyle = {
+    height: `calc(100% + ${tileH}px)`,
+    "--mfu-shift": `-${tileH}px`,
+    "--mfu-dur": `${Math.round(tileH / 2.5)}s`,
+  } as CSSProperties;
+
   return (
     <>
       {/* Left third — purple question marks */}
       <div
-        className="absolute inset-y-0 left-0 w-1/3"
+        className="absolute inset-y-0 left-0 w-1/3 overflow-hidden"
         style={{ WebkitMaskImage: EDGE_FADE, maskImage: EDGE_FADE }}
       >
-        <svg className="h-full w-full">
-          <defs>
-            <pattern
-              id={qid}
-              width={TILE_W * s}
-              height={TILE_H * s}
-              patternUnits="userSpaceOnUse"
-            >
-              {Q_MARKS.map((m, i) => (
-                <text
-                  key={i}
-                  x={m.x * s}
-                  y={m.y * s}
-                  fontSize={m.size * s}
-                  fontWeight="800"
-                  fill={PURPLE}
-                  opacity={m.o}
-                  transform={`rotate(${m.rot} ${m.x * s} ${m.y * s})`}
-                >
-                  ?
-                </text>
-              ))}
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill={`url(#${qid})`} />
-        </svg>
+        <div className="mfu-drift absolute inset-x-0 top-0" style={driftStyle}>
+          <svg className="h-full w-full">
+            <defs>
+              <pattern
+                id={qid}
+                width={TILE_W * s}
+                height={tileH}
+                patternUnits="userSpaceOnUse"
+              >
+                {Q_MARKS.map((m, i) => (
+                  <text
+                    key={i}
+                    x={m.x * s}
+                    y={m.y * s}
+                    fontSize={m.size * s}
+                    fontWeight="800"
+                    fill={PURPLE}
+                    opacity={m.o}
+                    transform={`rotate(${m.rot} ${m.x * s} ${m.y * s})`}
+                  >
+                    ?
+                  </text>
+                ))}
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill={`url(#${qid})`} />
+          </svg>
+        </div>
       </div>
 
       {/* Right third — red crosshairs */}
       <div
-        className="absolute inset-y-0 right-0 w-1/3"
+        className="absolute inset-y-0 right-0 w-1/3 overflow-hidden"
         style={{ WebkitMaskImage: EDGE_FADE, maskImage: EDGE_FADE }}
       >
-        <svg className="h-full w-full">
-          <defs>
-            <pattern
-              id={xid}
-              width={TILE_W * s}
-              height={TILE_H * s}
-              patternUnits="userSpaceOnUse"
-            >
-              {CROSSHAIRS.map((c, i) => (
-                <Crosshair key={i} {...c} s={s} />
-              ))}
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill={`url(#${xid})`} />
-        </svg>
+        <div className="mfu-drift absolute inset-x-0 top-0" style={driftStyle}>
+          <svg className="h-full w-full">
+            <defs>
+              <pattern
+                id={xid}
+                width={TILE_W * s}
+                height={tileH}
+                patternUnits="userSpaceOnUse"
+              >
+                {CROSSHAIRS.map((c, i) => (
+                  <Crosshair key={i} {...c} s={s} />
+                ))}
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill={`url(#${xid})`} />
+          </svg>
+        </div>
       </div>
     </>
   );
