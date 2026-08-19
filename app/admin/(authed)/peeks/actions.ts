@@ -290,7 +290,9 @@ export type InlineField =
   | "difficulty"
   | "risk"
   | "success_rate"
-  | "published";
+  | "published"
+  | "instructions"
+  | "tip";
 
 export type InlineUpdateResult =
   | { ok: true; value: string | number | boolean }
@@ -336,6 +338,24 @@ export async function updatePeekFieldAction(
       const v = Boolean(raw);
       patch = { published: v };
       normalized = v;
+      break;
+    }
+    // Both below normalize exactly as updatePeekAction does, so an inline edit
+    // and a full-form save store identical shapes. Instructions arrive as one
+    // textarea string, one step per line.
+    case "instructions": {
+      const steps = String(raw ?? "")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+      patch = { instructions: steps.length ? steps : null };
+      normalized = steps.join("\n");
+      break;
+    }
+    case "tip": {
+      const v = parseTip(String(raw ?? ""));
+      patch = { tip: v };
+      normalized = v ?? "";
       break;
     }
     default:

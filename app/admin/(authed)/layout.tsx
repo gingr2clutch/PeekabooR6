@@ -24,6 +24,9 @@ export default function AuthedAdminLayout({
           <Link href="/admin/queue" className={navLinkCls}>
             Queue
           </Link>
+          <Link href="/admin/copy" className={navLinkCls}>
+            Copy
+          </Link>
           <Link href="/admin/submissions" className={navLinkCls}>
             Submissions
           </Link>
