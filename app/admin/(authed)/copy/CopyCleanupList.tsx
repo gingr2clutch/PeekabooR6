@@ -112,7 +112,86 @@ function Field({
   );
 }
 
+// Read-only pass: plain selectable text, no inputs, tight leading — sized so
+// roughly four peeks land on a screen at normal zoom. Deliberately renders no
+// Field components, so nothing here can write.
+function ReviewRow({ row }: { row: CopyRow }) {
+  const steps = row.instructions.split("\n").filter((s) => s.trim());
+  return (
+    <article className="border-b border-border py-3">
+      <p className="text-sm font-semibold leading-tight text-ink">
+        {row.name}{" "}
+        <span className="font-normal text-muted">
+          · {row.mapName} · {row.floorName}
+        </span>
+      </p>
+
+      {steps.length > 0 ? (
+        <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-[13px] leading-snug text-ink">
+          {steps.map((s, i) => (
+            <li key={i}>{s}</li>
+          ))}
+        </ol>
+      ) : (
+        <p className="mt-1 text-[13px] leading-snug text-muted">
+          No instructions.
+        </p>
+      )}
+
+      {row.tip ? (
+        <p className="mt-1 text-[13px] leading-snug text-ink">
+          <span className="font-semibold text-muted">Tip: </span>
+          {row.tip}
+        </p>
+      ) : null}
+    </article>
+  );
+}
+
 export function CopyCleanupList({ rows }: { rows: CopyRow[] }) {
+  // Editable is the default; review mode is only for reading and screenshots.
+  const [review, setReview] = useState(false);
+
+  return (
+    <>
+      <div className="mb-5 flex items-center gap-2">
+        {(["Edit", "Review"] as const).map((label) => {
+          const on = (label === "Review") === review;
+          return (
+            <button
+              key={label}
+              type="button"
+              onClick={() => setReview(label === "Review")}
+              aria-pressed={on}
+              className={`rounded-btn border px-3 py-1 text-sm font-medium transition-colors ${
+                on
+                  ? "border-brand bg-brand/[0.08] text-ink"
+                  : "border-border text-muted hover:border-brand hover:text-ink"
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
+        <span className="text-xs text-muted">
+          {review ? "Read-only — plain text for screenshots" : "Edits save on blur"}
+        </span>
+      </div>
+
+      {review ? (
+        <div className="border-t border-border">
+          {rows.map((r) => (
+            <ReviewRow key={r.id} row={r} />
+          ))}
+        </div>
+      ) : (
+        <EditableList rows={rows} />
+      )}
+    </>
+  );
+}
+
+function EditableList({ rows }: { rows: CopyRow[] }) {
   return (
     <div className="space-y-8">
       {rows.map((r) => (
