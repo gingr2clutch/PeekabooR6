@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/ConfirmButton";
+import { PinPlacer } from "@/components/PinPlacer";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   createPlacementAction,
@@ -48,7 +49,7 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
 
   const [opsRes, floorsRes, placementsRes] = await Promise.all([
     sb.from("gadget_operators").select("id, slug, name").order("display_order"),
-    sb.from("floors").select("id, name").eq("map_id", site.map_id).order("name"),
+    sb.from("floors").select("id, name, birds_eye_url").eq("map_id", site.map_id).order("name"),
     sb
       .from("gadget_placements")
       .select("id, operator_id, label, note, x_pct, y_pct, video_url, thumbs_up, thumbs_down, published")
@@ -58,7 +59,16 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
   for (const r of [opsRes, floorsRes, placementsRes]) if (r.error) throw r.error;
 
   const operators = (opsRes.data ?? []) as { id: string; slug: string; name: string }[];
-  const floors = (floorsRes.data ?? []) as { id: string; name: string }[];
+  const floors = (floorsRes.data ?? []) as {
+    id: string;
+    name: string;
+    birds_eye_url: string | null;
+  }[];
+
+  // The picker draws on the site's own blueprint. Without floor_id there is
+  // nothing to click, and PinPlacer falls back to numeric inputs by itself.
+  const blueprint =
+    (site.floor_id ? floors.find((f) => f.id === site.floor_id) : null) ?? null;
   const placements = (placementsRes.data ?? []) as {
     id: string;
     operator_id: string;
@@ -142,14 +152,22 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
                 <span className="mb-1 block text-xs text-muted">Label</span>
                 <input name="label" defaultValue={p.label ?? ""} className={input} />
               </label>
-              <label className="w-20">
-                <span className="mb-1 block text-xs text-muted">X %</span>
-                <input name="x_pct" type="number" step="0.1" defaultValue={p.x_pct} className={input} />
-              </label>
-              <label className="w-20">
-                <span className="mb-1 block text-xs text-muted">Y %</span>
-                <input name="y_pct" type="number" step="0.1" defaultValue={p.y_pct} className={input} />
-              </label>
+              {/* Collapsed by default: one expanded blueprint per placement
+                  would be a wall of images. The hidden x_pct/y_pct inputs
+                  PinPlacer renders submit whether or not it is open. */}
+              <details className="w-full">
+                <summary className="cursor-pointer text-xs text-muted">
+                  Position — {p.x_pct}%, {p.y_pct}% (click to place)
+                </summary>
+                <div className="mt-2">
+                  <PinPlacer
+                    src={blueprint?.birds_eye_url ?? null}
+                    initialX={p.x_pct}
+                    initialY={p.y_pct}
+                    name={`${site.name} blueprint`}
+                  />
+                </div>
+              </details>
               <label className="min-w-[10rem] flex-1">
                 <span className="mb-1 block text-xs text-muted">Video URL</span>
                 <input name="video_url" defaultValue={p.video_url ?? ""} className={input} />
@@ -213,14 +231,17 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
           <span className="mb-1 block text-xs text-muted">Label</span>
           <input name="label" placeholder="Above door" className={input} />
         </label>
-        <label className="w-20">
-          <span className="mb-1 block text-xs text-muted">X %</span>
-          <input name="x_pct" type="number" step="0.1" defaultValue={50} className={input} />
-        </label>
-        <label className="w-20">
-          <span className="mb-1 block text-xs text-muted">Y %</span>
-          <input name="y_pct" type="number" step="0.1" defaultValue={50} className={input} />
-        </label>
+        <div className="w-full">
+          <span className="mb-1 block text-xs text-muted">
+            Position — click the blueprint
+          </span>
+          <PinPlacer
+            src={blueprint?.birds_eye_url ?? null}
+            initialX={50}
+            initialY={50}
+            name={`${site.name} blueprint`}
+          />
+        </div>
         <label className="min-w-[10rem] flex-1">
           <span className="mb-1 block text-xs text-muted">Video URL</span>
           <input name="video_url" className={input} />
