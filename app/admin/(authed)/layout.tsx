@@ -1,9 +1,6 @@
-import Link from "next/link";
 import { Wordmark } from "@/components/Wordmark";
 import { logoutAction } from "../actions";
-
-const navLinkCls =
-  "text-sm font-medium text-ink transition-colors hover:text-brand sm:text-base";
+import { AdminNav } from "./AdminNav";
 
 export default function AuthedAdminLayout({
   children,
@@ -14,25 +11,8 @@ export default function AuthedAdminLayout({
     <>
       <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 sm:px-6">
         <Wordmark href="/admin/maps" />
-        <nav className="flex items-center gap-4 sm:gap-6">
-          <Link href="/admin/maps" className={navLinkCls}>
-            Maps
-          </Link>
-          <Link href="/admin/peeks" className={navLinkCls}>
-            Peeks
-          </Link>
-          <Link href="/admin/queue" className={navLinkCls}>
-            Queue
-          </Link>
-          <Link href="/admin/copy" className={navLinkCls}>
-            Copy
-          </Link>
-          <Link href="/admin/submissions" className={navLinkCls}>
-            Submissions
-          </Link>
-          <Link href="/admin/creators" className={navLinkCls}>
-            Creators
-          </Link>
+        <div className="flex items-center gap-4 sm:gap-6">
+          <AdminNav />
           <form action={logoutAction}>
             <button
               type="submit"
@@ -41,7 +21,7 @@ export default function AuthedAdminLayout({
               Sign out
             </button>
           </form>
-        </nav>
+        </div>
       </header>
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</div>
     </>
