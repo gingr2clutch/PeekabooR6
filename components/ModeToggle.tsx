@@ -33,14 +33,14 @@ export function ModeToggle() {
       role="group"
       aria-label="Content mode"
       // Compact enough to sit beside the nav icons at 320px.
-      className="inline-flex shrink-0 items-center rounded-btn border border-border bg-card p-0.5"
+      className="inline-flex shrink-0 items-center rounded-btn border border-border bg-card p-[2px]"
     >
       {options.map((o) => (
         <Link
           key={o.label}
           href={o.href}
           aria-current={o.active ? "page" : undefined}
-          className={`inline-flex items-center gap-1.5 rounded-btn px-2 py-1 text-[11px] font-semibold transition-colors duration-150 ease-out sm:px-2.5 sm:text-xs ${
+          className={`inline-flex items-center gap-1 rounded-btn px-1.5 py-0.5 text-[10px] font-semibold transition-colors duration-150 ease-out sm:px-2 sm:text-[11px] ${
             o.active ? "text-ink" : "text-muted hover:text-ink"
           }`}
         >
@@ -48,7 +48,7 @@ export function ModeToggle() {
               the active side shows a filled dot. */}
           <span
             aria-hidden
-            className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+            className={`h-1 w-1 shrink-0 rounded-full ${
               o.active
                 ? o.label === "Gadgets"
                   ? "bg-blue"
