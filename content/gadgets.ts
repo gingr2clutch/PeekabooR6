@@ -153,3 +153,81 @@ export function gadgetsForMap(mapSlug: string): Gadget[] {
   // Always return at least four, so no map page looks broken.
   return all.filter((_, i) => (h >> i % 8) % 3 !== 0 || i < 4);
 }
+
+/* ===========================================================================
+   PLACEHOLDER navigation data for the map -> site -> operator -> placement
+   flow. All dummy: no bomb-site or placement table exists yet.
+
+   Real bomb sites vary per map (Oregon's are not Chalet's), so a fixed list
+   here is a stand-in, not a claim about any map. Same for placements — the
+   pin coordinates are invented, not surveyed. Keep the shapes; replace the
+   bodies when the tables land.
+   =========================================================================== */
+
+export type BombSite = { slug: string; name: string; floorHint: string };
+
+export type GadgetOperator = {
+  slug: string;
+  name: string;
+  role: string;
+  gadget: string;
+};
+
+export type Placement = {
+  id: string;
+  /* Percentages of the bird's-eye box, matching how peek pins are stored. */
+  x: number;
+  y: number;
+  label: string;
+  note: string;
+};
+
+// Four per map. Generic names because inventing map-specific ones would read
+// as real data.
+export const BOMB_SITES: BombSite[] = [
+  { slug: "site-a", name: "Site A", floorHint: "Basement" },
+  { slug: "site-b", name: "Site B", floorHint: "1st floor" },
+  { slug: "site-c", name: "Site C", floorHint: "2nd floor" },
+  { slug: "site-d", name: "Site D", floorHint: "2nd floor" },
+];
+
+export const GADGET_OPERATORS: GadgetOperator[] = [
+  { slug: "denari", name: "Denari", role: "Support", gadget: "Placeholder gadget" },
+  { slug: "valkyrie", name: "Valkyrie", role: "Intel", gadget: "Black Eye" },
+  { slug: "kapkan", name: "Kapkan", role: "Trapper", gadget: "Entry Denial Device" },
+];
+
+export function sitesForMap(_mapSlug: string): BombSite[] {
+  return BOMB_SITES;
+}
+
+export function findSite(slug: string): BombSite | undefined {
+  return BOMB_SITES.find((s) => s.slug === slug);
+}
+
+export function findOperator(slug: string): GadgetOperator | undefined {
+  return GADGET_OPERATORS.find((o) => o.slug === slug);
+}
+
+// Deterministic from operator + site so the same page always shows the same
+// pins, and different operators/sites differ. Invented coordinates.
+export function placementsFor(
+  operatorSlug: string,
+  siteSlug: string
+): Placement[] {
+  const key = `${operatorSlug}:${siteSlug}`;
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  const count = 3 + (h % 2); // 3 or 4 pins
+  return Array.from({ length: count }, (_, i) => {
+    const a = (h >> (i * 3)) % 100;
+    const b = (h >> (i * 5 + 1)) % 100;
+    return {
+      id: `${key}-${i}`,
+      x: 12 + (a % 76),
+      y: 14 + (b % 68),
+      label: `Placement ${i + 1}`,
+      note: "Placeholder position — not a real callout.",
+    };
+  });
+}

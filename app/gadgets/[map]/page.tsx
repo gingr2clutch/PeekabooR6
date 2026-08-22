@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
-import { BackToTop } from "@/components/BackToTop";
 import { getMaps } from "@/lib/db";
-import { gadgetsForMap, type Gadget } from "@/content/gadgets";
+import { sitesForMap } from "@/content/gadgets";
 
 export const dynamic = "force-dynamic";
 
@@ -19,26 +18,24 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const map = await findMap(params.map);
   if (!map) return { title: "Not found" };
   return {
-    title: `${map.name} gadgets`,
-    description: `Operator gadgets that matter on ${map.name} in Rainbow Six Siege — what each one does, what counters it, and how to use it.`,
+    title: `${map.name} bomb sites — gadgets`,
+    description: `Pick a bomb site on ${map.name} to see gadget placements for each operator.`,
   };
 }
 
-// A single map's gadgets. Mirrors the peek flow: maps grid -> this page.
-// Gadget bodies are placeholder (content/gadgets.ts); the map itself is real,
-// so an unpublished or unknown slug 404s exactly like the peek map pages do.
-export default async function MapGadgetsPage({ params }: Params) {
+// Step 2 of the gadget flow: map -> SITE -> operator -> placements.
+// Sites are placeholder (content/gadgets.ts); the map is real, so an unknown
+// or unpublished slug 404s the same way the peek map pages do.
+export default async function MapSitesPage({ params }: Params) {
   const map = await findMap(params.map);
   if (!map) notFound();
 
-  const gadgets = gadgetsForMap(map.slug);
-  const attack = gadgets.filter((g) => g.side === "attack");
-  const defense = gadgets.filter((g) => g.side === "defense");
+  const sites = sitesForMap(map.slug);
 
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-5xl px-4 pb-20 pt-8 sm:px-6 sm:pt-10">
+      <main className="mx-auto max-w-3xl px-4 pb-20 pt-8 sm:px-6 sm:pt-10">
         <Link
           href="/gadgets"
           className="text-sm font-medium text-muted transition-colors hover:text-blue"
@@ -53,16 +50,30 @@ export default async function MapGadgetsPage({ params }: Params) {
           <h1 className="mt-2 text-3xl font-semibold tracking-tight lg:text-4xl">
             {map.name}
           </h1>
-          <p className="mt-2 text-[15px] text-muted">
-            {gadgets.length} gadgets worth knowing on this map.
+          <p className="mt-2 text-lg font-medium text-[#6f716a]">
+            Pick the bomb site
           </p>
           <p className="mt-3 inline-block rounded-btn border border-blue/30 bg-blue/[0.06] px-3 py-1 text-xs font-medium text-blue">
-            Placeholder data — real gadgets land once the database is wired up
+            Placeholder sites — real bomb sites land with the database
           </p>
         </header>
 
-        <Section title="Attack" gadgets={attack} />
-        <Section title="Defense" gadgets={defense} />
+        {/* Two-up from 320px: four short labels fit comfortably. */}
+        <ul className="mt-8 grid grid-cols-2 gap-3 sm:gap-4">
+          {sites.map((s) => (
+            <li key={s.slug}>
+              <Link
+                href={`/gadgets/${map.slug}/${s.slug}`}
+                className="flex h-full flex-col items-center justify-center rounded-card border border-border bg-card px-4 py-6 text-center transition-colors duration-150 ease-out hover:border-blue sm:py-8"
+              >
+                <span className="text-lg font-semibold text-ink sm:text-xl">
+                  {s.name}
+                </span>
+                <span className="mt-1 text-xs text-muted">{s.floorHint}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
 
         <p className="mt-12 text-center text-sm text-muted">
           Looking for spawn peeks instead?{" "}
@@ -74,56 +85,6 @@ export default async function MapGadgetsPage({ params }: Params) {
           </Link>
         </p>
       </main>
-      <BackToTop />
     </>
-  );
-}
-
-function Section({ title, gadgets }: { title: string; gadgets: Gadget[] }) {
-  if (gadgets.length === 0) return null;
-  return (
-    <section className="mt-10">
-      <div className="mb-3 flex items-center gap-3">
-        <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-blue">
-          {title}
-        </h2>
-        <hr className="h-px flex-1 border-0 bg-border" />
-      </div>
-
-      {/* One column at 320px, widening with the viewport. */}
-      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {gadgets.map((g) => (
-          <li
-            key={g.id}
-            className="flex h-full flex-col rounded-card border border-border bg-card p-4"
-          >
-            <div className="flex items-baseline justify-between gap-2">
-              <h3 className="text-base font-semibold text-ink">{g.name}</h3>
-              <span className="shrink-0 text-[11px] font-medium text-muted">
-                {g.operator}
-              </span>
-            </div>
-            <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-blue">
-              {g.category}
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-muted">{g.summary}</p>
-
-            {g.counters.length > 0 && (
-              <p className="mt-3 text-[13px] leading-snug text-ink">
-                <span className="font-semibold text-muted">Countered by: </span>
-                {g.counters.join(", ")}
-              </p>
-            )}
-            {g.tips.length > 0 && (
-              <ul className="mt-2 list-disc space-y-1 pl-4 text-[13px] leading-snug text-ink">
-                {g.tips.map((t, i) => (
-                  <li key={i}>{t}</li>
-                ))}
-              </ul>
-            )}
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }
