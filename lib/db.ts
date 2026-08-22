@@ -528,3 +528,124 @@ export async function getHomeStats(): Promise<HomeStats> {
     saTierPeeks,
   };
 }
+
+/* ===========================================================================
+   Gadgets. Separate tables from the peek side (see db/migrations/029_gadgets.sql)
+   and read through supabasePublic(), so RLS applies: only rows with
+   published = true come back. Drafts are invisible here by design — the admin
+   reads them with the service-role client instead.
+   =========================================================================== */
+
+export type GadgetOperator = {
+  id: string;
+  slug: string;
+  name: string;
+  role: string | null;
+  gadget_name: string | null;
+  display_order: number;
+};
+
+export type GadgetSite = {
+  id: string;
+  map_id: string;
+  floor_id: string | null;
+  slug: string;
+  name: string;
+  display_order: number;
+};
+
+export type GadgetPlacement = {
+  id: string;
+  site_id: string;
+  operator_id: string;
+  label: string | null;
+  note: string | null;
+  x_pct: number;
+  y_pct: number;
+  video_url: string | null;
+  thumbs_up: number;
+  thumbs_down: number;
+};
+
+const GADGET_SITE_COLUMNS =
+  "id, map_id, floor_id, slug, name, display_order";
+const GADGET_PLACEMENT_COLUMNS =
+  "id, site_id, operator_id, label, note, x_pct, y_pct, video_url, thumbs_up, thumbs_down";
+
+export async function getGadgetSitesForMap(
+  mapId: string
+): Promise<GadgetSite[]> {
+  const { data, error } = await supabasePublic()
+    .from("gadget_sites")
+    .select(GADGET_SITE_COLUMNS)
+    .eq("map_id", mapId)
+    .order("display_order", { ascending: true })
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getGadgetSiteBySlug(
+  mapId: string,
+  siteSlug: string
+): Promise<GadgetSite | null> {
+  const { data, error } = await supabasePublic()
+    .from("gadget_sites")
+    .select(GADGET_SITE_COLUMNS)
+    .eq("map_id", mapId)
+    .eq("slug", siteSlug)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function getGadgetOperatorBySlug(
+  slug: string
+): Promise<GadgetOperator | null> {
+  const { data, error } = await supabasePublic()
+    .from("gadget_operators")
+    .select("id, slug, name, role, gadget_name, display_order")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// Only operators that actually have a published placement on this site — an
+// operator with nothing to show would be a dead end for the visitor.
+export async function getGadgetOperatorsForSite(
+  siteId: string
+): Promise<GadgetOperator[]> {
+  const { data, error } = await supabasePublic()
+    .from("gadget_placements")
+    .select(
+      "operator_id, gadget_operators!inner(id, slug, name, role, gadget_name, display_order)"
+    )
+    .eq("site_id", siteId);
+  if (error) throw error;
+
+  const rows = (data ?? []) as unknown as {
+    gadget_operators: GadgetOperator | null;
+  }[];
+  const byId = new Map<string, GadgetOperator>();
+  for (const r of rows) {
+    if (r.gadget_operators) byId.set(r.gadget_operators.id, r.gadget_operators);
+  }
+  return Array.from(byId.values()).sort(
+    (a, b) => a.display_order - b.display_order || a.name.localeCompare(b.name)
+  );
+}
+
+export async function getGadgetPlacements(
+  siteId: string,
+  operatorId: string
+): Promise<GadgetPlacement[]> {
+  const { data, error } = await supabasePublic()
+    .from("gadget_placements")
+    .select(GADGET_PLACEMENT_COLUMNS)
+    .eq("site_id", siteId)
+    .eq("operator_id", operatorId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}

@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
-import { getMaps } from "@/lib/db";
-import { findSite, GADGET_OPERATORS } from "@/content/gadgets";
+import {
+  getMaps,
+  getGadgetSiteBySlug,
+  getGadgetOperatorsForSite,
+} from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +19,9 @@ async function findMap(slug: string) {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const map = await findMap(params.map);
-  const site = findSite(params.site);
-  if (!map || !site) return { title: "Not found" };
+  if (!map) return { title: "Not found" };
+  const site = await getGadgetSiteBySlug(map.id, params.site);
+  if (!site) return { title: "Not found" };
   return {
     title: `${site.name} on ${map.name} — gadget operators`,
     description: `Operators with gadget placements on ${site.name}, ${map.name}.`,
@@ -27,8 +31,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 // Step 3: map -> site -> OPERATOR -> placements.
 export default async function SiteOperatorsPage({ params }: Params) {
   const map = await findMap(params.map);
-  const site = findSite(params.site);
-  if (!map || !site) notFound();
+  if (!map) notFound();
+  const site = await getGadgetSiteBySlug(map.id, params.site);
+  if (!site) notFound();
+
+  // Only operators with a published placement here — anyone else is a dead end.
+  const operators = await getGadgetOperatorsForSite(site.id);
 
   return (
     <>
@@ -43,7 +51,7 @@ export default async function SiteOperatorsPage({ params }: Params) {
 
         <header className="mt-4 text-center">
           <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-blue">
-            {map.name} · {site.floorHint}
+            {map.name}
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight lg:text-4xl">
             {site.name}
@@ -53,8 +61,13 @@ export default async function SiteOperatorsPage({ params }: Params) {
           </p>
         </header>
 
+        {operators.length === 0 ? (
+          <p className="mt-8 rounded-card border border-border bg-card p-4 text-center text-sm text-muted">
+            No placements published for {site.name} yet.
+          </p>
+        ) : (
         <ul className="mt-8 space-y-3">
-          {GADGET_OPERATORS.map((o) => (
+          {operators.map((o) => (
             <li key={o.slug}>
               <Link
                 href={`/gadgets/${map.slug}/${site.slug}/${o.slug}`}
@@ -65,7 +78,7 @@ export default async function SiteOperatorsPage({ params }: Params) {
                     {o.name}
                   </span>
                   <span className="block text-xs text-muted">
-                    {o.role} · {o.gadget}
+                    {[o.role, o.gadget_name].filter(Boolean).join(" · ")}
                   </span>
                 </span>
                 <span aria-hidden className="shrink-0 text-blue">
@@ -75,6 +88,7 @@ export default async function SiteOperatorsPage({ params }: Params) {
             </li>
           ))}
         </ul>
+        )}
       </main>
     </>
   );

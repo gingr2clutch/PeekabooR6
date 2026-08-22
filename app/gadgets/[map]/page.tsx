@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { getMaps } from "@/lib/db";
-import { sitesForMap } from "@/content/gadgets";
+import { getGadgetSitesForMap } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -24,13 +24,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 // Step 2 of the gadget flow: map -> SITE -> operator -> placements.
-// Sites are placeholder (content/gadgets.ts); the map is real, so an unknown
-// or unpublished slug 404s the same way the peek map pages do.
+// Sites come from gadget_sites via supabasePublic(), so RLS returns published
+// rows only. An unknown or unpublished map slug 404s the same way the peek map
+// pages do.
 export default async function MapSitesPage({ params }: Params) {
   const map = await findMap(params.map);
   if (!map) notFound();
 
-  const sites = sitesForMap(map.slug);
+  const sites = await getGadgetSitesForMap(map.id);
 
   return (
     <>
@@ -53,12 +54,14 @@ export default async function MapSitesPage({ params }: Params) {
           <p className="mt-2 text-lg font-medium text-[#6f716a]">
             Pick the bomb site
           </p>
-          <p className="mt-3 inline-block rounded-btn border border-blue/30 bg-blue/[0.06] px-3 py-1 text-xs font-medium text-blue">
-            Placeholder sites — real bomb sites land with the database
-          </p>
         </header>
 
-        {/* Two-up from 320px: four short labels fit comfortably. */}
+        {sites.length === 0 ? (
+          <p className="mt-8 rounded-card border border-border bg-card p-4 text-center text-sm text-muted">
+            No bomb sites published for {map.name} yet.
+          </p>
+        ) : (
+        /* Two-up from 320px: short labels fit comfortably. */
         <ul className="mt-8 grid grid-cols-2 gap-3 sm:gap-4">
           {sites.map((s) => (
             <li key={s.slug}>
@@ -69,11 +72,12 @@ export default async function MapSitesPage({ params }: Params) {
                 <span className="text-lg font-semibold text-ink sm:text-xl">
                   {s.name}
                 </span>
-                <span className="mt-1 text-xs text-muted">{s.floorHint}</span>
+
               </Link>
             </li>
           ))}
         </ul>
+        )}
 
         <p className="mt-12 text-center text-sm text-muted">
           Looking for spawn peeks instead?{" "}

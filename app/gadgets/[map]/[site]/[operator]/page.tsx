@@ -4,8 +4,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { BackToTop } from "@/components/BackToTop";
-import { getMapBySlug, getFloorsForMap } from "@/lib/db";
-import { findSite, findOperator, placementsFor } from "@/content/gadgets";
+import {
+  getMapBySlug,
+  getFloorsForMap,
+  getGadgetSiteBySlug,
+  getGadgetOperatorBySlug,
+  getGadgetPlacements,
+} from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -13,9 +18,12 @@ type Params = { params: { map: string; site: string; operator: string } };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const map = await getMapBySlug(params.map);
-  const site = findSite(params.site);
-  const op = findOperator(params.operator);
-  if (!map?.published || !site || !op) return { title: "Not found" };
+  if (!map?.published) return { title: "Not found" };
+  const [site, op] = await Promise.all([
+    getGadgetSiteBySlug(map.id, params.site),
+    getGadgetOperatorBySlug(params.operator),
+  ]);
+  if (!site || !op) return { title: "Not found" };
   return {
     title: `${op.name} on ${site.name} — ${map.name}`,
     description: `${op.name} gadget placements for ${site.name} on ${map.name}.`,
@@ -30,15 +38,23 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 // (blue, and labelled "Placement") so the two can't be confused.
 export default async function OperatorPlacementsPage({ params }: Params) {
   const map = await getMapBySlug(params.map);
-  const site = findSite(params.site);
-  const op = findOperator(params.operator);
-  if (!map || !map.published || !site || !op) notFound();
+  if (!map || !map.published) notFound();
+  const [site, op] = await Promise.all([
+    getGadgetSiteBySlug(map.id, params.site),
+    getGadgetOperatorBySlug(params.operator),
+  ]);
+  if (!site || !op) notFound();
 
-  // Any floor with a blueprint will do while sites aren't tied to floors.
+  const pins = await getGadgetPlacements(site.id, op.id);
+
+  // The site now names its own blueprint. Falling back to the first floor that
+  // has one only matters while floor_id is unset — that is the mismatch the
+  // column was added to fix, so a site with floor_id set is always correct.
   const floors = await getFloorsForMap(map.id);
-  const floor = floors.find((f) => f.birds_eye_url) ?? null;
-
-  const pins = placementsFor(op.slug, site.slug);
+  const floor =
+    (site.floor_id ? floors.find((f) => f.id === site.floor_id) : null) ??
+    floors.find((f) => f.birds_eye_url) ??
+    null;
 
   return (
     <>
@@ -59,10 +75,7 @@ export default async function OperatorPlacementsPage({ params }: Params) {
             {op.name}
           </h1>
           <p className="mt-1 text-sm text-muted">
-            {op.role} · {op.gadget}
-          </p>
-          <p className="mt-3 inline-block rounded-btn border border-blue/30 bg-blue/[0.06] px-3 py-1 text-xs font-medium text-blue">
-            Pin positions are placeholder — not real callouts
+            {[op.role, op.gadget_name].filter(Boolean).join(" · ")}
           </p>
         </header>
 
@@ -95,7 +108,7 @@ export default async function OperatorPlacementsPage({ params }: Params) {
               <span
                 key={p.id}
                 className="absolute -translate-x-1/2 -translate-y-1/2"
-                style={{ left: `${p.x}%`, top: `${p.y}%` }}
+                style={{ left: `${p.x_pct}%`, top: `${p.y_pct}%` }}
               >
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue text-[11px] font-bold text-white ring-2 ring-white">
                   {i + 1}
@@ -104,6 +117,12 @@ export default async function OperatorPlacementsPage({ params }: Params) {
             ))}
           </div>
         </div>
+
+        {pins.length === 0 && (
+          <p className="mt-5 rounded-card border border-border bg-card p-4 text-center text-sm text-muted">
+            No {op.name} placements published for {site.name} yet.
+          </p>
+        )}
 
         <ol className="mt-5 space-y-2">
           {pins.map((p, i) => (
@@ -116,10 +135,25 @@ export default async function OperatorPlacementsPage({ params }: Params) {
               </span>
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-ink">
-                  {p.label}
+                  {p.label ?? `Placement ${i + 1}`}
                 </span>
-                <span className="block text-[13px] leading-snug text-muted">
-                  {p.note}
+                {p.note && (
+                  <span className="block text-[13px] leading-snug text-muted">
+                    {p.note}
+                  </span>
+                )}
+                {p.video_url && (
+                  <a
+                    href={p.video_url}
+                    target="_blank"
+                    rel="noopener"
+                    className="mt-1 inline-block text-[13px] font-medium text-blue hover:underline"
+                  >
+                    Watch clip →
+                  </a>
+                )}
+                <span className="mt-1 block text-[11px] text-muted">
+                  👍 {p.thumbs_up} · 👎 {p.thumbs_down}
                 </span>
               </span>
             </li>
