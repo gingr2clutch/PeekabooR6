@@ -151,9 +151,38 @@ function ReviewRow({ row }: { row: CopyRow }) {
 export function CopyCleanupList({ rows }: { rows: CopyRow[] }) {
   // Editable is the default; review mode is only for reading and screenshots.
   const [review, setReview] = useState(false);
+  const [query, setQuery] = useState("");
+
+  // Matches the copy as well as the name/map/floor, so you can search for a
+  // misspelling and land on the peek containing it — the point of the page.
+  const q = query.trim().toLowerCase();
+  const visible = q
+    ? rows.filter((r) =>
+        `${r.name} ${r.mapName} ${r.floorName} ${r.instructions} ${r.tip}`
+          .toLowerCase()
+          .includes(q)
+      )
+    : rows;
 
   return (
     <>
+      <div className="mb-3">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search peeks — name, map, floor, or any word in the copy"
+          aria-label="Search peeks"
+          className="w-full rounded-btn border border-border bg-card px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-brand"
+        />
+        {q && (
+          <p className="mt-1 text-xs text-muted">
+            {visible.length} of {rows.length} peeks
+            {visible.length === 0 ? " — nothing matches" : ""}
+          </p>
+        )}
+      </div>
+
       <div className="mb-5 flex items-center gap-2">
         {(["Edit", "Review"] as const).map((label) => {
           const on = (label === "Review") === review;
@@ -180,12 +209,12 @@ export function CopyCleanupList({ rows }: { rows: CopyRow[] }) {
 
       {review ? (
         <div className="border-t border-border">
-          {rows.map((r) => (
+          {visible.map((r) => (
             <ReviewRow key={r.id} row={r} />
           ))}
         </div>
       ) : (
-        <EditableList rows={rows} />
+        <EditableList rows={visible} />
       )}
     </>
   );
