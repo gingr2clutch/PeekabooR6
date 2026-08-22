@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { loadGadgets } from "@/content/gadgets";
 
 export const metadata: Metadata = {
@@ -41,7 +40,6 @@ export default function AdminGadgetsPage() {
               <th className="px-3 py-2 font-semibold">Operator</th>
               <th className="px-3 py-2 font-semibold">Side</th>
               <th className="px-3 py-2 font-semibold">Category</th>
-              <th className="px-3 py-2 font-semibold">View</th>
             </tr>
           </thead>
           <tbody>
@@ -53,16 +51,6 @@ export default function AdminGadgetsPage() {
                   {g.side === "attack" ? "Attack" : "Defense"}
                 </td>
                 <td className="px-3 py-2 text-muted">{g.category}</td>
-                <td className="px-3 py-2">
-                  <Link
-                    href={`/gadgets/${g.slug}`}
-                    target="_blank"
-                    rel="noopener"
-                    className="text-blue underline-offset-2 hover:underline"
-                  >
-                    Open →
-                  </Link>
-                </td>
               </tr>
             ))}
           </tbody>

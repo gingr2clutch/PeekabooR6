@@ -135,6 +135,21 @@ export function loadGadgets(): Gadget[] {
   return [...GADGETS].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function findGadget(slug: string): Gadget | undefined {
-  return GADGETS.find((g) => g.slug === slug);
+// PLACEHOLDER map association.
+//
+// Operator gadgets are not really map-specific, so there is no honest dummy
+// mapping to invent here. This picks a deterministic subset from the map slug
+// purely so the map -> gadgets flow is visibly working: the same map always
+// shows the same gadgets, and different maps show different ones.
+//
+// The real version is a join (gadget_id, map_slug) or a per-map relevance
+// score. When that table exists, replace this function body — every caller
+// already treats it as "give me the gadgets for this map".
+export function gadgetsForMap(mapSlug: string): Gadget[] {
+  const all = loadGadgets();
+  // Cheap stable hash of the slug — no randomness, so SSR and client agree.
+  let h = 0;
+  for (let i = 0; i < mapSlug.length; i++) h = (h * 31 + mapSlug.charCodeAt(i)) >>> 0;
+  // Always return at least four, so no map page looks broken.
+  return all.filter((_, i) => (h >> i % 8) % 3 !== 0 || i < 4);
 }
