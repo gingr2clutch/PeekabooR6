@@ -569,20 +569,33 @@ export type GadgetPlacement = {
 
 const GADGET_SITE_COLUMNS =
   "id, map_id, floor_id, slug, name, display_order";
+
+// Same columns plus the linked floor's blueprint, which the site cards use as
+// their thumbnail until per-site photos exist.
+const GADGET_SITE_WITH_FLOOR_COLUMNS = `${GADGET_SITE_COLUMNS}, floors(name, birds_eye_url)`;
 const GADGET_PLACEMENT_COLUMNS =
   "id, site_id, operator_id, label, note, x_pct, y_pct, video_url, thumbs_up, thumbs_down";
 
+export type GadgetSiteWithFloor = GadgetSite & {
+  floor: { name: string; birds_eye_url: string | null } | null;
+};
+
 export async function getGadgetSitesForMap(
   mapId: string
-): Promise<GadgetSite[]> {
+): Promise<GadgetSiteWithFloor[]> {
   const { data, error } = await supabasePublic()
     .from("gadget_sites")
-    .select(GADGET_SITE_COLUMNS)
+    .select(GADGET_SITE_WITH_FLOOR_COLUMNS)
     .eq("map_id", mapId)
     .order("display_order", { ascending: true })
     .order("name", { ascending: true });
   if (error) throw error;
-  return data ?? [];
+
+  const rows = (data ?? []) as unknown as (GadgetSite & {
+    floors: { name: string; birds_eye_url: string | null } | null;
+  })[];
+  // Flatten PostgREST's embed name into something that reads like one site.
+  return rows.map(({ floors, ...site }) => ({ ...site, floor: floors }));
 }
 
 export async function getGadgetSiteBySlug(

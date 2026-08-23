@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
@@ -61,18 +62,46 @@ export default async function MapSitesPage({ params }: Params) {
             No bomb sites published for {map.name} yet.
           </p>
         ) : (
-        /* Two-up from 320px: short labels fit comfortably. */
-        <ul className="mt-8 grid grid-cols-2 gap-3 sm:gap-4">
+        /* Thumbnail cards matching the map picker. The thumbnail is the
+           linked floor's blueprint — sites have no photo of their own yet, so
+           two sites on the same floor will look alike until they do.
+
+           Rendered with plain next/image rather than MapCardImage: that
+           component routes through coverThumb, which is deliberately scoped to
+           map covers only (blueprints are already compressed WebP at upload,
+           and the narrow scope keeps a proxy hiccup away from them). */
+        <ul className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
           {sites.map((s) => (
             <li key={s.slug}>
               <Link
                 href={`/gadgets/${map.slug}/${s.slug}`}
-                className="flex h-full flex-col items-center justify-center rounded-card border border-border bg-card px-4 py-6 text-center transition-colors duration-150 ease-out hover:border-blue sm:py-8"
+                className="map-card group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card border-2 border-white text-center elev-card outline-none transition-all duration-[180ms] ease-out focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.99]"
               >
-                <span className="text-lg font-semibold text-ink sm:text-xl">
-                  {s.name}
-                </span>
+                {s.floor?.birds_eye_url ? (
+                  <Image
+                    src={s.floor.birds_eye_url}
+                    alt=""
+                    fill
+                    sizes="(max-width: 640px) 50vw, 25vw"
+                    className="object-cover"
+                  />
+                ) : (
+                  <span className="placeholder-stripes absolute inset-0" />
+                )}
 
+                <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+                <span className="pointer-events-none absolute inset-0 rounded-card ring-0 ring-inset ring-blue transition-all duration-[180ms] ease-out group-hover:ring-2 group-focus-visible:ring-2" />
+
+                <span className="relative z-10 mt-auto w-full px-3 pb-2.5 text-left">
+                  <span className="block truncate text-sm font-semibold text-white drop-shadow-sm sm:text-base">
+                    {s.name}
+                  </span>
+                  {s.floor?.name && (
+                    <span className="block truncate text-[11px] text-white/70">
+                      {s.floor.name}
+                    </span>
+                  )}
+                </span>
               </Link>
             </li>
           ))}
