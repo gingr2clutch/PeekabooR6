@@ -20,6 +20,7 @@ import {
 import { Wordmark } from "./Wordmark";
 import { AuthNavIcon } from "./AuthNavIcon";
 import { SiteSearch } from "./SiteSearch";
+import { ModeToggle } from "./ModeToggle";
 import { DISCORD_INVITE } from "./DiscordButton";
 
 const ENTER_MS = 320;
@@ -286,6 +287,14 @@ export function SiteNav({ version }: { version?: string }) {
               style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 5rem)" }}
             >
               <div className="flex min-h-full flex-col">
+                {/* Mode switch lives here on phones: the header row has no
+                    space for it at 320px, and this is where phone users come
+                    to navigate anyway. Hidden at sm: and up, where the header
+                    copy takes over. */}
+                <div className="mb-5 sm:hidden" style={revealStyle(stagger++)}>
+                  <ModeToggle className="flex w-full justify-center" onNavigate={closeDrawer} />
+                </div>
+
                 {SECTIONS.map((section) => {
                   const labelIdx = stagger++;
                   return (

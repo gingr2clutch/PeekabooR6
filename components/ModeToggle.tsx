@@ -19,7 +19,19 @@ export function isGadgetsPath(pathname: string | null): boolean {
   return !!pathname && (pathname === "/gadgets" || pathname.startsWith("/gadgets/"));
 }
 
-export function ModeToggle() {
+export function ModeToggle({
+  className,
+  onNavigate,
+}: {
+  /* Header passes "hidden sm:inline-flex": at 320px the header row is already
+     over budget before this exists (wordmark + three 44px icons ≈ 294px in
+     288px), so the toggle cannot live there on a phone. The drawer copy passes
+     nothing and is always visible. */
+  className?: string;
+  /* Drawer usage closes itself on navigate — the drawer's open state is local
+     and would otherwise survive the route change. */
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const gadgets = isGadgetsPath(pathname);
 
@@ -33,13 +45,16 @@ export function ModeToggle() {
       role="group"
       aria-label="Content mode"
       // Compact enough to sit beside the nav icons at 320px.
-      className="inline-flex shrink-0 items-center rounded-btn border border-border bg-card p-[2px]"
+      className={`shrink-0 items-center rounded-btn border border-border bg-card p-[2px] ${
+        className ?? "inline-flex"
+      }`}
     >
       {options.map((o) => (
         <Link
           key={o.label}
           href={o.href}
           aria-current={o.active ? "page" : undefined}
+          onClick={onNavigate}
           className={`inline-flex items-center gap-1 rounded-btn px-1.5 py-0.5 text-[10px] font-semibold transition-colors duration-150 ease-out sm:px-2 sm:text-[11px] ${
             o.active ? "text-ink" : "text-muted hover:text-ink"
           }`}
