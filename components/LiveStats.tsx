@@ -24,6 +24,11 @@ export type StatCell = {
 
 type Props = {
   cells: StatCell[];
+  /* Which accent the labels, hover tint and load sweep use. Defaults to the
+     site's orange, so every existing caller renders exactly as before; /gadgets
+     passes "blue". Both class strings are written out literally because
+     Tailwind cannot see an interpolated class name. */
+  accent?: "brand" | "blue";
 };
 
 const ROLL_MS = 1100; // roll duration per digit
@@ -131,10 +136,23 @@ function Odometer({
   );
 }
 
-export function LiveStats({ cells }: Props) {
+export function LiveStats({ cells, accent = "brand" }: Props) {
   // SSR + first render show the real values (crawlable, no-JS safe). On mount,
   // drop to 0 pre-paint (no transition) then roll each odometer up to target.
   const [phase, setPhase] = useState<Phase>("final");
+
+  const A =
+    accent === "blue"
+      ? {
+          label: "text-blue",
+          scan: "via-blue/20",
+          hover: "hover:bg-blue/[0.05]",
+        }
+      : {
+          label: "text-brand",
+          scan: "via-brand/20",
+          hover: "hover:bg-brand/[0.05]",
+        };
 
   useIsoLayoutEffect(() => {
     const reduce =
@@ -152,7 +170,7 @@ export function LiveStats({ cells }: Props) {
       {/* One-time orange scan-line sweep on load (CSS; off for reduced-motion). */}
       <span
         aria-hidden
-        className="peek-stats-scan pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-brand/20 to-transparent"
+        className={`peek-stats-scan pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent to-transparent ${A.scan}`}
       />
       <div className="relative grid grid-cols-2 sm:grid-cols-4">
         {cells.map((c, i) => {
@@ -180,7 +198,9 @@ export function LiveStats({ cells }: Props) {
                   </span>
                 )}
               </div>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand lg:text-[13px]">
+              <span
+                className={`text-[11px] font-semibold uppercase tracking-[0.12em] lg:text-[13px] ${A.label}`}
+              >
                 {c.label}
               </span>
             </>
@@ -200,7 +220,7 @@ export function LiveStats({ cells }: Props) {
               {c.href ? (
                 <Link
                   href={c.href}
-                  className={`${wrapClass} rounded-[10px] transition-colors duration-150 hover:bg-brand/[0.05] motion-safe:active:scale-[0.98]`}
+                  className={`${wrapClass} rounded-[10px] transition-colors duration-150 motion-safe:active:scale-[0.98] ${A.hover}`}
                 >
                   {inner}
                 </Link>

@@ -649,3 +649,43 @@ export async function getGadgetPlacements(
   if (error) throw error;
   return data ?? [];
 }
+
+export type GadgetStats = {
+  maps: number;
+  placements: number;
+  operators: number;
+  thumbsUp: number;
+};
+
+// Stat bar for /gadgets. One query: RLS already limits gadget_placements to
+// published rows, and the !inner join to gadget_sites drops any placement whose
+// site is still a draft — so "published gadget content" means both are live,
+// which is exactly what the public pages render.
+export async function getGadgetStats(): Promise<GadgetStats> {
+  const { data, error } = await supabasePublic()
+    .from("gadget_placements")
+    .select("operator_id, thumbs_up, gadget_sites!inner(map_id)");
+  if (error) throw error;
+
+  const rows = (data ?? []) as unknown as {
+    operator_id: string;
+    thumbs_up: number | null;
+    gadget_sites: { map_id: string } | null;
+  }[];
+
+  const mapIds = new Set<string>();
+  const operatorIds = new Set<string>();
+  let thumbsUp = 0;
+  for (const r of rows) {
+    if (r.gadget_sites?.map_id) mapIds.add(r.gadget_sites.map_id);
+    if (r.operator_id) operatorIds.add(r.operator_id);
+    thumbsUp += r.thumbs_up ?? 0;
+  }
+
+  return {
+    maps: mapIds.size,
+    placements: rows.length,
+    operators: operatorIds.size,
+    thumbsUp,
+  };
+}

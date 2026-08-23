@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { MapCardImage } from "@/components/MapCardImage";
-import { getMaps } from "@/lib/db";
+import { LiveStats } from "@/components/LiveStats";
+import { getGadgetStats, getMaps } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,8 @@ export const metadata: Metadata = {
 // this and duplicated the wrapper while reusing MapCardImage; this follows that
 // precedent, so the homepage stays untouched.
 export default async function GadgetsIndexPage() {
-  const maps = (await getMaps()).filter((m) => m.published);
+  const [allMaps, stats] = await Promise.all([getMaps(), getGadgetStats()]);
+  const maps = allMaps.filter((m) => m.published);
 
   return (
     <>
@@ -46,6 +48,22 @@ export default async function GadgetsIndexPage() {
           <p className="mt-3 text-[11px] text-muted">
             Placeholder data while the database fills up
           </p>
+        </div>
+
+        {/* Same bar the homepage uses, in the Gadgets accent. Cell ordering
+            mirrors the peek version: a 2x2 on phones that resets to a single
+            row at sm. Counts are real and will read 0 until content is
+            published. */}
+        <div className="mb-8 sm:mb-10">
+          <LiveStats
+            accent="blue"
+            cells={[
+              { label: "Maps", value: stats.maps, icon: "pin", cellClass: "order-3 sm:order-none" },
+              { label: "Placements", value: stats.placements, icon: "eye", cellClass: "order-1 sm:order-none sm:border-l" },
+              { label: "Operators", value: stats.operators, icon: "check", cellClass: "order-2 border-l sm:order-none" },
+              { label: "Thumbs Up", value: stats.thumbsUp, icon: "trophy", cellClass: "order-4 border-l sm:order-none" },
+            ]}
+          />
         </div>
 
         {maps.length === 0 ? (
