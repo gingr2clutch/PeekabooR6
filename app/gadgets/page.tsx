@@ -30,18 +30,21 @@ export default async function GadgetsIndexPage() {
     <>
       <PageHeader />
       <main className="mx-auto max-w-6xl px-6 pb-20 pt-10">
-        <div className="mb-8 text-center">
-          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-blue">
-            Gadgets
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight lg:text-5xl">
-            Gadgets
+        {/* One "Gadget", not two. The eyebrow used to say GADGETS above a
+            headline that also said Gadgets; the blue accent carries the mode
+            signal instead, matching the logo and wordmark. */}
+        <div className="mb-8 text-center sm:mb-10">
+          <h1 className="text-[26px] font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
+            Defender <span className="text-blue">Gadget</span> Database
           </h1>
-          <p className="mt-2 text-lg font-medium text-[#6f716a]">
-            Click the map you&apos;re on
+          <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-[#6f716a] sm:max-w-xl sm:text-lg">
+            Pick your map. Get the exact spot for every cam, trap, and utility
+            placement.
           </p>
-          <p className="mt-3 inline-block rounded-btn border border-blue/30 bg-blue/[0.06] px-3 py-1 text-xs font-medium text-blue">
-            Placeholder data — real gadgets land once the database is wired up
+          {/* Demoted from a blue callout box: it was competing with the
+              headline for attention in the hero. */}
+          <p className="mt-3 text-[11px] text-muted">
+            Placeholder data while the database fills up
           </p>
         </div>
 
@@ -53,7 +56,7 @@ export default async function GadgetsIndexPage() {
               <li key={map.id}>
                 <Link
                   href={`/gadgets/${map.slug}`}
-                  className="map-card group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card border-2 border-white text-center text-base font-medium elev-card transition-all duration-[180ms] ease-out motion-safe:hover:scale-[1.02]"
+                  className="map-card group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card border-2 border-white text-center text-base font-medium elev-card outline-none transition-all duration-[180ms] ease-out focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.99]"
                 >
                   {map.cover_image_url ? (
                     <MapCardImage
@@ -61,9 +64,16 @@ export default async function GadgetsIndexPage() {
                       published={map.published}
                     />
                   ) : null}
-                  <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+                  {/* Taller, deeper scrim than the peek cards: the name sits on
+                      top of it, and a lighter one left thin type hard to read
+                      over pale covers. */}
+                  <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+                  {/* Blue edge on hover/focus — the Gadgets accent, drawn
+                      inside the card's overflow so it reads as a crisp ring
+                      rather than a glow. */}
+                  <span className="pointer-events-none absolute inset-0 rounded-card ring-0 ring-inset ring-blue transition-all duration-[180ms] ease-out group-hover:ring-2 group-focus-visible:ring-2" />
                   <span className="relative z-10 mt-auto w-full px-3 pb-2.5 text-left">
-                    <span className="block truncate font-medium text-white drop-shadow-sm">
+                    <span className="block truncate text-sm font-semibold text-white drop-shadow-sm sm:text-base">
                       {map.name}
                     </span>
                   </span>
