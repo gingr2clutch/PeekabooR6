@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 export type StatIcon = "eye" | "check" | "pin" | "trophy";
 
@@ -138,8 +138,10 @@ function Odometer({
 
 export function LiveStats({ cells, accent = "brand" }: Props) {
   // SSR + first render show the real values (crawlable, no-JS safe). On mount,
-  // drop to 0 pre-paint (no transition) then roll each odometer up to target.
+  // drop to 0 pre-paint (no transition); the roll itself waits until the bar
+  // is actually on screen, so it isn't spent above the fold before it's seen.
   const [phase, setPhase] = useState<Phase>("final");
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   const A =
     accent === "blue"
@@ -154,19 +156,47 @@ export function LiveStats({ cells, accent = "brand" }: Props) {
           hover: "hover:bg-brand/[0.05]",
         };
 
+  // Pre-paint only: zero the digits so the roll has somewhere to start. Bail
+  // for reduced-motion, and bail if IntersectionObserver is missing — in both
+  // cases phase stays "final" and the real numbers render immediately, so the
+  // counters can never get stranded at 0.
   useIsoLayoutEffect(() => {
     const reduce =
       typeof window !== "undefined" &&
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduce) return; // final values instantly, no roll
+    if (typeof IntersectionObserver !== "function") return;
     setPhase("reset");
-    const id = requestAnimationFrame(() => setPhase("roll"));
-    return () => cancelAnimationFrame(id);
   }, []);
 
+  // Roll once, when the bar scrolls into view. Disconnecting on the first hit
+  // means it never replays on scroll-up.
+  useEffect(() => {
+    if (phase !== "reset") return;
+    const el = rootRef.current;
+    if (!el) return;
+    let raf = 0;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        io.disconnect();
+        raf = requestAnimationFrame(() => setPhase("roll"));
+      },
+      { threshold: 0.3 }
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [phase]);
+
   return (
-    <div className="peek-stats elev-md relative w-full overflow-hidden rounded-card border border-border bg-card">
+    <div
+      ref={rootRef}
+      className="peek-stats elev-md relative w-full overflow-hidden rounded-card border border-border bg-card"
+    >
       {/* One-time orange scan-line sweep on load (CSS; off for reduced-motion). */}
       <span
         aria-hidden

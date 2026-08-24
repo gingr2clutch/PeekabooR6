@@ -93,6 +93,20 @@ function PromoCard({
 const EDGE_FADE =
   "linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%)";
 
+// The question-mark column gets a radial mask instead of the plain vertical
+// fade, anchored to its right edge — the side the HowItEnds card sits on. The
+// marks stay dense in the gutter beside the card and thin out toward the
+// page's left edge, so the field reads as belonging to that card rather than
+// as wallpaper across the whole section. The 48% vertical radius still lands
+// on transparent at the top and bottom, which is what keeps marks off the
+// "MORE FROM US" heading.
+const Q_CLUSTER =
+  "radial-gradient(ellipse 110% 48% at 100% 50%, #000 0%, #000 34%, transparent 100%)";
+
+// Nudge on the baked per-mark opacities (0.18–0.26) so the clustered field
+// reads a little stronger without re-tuning sixteen values by hand.
+const Q_BOOST = 1.25;
+
 // The two motifs live in separate columns rather than one mixed field: purple
 // question marks down the left third, red crosshairs down the right third,
 // nothing in the centre. The centre stays clear so the heading and the card's
@@ -215,7 +229,7 @@ function MarkColumns({ s, uid }: { s: number; uid: string }) {
       {/* Left third — purple question marks */}
       <div
         className="absolute inset-y-0 left-0 w-1/3 overflow-hidden"
-        style={{ WebkitMaskImage: EDGE_FADE, maskImage: EDGE_FADE }}
+        style={{ WebkitMaskImage: Q_CLUSTER, maskImage: Q_CLUSTER }}
       >
         <div className="mfu-drift absolute inset-x-0 top-0" style={driftStyle}>
           <svg className="h-full w-full">
@@ -234,7 +248,7 @@ function MarkColumns({ s, uid }: { s: number; uid: string }) {
                     fontSize={m.size * s}
                     fontWeight="800"
                     fill={PURPLE}
-                    opacity={m.o}
+                    opacity={m.o * Q_BOOST}
                     transform={`rotate(${m.rot} ${m.x * s} ${m.y * s})`}
                   >
                     ?

@@ -10,6 +10,7 @@ import {
   getMapVoteActivity,
 } from "@/lib/map-activity";
 import { BackToTop } from "@/components/BackToTop";
+import type { CSSProperties } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export default async function Home() {
         <div data-reveal className="mb-6">
           <MoreFromUs />
         </div>
-        <div className="mb-5">
+        <div data-reveal className="mb-5">
           {/* DOM/source order stays Maps, Peeks, Votes, S-Tier (keeps the
               desktop single-row order); the `order-*` classes reshuffle the
               mobile 2x2 to Peeks | Votes (top) / Maps | S-Tier (bottom), and
@@ -71,7 +72,9 @@ export default async function Home() {
           <p className="mt-2 text-lg font-medium text-[#6f716a] lg:mt-3 lg:text-[1.75rem]">Click the map you're on</p>
           <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand lg:mt-4 lg:text-sm">
             <span className="relative flex h-2 w-2" aria-hidden>
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-75" />
+              {/* Expanding ring, not a glow — geometry + opacity only. ~2s so
+                  it reads as a slow heartbeat rather than a blink. */}
+              <span className="peek-pulse-ring absolute inline-flex h-full w-full rounded-full bg-brand" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-brand" />
             </span>
             <span>New peeks weekly</span>
@@ -83,8 +86,14 @@ export default async function Home() {
           id="maps"
           className="grid scroll-mt-24 grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4"
         >
-          {maps.map((map) => {
+          {maps.map((map, i) => {
             const hasCover = !!map.cover_image_url;
+            // Stagger resets every 4 cards so each grid row sweeps in
+            // left-to-right. A running index would make the last card on a
+            // 20-map page wait ~1.2s after it was already on screen.
+            const revealDelay = {
+              "--reveal-delay": `${(i % 4) * 60}ms`,
+            } as CSSProperties;
             // Live per-map counts → one short status line under the name.
             const counts = mapPeekCounts.get(map.id);
             const statusParts: string[] = [];
@@ -126,12 +135,12 @@ export default async function Home() {
 
             if (map.published) {
               return (
-                <li key={map.id}>
+                <li key={map.id} data-reveal style={revealDelay}>
                   <MapCardLink
                     href={`/maps/${map.slug}`}
                     className={`${cardBase} map-card border-2 border-white ${
                       hasCover ? "" : "bg-card text-ink"
-                    } motion-safe:hover:scale-[1.02]`}
+                    } motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.97]`}
                   >
                     {cover}
                     {label}
@@ -141,7 +150,7 @@ export default async function Home() {
             }
 
             return (
-              <li key={map.id}>
+              <li key={map.id} data-reveal style={revealDelay}>
                 <div
                   aria-disabled="true"
                   className={`${cardBase} !cursor-not-allowed border-2 border-white ${
@@ -159,9 +168,10 @@ export default async function Home() {
           })}
         </ul>
 
-        {/* Scroll-completion note after the last row. Static (no animation),
-            muted. Count reflects the live maps shown in the stats. */}
-        <div className="mt-10 text-center text-sm">
+        {/* Scroll-completion note after the last row. Muted; reveals with the
+            shared observer like everything else. Count reflects the live maps
+            shown in the stats. */}
+        <div data-reveal className="mt-10 text-center text-sm">
           <p className="font-medium text-ink/70">
             ✓ You&apos;ve explored all {stats.mapsLive} maps
           </p>
