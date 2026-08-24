@@ -3,6 +3,7 @@ import type { Floor, Map, Peek } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import type { CSSProperties } from "react";
 
 export function FloorPeekList({
   map,
@@ -44,8 +45,15 @@ export function FloorPeekList({
             peek.vote_count
           );
           return (
+            // This list is the page's crawlable text, so the reveal is an
+            // attribute on already-server-rendered markup — nothing here
+            // becomes client-only.
             <li
               key={peek.id}
+              data-reveal="quick"
+              style={
+                { "--reveal-delay": `${Math.min(i, 5) * 50}ms` } as CSSProperties
+              }
               className="rounded-card border border-border bg-card p-4"
             >
               <div className="flex items-center gap-3">

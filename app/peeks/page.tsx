@@ -7,6 +7,7 @@ import {
   getSTierPeeks,
   type PeekWithContext,
 } from "@/lib/db";
+import type { CSSProperties } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -81,8 +82,20 @@ export default async function PeeksPage({
           <p className="text-center text-sm text-muted">No peeks to show yet.</p>
         ) : (
           <ul className="space-y-3">
-            {peeks.map((peek) => (
-              <li key={peek.id}>
+            {peeks.map((peek, i) => (
+              // Vertical list, so the stagger only has to carry the rows
+              // already on screen at load — capped at 6. Past that, rows
+              // arrive one at a time as you scroll and a delay would just
+              // read as lag.
+              <li
+                key={peek.id}
+                data-reveal="quick"
+                style={
+                  {
+                    "--reveal-delay": `${Math.min(i, 5) * 50}ms`,
+                  } as CSSProperties
+                }
+              >
                 <BestPeek peek={peek} showMap from={mode} />
               </li>
             ))}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { MapCardImage } from "@/components/MapCardImage";
 import { getMaps } from "@/lib/db";
+import type { CSSProperties } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -32,11 +33,18 @@ export default async function AttackingIndexPage() {
         </div>
 
         <ul className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
-          {maps.map((map) => (
-            <li key={map.id}>
+          {maps.map((map, i) => (
+            // Stagger resets every 5 to match this grid's widest column count,
+            // so each row sweeps in rather than the page-long index dragging
+            // late cards behind the scroll.
+            <li
+              key={map.id}
+              data-reveal="quick"
+              style={{ "--reveal-delay": `${(i % 5) * 60}ms` } as CSSProperties}
+            >
               <Link
                 href={`/maps/${map.slug}/attacking`}
-                className="map-card group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card border-2 border-white text-center text-base font-medium elev-card transition-all duration-[180ms] ease-out motion-safe:hover:scale-[1.02]"
+                className="map-card group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card border-2 border-white text-center text-base font-medium elev-card transition-all duration-[180ms] ease-out motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.97]"
               >
                 {map.cover_image_url ? (
                   <MapCardImage src={map.cover_image_url} published={map.published} />

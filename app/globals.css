@@ -420,6 +420,16 @@ h4 {
   opacity: 1;
   transform: none;
 }
+/* Browsing pages (peek lists, map grids) use the same observer and the same
+   attribute — only the numbers change. Shorter travel and a faster curve so
+   rows settle almost as soon as they appear, which suits scanning a list; the
+   homepage hero can afford the longer 20px/0.45s version because you meet it
+   once. The observer in app/layout.tsx selects on attribute presence, so a
+   value here needs no JS change. */
+.reveal-ready [data-reveal="quick"] {
+  transform: translateY(12px);
+  transition-duration: 0.28s;
+}
 /* Belt-and-suspenders: even if .reveal-ready is present, never animate or
    hide for reduced-motion users. */
 @media (prefers-reduced-motion: reduce) {

@@ -262,7 +262,15 @@ export default async function MapPage({
                       peek.vote_count
                     );
                     return (
-                      <li key={peek.id}>
+                      <li
+                        key={peek.id}
+                        data-reveal="quick"
+                        style={
+                          {
+                            "--reveal-delay": `${Math.min(i, 5) * 50}ms`,
+                          } as React.CSSProperties
+                        }
+                      >
                         <div className="peek-lift group relative flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 shadow-sm hover:border-brand">
                           <Link
                             href={`/peeks/${peek.slug}?from=ranked`}
@@ -320,7 +328,10 @@ export default async function MapPage({
             <h2 className="mb-4 text-center text-lg font-bold tracking-tight text-ink">
               💎 Underrated on this map
             </h2>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {/* Revealed as one block rather than per card: BestPeek's root has
+                no h-full, so wrapping each card in a reveal div would make it
+                the grid item and break the row-height stretch. */}
+            <div data-reveal="quick" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {underratedPeeks.map((peek) => (
                 <BestPeek key={peek.id} peek={peek} isGem from="map" />
               ))}

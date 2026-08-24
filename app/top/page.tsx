@@ -228,7 +228,18 @@ function ClimbRow({
   const votes = peek.vote_count ?? 0;
 
   return (
-    <li className="arena-climb">
+    // Only the climbing rows reveal. The banners above keep the arena's own
+    // entrance — ranks 1-3 are the showcase, and a generic slide-up would
+    // fight the pennant treatment.
+    <li
+      className="arena-climb"
+      data-reveal="quick"
+      style={
+        {
+          "--reveal-delay": `${Math.min(Math.max(rank - 4, 0), 5) * 50}ms`,
+        } as CSSProperties
+      }
+    >
       <Link
         href={`/peeks/${peek.slug}?from=top`}
         className="arena-climb-link"

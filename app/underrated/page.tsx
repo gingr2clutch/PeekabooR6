@@ -204,7 +204,17 @@ function ClimbRow({
   const votes = peek.vote_count ?? 0;
 
   return (
-    <li className="arena-climb">
+    // Gem rows only. The podium above keeps the arena's own entrance, same
+    // reasoning as /top.
+    <li
+      className="arena-climb"
+      data-reveal="quick"
+      style={
+        {
+          "--reveal-delay": `${Math.min(Math.max(rank - 4, 0), 5) * 50}ms`,
+        } as CSSProperties
+      }
+    >
       <Link
         href={`/peeks/${peek.slug}?from=underrated`}
         className="arena-climb-link"
