@@ -62,14 +62,17 @@ export default async function MapSitesPage({ params }: Params) {
             No bomb sites published for {map.name} yet.
           </p>
         ) : (
-        /* Thumbnail cards matching the map picker. The thumbnail is the
-           linked floor's blueprint — sites have no photo of their own yet, so
-           two sites on the same floor will look alike until they do.
+        /* Thumbnail cards matching the map picker. The thumbnail is the site's
+           own uploaded photo, falling back to the linked floor's blueprint
+           when there isn't one — so a site without a photo still shows
+           something, and two sites on the same floor only look alike until
+           one gets a photo.
 
            Rendered with plain next/image rather than MapCardImage: that
            component routes through coverThumb, which is deliberately scoped to
            map covers only (blueprints are already compressed WebP at upload,
-           and the narrow scope keeps a proxy hiccup away from them). */
+           and the narrow scope keeps a proxy hiccup away from them). Site
+           photos are compressed to WebP on upload for the same reason. */
         <ul className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
           {sites.map((s) => (
             <li key={s.slug}>
@@ -77,9 +80,9 @@ export default async function MapSitesPage({ params }: Params) {
                 href={`/gadgets/${map.slug}/${s.slug}`}
                 className="map-card group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card border-2 border-white text-center elev-card outline-none transition-all duration-[180ms] ease-out focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.99]"
               >
-                {s.floor?.birds_eye_url ? (
+                {s.preview_image_url ?? s.floor?.birds_eye_url ? (
                   <Image
-                    src={s.floor.birds_eye_url}
+                    src={(s.preview_image_url ?? s.floor?.birds_eye_url)!}
                     alt=""
                     fill
                     sizes="(max-width: 640px) 50vw, 25vw"

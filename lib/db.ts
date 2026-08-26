@@ -552,6 +552,9 @@ export type GadgetSite = {
   slug: string;
   name: string;
   display_order: number;
+  // Uploaded photo of the site, used as the card thumbnail. Null falls back
+  // to the linked floor's blueprint.
+  preview_image_url: string | null;
 };
 
 export type GadgetPlacement = {
@@ -568,10 +571,11 @@ export type GadgetPlacement = {
 };
 
 const GADGET_SITE_COLUMNS =
-  "id, map_id, floor_id, slug, name, display_order";
+  "id, map_id, floor_id, slug, name, display_order, preview_image_url";
 
-// Same columns plus the linked floor's blueprint, which the site cards use as
-// their thumbnail until per-site photos exist.
+// Same columns plus the linked floor's blueprint. The blueprint is both the
+// card's fallback thumbnail (when a site has no photo) and what the pins are
+// drawn on after clicking in.
 const GADGET_SITE_WITH_FLOOR_COLUMNS = `${GADGET_SITE_COLUMNS}, floors(name, birds_eye_url)`;
 const GADGET_PLACEMENT_COLUMNS =
   "id, site_id, operator_id, label, note, x_pct, y_pct, video_url, thumbs_up, thumbs_down";

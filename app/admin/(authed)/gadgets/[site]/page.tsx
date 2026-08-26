@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/ConfirmButton";
+import { DirectGadgetSiteImageUpload } from "@/components/DirectGadgetSiteImageUpload";
 import { PinPlacer } from "@/components/PinPlacer";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
@@ -30,7 +31,9 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
 
   const { data: siteRow, error: siteErr } = await sb
     .from("gadget_sites")
-    .select("id, map_id, floor_id, slug, name, display_order, published, maps(name, slug)")
+    .select(
+      "id, map_id, floor_id, slug, name, display_order, published, preview_image_url, maps(name, slug)"
+    )
     .eq("id", params.site)
     .maybeSingle();
   if (siteErr) throw siteErr;
@@ -44,6 +47,7 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
     name: string;
     display_order: number;
     published: boolean;
+    preview_image_url: string | null;
     maps: { name: string; slug: string } | null;
   };
 
@@ -94,6 +98,23 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
       <p className="mt-1 text-sm text-muted">
         {placements.length} placements · {site.published ? "published" : "draft"}
       </p>
+
+      {/* Card photo. Thumbnail only — the blueprint below is still what the
+          public page draws pins on after you click into the site. */}
+      <section className="mt-6 rounded-card border border-border bg-card p-3">
+        <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-ink">
+          Card photo
+        </h2>
+        <p className="mb-3 mt-1 text-xs text-muted">
+          Shown as this site&rsquo;s thumbnail on /gadgets/{site.maps?.slug}.
+        </p>
+        <DirectGadgetSiteImageUpload
+          siteId={site.id}
+          siteName={site.name}
+          initialUrl={site.preview_image_url}
+          blueprintUrl={blueprint?.birds_eye_url ?? null}
+        />
+      </section>
 
       {/* Site settings. floor_id decides which blueprint the public page draws
           pins on; without it the page falls back to guessing a floor. */}
