@@ -25,6 +25,7 @@ type SiteRow = {
   name: string;
   display_order: number;
   published: boolean;
+  preview_image_url: string | null;
 };
 
 const input =
@@ -38,7 +39,9 @@ export default async function AdminGadgetSitesPage() {
     sb.from("floors").select("id, map_id, name").order("name"),
     sb
       .from("gadget_sites")
-      .select("id, map_id, floor_id, slug, name, display_order, published")
+      .select(
+        "id, map_id, floor_id, slug, name, display_order, published, preview_image_url"
+      )
       .order("display_order"),
     sb.from("gadget_placements").select("id, site_id"),
   ]);
@@ -117,6 +120,25 @@ export default async function AdminGadgetSitesPage() {
                       </span>
                     </span>
 
+                    {/* Which thumbnail the public card is actually using.
+                        "No photo" is not an error — the card falls back to the
+                        floor blueprint — but it is the one thing you cannot
+                        tell from the row otherwise. */}
+                    <span
+                      className={`rounded-btn px-2 py-0.5 text-xs font-medium ${
+                        s.preview_image_url
+                          ? "bg-blue/10 text-blue"
+                          : "bg-ink/[0.06] text-muted"
+                      }`}
+                      title={
+                        s.preview_image_url
+                          ? "Card shows this site's photo"
+                          : "Card falls back to the floor blueprint"
+                      }
+                    >
+                      {s.preview_image_url ? "Photo" : "No photo"}
+                    </span>
+
                     <span
                       className={`rounded-btn px-2 py-0.5 text-xs font-semibold ${
                         s.published
@@ -126,6 +148,16 @@ export default async function AdminGadgetSitesPage() {
                     >
                       {s.published ? "Published" : "Draft"}
                     </span>
+
+                    {/* Explicit affordance. The site name above links to the
+                        same place, but it reads as plain text, so the photo
+                        and placement editor was effectively hidden. */}
+                    <Link
+                      href={`/admin/gadgets/${s.id}`}
+                      className="rounded-btn border border-border px-2 py-1 text-xs font-medium text-ink hover:border-blue hover:text-blue"
+                    >
+                      Photo &amp; placements
+                    </Link>
 
                     <form action={toggleSitePublishedAction}>
                       <input type="hidden" name="id" value={s.id} />
