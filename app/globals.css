@@ -550,6 +550,163 @@ h4 {
   border-color: #c9a24b;
 }
 
+/* --- Homepage lure ---
+   Absolutely positioned so it is out of flow and the "Maps" heading stays
+   optically centred at every width. Transform-only hover/press, so it cannot
+   shift the heading or the grid below it. */
+.pr-lure {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  width: 66px;
+  height: 66px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.16s ease-out;
+}
+.pr-lure canvas {
+  display: block;
+  border-radius: 50%;
+}
+.pr-lure:focus-visible {
+  outline: 3px solid #ec7311;
+  outline-offset: 3px;
+}
+@media (hover: hover) {
+  .pr-lure:hover {
+    transform: translateY(-50%) scale(1.07);
+  }
+}
+.pr-lure:active {
+  transform: translateY(-50%) scale(0.96);
+}
+/* The one place orange appears in Peek Roulette: the "!" badge, centred on
+   the felt hub. Scale-only pulse — no glow, no box-shadow animation. */
+.pr-bang {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  pointer-events: none;
+  font-weight: 800;
+  font-size: 16px;
+  color: #fff;
+  background: linear-gradient(180deg, #ec7311, #d9640a);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(244, 236, 221, 0.9);
+  animation: pr-bang-pulse 1.7s ease-in-out infinite;
+}
+@keyframes pr-bang-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.16); }
+}
+
+/* --- Map-picker modal (homepage) --- */
+.pr-felt--modal {
+  width: 100%;
+  max-width: 352px;
+  padding: 18px 16px 16px;
+  animation: pr-pop 0.3s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+@keyframes pr-pop {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+.pr-winx--left {
+  right: auto;
+  left: 9px;
+}
+.pr-mhead {
+  text-align: center;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: 0.01em;
+}
+.pr-mq {
+  margin: 3px 0 13px;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(244, 236, 221, 0.72);
+}
+.pr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  max-height: 168px;
+  overflow-y: auto;
+}
+.pr-chip {
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-weight: 600;
+  font-size: 12.5px;
+  cursor: pointer;
+  color: #f4ecdd;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.4px solid rgba(201, 162, 75, 0.38);
+  transition: transform 0.12s ease-out;
+}
+.pr-chip:active {
+  transform: scale(0.96);
+}
+.pr-chip.is-sel {
+  background: #c9a24b;
+  border-color: #c9a24b;
+  color: #241c08;
+}
+.pr-btn-gold {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 14.5px;
+  color: #241c08;
+  background: linear-gradient(180deg, #c9a24b, #a5813a);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.32);
+  transition: transform 0.12s ease-out;
+}
+.pr-btn-gold:active {
+  transform: translateY(1px);
+}
+.pr-btn-gold:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.pr-merr {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 12.5px;
+  color: #f3c7b4;
+}
+.pr-wheelhold--full {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 12px 0 4px;
+}
+.pr-word {
+  margin-top: 8px;
+  min-height: 16px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 11.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(244, 236, 221, 0.6);
+}
+
 /* --- Win popup --- */
 .pr-win {
   position: fixed;
@@ -716,11 +873,16 @@ h4 {
 
 @media (prefers-reduced-motion: reduce) {
   .pr-win,
-  .pr-wincard {
+  .pr-wincard,
+  .pr-felt--modal,
+  .pr-bang {
     animation: none;
   }
   .pr-cta,
-  .pr-wingo {
+  .pr-wingo,
+  .pr-lure,
+  .pr-chip,
+  .pr-btn-gold {
     transition: none;
   }
 }

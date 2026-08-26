@@ -99,6 +99,37 @@ export function PeekRoulette({
 
   const px = SIZE[variant];
 
+  const wheelCanvas = (
+    <canvas
+      ref={canvasRef}
+      width={px}
+      height={px}
+      role="button"
+      tabIndex={0}
+      aria-label={`Spin Peek Roulette for a random ${mapName} peek`}
+      aria-disabled={spinning}
+      onClick={spin}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          spin();
+        }
+      }}
+      className="pr-canvas"
+    />
+  );
+
+  // 'full' is the wheel alone, for the homepage modal — the felt, heading and
+  // sound toggle belong to that modal, not here.
+  if (variant === "full") {
+    return (
+      <div className="pr-wheelhold pr-wheelhold--full">
+        {wheelCanvas}
+        <div className="pr-word">{spinning ? "Spinning…" : " "}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="pr-felt pr-felt--compact">
       <button
@@ -114,25 +145,7 @@ export function PeekRoulette({
         {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
       </button>
 
-      <div className="pr-wheelhold">
-        <canvas
-          ref={canvasRef}
-          width={px}
-          height={px}
-          role="button"
-          tabIndex={0}
-          aria-label={`Spin Peek Roulette for a random ${mapName} peek`}
-          aria-disabled={spinning}
-          onClick={spin}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              spin();
-            }
-          }}
-          className="pr-canvas"
-        />
-      </div>
+      <div className="pr-wheelhold">{wheelCanvas}</div>
 
       <div className="pr-body">
         <div className="pr-title">Peek Roulette</div>
