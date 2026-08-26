@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { track, type RoulettePlacement } from "@/lib/analytics";
-import {
-  RouletteWheel,
-  rouletteSound,
-  type RoulettePeek,
-} from "@/lib/peek-roulette-wheel";
+import { RouletteWheel, type RoulettePeek } from "@/lib/peek-roulette-wheel";
 
 export type RouletteVariant = "compact" | "full" | "mini";
 
@@ -43,11 +39,6 @@ export function PeekRoulette({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wheelRef = useRef<RouletteWheel | null>(null);
   const [spinning, setSpinning] = useState(false);
-  const [soundOn, setSoundOn] = useState(false);
-
-  // Read the persisted mute choice after mount only. Reading it during render
-  // would mismatch the server HTML and trip a hydration error.
-  useEffect(() => setSoundOn(rouletteSound.on), []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -80,10 +71,6 @@ export function PeekRoulette({
       window.setTimeout(() => onLand(winner), 380);
     });
   }, [mapSlug, onLand, peeks.length, placement]);
-
-  const toggleSound = useCallback(() => {
-    setSoundOn(rouletteSound.toggle());
-  }, []);
 
   // "Spin again" path. rAF defers to the frame after the wheel is constructed
   // and idling, so the spin starts from a drawn face rather than a blank one.
@@ -119,8 +106,8 @@ export function PeekRoulette({
     />
   );
 
-  // 'full' is the wheel alone, for the homepage modal — the felt, heading and
-  // sound toggle belong to that modal, not here.
+  // 'full' is the wheel alone — the felt and heading belong to whatever
+  // container renders it.
   if (variant === "full") {
     return (
       <div className="pr-wheelhold pr-wheelhold--full">
@@ -132,19 +119,6 @@ export function PeekRoulette({
 
   return (
     <div className="pr-felt pr-felt--compact">
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleSound();
-        }}
-        aria-pressed={soundOn}
-        aria-label={soundOn ? "Mute roulette sound" : "Unmute roulette sound"}
-        className={`pr-sound ${soundOn ? "is-on" : ""}`}
-      >
-        {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
-      </button>
-
       <div className="pr-wheelhold">{wheelCanvas}</div>
 
       <div className="pr-body">
@@ -162,23 +136,5 @@ export function PeekRoulette({
         </button>
       </div>
     </div>
-  );
-}
-
-function SoundOffIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden>
-      <path d="M11 5L6 9H3v6h3l5 4V5z" />
-      <path d="M17 9l4 6M21 9l-4 6" />
-    </svg>
-  );
-}
-
-function SoundOnIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden>
-      <path d="M11 5L6 9H3v6h3l5 4V5z" />
-      <path d="M15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13" />
-    </svg>
   );
 }

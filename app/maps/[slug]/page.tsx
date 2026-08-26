@@ -190,10 +190,7 @@ export default async function MapPage({
             <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">
               {map.name}
             </h1>
-            <p className="mt-3 text-sm text-[#6f716a]">{floorLabel}</p>
-            <p className="mt-2 text-[15px] font-light italic text-[#6f716a]">
-              Choose your floor
-            </p>
+            <p className="mt-3 text-base text-[#585a52] sm:text-lg">{floorLabel}</p>
             {totalPeeks >= 2 && (
               <div className="mt-5">
                 <PeekRouletteBar

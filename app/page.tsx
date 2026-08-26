@@ -10,7 +10,6 @@ import {
   getMapVoteActivity,
 } from "@/lib/map-activity";
 import { BackToTop } from "@/components/BackToTop";
-import { HomeRouletteLure } from "@/components/HomeRouletteLure";
 import type { CSSProperties } from "react";
 
 export const dynamic = "force-dynamic";
@@ -69,15 +68,7 @@ export default async function Home() {
           />
         </div>
         <div data-reveal className="mb-8 text-center lg:mb-10">
-          {/* The lure is absolutely positioned inside this relative wrapper so
-              it is out of normal flow — "Maps" stays optically centred at every
-              breakpoint rather than being pushed left by a sibling. */}
-          <div className="relative">
-            <h1 className="text-3xl font-semibold tracking-tight lg:text-5xl">Maps</h1>
-            <HomeRouletteLure
-              maps={maps.map((m) => ({ slug: m.slug, name: m.name }))}
-            />
-          </div>
+          <h1 className="text-3xl font-semibold tracking-tight lg:text-5xl">Maps</h1>
           <p className="mt-2 text-lg font-medium text-[#6f716a] lg:mt-3 lg:text-[1.75rem]">Click the map you're on</p>
           <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand lg:mt-4 lg:text-sm">
             <span className="relative flex h-2 w-2" aria-hidden>
