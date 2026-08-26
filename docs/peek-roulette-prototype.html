@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peek Roulette Build Spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#f2ece1;--card:#fff;--ink:#1c1a17;--ink-soft:#6f6a61;
+    --orange:#ec7311;--orange-d:#d9640a;--teal:#3f8f7d;
+    --green:#69ab4a;--amber:#e0a92e;--red:#d8603a;
+    --line:#e6ddcd;--shadow:0 10px 30px rgba(40,30,15,.10);
+    --felt:#123a2c;--felt-2:#0d2b21;
+    --gold:#c9a24b;--gold-d:#a5813a;--ivory:#f4ecdd;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);
+    background:radial-gradient(120% 60% at 50% 0%,#efe6d6,#e7ddcb);
+    padding:28px 14px 60px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto}
+  .lead{text-align:center;max-width:680px;margin:0 auto 28px}
+  .lead h1{font-family:'Poppins';font-weight:800;font-size:clamp(26px,5vw,36px);letter-spacing:-.02em;margin-bottom:9px}
+  .lead p{color:var(--ink-soft);font-size:15px;line-height:1.6}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:34px;align-items:start}
+  .col-label{text-align:center;font-family:'Poppins';font-weight:700;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--orange-d);margin-bottom:5px}
+  .col-sub{text-align:center;color:var(--ink-soft);font-size:13px;margin-bottom:14px;min-height:34px;line-height:1.5}
+
+  .phone{width:100%;max-width:392px;margin:0 auto;background:var(--cream);border-radius:34px;
+    box-shadow:0 24px 60px rgba(40,28,10,.22),0 0 0 1px rgba(0,0,0,.04);padding:14px 12px 18px;overflow:hidden}
+  .statusbar{display:flex;justify-content:space-between;font-size:12px;font-weight:600;padding:2px 10px 10px;opacity:.85}
+  .sitehead{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 14px}
+  .logo{width:38px;height:38px;border-radius:10px;background:#fff;box-shadow:var(--shadow);position:relative}
+  .logo::before,.logo::after{content:"";position:absolute;width:9px;height:9px;border:2.4px solid var(--ink)}
+  .logo::before{top:8px;left:8px;border-right:none;border-bottom:none}
+  .logo::after{bottom:8px;right:8px;border-left:none;border-top:none}
+  .logo i{position:absolute;inset:0;margin:auto;width:7px;height:7px;border-radius:50%;background:var(--orange)}
+  .headicons{display:flex;gap:16px;align-items:center;color:var(--teal)}
+  .headicons svg{width:22px;height:22px}.headicons .burger{color:var(--ink)}
+
+  .card{background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:20px 18px;margin-bottom:18px}
+  .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px 10px;text-align:center}
+  .statgrid .n{font-family:'Poppins';font-weight:800;font-size:26px;display:block}
+  .statgrid .k{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--orange-d)}
+
+  /* ===== HOMEPAGE: centered Maps + absolutely-positioned lure ===== */
+  .maps-head{position:relative;text-align:center;padding:4px 0}
+  .maps-h{font-family:'Poppins';font-weight:800;font-size:34px;line-height:1.1}
+  .lure{position:absolute;top:50%;right:6px;transform:translateY(-50%);
+    width:66px;height:66px;cursor:pointer;background:none;border:none;padding:0;
+    border-radius:50%;transition:transform .16s ease}
+  .lure:hover{transform:translateY(-50%) scale(1.07)}
+  .lure:active{transform:translateY(-50%) scale(.96)}
+  .lure canvas{display:block;border-radius:50%}
+  /* the ! sits ON the wheel, centered on the hub */
+  .lure .bang{position:absolute;inset:0;margin:auto;width:23px;height:23px;pointer-events:none;
+    display:grid;place-items:center;font-family:'Poppins';font-weight:800;font-size:16px;
+    color:#fff;border-radius:50%;background:linear-gradient(180deg,var(--orange),var(--orange-d));
+    box-shadow:0 2px 8px rgba(0,0,0,.45),0 0 0 2px rgba(244,236,221,.9);
+    animation:pulse 1.7s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.16)}}
+  @media (prefers-reduced-motion: reduce){.lure .bang{animation:none}}
+  .lure:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
+
+  .maps-sub{text-align:center;color:var(--ink-soft);font-size:15px;margin:6px 0 4px}
+  .maps-weekly{text-align:center;color:var(--orange-d);font-weight:700;font-size:12px;letter-spacing:.1em;
+    display:flex;gap:7px;align-items:center;justify-content:center;margin-bottom:14px}
+  .maps-weekly .dot{width:8px;height:8px;border-radius:50%;background:var(--orange)}
+  .mapgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .mapcard{position:relative;border-radius:16px;overflow:hidden;height:110px;box-shadow:var(--shadow)}
+  .mapcard b{position:absolute;left:12px;bottom:26px;font-family:'Poppins';font-weight:700;font-size:16px;color:#fff;z-index:2}
+  .mapcard small{position:absolute;left:12px;bottom:11px;font-size:11px;color:#fff;opacity:.85;z-index:2}
+  .mapcard::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(0,0,0,.55))}
+  .m-oregon{background:linear-gradient(135deg,#c7a24e,#8a6b3a)}.m-chalet{background:linear-gradient(135deg,#7f97ad,#4a6076)}
+  .m-kafe{background:linear-gradient(135deg,#c98a6a,#7a4b52)}.m-club{background:linear-gradient(135deg,#8f8f7f,#4a4a3f)}
+
+  /* ===== FELT ===== */
+  .felt{background:radial-gradient(120% 90% at 50% 0%,#1a4a38 0%,var(--felt) 55%,var(--felt-2) 100%);
+    border-radius:18px;position:relative;overflow:hidden;color:var(--ivory);
+    box-shadow:0 12px 30px rgba(10,30,20,.38),inset 0 0 0 1.5px rgba(201,162,75,.35),inset 0 0 50px rgba(0,0,0,.34)}
+  .felt::before{content:"";position:absolute;inset:7px;border-radius:12px;border:1px solid rgba(201,162,75,.2);pointer-events:none}
+
+  /* --- per-map COMPACT: horizontal, half height --- */
+  .felt-compact{padding:12px 14px;display:flex;align-items:center;gap:14px;min-height:0}
+  .felt-compact .wheelhold{flex:none;position:relative}
+  .felt-compact canvas{display:block;cursor:pointer;border-radius:50%}
+  .felt-compact canvas:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+  .cbody{flex:1;min-width:0}
+  .ctitle{font-family:'Poppins';font-weight:700;font-size:16px;letter-spacing:.01em;line-height:1.15}
+  .csub{font-size:11.5px;color:rgba(244,236,221,.66);margin-top:2px}
+  .ctap{margin-top:9px;display:inline-flex;align-items:center;gap:6px;
+    background:linear-gradient(180deg,var(--gold),var(--gold-d));color:#241c08;border:none;border-radius:9px;
+    padding:8px 13px;font-family:'Poppins';font-weight:800;font-size:12.5px;cursor:pointer;
+    box-shadow:0 5px 12px rgba(0,0,0,.3);transition:transform .12s}
+  .ctap:active{transform:translateY(1px)}
+  .ctap:disabled{opacity:.5;cursor:default}
+
+  /* inline result inside compact */
+  .cres{display:none;margin-top:2px}
+  .cres.on{display:block;animation:fadeup .35s ease both}
+  .cres .top{display:flex;align-items:center;gap:8px}
+  .cres .g{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;color:#fff;
+    font-family:'Poppins';font-weight:800;font-size:13px;flex:none}
+  .cres .nm{font-family:'Poppins';font-weight:700;font-size:15.5px;line-height:1.1;min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cres .fl{font-size:11px;color:rgba(244,236,221,.62);margin-top:1px}
+  .cres .acts{display:flex;gap:6px;margin-top:9px}
+  .cres .go{background:linear-gradient(180deg,var(--gold),var(--gold-d));color:#241c08;border:none;border-radius:9px;
+    padding:8px 12px;font-family:'Poppins';font-weight:800;font-size:12.5px;cursor:pointer;white-space:nowrap}
+  .cres .again{background:rgba(255,255,255,.09);border:1.4px solid rgba(201,162,75,.34);border-radius:9px;
+    padding:8px 11px;color:var(--ivory);font-family:'Poppins';font-weight:700;font-size:12.5px;cursor:pointer}
+  @keyframes fadeup{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+  .sndbtn{position:absolute;top:8px;right:9px;width:26px;height:26px;border-radius:50%;z-index:3;
+    background:rgba(0,0,0,.28);border:1px solid rgba(201,162,75,.3);color:rgba(244,236,221,.75);
+    cursor:pointer;display:grid;place-items:center;padding:0}
+  .sndbtn svg{width:14px;height:14px}
+  .sndbtn.on{color:var(--gold);border-color:var(--gold)}
+
+  /* --- modal (homepage) --- */
+  .modal{display:none;position:fixed;inset:0;z-index:60;align-items:center;justify-content:center;padding:18px;
+    background:rgba(12,24,18,.6);backdrop-filter:blur(4px)}
+  .modal.on{display:flex;animation:fade .22s ease both}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .sheet{width:100%;max-width:352px;animation:pop .3s cubic-bezier(.2,1.2,.4,1) both}
+  @keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+  .felt-modal{padding:18px 16px 16px}
+  .mx{position:absolute;top:8px;left:9px;width:26px;height:26px;border-radius:50%;z-index:3;
+    background:rgba(0,0,0,.28);border:1px solid rgba(201,162,75,.3);color:var(--ivory);cursor:pointer;
+    font-size:14px;line-height:1;display:grid;place-items:center;padding:0}
+  .mhead{text-align:center;font-family:'Poppins';font-weight:800;font-size:17px;letter-spacing:.01em}
+  .mq{text-align:center;font-size:13px;color:rgba(244,236,221,.72);margin:3px 0 13px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+  .chip{border:1.4px solid rgba(201,162,75,.38);background:rgba(255,255,255,.06);border-radius:10px;
+    padding:7px 12px;font-weight:600;font-size:12.5px;color:var(--ivory);cursor:pointer;font-family:'Inter';transition:.12s}
+  .chip:active{transform:scale(.96)}
+  .chip.sel{background:var(--gold);border-color:var(--gold);color:#241c08}
+  .btn-gold{display:block;width:100%;margin-top:14px;border:none;border-radius:12px;padding:13px;cursor:pointer;
+    background:linear-gradient(180deg,var(--gold),var(--gold-d));color:#241c08;
+    font-family:'Poppins';font-weight:800;font-size:14.5px;box-shadow:0 8px 16px rgba(0,0,0,.32);transition:transform .12s}
+  .btn-gold:active{transform:translateY(1px)}
+  .mwheel{display:flex;justify-content:center;margin:12px 0 4px}
+  .mwheel canvas{display:block}
+  .mword{text-align:center;font-family:'Poppins';font-weight:600;font-size:11.5px;color:rgba(244,236,221,.6);
+    letter-spacing:.15em;text-transform:uppercase;min-height:16px}
+  .mres{display:none;margin-top:12px;background:rgba(0,0,0,.24);border:1px solid rgba(201,162,75,.28);
+    border-radius:13px;padding:12px}
+  .mres.on{display:block;animation:fadeup .35s ease both}
+  .mres .row{display:flex;align-items:center;gap:10px}
+  .mres .thumb{width:52px;height:39px;border-radius:7px;background:linear-gradient(135deg,#333,#111);flex:none}
+  .mres .eyebrow{font-size:9.5px;font-weight:700;letter-spacing:.13em;color:var(--gold);text-transform:uppercase}
+  .mres .pname{font-family:'Poppins';font-weight:700;font-size:16px;line-height:1.1;margin-top:2px}
+  .mres .pfloor{font-size:11.5px;color:rgba(244,236,221,.62);margin-top:1px}
+  .mres .g{width:31px;height:31px;border-radius:8px;display:grid;place-items:center;color:#fff;
+    font-family:'Poppins';font-weight:800;font-size:15px;flex:none}
+  .mres .acts{display:flex;gap:7px;margin-top:11px}
+  .mres .go{flex:1;background:linear-gradient(180deg,var(--gold),var(--gold-d));color:#241c08;border:none;
+    border-radius:10px;padding:10px;font-family:'Poppins';font-weight:800;font-size:13px;cursor:pointer}
+  .mres .again{flex:none;background:rgba(255,255,255,.08);border:1.4px solid rgba(201,162,75,.32);
+    border-radius:10px;padding:10px 13px;color:var(--ivory);font-family:'Poppins';font-weight:700;font-size:13px;cursor:pointer}
+
+  .grade-green{background:var(--green)}.grade-amber{background:var(--amber)}.grade-red{background:var(--red)}
+
+  /* ===== WIN POPUP (shared payoff for both placements) ===== */
+  .win{display:none;position:fixed;inset:0;z-index:80;align-items:center;justify-content:center;padding:20px;
+    background:rgba(10,20,15,.66);backdrop-filter:blur(5px)}
+  .win.on{display:flex;animation:fade .2s ease both}
+  .wincard{width:100%;max-width:330px;position:relative;border-radius:20px;overflow:hidden;
+    background:radial-gradient(120% 90% at 50% 0%,#1c5340 0%,var(--felt) 58%,var(--felt-2) 100%);
+    color:var(--ivory);box-shadow:0 22px 50px rgba(6,20,14,.55),inset 0 0 0 1.5px rgba(201,162,75,.45);
+    animation:winpop .42s cubic-bezier(.18,1.3,.4,1) both}
+  @keyframes winpop{from{opacity:0;transform:scale(.86) translateY(10px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){.wincard{animation:none}}
+  .wincard::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(70% 45% at 50% 0%,rgba(201,162,75,.3),transparent 70%)}
+  .winbar{position:relative;text-align:center;padding:15px 16px 0}
+  .winbar .kicker{font-family:'Poppins';font-weight:800;font-size:10.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--gold)}
+  .winx{position:absolute;top:10px;right:11px;width:26px;height:26px;border-radius:50%;z-index:4;
+    background:rgba(0,0,0,.3);border:1px solid rgba(201,162,75,.3);color:var(--ivory);cursor:pointer;
+    font-size:13px;line-height:1;display:grid;place-items:center;padding:0}
+  .winbody{position:relative;padding:12px 18px 18px;text-align:center}
+  .winthumb{width:100%;height:112px;border-radius:13px;margin-bottom:13px;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#3a3a3a,#141414);box-shadow:inset 0 0 0 1px rgba(201,162,75,.25)}
+  .winthumb::after{content:"▶";position:absolute;inset:0;display:grid;place-items:center;
+    color:rgba(255,255,255,.5);font-size:24px}
+  .wingrade{position:absolute;top:9px;right:9px;width:34px;height:34px;border-radius:9px;z-index:2;
+    display:grid;place-items:center;color:#fff;font-family:'Poppins';font-weight:800;font-size:17px;
+    box-shadow:0 4px 12px rgba(0,0,0,.45),0 0 0 2px rgba(244,236,221,.55)}
+  .winmap{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+  .winname{font-family:'Poppins';font-weight:800;font-size:25px;line-height:1.1;margin-top:3px;letter-spacing:-.01em}
+  .winfloor{font-size:12.5px;color:rgba(244,236,221,.65);margin-top:3px}
+  .winacts{display:flex;gap:8px;margin-top:16px}
+  .wingo{flex:1;background:linear-gradient(180deg,var(--gold),var(--gold-d));color:#241c08;border:none;
+    border-radius:12px;padding:14px;font-family:'Poppins';font-weight:800;font-size:15px;cursor:pointer;
+    box-shadow:0 8px 18px rgba(0,0,0,.34);transition:transform .12s}
+  .wingo:active{transform:translateY(1px)}
+  .winagain{flex:none;background:rgba(255,255,255,.08);border:1.5px solid rgba(201,162,75,.35);
+    border-radius:12px;padding:14px 16px;color:var(--ivory);font-family:'Poppins';font-weight:700;
+    font-size:14px;cursor:pointer}
+
+  /* event log */
+  .evwrap{max-width:700px;margin:34px auto 0}
+  .evhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .evhead h3{font-family:'Poppins';font-weight:700;font-size:14px}
+  .evhead span{font-size:12px;color:var(--ink-soft)}
+  .evlog{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#4a453d;
+    max-height:150px;overflow-y:auto;box-shadow:var(--shadow)}
+  .evlog div{padding:3px 0;border-bottom:1px dashed #f0e9dc}
+  .evlog div:last-child{border:none}
+  .evlog .ev{color:var(--orange-d);font-weight:600}
+  .evlog .empty{color:var(--ink-soft);font-style:italic;border:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lead">
+    <h1>Peek Roulette — final build spec</h1>
+    <p>Exactly what ships. Homepage: the “!” sits on the wheel, “Maps” stays centered. Per-map: half-height felt bar. Tap the speaker to turn sound on.</p>
+  </div>
+
+  <div class="cols">
+    <!-- ===== HOMEPAGE ===== -->
+    <div>
+      <div class="col-label">Homepage</div>
+      <div class="col-sub">Wheel idles beside a still-centered “Maps.” Tap → asks your map → spins → go or spin again.</div>
+      <div class="phone">
+        <div class="statusbar"><span>2:04</span><span>5G 56</span></div>
+        <div class="sitehead">
+          <div class="logo"><i></i></div>
+          <div class="headicons">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+            <svg class="burger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </div>
+        </div>
+        <div class="card">
+          <div class="statgrid">
+            <div><span class="n">189</span><span class="k">PEEKS</span></div>
+            <div><span class="n">3,350</span><span class="k">VOTES</span></div>
+            <div><span class="n">18</span><span class="k">MAPS</span></div>
+            <div><span class="n">14</span><span class="k">S/A+ TIER</span></div>
+          </div>
+        </div>
+
+        <div class="maps-head">
+          <div class="maps-h">Maps</div>
+          <button class="lure" id="lure" aria-label="Open Peek Roulette">
+            <canvas id="lureWheel" width="66" height="66"></canvas>
+            <span class="bang">!</span>
+          </button>
+        </div>
+        <div class="maps-sub">Click the map you’re on</div>
+        <div class="maps-weekly"><span class="dot"></span>NEW PEEKS WEEKLY</div>
+        <div class="mapgrid">
+          <div class="mapcard m-oregon"><b>Oregon</b><small>17 peeks</small></div>
+          <div class="mapcard m-chalet"><b>Chalet</b><small>13 peeks</small></div>
+          <div class="mapcard m-kafe"><b>Kafe</b><small>12 peeks</small></div>
+          <div class="mapcard m-club"><b>Clubhouse</b><small>13 peeks</small></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PER-MAP ===== -->
+    <div>
+      <div class="col-label">On each map page</div>
+      <div class="col-sub">Half-height felt bar inside the hero, replacing “Random peek.” Map’s known — tap and it spins.</div>
+      <div class="phone">
+        <div class="statusbar"><span>2:05</span><span>5G 55</span></div>
+        <div class="sitehead">
+          <div class="logo"><i></i></div>
+          <div class="headicons">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+            <svg class="burger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </div>
+        </div>
+
+        <!-- map hero -->
+        <div style="position:relative;border-radius:20px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px">
+          <div style="position:absolute;inset:0;background:
+            linear-gradient(180deg,rgba(240,235,225,.35),rgba(238,232,221,.74)),
+            linear-gradient(140deg,#8fa7bd,#6d859e 45%,#b9c6d1)"></div>
+          <div style="position:relative;padding:30px 14px 14px;text-align:center">
+            <div style="font-family:'Poppins';font-weight:800;font-size:50px;letter-spacing:-.02em;color:#241f18;line-height:1">Chalet</div>
+            <div style="color:#4b463d;font-weight:600;font-size:15px;margin-top:8px">3 floors</div>
+            <div style="color:#5f594e;font-style:italic;font-size:14px;margin-top:1px;margin-bottom:14px">Choose your floor</div>
+
+            <!-- THE HALF-HEIGHT FELT BAR -->
+            <div class="felt felt-compact" style="text-align:left">
+              <button class="sndbtn" id="sndMap" aria-label="Toggle sound"></button>
+              <div class="wheelhold">
+                <canvas id="mapWheel" width="112" height="112" tabindex="0" role="button" aria-label="Spin Peek Roulette"></canvas>
+              </div>
+              <div class="cbody">
+                <div class="ctitle">Peek Roulette</div>
+                <div class="csub" id="mapSub">Spin a random Chalet peek</div>
+                <button class="ctap" id="mapTap">Spin the wheel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="text-align:center">
+          <div style="font-family:'Poppins';font-weight:700;font-size:19px;margin-bottom:14px">Map Stats</div>
+          <div style="display:flex;justify-content:space-around">
+            <div><span style="font-family:'Poppins';font-weight:800;font-size:22px">13</span> <span style="font-size:11px;color:var(--ink-soft)">PEEKS</span></div>
+            <div><span style="font-family:'Poppins';font-weight:800;font-size:22px">379</span> <span style="font-size:11px;color:var(--ink-soft)">VOTES</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="evwrap">
+    <div class="evhead"><h3>Analytics events firing</h3><span>what gets sent to GA4</span></div>
+    <div class="evlog" id="evlog"><div class="empty">Spin a wheel — events show up here.</div></div>
+  </div>
+</div>
+
+<!-- ===== HOMEPAGE MODAL ===== -->
+<div class="modal" id="modal">
+  <div class="sheet">
+    <div class="felt felt-modal">
+      <button class="mx" id="modalX" aria-label="Close">✕</button>
+      <button class="sndbtn" id="sndHome" aria-label="Toggle sound"></button>
+      <div class="mhead">Peek Roulette</div>
+
+      <div id="askStep">
+        <div class="mq">What map are you on?</div>
+        <div class="chips" id="chipSet">
+          <button class="chip sel" data-map="Chalet">Chalet</button>
+          <button class="chip" data-map="Clubhouse">Clubhouse</button>
+          <button class="chip" data-map="Oregon">Oregon</button>
+          <button class="chip" data-map="Kafe">Kafe</button>
+          <button class="chip" data-map="Bank">Bank</button>
+          <button class="chip" data-map="Border">Border</button>
+        </div>
+        <button class="btn-gold" id="modalSpin">Spin the wheel</button>
+      </div>
+
+      <div id="spinStep" style="display:none">
+        <div class="mwheel"><canvas id="modalWheel" width="212" height="212"></canvas></div>
+        <div class="mword" id="modalWord">Spinning…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== WIN POPUP (shared) ===== -->
+<div class="win" id="winModal">
+  <div class="wincard">
+    <button class="winx" id="winX" aria-label="Close">✕</button>
+    <div class="winbar"><div class="kicker">The wheel landed on</div></div>
+    <div class="winbody">
+      <div class="winthumb"><div class="wingrade grade-green" id="winGrade">A</div></div>
+      <div class="winmap" id="winMap">CHALET</div>
+      <div class="winname" id="winName">Lounge window</div>
+      <div class="winfloor" id="winFloor">First floor</div>
+      <div class="winacts">
+        <button class="wingo" id="winGo">Go to peek →</button>
+        <button class="winagain" id="winAgain">↻ Spin again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ DATA (stand-in for Supabase per-map query) ============ */
+const PEEKS={
+  Chalet:[["Lounge window","First floor","A"],["Master bedroom","Second floor","B"],["Gaming room","First floor","A"],["Wine cellar","Basement","C"],["Kitchen","First floor","B"],["Library","Second floor","A"],["Snowmobile garage","First floor","C"],["Office","Second floor","B"],["Dining room","First floor","B"],["Trophy room","Second floor","A"],["Bunk hall","Basement","C"],["Attic stairs","Second floor","B"],["Blue stairs","First floor","A"]],
+  Clubhouse:[["Cash room","Basement","A"],["Gym","Second floor","B"],["Bar","First floor","A"],["Church","Second floor","B"],["Armory","Basement","C"],["CCTV","Basement","B"],["Master bedroom","Second floor","A"],["Construction","First floor","C"],["Stage","First floor","B"],["Junk hall","First floor","C"],["Logistics","Basement","A"],["Garage","First floor","B"],["Blue stairs","Second floor","A"]],
+  Oregon:[["Meeting hall","First floor","A"],["Kids dorms","Second floor","B"],["Dining","First floor","B"],["Attic","Second floor","A"],["Laundry","Basement","C"],["Freezer","First floor","B"],["Tower","Second floor","A"],["Kitchen","First floor","C"],["Small tower","Second floor","B"],["Supply","First floor","A"],["Bunks","Second floor","C"],["Sewer","Basement","B"]],
+  Kafe:[["Cocktail lounge","Third floor","A"],["Reading room","Second floor","B"],["Fireplace hall","First floor","A"],["Mining room","First floor","C"],["Train museum","First floor","B"],["Cigar lounge","Second floor","A"],["Bar","First floor","B"],["Freezer","First floor","C"],["White stairs","Second floor","A"],["Kitchen","First floor","B"]],
+  Bank:[["CEO office","Second floor","A"],["Open area","First floor","B"],["Tellers","First floor","A"],["Vault","Basement","C"],["Lockers","Basement","B"],["Staff room","First floor","B"],["Skylight","Second floor","A"],["Garage","Basement","C"]],
+  Border:[["Ventilation","First floor","A"],["Armory","First floor","B"],["Customs","First floor","A"],["Bathroom","Second floor","C"],["Tellers","First floor","B"],["Workshop","First floor","A"],["Archives","Second floor","B"],["Server room","First floor","C"]]
+};
+const GCOL={A:"#69ab4a",B:"#e0a92e",C:"#d8603a"};
+const GC={A:"grade-green",B:"grade-amber",C:"grade-red"};
+const REDUCED=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const POCKETS=10;                       // fixed visible pockets — stays readable on mobile
+const initials=n=>n.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').slice(0,3).toUpperCase();
+
+/* ============ ANALYTICS ============ */
+function track(name,params){
+  const log=document.getElementById('evlog');
+  const first=log.querySelector('.empty'); if(first) log.innerHTML='';
+  const row=document.createElement('div');
+  row.innerHTML='<span class="ev">'+name+'</span> '+JSON.stringify(params);
+  log.prepend(row);
+  if(window.gtag) window.gtag('event',name,params);   // real site: fires to GA4
+}
+
+/* ============ SOUND (muted by default) ============ */
+const Snd={
+  on:false, ctx:null,
+  init(){ if(!this.ctx){ try{ this.ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } },
+  tick(){ if(!this.on||!this.ctx)return;
+    const t=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();
+    o.type='square';o.frequency.value=1250;g.gain.setValueAtTime(.05,t);
+    g.gain.exponentialRampToValueAtTime(.0008,t+.035);o.connect(g);g.connect(this.ctx.destination);o.start(t);o.stop(t+.04);},
+  chime(){ if(!this.on||!this.ctx)return;
+    const t=this.ctx.currentTime;
+    [[784,0],[1175,.09]].forEach(([f,d])=>{const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+      o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.0001,t+d);
+      g.gain.exponentialRampToValueAtTime(.14,t+d+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d+.5);
+      o.connect(g);g.connect(this.ctx.destination);o.start(t+d);o.stop(t+d+.55);});}
+};
+const ICON_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M17 9l4 6M21 9l-4 6"/></svg>';
+const ICON_ON ='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13"/></svg>';
+function paintSnd(){document.querySelectorAll('.sndbtn').forEach(b=>{b.innerHTML=Snd.on?ICON_ON:ICON_OFF;b.classList.toggle('on',Snd.on);});}
+function toggleSnd(){Snd.init();Snd.on=!Snd.on;paintSnd();if(Snd.on)Snd.chime();}
+document.getElementById('sndMap').onclick=e=>{e.stopPropagation();toggleSnd();};
+document.getElementById('sndHome').onclick=e=>{e.stopPropagation();toggleSnd();};
+paintSnd();
+
+/* ============ WHEEL ============ */
+class Wheel{
+  constructor(canvas,map,opts={}){
+    this.c=canvas;this.ctx=canvas.getContext('2d');
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    const w=canvas.width,h=canvas.height;
+    canvas.width=w*dpr;canvas.height=h*dpr;canvas.style.width=w+'px';canvas.style.height=h+'px';
+    this.ctx.scale(dpr,dpr);
+    this.W=w;this.H=h;this.R=Math.min(w,h)/2-3;
+    this.mini=!!opts.mini;                    // mini = homepage lure, no labels
+    this.seg=2*Math.PI/POCKETS;
+    this.rot=0;this.ballA=-Math.PI/2;this.ballR=this.R-10;this.ballShow=false;
+    this.spinning=false;this.idle=false;
+    this.setMap(map);this.draw();
+  }
+  /* Build the visible face: POCKETS peeks sampled from the map pool.
+     `winner` (if given) is planted in `winIdx` so the landing pocket
+     always displays the real drawn peek. */
+  setMap(map,winner,winIdx){
+    this.map=map;
+    const pool=PEEKS[map]||PEEKS.Chalet;
+    const face=[];
+    const shuffled=pool.slice().sort(()=>Math.random()-.5);
+    for(let i=0;i<POCKETS;i++) face.push(shuffled[i%shuffled.length]);
+    if(winner && winIdx!=null) face[winIdx]=winner;
+    this.face=face;
+  }
+  draw(){
+    const ctx=this.ctx,cx=this.W/2,cy=this.H/2,R=this.R;
+    ctx.clearRect(0,0,this.W,this.H);
+    ctx.beginPath();ctx.arc(cx,cy,R,0,7);
+    const rim=ctx.createRadialGradient(cx,cy,R-(this.mini?5:9),cx,cy,R);
+    rim.addColorStop(0,'#8a6a2c');rim.addColorStop(.5,'#d8b45e');rim.addColorStop(1,'#7a5c25');
+    ctx.fillStyle=rim;ctx.fill();
+    const rIn=R-(this.mini?5:9);
+    for(let i=0;i<POCKETS;i++){
+      const a0=-Math.PI/2+i*this.seg+this.rot,a1=a0+this.seg;
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,rIn,a0,a1);ctx.closePath();
+      ctx.fillStyle=GCOL[this.face[i][2]];ctx.fill();
+      ctx.strokeStyle='rgba(18,28,20,.5)';ctx.lineWidth=1.2;ctx.stroke();
+      if(!this.mini){
+        const am=a0+this.seg/2,tr=rIn*.72;
+        ctx.save();ctx.translate(cx+Math.cos(am)*tr,cy+Math.sin(am)*tr);ctx.rotate(am+Math.PI/2);
+        ctx.fillStyle='rgba(255,255,255,.97)';
+        ctx.font='700 '+Math.max(9,R*.11)+'px Poppins, sans-serif';
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(initials(this.face[i][0]),0,0);ctx.restore();
+      }
+    }
+    const hubR=rIn*(this.mini?.42:.33);
+    ctx.beginPath();ctx.arc(cx,cy,hubR,0,7);
+    const hub=ctx.createRadialGradient(cx-3,cy-3,1,cx,cy,hubR);
+    hub.addColorStop(0,'#1c5540');hub.addColorStop(1,'#0d2b21');
+    ctx.fillStyle=hub;ctx.fill();
+    ctx.strokeStyle='rgba(201,162,75,.6)';ctx.lineWidth=1.6;ctx.stroke();
+    if(this.ballShow){
+      const bx=cx+Math.cos(this.ballA)*this.ballR,by=cy+Math.sin(this.ballA)*this.ballR;
+      ctx.beginPath();ctx.arc(bx,by,R*.06,0,7);
+      const bg=ctx.createRadialGradient(bx-1.5,by-1.5,.5,bx,by,R*.065);
+      bg.addColorStop(0,'#fff');bg.addColorStop(1,'#d6c9ad');
+      ctx.fillStyle=bg;ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=4;ctx.fill();ctx.shadowBlur=0;
+    }
+    if(!this.mini){
+      ctx.beginPath();ctx.moveTo(cx,cy-R-1);ctx.lineTo(cx-6,cy-R+10);ctx.lineTo(cx+6,cy-R+10);ctx.closePath();
+      ctx.fillStyle='#f4ecdd';ctx.strokeStyle='#a5813a';ctx.lineWidth=1.3;ctx.fill();ctx.stroke();
+    }
+  }
+  startIdle(){ if(REDUCED){this.draw();return;} this.idle=true;
+    const loop=()=>{if(!this.idle)return;this.rot+=.010;this.draw();this._raf=requestAnimationFrame(loop);};loop();}
+  stopIdle(){this.idle=false;cancelAnimationFrame(this._raf);}
+  /* PURE RANDOM draw from the full map pool, then planted in a pocket */
+  spin(done){
+    if(this.spinning)return;this.spinning=true;this.stopIdle();
+    const pool=PEEKS[this.map]||PEEKS.Chalet;
+    const winner=pool[Math.floor(Math.random()*pool.length)];
+    const winIdx=Math.floor(Math.random()*POCKETS);
+    this.setMap(this.map,winner,winIdx);
+    // pocket center sits under the top pointer when rot = -winIdx*seg - seg/2
+    const target=-winIdx*this.seg-this.seg/2;
+    if(REDUCED){this.rot=target;this.ballShow=true;this.ballA=-Math.PI/2;this.ballR=this.R*.52;
+      this.draw();this.spinning=false;Snd.chime();done(winner);return;}
+    const start=this.rot;
+    const base=start+5*2*Math.PI;
+    const delta=((target-base)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
+    const rotEnd=base+delta;
+    const bStart=-Math.PI/2,bEnd=-Math.PI/2-7*2*Math.PI;
+    const rOut=this.R-(this.mini?6:10),rMid=this.R*.52;
+    const dur=3600,t0=performance.now();
+    const ease=t=>1-Math.pow(1-t,3);
+    this.ballShow=true;let lastTick=0;
+    const step=now=>{
+      const t=Math.min((now-t0)/dur,1),e=ease(t);
+      this.rot=start+(rotEnd-start)*e;
+      this.ballA=bStart+(bEnd-bStart)*e;
+      this.ballR = t<.7 ? rOut : rOut+(rMid-rOut)*ease((t-.7)/.3);
+      if(t>.9){const k=(t-.9)/.1;this.ballA=this.ballA*(1-k)+(-Math.PI/2)*k;}
+      const spd=1-e; if(now-lastTick > 40+220*e && spd>.02){Snd.tick();lastTick=now;}
+      this.draw();
+      if(t<1)requestAnimationFrame(step);
+      else{this.rot=target;this.ballA=-Math.PI/2;this.ballR=rMid;this.draw();
+           this.spinning=false;Snd.chime();done(winner);}
+    };
+    requestAnimationFrame(step);
+  }
+}
+
+/* ============ WIN POPUP (shared payoff) ============ */
+let lastWin={placement:'map',map:'Chalet',peek:null};
+function showWin(placement,map,peek){
+  lastWin={placement,map,peek};
+  document.getElementById('winMap').textContent=map.toUpperCase();
+  document.getElementById('winName').textContent=peek[0];
+  document.getElementById('winFloor').textContent=peek[1];
+  const g=document.getElementById('winGrade');
+  g.className='wingrade '+GC[peek[2]];g.textContent=peek[2];
+  document.getElementById('winModal').classList.add('on');
+}
+function closeWin(){
+  document.getElementById('winModal').classList.remove('on');
+  if(lastWin.placement==='homepage') lure.startIdle();
+  mapWheel.startIdle();
+}
+document.getElementById('winX').onclick=closeWin;
+document.getElementById('winModal').onclick=e=>{if(e.target.id==='winModal')closeWin();};
+document.getElementById('winGo').onclick=()=>
+  track('roulette_go_to_peek',{placement:lastWin.placement,map:lastWin.map,peek:lastWin.peek[0]});
+document.getElementById('winAgain').onclick=()=>{
+  document.getElementById('winModal').classList.remove('on');
+  if(lastWin.placement==='homepage') homeSpin(); else mapSpin();
+};
+
+/* ============ HOMEPAGE ============ */
+const lure=new Wheel(document.getElementById('lureWheel'),'Chalet',{mini:true});
+lure.startIdle();
+let modalWheel=null,currentMap='Chalet';
+
+document.getElementById('lure').onclick=()=>{
+  track('roulette_opened',{placement:'homepage'});
+  document.getElementById('modal').classList.add('on');
+  document.getElementById('askStep').style.display='block';
+  document.getElementById('spinStep').style.display='none';
+  lure.stopIdle();
+};
+document.getElementById('modalX').onclick=()=>{
+  document.getElementById('modal').classList.remove('on');lure.startIdle();
+};
+document.getElementById('chipSet').onclick=e=>{
+  const c=e.target.closest('.chip');if(!c)return;
+  document.querySelectorAll('#chipSet .chip').forEach(x=>x.classList.remove('sel'));
+  c.classList.add('sel');
+};
+function homeSpin(){
+  const sel=document.querySelector('#chipSet .chip.sel');
+  if(sel) currentMap=sel.dataset.map;
+  const modal=document.getElementById('modal');
+  modal.classList.add('on');
+  document.getElementById('askStep').style.display='none';
+  document.getElementById('spinStep').style.display='block';
+  const word=document.getElementById('modalWord');
+  word.textContent='Spinning…';word.style.opacity='1';
+  if(!modalWheel) modalWheel=new Wheel(document.getElementById('modalWheel'),currentMap);
+  else{modalWheel.map=currentMap;modalWheel.setMap(currentMap);modalWheel.rot=0;modalWheel.draw();}
+  track('roulette_spin_started',{placement:'homepage',map:currentMap});
+  modalWheel.spin(peek=>{
+    track('roulette_peek_landed',{placement:'homepage',map:currentMap,peek:peek[0],grade:peek[2]});
+    word.style.opacity='0';
+    setTimeout(()=>{ modal.classList.remove('on'); showWin('homepage',currentMap,peek); },420);
+  });
+}
+document.getElementById('modalSpin').onclick=homeSpin;
+
+/* ============ PER-MAP ============ */
+const mapWheel=new Wheel(document.getElementById('mapWheel'),'Chalet');
+mapWheel.startIdle();
+function mapSpin(){
+  const tap=document.getElementById('mapTap');
+  tap.disabled=true;tap.textContent='Spinning…';
+  document.getElementById('mapSub').textContent='Good luck…';
+  track('roulette_spin_started',{placement:'map',map:'Chalet'});
+  mapWheel.spin(peek=>{
+    track('roulette_peek_landed',{placement:'map',map:'Chalet',peek:peek[0],grade:peek[2]});
+    tap.disabled=false;tap.textContent='Spin the wheel';
+    document.getElementById('mapSub').textContent='Spin a random Chalet peek';
+    setTimeout(()=>showWin('map','Chalet',peek),380);
+  });
+}
+document.getElementById('mapTap').onclick=mapSpin;
+document.getElementById('mapWheel').onclick=mapSpin;
+document.getElementById('mapWheel').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();mapSpin();}};
+</script>
+</body>
+</html>

@@ -9,7 +9,7 @@ import { MapStats } from "@/components/MapStats";
 import { MapEntryScope } from "@/components/MapEntryScope";
 import { MapViewToggle } from "@/components/MapViewToggle";
 import { PageHeader } from "@/components/PageHeader";
-import { RandomPeekButton } from "@/components/RandomPeekButton";
+import { PeekRouletteBar } from "@/components/PeekRouletteBar";
 import {
   getFloorsForMap,
   getMapBySlug,
@@ -127,6 +127,20 @@ export default async function MapPage({
   // best-first, so this preserves grade order.
   const underratedPeeks = rankedPeeks.filter((p) => gemIds.has(p.id));
 
+  // Peek Roulette draws from this map's full published pool. rankedPeeks is
+  // already loaded above, so this adds no query — it is a reshape, not a read.
+  // Grade is the computed rating() label, since peeks carry no grade column.
+  const roulettePeeks = rankedPeeks.map((p) => ({
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    floorName: p.floors?.name ?? null,
+    gradeLabel: rating(p.base_success_rate, p.worked_votes, p.vote_count).label,
+  }));
+  const roulettePosters: Record<string, string | null> = Object.fromEntries(
+    rankedPeeks.map((p) => [p.id, p.poster_url])
+  );
+
   // Always-visible "Last 7 days" chart: top 5 peeks, reusing the 14-day
   // snapshots above (filtered to the last 7 days). Only series with a real
   // slope (>= 2 points in the window) are plotted.
@@ -183,7 +197,12 @@ export default async function MapPage({
             </p>
             {totalPeeks >= 2 && (
               <div className="mt-5">
-                <RandomPeekButton href={`/api/maps/${map.slug}/random-peek`} />
+                <PeekRouletteBar
+                  mapName={map.name}
+                  mapSlug={map.slug}
+                  peeks={roulettePeeks}
+                  posters={roulettePosters}
+                />
               </div>
             )}
           </div>
