@@ -136,10 +136,9 @@ export default async function MapPage({
     name: p.name,
     floorName: p.floors?.name ?? null,
     gradeLabel: rating(p.base_success_rate, p.worked_votes, p.vote_count).label,
+    videoUrl: p.video_url,
+    posterUrl: p.poster_url,
   }));
-  const roulettePosters: Record<string, string | null> = Object.fromEntries(
-    rankedPeeks.map((p) => [p.id, p.poster_url])
-  );
 
   // Always-visible "Last 7 days" chart: top 5 peeks, reusing the 14-day
   // snapshots above (filtered to the last 7 days). Only series with a real
@@ -201,7 +200,7 @@ export default async function MapPage({
                   mapName={map.name}
                   mapSlug={map.slug}
                   peeks={roulettePeeks}
-                  posters={roulettePosters}
+                  mapCoverUrl={map.cover_image_url}
                 />
               </div>
             )}

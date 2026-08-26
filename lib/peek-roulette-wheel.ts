@@ -18,6 +18,10 @@ export type RoulettePeek = {
   floorName: string | null;
   // Full display label from rating() — "S+", "A", "B-", … not just a letter.
   gradeLabel: string;
+  // Clip and optional poster frame, mirroring what the peek cards render.
+  // poster_url is null on most rows, so video_url is the primary source.
+  videoUrl: string | null;
+  posterUrl: string | null;
 };
 
 /* ------------------------------- sound -------------------------------- */
@@ -329,9 +333,13 @@ export class RouletteWheel {
     const delta = (((target - base) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     const rotEnd = base + delta;
 
-    // Ball orbits the opposite way, seven turns.
+    // Ball orbits the opposite way. Start and end are both -PI/2 separated by
+    // a whole number of turns, so the eased angle arrives exactly on the top
+    // pointer at t=1 with no correction needed — the wheel has already brought
+    // the winning pocket under that same point.
+    const BALL_TURNS = 7;
     const bStart = -Math.PI / 2;
-    const bEnd = -Math.PI / 2 - 7 * 2 * Math.PI;
+    const bEnd = bStart - BALL_TURNS * 2 * Math.PI;
     const rOut = this.R - (this.mini ? 6 : 10);
     const rMid = this.R * 0.52;
 
@@ -350,12 +358,11 @@ export class RouletteWheel {
       this.ballA = bStart + (bEnd - bStart) * e;
       // Rides the outer rim to 70%, then drops inward over the last 30%.
       this.ballR = t < 0.7 ? rOut : rOut + (rMid - rOut) * ease((t - 0.7) / 0.3);
-      // Final 10%: blend the ball's angle to 12 o'clock so it settles under
-      // the pointer rather than stopping wherever its orbit happened to end.
-      if (t > 0.9) {
-        const k = (t - 0.9) / 0.1;
-        this.ballA = this.ballA * (1 - k) + (-Math.PI / 2) * k;
-      }
+      // No final-settle correction. The prototype lerped ballA toward -PI/2
+      // over the last 10%, but ballA is a multi-turn accumulated angle (~-44
+      // rad near the end) while the target is ~-1.57 — blending between them
+      // whipped the ball through several positions, which is the stutter. The
+      // turn count above makes the landing exact by construction instead.
 
       // Tick cadence stretches from 40ms to 260ms as the wheel slows.
       const spd = 1 - e;

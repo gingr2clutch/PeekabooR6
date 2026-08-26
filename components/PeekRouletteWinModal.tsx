@@ -11,7 +11,8 @@ type Props = {
   mapName: string;
   mapSlug: string;
   placement: RoulettePlacement;
-  posterUrl?: string | null;
+  // Last-resort thumbnail, same as the peek cards use.
+  mapCoverUrl?: string | null;
   onSpinAgain: () => void;
   onClose: () => void;
 };
@@ -28,7 +29,7 @@ export function PeekRouletteWinModal({
   mapName,
   mapSlug,
   placement,
-  posterUrl,
+  mapCoverUrl,
   onSpinAgain,
   onClose,
 }: Props) {
@@ -94,15 +95,27 @@ export function PeekRouletteWinModal({
         </div>
 
         <div className="pr-winbody">
+          {/* Same cascade the peek cards use (BestPeek, AttackerPeekRow,
+              FloorPeekList): the clip's first frame, else the poster, else the
+              map cover, else the felt block. poster_url is null on nearly
+              every row, so video_url has to lead — using poster first left
+              this empty for almost every peek. */}
           <div className="pr-winthumb">
-            {posterUrl ? (
-              <Image
-                src={posterUrl}
-                alt=""
-                fill
-                sizes="330px"
-                className="object-cover"
+            {peek.videoUrl ? (
+              <video
+                src={`${peek.videoUrl}#t=0.1`}
+                poster={peek.posterUrl ?? undefined}
+                preload="metadata"
+                muted
+                playsInline
+                aria-hidden
+                {...{ "webkit-playsinline": "true" }}
+                className="pointer-events-none absolute inset-0 h-full w-full object-cover"
               />
+            ) : peek.posterUrl ? (
+              <Image src={peek.posterUrl} alt="" fill sizes="330px" className="object-cover" />
+            ) : mapCoverUrl ? (
+              <Image src={mapCoverUrl} alt="" fill sizes="330px" className="object-cover" />
             ) : null}
             <span aria-hidden className="pr-winplay">
               ▶

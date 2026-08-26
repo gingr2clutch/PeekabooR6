@@ -10,8 +10,8 @@ type Props = {
   mapName: string;
   mapSlug: string;
   peeks: RoulettePeek[];
-  // Poster frames keyed by peek id, for the popup thumbnail.
-  posters: Record<string, string | null>;
+  // Last-resort popup thumbnail when a peek has neither clip nor poster.
+  mapCoverUrl: string | null;
 };
 
 // Map-page placement: the felt bar in the hero plus the win popup it opens.
@@ -21,7 +21,7 @@ type Props = {
 // State lives here rather than in PeekRoulette so the bar itself never changes
 // height when a result arrives: the result is rendered in an overlay, not
 // inside the bar. That is what keeps CLS at zero.
-export function PeekRouletteBar({ mapName, mapSlug, peeks, posters }: Props) {
+export function PeekRouletteBar({ mapName, mapSlug, peeks, mapCoverUrl }: Props) {
   const [landed, setLanded] = useState<RoulettePeek | null>(null);
   const [spinToken, setSpinToken] = useState(0);
 
@@ -58,7 +58,7 @@ export function PeekRouletteBar({ mapName, mapSlug, peeks, posters }: Props) {
           mapName={mapName}
           mapSlug={mapSlug}
           placement="map_page"
-          posterUrl={posters[landed.id] ?? null}
+          mapCoverUrl={mapCoverUrl}
           onSpinAgain={handleSpinAgain}
           onClose={() => setLanded(null)}
         />
