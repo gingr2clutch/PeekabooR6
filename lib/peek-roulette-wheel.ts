@@ -20,18 +20,6 @@ export type RoulettePeek = {
   gradeLabel: string;
 };
 
-// "Lounge window" -> "LW". Three-char cap, matching the prototype: a
-// three-word name keeps all three initials rather than being clipped to two.
-export function peekInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 3)
-    .toUpperCase();
-}
-
 /* ------------------------------- sound -------------------------------- */
 
 // Muted by default. AudioContext is created lazily on the first user gesture,
@@ -132,6 +120,9 @@ function prefersReducedMotion(): boolean {
   );
 }
 
+// `mini` is the homepage lure: thinner rim, larger hub, tighter ball orbit,
+// and no top pointer. It no longer affects labelling — pockets are colour-only
+// at every size.
 export type WheelOptions = { mini?: boolean };
 
 export class RouletteWheel {
@@ -231,20 +222,6 @@ export class RouletteWheel {
       ctx.strokeStyle = "rgba(18,28,20,.5)";
       ctx.lineWidth = 1.2;
       ctx.stroke();
-
-      if (!this.mini) {
-        const am = a0 + this.seg / 2;
-        const tr = rIn * 0.72;
-        ctx.save();
-        ctx.translate(cx + Math.cos(am) * tr, cy + Math.sin(am) * tr);
-        ctx.rotate(am + Math.PI / 2);
-        ctx.fillStyle = "rgba(255,255,255,.97)";
-        ctx.font = `700 ${Math.max(9, R * 0.11)}px Poppins, system-ui, sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(peekInitials(this.face[i].name), 0, 0);
-        ctx.restore();
-      }
     }
 
     // Felt hub.
