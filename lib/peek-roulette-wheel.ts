@@ -9,7 +9,22 @@
 
 import { gradeTierColor } from "@/lib/rate";
 
-export const POCKETS = 10;
+// Pocket count follows the map's peek count, so every peek is its own wedge
+// and the face is an honest picture of the pool. Clamped at both ends:
+//   • below MIN, a 2- or 3-peek map would draw as a half or third circle and
+//     read as a broken pie chart, so the pool repeats to fill the wheel.
+//   • above MAX, wedges thin toward a hairline as peeks keep being added, so
+//     the face samples a subset (the draw still covers the whole pool).
+export const MIN_POCKETS = 6;
+export const MAX_POCKETS = 20;
+
+export function pocketCountFor(poolSize: number): number {
+  if (poolSize <= 0) return MIN_POCKETS;
+  if (poolSize >= MIN_POCKETS) return Math.min(poolSize, MAX_POCKETS);
+  // Repeat the pool up to a whole multiple that clears MIN_POCKETS, so
+  // duplicates are evenly distributed rather than lopsided.
+  return poolSize * Math.ceil(MIN_POCKETS / poolSize);
+}
 
 export type RoulettePeek = {
   id: string;
@@ -135,7 +150,9 @@ export class RouletteWheel {
   private H: number;
   private R: number;
   private mini: boolean;
-  private seg = (2 * Math.PI) / POCKETS;
+  // Set per-pool in setPool, since the pocket count now varies by map.
+  private pockets = MIN_POCKETS;
+  private seg = (2 * Math.PI) / MIN_POCKETS;
 
   private rot = 0;
   private ballA = -Math.PI / 2;
@@ -175,17 +192,22 @@ export class RouletteWheel {
     this.draw();
   }
 
-  // Build the visible face: POCKETS peeks sampled from the pool. `winner`, when
-  // given, is planted at `winIdx` so the landing pocket always displays the
-  // peek that was actually drawn.
-  setPool(pool: RoulettePeek[], winner?: RoulettePeek, winIdx?: number) {
+  // Build the face: one pocket per peek, so a wedge IS a peek rather than a
+  // sample of one. The winner-planting argument the prototype needed is gone —
+  // with a 1:1 face, picking a uniform random pocket already is a uniform
+  // random peek, so spin() just reads face[winIdx].
+  setPool(pool: RoulettePeek[]) {
     this.pool = pool;
+    this.pockets = pocketCountFor(pool.length);
+    this.seg = (2 * Math.PI) / this.pockets;
+
     const face: RoulettePeek[] = [];
     if (pool.length > 0) {
       const shuffled = pool.slice().sort(() => Math.random() - 0.5);
-      for (let i = 0; i < POCKETS; i++) face.push(shuffled[i % shuffled.length]);
+      // Above MAX_POCKETS this truncates; below MIN_POCKETS the modulo repeats
+      // the pool evenly. In the common case it is an exact 1:1 mapping.
+      for (let i = 0; i < this.pockets; i++) face.push(shuffled[i % shuffled.length]);
     }
-    if (winner && winIdx != null && face.length > 0) face[winIdx] = winner;
     this.face = face;
   }
 
@@ -214,7 +236,7 @@ export class RouletteWheel {
     // collapsing those into A/C would merge distinct tiers, so this asks
     // lib/rate for the tier colour instead. B is identical either way.
     const rIn = R - (this.mini ? 5 : 9);
-    for (let i = 0; i < POCKETS; i++) {
+    for (let i = 0; i < this.pockets; i++) {
       const a0 = -Math.PI / 2 + i * this.seg + this.rot;
       const a1 = a0 + this.seg;
       ctx.beginPath();
@@ -300,18 +322,24 @@ export class RouletteWheel {
   }
 
   /**
-   * Draw is PURE RANDOM from the full pool, then the winner is planted into
-   * whichever pocket the ball will land in. Selection is therefore never
-   * biased by what happens to be showing on the ten visible pockets.
+   * Reshuffles the face, then lands on a uniformly random pocket. With one
+   * peek per pocket that is a uniform draw over the pool, so the result is
+   * still pure random — and unlike the planted-winner approach it cannot
+   * disagree with what the wedge shows.
+   *
+   * The two clamped cases stay fair for the same reason: below MIN_POCKETS the
+   * pool is repeated a whole number of times, so every peek holds an equal
+   * share of pockets; above MAX_POCKETS the face is a fresh random sample each
+   * spin, so every peek is equally likely to be on it.
    */
   spin(done: (winner: RoulettePeek) => void) {
     if (this.spinning || this.pool.length === 0) return;
     this.spinning = true;
     this.stopIdle();
 
-    const winner = this.pool[Math.floor(Math.random() * this.pool.length)];
-    const winIdx = Math.floor(Math.random() * POCKETS);
-    this.setPool(this.pool, winner, winIdx);
+    this.setPool(this.pool);
+    const winIdx = Math.floor(Math.random() * this.pockets);
+    const winner = this.face[winIdx];
 
     // A pocket centre sits under the top pointer when rot = -winIdx*seg - seg/2.
     const target = -winIdx * this.seg - this.seg / 2;
