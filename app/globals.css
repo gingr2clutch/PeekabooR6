@@ -442,8 +442,9 @@ h4 {
 
 /* --- Homepage pin drop ----------------------------------------------------
    Load-in for the homepage's six blocks. Each drops 16px with a firm stop:
-   opacity 180ms linear, transform 295ms on a curve that decelerates without
-   overshooting, both starting together and staggered 70ms in document order.
+   opacity 360ms linear, transform 590ms on a curve that decelerates without
+   overshooting, both starting together and staggered 140ms in document order.
+   Every value is double the original spec — half speed, same shape.
 
    Transform/opacity only, and the animation is applied to elements that are
    already in their final layout position, so nothing reflows — no CLS.
@@ -454,8 +455,8 @@ h4 {
    renders in its final state — content can never be stranded invisible. */
 .pin-ready [data-pin] {
   animation:
-    pin-fade 180ms linear both,
-    pin-drop 295ms cubic-bezier(0.55, 0.06, 0.28, 1) both;
+    pin-fade 360ms linear both,
+    pin-drop 590ms cubic-bezier(0.55, 0.06, 0.28, 1) both;
   animation-delay: var(--pin-delay, 0ms);
 }
 @keyframes pin-fade {
