@@ -40,25 +40,46 @@ export default async function Home() {
 
   return (
     <>
-      <PageHeader home />
-      <main className="fade-in-up mx-auto max-w-6xl px-6 pb-20 pt-10">
+      {/* Pin-drop gate. Runs in document order before the body paints, so the
+          blocks start hidden rather than flashing in at full opacity first.
+          Bails on reduced motion, and on any repeat view in this tab — Next
+          remounts this page on back-navigation from a map, and replaying the
+          drop every time would feel broken. sessionStorage (not local) so a
+          fresh tab gets the animation again. */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(){try{
+if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+if(sessionStorage.getItem('pinDropPlayed'))return;
+sessionStorage.setItem('pinDropPlayed','1');
+document.documentElement.classList.add('pin-ready');
+}catch(e){}})()`,
+        }}
+      />
+      {/* Block 1 of the pin drop. A plain wrapper — PageHeader is shared with
+          every other page, so the marker goes here, not inside it. */}
+      <div data-pin style={{ "--pin-delay": "0ms" } as CSSProperties}>
+        <PageHeader home />
+      </div>
+      <main className="mx-auto max-w-6xl px-6 pb-20 pt-10">
         {/* Homepage hero. The drifting map filmstrip is anchored to the Maps
             heading below (not here) so it stays clear of the stats card. */}
         <div>
           {/* lg: hides this bar — on desktop the Discord link lives in the top
               nav next to the profile icon (components/SiteNav.tsx) instead. */}
-          <div data-reveal className="mb-6 lg:hidden">
+          <div data-pin style={{ "--pin-delay": "70ms" } as CSSProperties} className="mb-6 lg:hidden">
             <DiscordBanner />
         </div>
-        <div data-reveal className="mb-6">
+        <div data-pin style={{ "--pin-delay": "140ms" } as CSSProperties} className="mb-6">
           <MoreFromUs />
         </div>
-        <div data-reveal className="mb-5">
+        <div data-pin style={{ "--pin-delay": "210ms" } as CSSProperties} className="mb-5">
           {/* DOM/source order stays Maps, Peeks, Votes, S-Tier (keeps the
               desktop single-row order); the `order-*` classes reshuffle the
               mobile 2x2 to Peeks | Votes (top) / Maps | S-Tier (bottom), and
               `sm:` resets both order and dividers to the source-order row. */}
           <LiveStats
+            entrance={false}
             cells={[
               { label: "Maps", value: stats.mapsLive, icon: "pin", cellClass: "order-3 sm:order-none" },
               { label: "Peeks", value: stats.gradedPeeks, icon: "eye", cellClass: "order-1 sm:order-none sm:border-l" },
@@ -67,14 +88,11 @@ export default async function Home() {
             ]}
           />
         </div>
-        <div data-reveal className="mb-8 text-center lg:mb-10">
+        <div data-pin style={{ "--pin-delay": "280ms" } as CSSProperties} className="mb-8 text-center lg:mb-10">
           <h1 className="text-3xl font-semibold tracking-tight lg:text-5xl">Maps</h1>
           <p className="mt-2 text-lg font-medium text-[#6f716a] lg:mt-3 lg:text-[1.75rem]">Click the map you're on</p>
           <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand lg:mt-4 lg:text-sm">
             <span className="relative flex h-2 w-2" aria-hidden>
-              {/* Expanding ring, not a glow — geometry + opacity only. ~2s so
-                  it reads as a slow heartbeat rather than a blink. */}
-              <span className="peek-pulse-ring absolute inline-flex h-full w-full rounded-full bg-brand" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-brand" />
             </span>
             <span>New peeks weekly</span>
@@ -84,16 +102,12 @@ export default async function Home() {
 
         <ul
           id="maps"
+          data-pin
+          style={{ "--pin-delay": "350ms" } as CSSProperties}
           className="grid scroll-mt-24 grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4"
         >
-          {maps.map((map, i) => {
+          {maps.map((map) => {
             const hasCover = !!map.cover_image_url;
-            // Stagger resets every 4 cards so each grid row sweeps in
-            // left-to-right. A running index would make the last card on a
-            // 20-map page wait ~1.2s after it was already on screen.
-            const revealDelay = {
-              "--reveal-delay": `${(i % 4) * 60}ms`,
-            } as CSSProperties;
             // Live per-map counts → one short status line under the name.
             const counts = mapPeekCounts.get(map.id);
             const statusParts: string[] = [];
@@ -135,7 +149,7 @@ export default async function Home() {
 
             if (map.published) {
               return (
-                <li key={map.id} data-reveal style={revealDelay}>
+                <li key={map.id}>
                   <MapCardLink
                     href={`/maps/${map.slug}`}
                     className={`${cardBase} map-card border-2 border-white ${
@@ -150,7 +164,7 @@ export default async function Home() {
             }
 
             return (
-              <li key={map.id} data-reveal style={revealDelay}>
+              <li key={map.id}>
                 <div
                   aria-disabled="true"
                   className={`${cardBase} !cursor-not-allowed border-2 border-white ${
@@ -168,10 +182,9 @@ export default async function Home() {
           })}
         </ul>
 
-        {/* Scroll-completion note after the last row. Muted; reveals with the
-            shared observer like everything else. Count reflects the live maps
-            shown in the stats. */}
-        <div data-reveal className="mt-10 text-center text-sm">
+        {/* Scroll-completion note after the last row. Static and not part of
+            the pin drop — it sits below the fold on every viewport. */}
+        <div className="mt-10 text-center text-sm">
           <p className="font-medium text-ink/70">
             ✓ You&apos;ve explored all {stats.mapsLive} maps
           </p>

@@ -29,6 +29,12 @@ type Props = {
      passes "blue". Both class strings are written out literally because
      Tailwind cannot see an interpolated class name. */
   accent?: "brand" | "blue";
+  /* The card's own load motion — the scan-line sweep and the per-cell rise.
+     On by default so every existing caller is unchanged; the homepage passes
+     false because its pin drop already animates this card in, and two load
+     animations on one element fight each other. The odometer digit-roll is
+     separate and always runs. */
+  entrance?: boolean;
 };
 
 const ROLL_MS = 1100; // roll duration per digit
@@ -136,7 +142,7 @@ function Odometer({
   );
 }
 
-export function LiveStats({ cells, accent = "brand" }: Props) {
+export function LiveStats({ cells, accent = "brand", entrance = true }: Props) {
   // SSR + first render show the real values (crawlable, no-JS safe). On mount,
   // drop to 0 pre-paint (no transition); the roll itself waits until the bar
   // is actually on screen, so it isn't spent above the fold before it's seen.
@@ -200,7 +206,7 @@ export function LiveStats({ cells, accent = "brand" }: Props) {
       {/* One-time orange scan-line sweep on load (CSS; off for reduced-motion). */}
       <span
         aria-hidden
-        className={`peek-stats-scan pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent to-transparent ${A.scan}`}
+        className={`${entrance ? "peek-stats-scan" : "hidden"} pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent to-transparent ${A.scan}`}
       />
       <div className="relative grid grid-cols-2 sm:grid-cols-4">
         {cells.map((c, i) => {
@@ -244,8 +250,8 @@ export function LiveStats({ cells, accent = "brand" }: Props) {
               key={c.label}
               // Thin full-length dividers in faint teal-grey; each cell's
               // order + border classes (c.cellClass) lay out the 2x2 / row.
-              className={`peek-stats-cell border-[#dfe4dd]/60 ${c.cellClass}`}
-              style={{ animationDelay: `${i * CELL_STAGGER_MS}ms` }}
+              className={`${entrance ? "peek-stats-cell" : ""} border-[#dfe4dd]/60 ${c.cellClass}`}
+              style={entrance ? { animationDelay: `${i * CELL_STAGGER_MS}ms` } : undefined}
             >
               {c.href ? (
                 <Link

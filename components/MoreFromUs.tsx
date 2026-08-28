@@ -217,12 +217,10 @@ function MarkColumns({ s, uid }: { s: number; uid: string }) {
   const qid = `mfu-q-${uid}`;
   const xid = `mfu-x-${uid}`;
   const tileH = TILE_H * s;
-  // ~2.5px/second at either scale — one tile every few minutes.
-  const driftStyle = {
-    height: `calc(100% + ${tileH}px)`,
-    "--mfu-shift": `-${tileH}px`,
-    "--mfu-dur": `${Math.round(tileH / 2.5)}s`,
-  } as CSSProperties;
+  // Static. The motifs stay; only their drift was removed, so the homepage is
+  // still except for the pin drop on load. The extra tile of height is kept so
+  // the pattern still covers the section at any height.
+  const driftStyle = { height: `calc(100% + ${tileH}px)` } as CSSProperties;
 
   return (
     <>
@@ -231,7 +229,7 @@ function MarkColumns({ s, uid }: { s: number; uid: string }) {
         className="absolute inset-y-0 left-0 w-1/3 overflow-hidden"
         style={{ WebkitMaskImage: Q_CLUSTER, maskImage: Q_CLUSTER }}
       >
-        <div className="mfu-drift absolute inset-x-0 top-0" style={driftStyle}>
+        <div className="absolute inset-x-0 top-0" style={driftStyle}>
           <svg className="h-full w-full">
             <defs>
               <pattern
@@ -266,7 +264,7 @@ function MarkColumns({ s, uid }: { s: number; uid: string }) {
         className="absolute inset-y-0 right-0 w-1/3 overflow-hidden"
         style={{ WebkitMaskImage: EDGE_FADE, maskImage: EDGE_FADE }}
       >
-        <div className="mfu-drift absolute inset-x-0 top-0" style={driftStyle}>
+        <div className="absolute inset-x-0 top-0" style={driftStyle}>
           <svg className="h-full w-full">
             <defs>
               <pattern

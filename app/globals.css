@@ -440,6 +440,40 @@ h4 {
   }
 }
 
+/* --- Homepage pin drop ----------------------------------------------------
+   Load-in for the homepage's six blocks. Each drops 16px with a firm stop:
+   opacity 180ms linear, transform 295ms on a curve that decelerates without
+   overshooting, both starting together and staggered 70ms in document order.
+
+   Transform/opacity only, and the animation is applied to elements that are
+   already in their final layout position, so nothing reflows — no CLS.
+
+   Gated on `.pin-ready`, which an inline script on the homepage adds to <html>
+   before first paint. If that script never runs (JS disabled, reduced motion,
+   or a repeat visit in the same tab) the rule never matches and every block
+   renders in its final state — content can never be stranded invisible. */
+.pin-ready [data-pin] {
+  animation:
+    pin-fade 180ms linear both,
+    pin-drop 295ms cubic-bezier(0.55, 0.06, 0.28, 1) both;
+  animation-delay: var(--pin-delay, 0ms);
+}
+@keyframes pin-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pin-drop {
+  from { transform: translateY(-16px); }
+  to { transform: none; }
+}
+/* Belt-and-suspenders: the script already bails on reduced motion, but if the
+   class is present for any other reason, never animate. */
+@media (prefers-reduced-motion: reduce) {
+  .pin-ready [data-pin] {
+    animation: none;
+  }
+}
+
 /* --- Peek Roulette --------------------------------------------------------
    Felt/gold palette, scoped to .pr-* so it never leaks into the site's
    cream/dark-green/orange language. Orange is deliberately absent here — it
