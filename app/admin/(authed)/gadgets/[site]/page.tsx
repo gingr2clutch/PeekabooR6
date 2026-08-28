@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { DirectGadgetSiteImageUpload } from "@/components/DirectGadgetSiteImageUpload";
+import { GadgetClipUpload } from "@/components/GadgetClipUpload";
 import { PinPlacer } from "@/components/PinPlacer";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
@@ -189,10 +190,10 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
                   />
                 </div>
               </details>
-              <label className="min-w-[10rem] flex-1">
-                <span className="mb-1 block text-xs text-muted">Video URL</span>
-                <input name="video_url" defaultValue={p.video_url ?? ""} className={input} />
-              </label>
+              <div className="min-w-[14rem] flex-1">
+                <span className="mb-1 block text-xs text-muted">Clip</span>
+                <GadgetClipUpload siteId={site.id} initialUrl={p.video_url} />
+              </div>
               <label className="min-w-[10rem] flex-1">
                 <span className="mb-1 block text-xs text-muted">Note</span>
                 <input name="note" defaultValue={p.note ?? ""} className={input} />
@@ -248,10 +249,6 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
             ))}
           </select>
         </label>
-        <label className="min-w-[8rem] flex-1">
-          <span className="mb-1 block text-xs text-muted">Label</span>
-          <input name="label" placeholder="Above door" className={input} />
-        </label>
         <div className="w-full">
           <span className="mb-1 block text-xs text-muted">
             Position — click the blueprint
@@ -263,10 +260,10 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
             name={`${site.name} blueprint`}
           />
         </div>
-        <label className="min-w-[10rem] flex-1">
-          <span className="mb-1 block text-xs text-muted">Video URL</span>
-          <input name="video_url" className={input} />
-        </label>
+        <div className="w-full">
+          <span className="mb-1 block text-xs text-muted">Clip</span>
+          <GadgetClipUpload siteId={site.id} />
+        </div>
         <button className="rounded-btn bg-ink px-3 py-2 text-sm font-medium text-white hover:bg-brand">
           Add placement
         </button>
