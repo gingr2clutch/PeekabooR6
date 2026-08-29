@@ -136,7 +136,14 @@ export function SiteNav({
     if (!open) return;
     const lastActive = document.activeElement as HTMLElement | null;
     const originalOverflow = document.body.style.overflow;
+    const originalPadRight = document.body.style.paddingRight;
+    // Compensate for the scrollbar the lock removes. Desktop has a classic
+    // scrollbar, so without this the page behind (and the header above) jumps
+    // ~15px wider the moment the drawer opens. Phones use overlay scrollbars,
+    // where the gap is 0 and this is a no-op.
+    const gap = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
+    if (gap > 0) document.body.style.paddingRight = `${gap}px`;
 
     // Focus the dialog container itself (tabIndex -1, outline-none) rather than
     // the first link, so opening the drawer doesn't paint a focus ring around
@@ -170,6 +177,7 @@ export function SiteNav({
 
     return () => {
       document.body.style.overflow = originalOverflow;
+      document.body.style.paddingRight = originalPadRight;
       document.removeEventListener("keydown", onKey);
       lastActive?.focus({ preventScroll: true });
     };
@@ -248,7 +256,12 @@ export function SiteNav({
             aria-modal="true"
             aria-label="Site navigation"
             tabIndex={-1}
-            className="fixed inset-y-0 right-0 z-[100] flex w-[85vw] max-w-[400px] flex-col rounded-l-2xl bg-bg shadow-[-8px_0_30px_rgba(0,0,0,0.14)] outline-none"
+            // 400px is a phone-first width. On desktop it left only ~258px for the
+            // label and subtitle after the 40px icon chip, the chevron and the
+            // padding, so the longer subtitles ("Counter every spawn peek") hit
+            // their truncate and ellipsed. Widening at lg: only — the drawer is a
+            // fixed overlay, so this moves nothing on the page behind it.
+            className="fixed inset-y-0 right-0 z-[100] flex w-[85vw] max-w-[400px] flex-col rounded-l-2xl bg-bg shadow-[-8px_0_30px_rgba(0,0,0,0.14)] outline-none lg:max-w-[460px]"
             style={{
               transform: reduce ? "none" : show ? "translateX(0)" : "translateX(100%)",
               opacity: reduce ? (show ? 1 : 0) : 1,
