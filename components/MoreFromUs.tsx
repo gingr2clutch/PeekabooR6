@@ -54,7 +54,7 @@ function PromoCard({
 }: CardProps) {
   return (
     <div
-      className={`flex min-w-0 flex-col items-center gap-2.5 px-3 py-6 text-center sm:gap-4 sm:px-6 sm:py-10 lg:gap-5 ${
+      className={`flex min-w-0 flex-col items-center gap-2.5 px-3 py-6 text-center sm:gap-4 sm:px-6 sm:py-10 lg:gap-4 lg:py-7 ${
         divider ? "border-l border-border" : ""
       }`}
     >
@@ -73,7 +73,7 @@ function PromoCard({
         // motion-safe: the press-down is the only movement in this block, and
         // it is suppressed entirely under prefers-reduced-motion — those users
         // get the same button with no transform and no transition.
-        className="mt-0.5 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-[12px] font-bold text-white motion-safe:transition-transform motion-safe:duration-100 motion-safe:ease-out motion-safe:active:translate-y-[3px] sm:mt-1 sm:gap-2 sm:px-7 sm:py-3 sm:text-[16px] lg:px-9 lg:py-4 lg:text-[19px]"
+        className="mt-0.5 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-[12px] font-bold text-white motion-safe:transition-transform motion-safe:duration-100 motion-safe:ease-out motion-safe:active:translate-y-[3px] sm:mt-1 sm:gap-2 sm:px-7 sm:py-3 sm:text-[16px] lg:px-7 lg:py-3 lg:text-[15px]"
         style={{
           backgroundImage: `linear-gradient(180deg, ${light} 0%, ${base} 100%)`,
           boxShadow: `0 4px 0 ${dark}, 0 6px 14px rgba(0, 0, 0, 0.18)`,
@@ -361,15 +361,15 @@ export function MoreFromUs() {
             base={PURPLE}
             dark={PURPLE_DARK}
             wordmark={
-              <span className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-3">
-                <span className="text-[13px] font-extrabold tracking-tight text-ink sm:text-[26px] lg:text-[32px]">
+              <span className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-2.5">
+                <span className="text-[13px] font-extrabold tracking-tight text-ink sm:text-[26px] lg:text-[24px]">
                   HowItEnds
                 </span>
                 {/* Solid purple play triangle — no square, no circle. */}
                 <svg
                   viewBox="0 0 24 24"
                   aria-hidden
-                  className="h-3.5 w-3.5 shrink-0 sm:h-7 sm:w-7 lg:h-8 lg:w-8"
+                  className="h-3.5 w-3.5 shrink-0 sm:h-7 sm:w-7 lg:h-6 lg:w-6"
                 >
                   <path d="M5 3 L21 12 L5 21 Z" fill={PURPLE} />
                 </svg>
@@ -386,7 +386,7 @@ export function MoreFromUs() {
             dark={RED_DARK}
             divider
             wordmark={
-              <span className="flex items-center gap-1.5 sm:gap-3.5 lg:gap-4">
+              <span className="flex items-center gap-1.5 sm:gap-3.5 lg:gap-3">
                 {/* MF monogram — serif, dark M against a red F. Set larger than
                     the wordmark (it reads as a mark, not text) with real space
                     before it rather than butting up against "MainFinder". The
@@ -394,12 +394,12 @@ export function MoreFromUs() {
                     what separates mark from wordmark. */}
                 <span
                   aria-hidden
-                  className="shrink-0 font-serif text-[16px] font-bold leading-none tracking-[-0.08em] sm:text-[36px] lg:text-[44px]"
+                  className="shrink-0 font-serif text-[16px] font-bold leading-none tracking-[-0.08em] sm:text-[36px] lg:text-[33px]"
                 >
                   <span className="text-ink">M</span>
                   <span className="text-[#d92d20]">F</span>
                 </span>
-                <span className="text-[13px] font-extrabold tracking-tight sm:text-[26px] lg:text-[32px]">
+                <span className="text-[13px] font-extrabold tracking-tight sm:text-[26px] lg:text-[24px]">
                   <span className="text-ink">Main</span>
                   <span className="text-[#d92d20]">Finder</span>
                 </span>

@@ -7,9 +7,12 @@ import { isGadgetsPath } from "./ModeToggle";
 type Props = {
   href?: string;
   showText?: boolean;
+  /* Homepage header only: one size step at lg. Kept separate from showText,
+     which AuthShell and the drawer also pass. */
+  large?: boolean;
 };
 
-export function Wordmark({ href = "/", showText = false }: Props) {
+export function Wordmark({ href = "/", showText = false, large = false }: Props) {
   // Derived from the route rather than a prop: PageHeader is mounted by 29
   // separate pages, so threading a mode prop would mean editing all of them.
   // usePathname resolves during SSR, so the colour is right on first paint.
@@ -18,7 +21,13 @@ export function Wordmark({ href = "/", showText = false }: Props) {
     <Link
       href={href}
       aria-label="peekabooR6 home"
-      className="flex items-center gap-2.5 text-xl font-semibold tracking-tight transition-colors"
+      // `large` is its own prop rather than being derived from showText:
+      // AuthShell and the drawer also pass showText, so reusing it would have
+      // grown the logo on the login pages too. Only PageHeader sets it, and
+      // only from its `home` prop, so the bump is the homepage header alone.
+      className={`flex items-center gap-2.5 text-xl font-semibold tracking-tight transition-colors ${
+        large ? "lg:gap-3 lg:text-2xl" : ""
+      }`}
     >
       {/* Inlined from public/logo.svg so the centre dot can follow the mode —
           an <img> can't be recoloured. Everything else is byte-for-byte the
@@ -32,7 +41,7 @@ export function Wordmark({ href = "/", showText = false }: Props) {
         width={36}
         height={36}
         aria-hidden
-        className="h-8 w-8 md:h-9 md:w-9"
+        className={`h-8 w-8 md:h-9 md:w-9 ${large ? "lg:h-11 lg:w-11" : ""}`}
       >
         <rect width="64" height="64" rx="12" fill="#ffffff" />
         <path d="M 14 24 L 14 14 L 24 14" fill="none" stroke="#1a1a1a" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />

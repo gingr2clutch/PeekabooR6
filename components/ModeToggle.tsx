@@ -22,6 +22,7 @@ export function isGadgetsPath(pathname: string | null): boolean {
 export function ModeToggle({
   className,
   onNavigate,
+  home = false,
 }: {
   /* Header passes "hidden sm:inline-flex": at 320px the header row is already
      over budget before this exists (wordmark + three 44px icons ≈ 294px in
@@ -31,6 +32,9 @@ export function ModeToggle({
   /* Drawer usage closes itself on navigate — the drawer's open state is local
      and would otherwise survive the route change. */
   onNavigate?: () => void;
+  /* Homepage header only: one size step at lg to match the larger wordmark
+     there. Defaults false, so every other page and the drawer are unchanged. */
+  home?: boolean;
 }) {
   const pathname = usePathname();
   const gadgets = isGadgetsPath(pathname);
@@ -56,8 +60,8 @@ export function ModeToggle({
           aria-current={o.active ? "page" : undefined}
           onClick={onNavigate}
           className={`inline-flex items-center gap-1 rounded-btn px-1.5 py-0.5 text-[10px] font-semibold transition-colors duration-150 ease-out sm:px-2 sm:text-[11px] ${
-            o.active ? "text-ink" : "text-muted hover:text-ink"
-          }`}
+            home ? "lg:px-2.5 lg:py-1 lg:text-[13px]" : ""
+          } ${o.active ? "text-ink" : "text-muted hover:text-ink"}`}
         >
           {/* The dot is the mode signal: orange on Peeks, blue on Gadgets. Only
               the active side shows a filled dot. */}

@@ -77,7 +77,14 @@ function isActivePath(href: string, pathname: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function SiteNav({ version }: { version?: string }) {
+export function SiteNav({
+  version,
+  home = false,
+}: {
+  version?: string;
+  /* Homepage header only: one size step at lg, matching the wordmark. */
+  home?: boolean;
+}) {
   // `open` controls mount; `show` lags a frame so the entry transition animates
   // from closed → open instead of mounting already-open.
   const [open, setOpen] = useState(false);
@@ -191,7 +198,9 @@ export function SiteNav({ version }: { version?: string }) {
           rel="noopener noreferrer"
           aria-label="Join the peekabooR6 Discord (opens in new tab)"
           title="Join our Discord"
-          className="mr-1.5 hidden items-center gap-1.5 rounded-btn bg-gradient-to-r from-[#57938b] to-[#497f75] px-2.5 py-1.5 text-xs font-semibold text-white transition-[filter] duration-150 ease-out hover:brightness-95 lg:inline-flex"
+          className={`mr-1.5 hidden items-center gap-1.5 rounded-btn bg-gradient-to-r from-[#57938b] to-[#497f75] px-2.5 py-1.5 text-xs font-semibold text-white transition-[filter] duration-150 ease-out hover:brightness-95 lg:inline-flex ${
+            home ? "lg:px-3 lg:py-2 lg:text-sm" : ""
+          }`}
         >
           <DiscordGlyph size={15} />
           <span>Join</span>

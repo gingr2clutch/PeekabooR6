@@ -15,10 +15,10 @@ type Props = {
 export function PageHeader({ home = false }: Props) {
   return (
     <header className="flex items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-6">
-      <Wordmark showText={home} />
+      <Wordmark showText={home} large={home} />
       <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
-        <ModeToggle className="hidden sm:inline-flex" />
-        <SiteNav version={pkg.version} />
+        <ModeToggle className="hidden sm:inline-flex" home={home} />
+        <SiteNav version={pkg.version} home={home} />
       </div>
     </header>
   );
