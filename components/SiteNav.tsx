@@ -15,9 +15,14 @@ import {
   Plus,
   Scale,
   Swords,
+  Target,
   X,
 } from "lucide-react";
 import { Wordmark } from "./Wordmark";
+// Imported for the URL constant only, so tomorrow's domain swap stays a
+// one-line change in MoreFromUs.tsx even though that component is no longer
+// rendered on the homepage.
+import { MAIN_FINDER_URL } from "./MoreFromUs";
 import { AuthNavIcon } from "./AuthNavIcon";
 import { SiteSearch } from "./SiteSearch";
 import { ModeToggle } from "./ModeToggle";
@@ -367,6 +372,27 @@ export function SiteNav({
                         </span>
                         <span className="shrink-0 rounded-full bg-[#6d6de0] px-1.5 py-0.5 text-[9px] font-bold uppercase leading-none tracking-wide text-white">
                           New
+                        </span>
+                      </span>
+                      <ArrowUpRight size={18} className="shrink-0 text-muted" aria-hidden />
+                    </a>
+                    {/* Same shell as the row above, minus the badge: a plain
+                        menu item, with the drawer's standard lucide glyph
+                        rather than a brand mark. No new colours. */}
+                    <a
+                      href={MAIN_FINDER_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={closeDrawer}
+                      style={revealStyle(stagger++)}
+                      className="relative flex min-h-[44px] items-center gap-3 rounded-xl border border-border bg-card p-2.5 transition-[transform,background-color] duration-[120ms] ease-out active:scale-[0.98] active:bg-ink/[0.04]"
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink/[0.04]">
+                        <Target size={22} className="text-muted" aria-hidden />
+                      </span>
+                      <span className="flex min-w-0 flex-1 items-center gap-2">
+                        <span className="truncate text-[16px] font-semibold text-ink">
+                          MainFinder
                         </span>
                       </span>
                       <ArrowUpRight size={18} className="shrink-0 text-muted" aria-hidden />

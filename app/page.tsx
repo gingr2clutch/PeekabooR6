@@ -1,6 +1,5 @@
 import { DiscordBanner } from "@/components/DiscordButton";
 import { MapCardImage } from "@/components/MapCardImage";
-import { MoreFromUs } from "@/components/MoreFromUs";
 import { MapCardLink } from "@/components/MapCardLink";
 import { LiveStats } from "@/components/LiveStats";
 import { PageHeader } from "@/components/PageHeader";
@@ -95,13 +94,10 @@ document.documentElement.classList.add('pin-ready');
         <div>
           {/* lg: hides this bar — on desktop the Discord link lives in the top
               nav next to the profile icon (components/SiteNav.tsx) instead. */}
-          <div data-pin style={{ "--pin-delay": "140ms" } as CSSProperties} className="mb-6 lg:hidden">
+          <div data-pin style={{ "--pin-delay": "140ms" } as CSSProperties} className="mb-5 lg:hidden">
             <DiscordBanner />
         </div>
-        <div data-pin style={{ "--pin-delay": "280ms" } as CSSProperties} className="mb-6">
-          <MoreFromUs />
-        </div>
-        <div data-pin style={{ "--pin-delay": "420ms" } as CSSProperties} className="mb-5">
+        <div data-pin style={{ "--pin-delay": "280ms" } as CSSProperties} className="mb-5">
           {/* DOM/source order stays Maps, Peeks, Votes, S-Tier (keeps the
               desktop single-row order); the `order-*` classes reshuffle the
               mobile 2x2 to Peeks | Votes (top) / Maps | S-Tier (bottom), and
@@ -116,7 +112,7 @@ document.documentElement.classList.add('pin-ready');
             ]}
           />
         </div>
-        <div data-pin style={{ "--pin-delay": "560ms" } as CSSProperties} className="mb-8 text-center lg:mb-10">
+        <div data-pin style={{ "--pin-delay": "420ms" } as CSSProperties} className="mb-8 text-center lg:mb-10">
           <h1 className="text-3xl font-semibold tracking-tight lg:text-5xl">Maps</h1>
           <p className="mt-2 text-lg font-medium text-[#6f716a] lg:mt-3 lg:text-[1.75rem]">Click the map you're on</p>
           <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand lg:mt-4 lg:text-sm">
@@ -131,7 +127,7 @@ document.documentElement.classList.add('pin-ready');
         <ul
           id="maps"
           data-pin
-          style={{ "--pin-delay": "700ms" } as CSSProperties}
+          style={{ "--pin-delay": "560ms" } as CSSProperties}
           className="grid scroll-mt-24 grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4"
         >
           {maps.map((map) => {
