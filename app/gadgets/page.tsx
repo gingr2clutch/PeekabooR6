@@ -31,30 +31,43 @@ export default async function GadgetsIndexPage() {
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-6xl px-6 pb-20 pt-10">
-        {/* One "Gadget", not two. The eyebrow used to say GADGETS above a
-            headline that also said Gadgets; the blue accent carries the mode
-            signal instead, matching the logo and wordmark. */}
-        <div className="mb-8 text-center sm:mb-10">
-          <h1 className="text-[26px] font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
-            Defender <span className="text-blue">Gadget</span> Database
+      <main className="mx-auto max-w-6xl px-6 pb-20 pt-6 sm:pt-8">
+        {/* Two lines, with the whole of "Gadget Database" carrying the blue —
+            the accent reads as the mode signal (matching the logo and
+            wordmark) rather than picking out one word mid-sentence. */}
+        <div className="mb-6 text-center sm:mb-7">
+          <h1 className="text-[34px] font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+            <span className="block text-ink">Defender</span>
+            <span className="block text-blue">Gadget Database</span>
           </h1>
-          <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-[#6f716a] sm:max-w-xl sm:text-lg">
-            Pick your map. Get the exact spot for every cam, trap, and utility
-            placement.
+          <p className="mt-2.5 text-[13px] leading-relaxed text-[#6f716a] sm:text-base">
+            Exact spots for cams, traps, and utilities.
           </p>
-          {/* Demoted from a blue callout box: it was competing with the
-              headline for attention in the hero. */}
-          <p className="mt-3 text-[11px] text-muted">
-            Placeholder data while the database fills up
-          </p>
+
+          {/* Status banner. Follows the site's callout convention — rounded-card
+              radius with a tinted background and a matching border, the same
+              shape used for notices elsewhere — but in a warm yellow rather
+              than the brand orange, so it reads as status, not as a promo.
+              Both text colours clear WCAG AA on this background (14.8:1 and
+              6.6:1). Flat fill, no glow. */}
+          <div
+            className="mt-4 rounded-card border px-4 py-2.5 text-center"
+            style={{ backgroundColor: "#fdf4d8", borderColor: "#f0e2b4" }}
+          >
+            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-ink sm:text-[13px]">
+              Actively being worked on
+            </p>
+            <p className="mt-0.5 text-[12px]" style={{ color: "#6b5410" }}>
+              Database coming soon
+            </p>
+          </div>
         </div>
 
         {/* Same bar the homepage uses, in the Gadgets accent. Cell ordering
             mirrors the peek version: a 2x2 on phones that resets to a single
             row at sm. Counts are real and will read 0 until content is
             published. */}
-        <div className="mb-8 sm:mb-10">
+        <div className="mb-6 sm:mb-7">
           <LiveStats
             accent="blue"
             cells={[
