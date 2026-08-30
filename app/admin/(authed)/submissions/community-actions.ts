@@ -5,6 +5,11 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 // Approve/reject for the community submission queue.
 //
+// Kept as its own file rather than merged into ./actions.ts: that one drives
+// the legacy peek_submissions flow, writes to a different table, and creates
+// draft peeks on approve. Sharing a file would invite one to be edited for the
+// other's sake.
+//
 // PHASE 1 ONLY: approve flips status and nothing else. Attaching an approved
 // clip to a peek page and rendering "Clipped by {name}" is phase 2, so
 // linked_peek_id stays null and no peek row is created, read or altered here.
@@ -13,7 +18,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 // are thrown — Next surfaces them and the row stays put for a retry.
 
 function revalidate() {
-  revalidatePath("/admin/submissions/community");
+  revalidatePath("/admin/submissions");
 }
 
 async function setStatus(id: string, status: "approved" | "rejected") {

@@ -1,16 +1,15 @@
-import Link from "next/link";
 import { ConfirmButton } from "@/components/ConfirmButton";
-import { supabaseAdmin } from "@/lib/supabase";
 import {
   approveCommunitySubmissionAction,
   deleteCommunitySubmissionAction,
   reopenCommunitySubmissionAction,
   rejectCommunitySubmissionAction,
-} from "./actions";
+} from "./community-actions";
 
-export const dynamic = "force-dynamic";
+// One row of the community queue. Split out of the page so the tab shell stays
+// readable with two very different card layouts in it.
 
-type Row = {
+export type Row = {
   id: string;
   created_at: string;
   kind: "peek" | "gadget";
@@ -25,11 +24,6 @@ type Row = {
   status: "pending" | "approved" | "rejected";
 };
 
-const STATUS_ORDER: Record<Row["status"], number> = {
-  pending: 0,
-  approved: 1,
-  rejected: 2,
-};
 
 function formatDate(s: string): string {
   try {
@@ -39,87 +33,8 @@ function formatDate(s: string): string {
   }
 }
 
-export default async function CommunitySubmissionsPage() {
-  const sb = supabaseAdmin();
 
-  const { data, error } = await sb
-    .from("community_submissions")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    return (
-      <div className="rounded-card border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-        Could not load submissions: {error.message}
-      </div>
-    );
-  }
-
-  const rows = (data ?? []) as Row[];
-  // Pending first, then newest within each status. Done here rather than in the
-  // query because PostgREST cannot order by a custom status ranking.
-  rows.sort(
-    (a, b) =>
-      STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
-      b.created_at.localeCompare(a.created_at)
-  );
-
-  // The bucket is private, so previews need signed URLs. Minted in one batch
-  // here and valid for an hour — long enough to work through the queue, short
-  // enough that a copied link does not stay live.
-  const paths = rows.map((r) => r.file_path).filter((p): p is string => !!p);
-  const signed = new Map<string, string>();
-  if (paths.length > 0) {
-    const { data: urls } = await sb.storage
-      .from("submissions")
-      .createSignedUrls(paths, 60 * 60);
-    for (const u of urls ?? []) {
-      if (u.path && u.signedUrl) signed.set(u.path, u.signedUrl);
-    }
-  }
-
-  const pending = rows.filter((r) => r.status === "pending").length;
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <Link
-          href="/admin/submissions"
-          className="text-sm text-muted hover:text-brand"
-        >
-          ← Peek submissions
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">
-          Community submissions
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          Clips and screenshots from the submit sections on the homepage and
-          /gadgets. {pending} pending of {rows.length}. Approve and reject only
-          set status for now — attaching an approved clip to a peek page is a
-          later step.
-        </p>
-      </div>
-
-      {rows.length === 0 ? (
-        <p className="rounded-card border border-border bg-card p-6 text-sm text-muted">
-          No community submissions yet.
-        </p>
-      ) : (
-        <ul className="space-y-4">
-          {rows.map((r) => (
-            <Card
-              key={r.id}
-              r={r}
-              previewUrl={r.file_path ? signed.get(r.file_path) : undefined}
-            />
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function Card({ r, previewUrl }: { r: Row; previewUrl?: string }) {
+export function CommunityCard({ r, previewUrl }: { r: Row; previewUrl?: string }) {
   const labelCls =
     "text-[10px] font-semibold uppercase tracking-[0.12em] text-muted";
   const valueCls = "mt-0.5 text-sm text-ink break-words";
