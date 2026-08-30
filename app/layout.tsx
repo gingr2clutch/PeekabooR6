@@ -5,6 +5,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { Analytics } from "@vercel/analytics/next";
 import { SiteFooter } from "@/components/SiteFooter";
+import { SubmitCta } from "@/components/SubmitCta";
 import { FavoritesProvider } from "@/components/FavoritesProvider";
 import "./globals.css";
 
@@ -124,6 +125,10 @@ export default function RootLayout({
         <FavoritesProvider>
           <div className="flex-1">{children}</div>
         </FavoritesProvider>
+        {/* One prompt for the whole site, in flow directly above the
+            footer. Excludes itself on the pages that already carry the form,
+            on /admin and on the auth screens. */}
+        <SubmitCta />
         <SiteFooter />
         <Script
           defer

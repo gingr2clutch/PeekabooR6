@@ -1,85 +1,62 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
-type Props = {
-  variant: "banner" | "floating";
-  /* Gadget pages point at the gadget form; everything else at the homepage
-     one. Both are anchors on pages that already exist. */
-  gadgets?: boolean;
-};
-
-const PEEK_HREF = "/#submit";
-const GADGET_HREF = "/gadgets#submit-gadget";
-
-// Persistent entry points into the submission forms.
+// Slim submit prompt, rendered once in the root layout directly above the
+// footer so every page carries it without per-page wiring.
 //
-// Neither variant sits inside or beside an ad container. The banner renders at
-// the end of page content, above the footer; the floating pill is
-// position:fixed, so it is outside document flow entirely and cannot move an
-// ad or shift layout.
-export function SubmitCta({ variant, gadgets = false }: Props) {
-  const href = gadgets ? GADGET_HREF : PEEK_HREF;
+// A normal block in flow — no fixed positioning, no scroll listener, nothing
+// that animates size or position. It reserves its own space on first paint, so
+// it cannot shift layout or move an ad.
+//
+// It is a client component only because the exclusion list needs the current
+// path; there is no state and no effect.
 
-  if (variant === "banner") {
-    return (
-      <div className="mx-auto mt-12 max-w-3xl px-1">
-        <a
-          href={href}
-          className="submit-cta-banner group flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 transition-colors duration-150 ease-out hover:border-brand"
-        >
-          <CameraIcon />
-          <span className="min-w-0 flex-1 text-[14px] leading-snug text-ink">
-            Got a clip of a peek we&rsquo;re missing?{" "}
-            <span className="font-semibold text-brand">Submit it →</span>
-          </span>
-        </a>
-      </div>
-    );
-  }
+// Where it would be redundant or out of place:
+//   /            the real form is already on the page
+//   /gadgets     same, the gadget form is at the bottom
+//   /admin/*     internal tooling, not a place to recruit clips
+//   auth pages   a login screen should ask for one thing only
+const EXCLUDED_EXACT = new Set(["/", "/gadgets"]);
+const EXCLUDED_PREFIXES = ["/admin"];
+const AUTH_PATHS = new Set([
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+]);
 
-  return <FloatingPill href={href} />;
+function isExcluded(pathname: string): boolean {
+  if (EXCLUDED_EXACT.has(pathname)) return true;
+  if (AUTH_PATHS.has(pathname)) return true;
+  return EXCLUDED_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
 }
 
-function FloatingPill({ href }: { href: string }) {
-  const [show, setShow] = useState(false);
+export function SubmitCta() {
+  const pathname = usePathname();
+  if (!pathname || isExcluded(pathname)) return null;
 
-  useEffect(() => {
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        setShow(window.scrollY > 400);
-        ticking = false;
-      });
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  // Gadget pages point at the gadget form; everything else at the homepage one.
+  const href = pathname.startsWith("/gadgets")
+    ? "/gadgets#submit-gadget"
+    : "/#submit";
 
   return (
-    <a
-      href={href}
-      aria-hidden={!show}
-      tabIndex={show ? 0 : -1}
-      // lg: only. Mediavine runs a bottom adhesion unit on phones and a fixed
-      // bottom-right control would sit on top of it.
-      //
-      // bottom-[9.5rem] rather than the bottom-24 BackToTop uses: that value
-      // was picked to clear the anchor unit, and BackToTop is 44px tall, so
-      // this sits above it instead of overlapping. BackToTop appears on the
-      // gadget operator page, where both are visible at once.
-      className={`submit-cta-pill fixed bottom-[9.5rem] right-4 z-40 hidden items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-[13px] font-semibold text-ink elev-card transition-[opacity,transform] duration-300 ease-out hover:border-brand hover:text-brand lg:inline-flex ${
-        show
-          ? "translate-y-0 opacity-100"
-          : "pointer-events-none translate-y-2 opacity-0"
-      }`}
-    >
-      <CameraIcon />
-      <span>Submit your own peek</span>
-    </a>
+    // Matches the footer's own width and gutters so the two read as one block.
+    <div className="mt-16 px-4 sm:px-6">
+      <a
+        href={href}
+        className="mx-auto flex max-w-6xl items-center justify-center gap-2.5 rounded-card border border-border bg-card px-4 py-3 text-center transition-colors duration-150 ease-out hover:border-brand"
+      >
+        <CameraIcon />
+        <span className="text-[14px] leading-snug text-ink">
+          Got a clip of a peek we&rsquo;re missing?{" "}
+          <span className="font-semibold text-brand">Submit it →</span>
+        </span>
+      </a>
+    </div>
   );
 }
 

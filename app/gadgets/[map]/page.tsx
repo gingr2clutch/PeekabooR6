@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
-import { SubmitCta } from "@/components/SubmitCta";
 import { getMaps } from "@/lib/db";
 import { getGadgetSitesForMap } from "@/lib/db";
 
@@ -121,8 +120,6 @@ export default async function MapSitesPage({ params }: Params) {
             {map.name} peeks →
           </Link>
         </p>
-        <SubmitCta variant="banner" gadgets />
-        <SubmitCta variant="floating" gadgets />
       </main>
     </>
   );

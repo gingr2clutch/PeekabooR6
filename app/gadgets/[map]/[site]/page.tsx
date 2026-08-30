@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
-import { SubmitCta } from "@/components/SubmitCta";
 import {
   getMaps,
   getGadgetSiteBySlug,
@@ -90,8 +89,6 @@ export default async function SiteOperatorsPage({ params }: Params) {
           ))}
         </ul>
         )}
-        <SubmitCta variant="banner" gadgets />
-        <SubmitCta variant="floating" gadgets />
       </main>
     </>
   );

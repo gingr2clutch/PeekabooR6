@@ -19,7 +19,6 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { GradeBar } from "@/components/GradeBar";
 import { TrendArrow } from "@/components/TrendArrow";
 import { TrendChart } from "@/components/TrendChart";
-import { SubmitCta } from "@/components/SubmitCta";
 import {
   computeDirection,
   getSnapshotsForPeek,
@@ -419,12 +418,6 @@ export default async function PeekDetailPage({
           </section>
         )}
 
-        {/* The old "Know a better peek? Submit it →" line lived here and
-            pointed at /submit. The banner below says the same thing, better,
-            and points at the live form — two near-identical prompts stacked
-            would just read as clutter. */}
-        <SubmitCta variant="banner" />
-        <SubmitCta variant="floating" />
       </main>
 
       {videoJsonLd && (

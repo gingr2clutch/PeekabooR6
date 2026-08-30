@@ -4,7 +4,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { BackToTop } from "@/components/BackToTop";
-import { SubmitCta } from "@/components/SubmitCta";
 import {
   getMapBySlug,
   getFloorsForMap,
@@ -160,8 +159,6 @@ export default async function OperatorPlacementsPage({ params }: Params) {
             </li>
           ))}
         </ol>
-        <SubmitCta variant="banner" gadgets />
-        <SubmitCta variant="floating" gadgets />
       </main>
       <BackToTop />
     </>
