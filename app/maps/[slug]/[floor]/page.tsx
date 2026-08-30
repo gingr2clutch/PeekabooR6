@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FloorView } from "@/components/FloorView";
 import { PageHeader } from "@/components/PageHeader";
+import { SubmitCta } from "@/components/SubmitCta";
 import {
   getFloorBySlug,
   getFloorsForMap,
@@ -207,6 +208,8 @@ export default async function FloorPage({
             />
           </div>
         </section>
+        <SubmitCta variant="banner" />
+        <SubmitCta variant="floating" />
       </main>
     </>
   );

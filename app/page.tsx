@@ -197,6 +197,20 @@ document.documentElement.classList.add('pin-ready');
             Suggestions are fetched on demand from /api/submissions/suggestions
             once someone reaches step 2, which keeps the homepage's payload and
             query count exactly as they were. */}
+        {/* Lead-in, so the form reads as an invitation rather than something
+            trailing off the end of the page. Static markup above a section
+            that was already there — it reserves its own space and shifts
+            nothing. */}
+        <div className="mx-auto mt-16 max-w-[620px] text-center">
+          <div className="flex items-center gap-3">
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand">
+              Your turn
+            </span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+        </div>
+
         <SubmitSpot
           config={PEEK_SUBMIT}
           maps={maps

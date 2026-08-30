@@ -236,7 +236,7 @@ export function SubmitSpot({ config, maps, sites = [], operators = [] }: Props) 
     <section
       id={config.anchorId}
       style={accentVars}
-      className="mx-auto mt-16 max-w-[620px] scroll-mt-24"
+      className="mx-auto mt-6 max-w-[620px] scroll-mt-24"
       aria-labelledby={`${config.anchorId}-title`}
     >
       <div className="px-1 text-center">

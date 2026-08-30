@@ -21,6 +21,7 @@ import { rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
 import { TrendArrow } from "@/components/TrendArrow";
 import { MultiTrendChart, type TrendSeries } from "@/components/MultiTrendChart";
+import { SubmitCta } from "@/components/SubmitCta";
 import {
   computeDirection,
   getSnapshotsForPeeks,
@@ -417,6 +418,8 @@ export default async function MapPage({
           </p>
         )}
         </MapEntryScope>
+        <SubmitCta variant="banner" />
+        <SubmitCta variant="floating" />
       </main>
     </>
   );

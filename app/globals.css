@@ -2681,3 +2681,18 @@ h4 {
     transition: none !important;
   }
 }
+
+/* --- Submit CTA -----------------------------------------------------------
+   The banner reserves its own space in normal flow, and the pill is fixed, so
+   neither can shift layout. Only opacity and transform animate. */
+@media (prefers-reduced-motion: reduce) {
+  .submit-cta-banner,
+  .submit-cta-pill {
+    transition: none !important;
+  }
+  /* Without a transition the pill would pop in; keep it in place instead so
+     the only change is opacity, applied instantly. */
+  .submit-cta-pill {
+    transform: none !important;
+  }
+}
