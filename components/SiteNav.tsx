@@ -28,6 +28,7 @@ import { AuthNavIcon } from "./AuthNavIcon";
 import { SiteSearch } from "./SiteSearch";
 import { ModeToggle } from "./ModeToggle";
 import { DISCORD_INVITE } from "./DiscordButton";
+import { SubmitPeekButton } from "./SubmitPeekButton";
 
 const ENTER_MS = 320;
 const EXIT_MS = 220;
@@ -222,6 +223,11 @@ export function SiteNav({
           <DiscordGlyph size={15} />
           <span>Join</span>
         </a>
+        {/* Same lg: gate as the Discord button above. At 360px the row already
+            runs to ~308px of its 328px, so a ~124px button here would overflow
+            and squeeze the wordmark — but neither button exists below 1024px,
+            so narrow widths are untouched. */}
+        <SubmitPeekButton className="mr-1.5 hidden lg:inline-flex" />
         <AuthNavIcon />
         <SiteSearch />
         <button
