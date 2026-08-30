@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   approveSubmissionAction,
@@ -56,6 +57,14 @@ export default async function SubmissionsPage() {
           Approve creates a draft peek (published=false) you can finish in
           the Peeks dashboard. Reject deletes the submission.
         </p>
+        {/* The newer community form writes to a different table, so it has its
+            own queue. This flow is unchanged. */}
+        <Link
+          href="/admin/submissions/community"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-btn border border-border px-3 py-1.5 text-sm font-medium text-ink hover:border-brand hover:text-brand"
+        >
+          Community submissions →
+        </Link>
       </div>
 
       {submissions.length === 0 ? (
