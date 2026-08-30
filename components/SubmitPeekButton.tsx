@@ -1,3 +1,7 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 type Props = {
   // Extra classes for layout overrides (e.g. full-width in the mobile drawer).
   className?: string;
@@ -22,14 +26,35 @@ export function SubmitPeekButton({
   onClick,
   variant = "orange",
 }: Props) {
+  const pathname = usePathname();
+
   const tone =
     variant === "outline"
       ? "border border-border bg-card text-ink hover:border-brand hover:text-brand"
       : "bg-brand text-white hover:bg-[#d95a0c]";
+
+  // Already on the homepage: scroll rather than navigate. A plain hash href
+  // would jump, and letting the router handle it would re-run the page for no
+  // reason when the target is a few thousand pixels down the same document.
+  function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
+    onClick?.();
+    if (pathname !== "/") return; // different page — let the browser navigate
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+
+    const el = document.getElementById("submit");
+    if (!el) return; // nothing to scroll to; fall through to the href
+
+    e.preventDefault();
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    // Keep the URL honest without triggering another scroll.
+    history.replaceState(null, "", "#submit");
+  }
+
   return (
     <a
       href={SUBMIT_HREF}
-      onClick={onClick}
+      onClick={handleClick}
       className={`inline-flex items-center justify-center gap-1.5 rounded-btn ${tone} px-3 py-1.5 text-xs font-semibold transition-[background-color,box-shadow,transform] duration-150 ease-out motion-safe:hover:scale-[1.04] motion-safe:hover:shadow-md motion-safe:active:scale-[0.98] ${className}`}
     >
       <UploadIcon />

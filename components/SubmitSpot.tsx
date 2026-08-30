@@ -90,6 +90,24 @@ export function SubmitSpot({ config, maps, sites = [], operators = [] }: Props) 
   const mapName = maps.find((m) => m.slug === mapSlug)?.name ?? "";
   const siteOptions = sites.filter((s) => s.mapSlug === mapSlug);
 
+  // Land on the section when arriving at /#submit or /gadgets#submit-gadget.
+  // The browser only scrolls to a hash on a full document load, and this site
+  // works against that in two ways: Next's router does not reliably scroll to a
+  // hash on client navigation, and the layout sets scrollRestoration to manual
+  // with a ScrollToTop that fires on every pathname change. Doing it here, from
+  // the element that owns the id, is immune to both.
+  useEffect(() => {
+    if (window.location.hash !== `#${config.anchorId}`) return;
+    const el = document.getElementById(config.anchorId);
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // rAF so it runs after first paint, when the section has its real height.
+    const id = requestAnimationFrame(() =>
+      el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" })
+    );
+    return () => cancelAnimationFrame(id);
+  }, [config.anchorId]);
+
   // Bomb sites repopulate when the map changes — a site from the previous map
   // would not exist under the new one.
   useEffect(() => {
