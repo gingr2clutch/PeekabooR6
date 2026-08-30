@@ -60,7 +60,10 @@ const SECTIONS: { label: string; items: MenuItem[] }[] = [
   {
     label: "Community",
     items: [
-      { href: "/submit", label: "Submit a peek", subtitle: "Add your own angle", Icon: Plus },
+      // Points at the homepage submission section, not the old /submit page.
+      // That page and its route are left in place; removing them is a separate
+      // cleanup.
+      { href: "/#submit", label: "Submit a clip", subtitle: "Add your own angle", Icon: Plus },
       { href: DISCORD_INVITE, label: "Discord", subtitle: "Join the community", Icon: DiscordGlyph, external: true },
       { href: "/sponsor", label: "Partner", subtitle: "Work with us", Icon: Handshake },
     ],

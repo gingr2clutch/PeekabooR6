@@ -703,6 +703,39 @@ export async function getMapIdsWithGadgetPlacements(): Promise<Set<string>> {
   return ids;
 }
 
+// Published bomb sites with their map slug, for the gadget submission form's
+// site dropdown. Published only, via the anon client's RLS — draft site names
+// are content the admin has not released yet, and the submit form is public.
+//
+// Most maps have no published sites yet, so SubmitSpot falls back to a free
+// text field rather than showing an empty select.
+export async function getGadgetSiteOptions(): Promise<
+  { mapSlug: string; name: string }[]
+> {
+  const { data, error } = await supabasePublic()
+    .from("gadget_sites")
+    .select("name, maps!inner(slug)")
+    .order("display_order", { ascending: true });
+  if (error) throw error;
+  const rows = (data ?? []) as unknown as {
+    name: string;
+    maps: { slug: string } | null;
+  }[];
+  return rows
+    .filter((r) => r.maps?.slug)
+    .map((r) => ({ mapSlug: r.maps!.slug, name: r.name }));
+}
+
+// Operator names for the gadget submission form.
+export async function getGadgetOperatorNames(): Promise<string[]> {
+  const { data, error } = await supabasePublic()
+    .from("gadget_operators")
+    .select("name")
+    .order("display_order", { ascending: true });
+  if (error) throw error;
+  return ((data ?? []) as { name: string }[]).map((o) => o.name);
+}
+
 // Stat bar for /gadgets. One query: RLS already limits gadget_placements to
 // published rows, and the !inner join to gadget_sites drops any placement whose
 // site is still a draft — so "published gadget content" means both are live,

@@ -4,10 +4,14 @@ import { PageHeader } from "@/components/PageHeader";
 import { MapCardImage } from "@/components/MapCardImage";
 import { LiveStats } from "@/components/LiveStats";
 import {
+  getGadgetOperatorNames,
+  getGadgetSiteOptions,
   getGadgetStats,
   getMapIdsWithGadgetPlacements,
   getMaps,
 } from "@/lib/db";
+import { SubmitSpot } from "@/components/SubmitSpot";
+import { GADGET_SUBMIT } from "@/lib/submit-config";
 
 export const dynamic = "force-dynamic";
 
@@ -29,13 +33,18 @@ export const metadata: Metadata = {
 // this and duplicated the wrapper while reusing MapCardImage; this follows that
 // precedent, so the homepage stays untouched.
 export default async function GadgetsIndexPage() {
-  const [allMaps, stats, mapsWithPlacements] = await Promise.all([
-    getMaps(),
-    getGadgetStats(),
-    // One query for the whole grid, not one per card — see the reader in
-    // lib/db.ts. Runs alongside the other two, so it adds no round trip.
-    getMapIdsWithGadgetPlacements(),
-  ]);
+  const [allMaps, stats, mapsWithPlacements, siteOptions, operatorNames] =
+    await Promise.all([
+      getMaps(),
+      getGadgetStats(),
+      // One query for the whole grid, not one per card — see the reader in
+      // lib/db.ts. Runs alongside the others, so it adds no round trip.
+      getMapIdsWithGadgetPlacements(),
+      // Selects for the submission section at the bottom. Parallel with the
+      // rest, so they cost no extra wall clock.
+      getGadgetSiteOptions(),
+      getGadgetOperatorNames(),
+    ]);
   const maps = allMaps.filter((m) => m.published);
 
   return (
@@ -169,6 +178,17 @@ export default async function GadgetsIndexPage() {
             })}
           </ul>
         )}
+
+        {/* Community submissions, gadget variant — same component as the
+            homepage, different config. Bomb sites and operators come from the
+            queries above; the map list is the published set already used by
+            the grid. */}
+        <SubmitSpot
+          config={GADGET_SUBMIT}
+          maps={maps.map((m) => ({ slug: m.slug, name: m.name }))}
+          sites={siteOptions}
+          operators={operatorNames}
+        />
       </main>
     </>
   );

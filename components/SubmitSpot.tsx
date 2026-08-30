@@ -388,21 +388,35 @@ export function SubmitSpot({ config, maps, sites = [], operators = [] }: Props) 
                   <label className="sub-label" htmlFor={`${config.anchorId}-site`}>
                     BOMB SITE
                   </label>
-                  <div className="sub-selwrap">
-                    <select
+                  {/* A select only when there is something to pick. Most maps
+                      have no published bomb sites yet, and an empty dropdown
+                      would be a dead end — draft site names are not shown,
+                      since the admin has not released them. */}
+                  {siteOptions.length > 0 ? (
+                    <div className="sub-selwrap">
+                      <select
+                        id={`${config.anchorId}-site`}
+                        className="sub-select"
+                        value={site}
+                        onChange={(e) => setSite(e.target.value)}
+                      >
+                        {siteOptions.map((s) => (
+                          <option key={s.name} value={s.name}>
+                            {s.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <input
                       id={`${config.anchorId}-site`}
-                      className="sub-select"
+                      className="sub-input"
                       value={site}
+                      autoComplete="off"
+                      placeholder="e.g. Church / Arsenal"
                       onChange={(e) => setSite(e.target.value)}
-                    >
-                      {siteOptions.length === 0 && <option value="">—</option>}
-                      {siteOptions.map((s) => (
-                        <option key={s.name} value={s.name}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    />
+                  )}
                 </div>
               ) : (
                 <SpotField
