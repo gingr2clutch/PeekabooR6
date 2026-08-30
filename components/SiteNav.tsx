@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ComponentType } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -232,8 +233,19 @@ export function SiteNav({
         </button>
       </div>
 
-      {open && (
-        <>
+      {/* Portalled to <body>. The drawer is position:fixed with z-[100], but
+          z-index only ranks it inside its own stacking context — and on the
+          homepage SiteNav sits inside a [data-pin] wrapper whose pin-drop
+          animates transform, which makes that wrapper a stacking context. The
+          Discord bar and stats card are later [data-pin] siblings with
+          contexts of their own, so they painted over the whole header subtree
+          and the drawer went behind them. No z-index can escape an ancestor
+          context; moving the node out is the fix, and it holds no matter where
+          SiteNav is mounted in future. */}
+      {open &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <>
           {/* Backdrop */}
           <div
             aria-hidden
@@ -452,8 +464,9 @@ export function SiteNav({
               </div>
             </div>
           </div>
-        </>
-      )}
+          </>,
+          document.body
+        )}
     </>
   );
 }
