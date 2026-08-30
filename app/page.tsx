@@ -9,6 +9,8 @@ import {
   getMapVoteActivity,
 } from "@/lib/map-activity";
 import { BackToTop } from "@/components/BackToTop";
+import { SubmitSpot } from "@/components/SubmitSpot";
+import { PEEK_SUBMIT } from "@/lib/submit-config";
 import type { CSSProperties } from "react";
 
 export const dynamic = "force-dynamic";
@@ -186,6 +188,21 @@ document.documentElement.classList.add('pin-ready');
           </p>
           <p className="mt-1 text-muted">More peeks added every week.</p>
         </div>
+
+        {/* Community submissions. Below the maps grid and above the footer, and
+            deliberately outside the pin drop: it is far below the fold on every
+            viewport, so animating it in would be motion nobody sees.
+
+            `maps` is already loaded for the grid above, so this adds no query.
+            Suggestions are fetched on demand from /api/submissions/suggestions
+            once someone reaches step 2, which keeps the homepage's payload and
+            query count exactly as they were. */}
+        <SubmitSpot
+          config={PEEK_SUBMIT}
+          maps={maps
+            .filter((m) => m.published)
+            .map((m) => ({ slug: m.slug, name: m.name }))}
+        />
       </main>
       <BackToTop />
     </>

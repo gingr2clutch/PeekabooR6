@@ -16,6 +16,9 @@ import { sendGAEvent } from "@next/third-parties/google";
 // could appear in two places, and analytics cares about the placement.
 export type RoulettePlacement = "map_page" | "homepage";
 
+// Which submission form fired the event.
+export type SubmitKind = "peek" | "gadget";
+
 type EventMap = {
   roulette_opened: { placement: RoulettePlacement };
   roulette_spin_started: { placement: RoulettePlacement; map: string };
@@ -31,6 +34,11 @@ type EventMap = {
     map: string;
     peek_id: string;
   };
+
+  // Community submissions. `kind` matches community_submissions.kind.
+  submit_started: { kind: SubmitKind };
+  submit_step: { kind: SubmitKind; step: number };
+  submit_completed: { kind: SubmitKind; map: string; is_new_spot: boolean };
 };
 
 /**

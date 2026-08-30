@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Submit a Gadget Spot</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--cream:#f2ece1;--ink:#1c1a17;--soft:#6f6a61;--line:#e6ddcd;
+    --orange:#2e6f96;--orange-d:#22597a;--teal:#3f8f7d;--green:#69ab4a;
+    --shadow:0 10px 30px rgba(40,30,15,.10)}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--cream);color:var(--ink);
+    min-height:100vh;padding:0 16px 90px}
+  .wrap{max-width:620px;margin:0 auto}
+  .hero{text-align:center;padding:48px 0 6px}
+  .hero h1{font-family:'Poppins';font-weight:800;font-size:clamp(36px,9vw,56px);
+    letter-spacing:-.03em;line-height:.95}
+  .hero h1 span{color:var(--orange)}
+  .hero p{color:var(--soft);font-size:14.5px;margin-top:9px}
+
+  /* ------- the card ------- */
+  .card{background:#fff;border-radius:22px;box-shadow:var(--shadow);margin-top:30px;
+    padding:26px 24px 24px;position:relative;overflow:hidden}
+  .cardhead{text-align:center;margin-bottom:2px}
+  .card h2{font-family:'Poppins';font-weight:800;font-size:22px;letter-spacing:-.02em}
+  .card h2 em{font-style:normal;color:var(--orange)}
+  .card .tag{color:var(--soft);font-size:13px;margin-top:3px}
+
+  /* steps rail */
+  .steps{display:flex;gap:0;margin:20px 0 18px}
+  .step{flex:1;text-align:center;position:relative}
+  .step .dot{width:30px;height:30px;border-radius:50%;margin:0 auto;display:grid;
+    place-items:center;font-family:'Poppins';font-weight:800;font-size:13px;
+    background:#f0e9dc;color:#b3aa99;border:2px solid #f0e9dc;
+    transition:background .25s,color .25s,border-color .25s;position:relative;z-index:2}
+  .step.on .dot{background:var(--orange);color:#fff;border-color:var(--orange)}
+  .step.done .dot{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .step .lb{font-size:10.5px;font-weight:700;letter-spacing:.05em;color:#b3aa99;
+    margin-top:6px;transition:color .25s}
+  .step.on .lb,.step.done .lb{color:var(--ink)}
+  .step::before{content:"";position:absolute;top:14px;left:-50%;right:50%;height:2px;
+    background:#f0e9dc;z-index:1}
+  .step:first-child::before{display:none}
+  .step.on::before,.step.done::before{background:var(--teal)}
+
+  /* panes */
+  .pane{display:none}
+  .pane.on{display:block;animation:pop .42s cubic-bezier(.2,1.3,.35,1)}
+  @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+
+  /* hero entrance */
+  .hero h1{animation:heroin .6s cubic-bezier(.2,1.2,.4,1) both}
+  .hero p{animation:heroin .6s cubic-bezier(.2,1.2,.4,1) .08s both}
+  .card{animation:heroin .6s cubic-bezier(.2,1.2,.4,1) .14s both}
+  @keyframes heroin{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+  /* active step dot ping */
+  .step .dot::after{content:"";position:absolute;inset:-2px;border-radius:50%;
+    border:2px solid var(--orange);opacity:0;transform:scale(1)}
+  .step.on .dot::after{animation:ping 1.6s ease-out infinite}
+  @keyframes ping{0%{opacity:.7;transform:scale(1)}70%{opacity:0;transform:scale(1.65)}100%{opacity:0;transform:scale(1.65)}}
+
+  /* dropzone */
+  .dz{border:2.5px dashed var(--line);border-radius:16px;padding:34px 18px;text-align:center;
+    cursor:pointer;transition:border-color .2s,background .2s}
+  .dz:hover,.dz.hot{border-color:var(--orange);background:#fdf7ef;transform:translateY(-2px)}
+  .dz{transition:border-color .2s,background .2s,transform .25s cubic-bezier(.2,1.2,.4,1)}
+  .dz .big{font-size:34px;display:inline-block;animation:bob 2.6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  .dz .t1{font-family:'Poppins';font-weight:700;font-size:16.5px;margin-top:8px}
+  .dz .t2{font-size:12.5px;color:var(--soft);margin-top:4px}
+  .dz .t2 b{color:var(--orange-d)}
+  .orlink{display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:#b3aa99;
+    font-size:11px;font-weight:700;letter-spacing:.08em}
+  .orlink::before,.orlink::after{content:"";flex:1;height:1px;background:var(--line)}
+  .linkrow{display:flex;gap:8px}
+  .linkrow input{flex:1;border:2px solid var(--line);border-radius:12px;padding:12px 14px;
+    font-size:14px;font-family:'Inter';outline:none;background:#fff;color:var(--ink)}
+  .linkrow input:focus{border-color:var(--orange)}
+  .linkrow input::placeholder{color:#b3aa99}
+
+  /* file chip after "upload" */
+  .filechip{display:none;align-items:center;gap:12px;background:#f6faf4;
+    border:1.5px solid #d9e8d0;border-radius:14px;padding:12px 14px;margin-bottom:14px}
+  .filechip.on{display:flex}
+  .filechip .ic{width:40px;height:30px;border-radius:7px;flex:none;
+    background:linear-gradient(135deg,#31313a,#141418);display:grid;place-items:center;
+    color:rgba(255,255,255,.6);font-size:10px}
+  .filechip .nm{font-weight:700;font-size:13.5px;flex:1;min-width:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .filechip .sz{font-size:11.5px;color:var(--soft)}
+  .filechip .ok{color:var(--green);font-weight:800}
+
+  /* selects + inputs */
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  label{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--soft);
+    display:block;margin-bottom:5px}
+  select,.txt{width:100%;border:2px solid var(--line);border-radius:12px;padding:12px 13px;
+    font-size:14px;font-family:'Inter';font-weight:500;outline:none;background:#fff;
+    color:var(--ink);appearance:none}
+  select:focus,.txt:focus{border-color:var(--orange)}
+  .selwrap{position:relative}
+  .selwrap::after{content:"▾";position:absolute;right:13px;bottom:13px;color:var(--soft);
+    pointer-events:none}
+  .hint{font-size:12px;color:var(--soft);margin-top:8px}
+  .hint b{color:var(--ink)}
+  .hint.new{color:var(--orange-d)}
+
+  /* peek-name typeahead */
+  .pkwrap{position:relative}
+  .sug{position:absolute;top:calc(100% + 5px);left:0;right:0;background:#fff;
+    border:1.5px solid var(--line);border-radius:12px;box-shadow:0 14px 30px rgba(40,30,15,.16);
+    overflow:hidden;display:none;z-index:10}
+  .sug.on{display:block}
+  .sug .s{padding:9px 12px;font-size:13px;font-weight:600;cursor:pointer;
+    display:flex;align-items:center;gap:8px}
+  .sug .s:hover{background:#fdf6ee}
+  .sug .s .sg{margin-left:auto;width:20px;height:20px;border-radius:6px;background:var(--teal);
+    color:#fff;display:grid;place-items:center;font-family:'Poppins';font-weight:800;font-size:10.5px}
+
+  /* step 3 — centered */
+  #p3{text-align:center}
+  #p3 label{text-align:center}
+  #p3 .txt{text-align:center;max-width:320px;margin:0 auto;display:block}
+
+  /* credit preview — a mini mock of the real peek card */
+  .credprev{background:#faf7f0;border:1.5px solid var(--line);border-radius:14px;
+    padding:16px 14px;margin-top:16px;text-align:center}
+  .credprev .k{font-size:10.5px;font-weight:700;letter-spacing:.07em;color:var(--soft);
+    margin-bottom:11px}
+  .minicard{background:#fff;border:1.5px solid var(--line);border-radius:13px;
+    overflow:hidden;max-width:250px;margin:0 auto;box-shadow:0 6px 16px rgba(40,30,15,.08);
+    position:relative;animation:cardin .55s cubic-bezier(.2,1.3,.35,1) both;
+    transition:transform .25s cubic-bezier(.2,1.2,.4,1)}
+  .minicard:hover{transform:translateY(-3px) rotate(-.6deg)}
+  @keyframes cardin{from{opacity:0;transform:translateY(16px) scale(.92) rotate(-2deg)}
+    to{opacity:1;transform:none}}
+  .minicard::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+    background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);
+    transform:translateX(-120%);animation:shine 2.8s ease-in-out 1s infinite}
+  @keyframes shine{0%{transform:translateX(-120%)}45%{transform:translateX(120%)}
+    100%{transform:translateX(120%)}}
+  .minicard .vid{height:96px;position:relative;display:grid;place-items:center;
+    background:linear-gradient(135deg,#12242f,#0a161e);
+    background-image:linear-gradient(rgba(90,160,200,.10) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(90,160,200,.10) 1px,transparent 1px),
+      linear-gradient(135deg,#12242f,#0a161e);
+    background-size:16px 16px,16px 16px,100% 100%}
+  .minicard .vid .pinmark{font-size:22px;animation:pindrop .5s cubic-bezier(.2,1.4,.4,1) .3s both;
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+  @keyframes pindrop{from{opacity:0;transform:translateY(-26px) scale(.6)}
+    to{opacity:1;transform:none}}
+  .minicard .vid .play{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.14);
+    display:grid;place-items:center;color:#fff;font-size:12px}
+  .minicard .vid .gr{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:7px;
+    background:var(--orange);color:#fff;display:grid;place-items:center;
+    font-family:'Poppins';font-weight:800;font-size:12px}
+  .minicard .bd{padding:10px 12px 11px}
+  .minicard .pn{font-family:'Poppins';font-weight:700;font-size:14px}
+  .minicard .pl{font-size:11px;color:var(--soft);margin-top:1px}
+  .minicard .by{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;
+    padding-top:8px;border-top:1px solid #f0e9dc;font-size:12px;font-weight:600}
+  .minicard .by .av{transition:transform .15s}
+  .minicard .by .av.pop{animation:avpop .3s cubic-bezier(.2,1.5,.4,1)}
+  @keyframes avpop{0%{transform:scale(1)}40%{transform:scale(1.45)}100%{transform:scale(1)}}
+  .minicard .by .av{width:19px;height:19px;border-radius:50%;background:var(--orange);color:#fff;
+    display:grid;place-items:center;font-family:'Poppins';font-weight:800;font-size:9.5px;flex:none}
+  .minicard .by b{color:var(--orange-d)}
+
+  /* buttons */
+  .btn{width:100%;border:none;border-radius:14px;padding:15px;font-family:'Poppins';
+    font-weight:800;font-size:15px;cursor:pointer;margin-top:16px;
+    background:var(--orange);color:#fff;box-shadow:0 8px 22px rgba(34,89,122,.28);
+    transition:transform .15s,box-shadow .15s}
+  .btn{position:relative;overflow:hidden}
+  .btn::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.35) 50%,transparent 58%);
+    transform:translateX(-120%)}
+  .btn:hover:not(:disabled)::after{animation:shine 1s ease-out}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 11px 26px rgba(34,89,122,.34)}
+  .btn:active:not(:disabled){transform:translateY(1px) scale(.99)}
+  .btn:disabled{background:#e8dfd0;color:#b3aa99;box-shadow:none;cursor:not-allowed;transform:none}
+  .back{background:none;border:none;color:var(--soft);font-family:'Inter';font-weight:600;
+    font-size:12.5px;cursor:pointer;margin-top:10px;width:100%}
+
+  /* success */
+  .done-wrap{text-align:center;padding:8px 0 4px}
+  .done-wrap .ring{width:64px;height:64px;border-radius:50%;background:#eef6e8;margin:0 auto;
+    display:grid;place-items:center;font-size:28px;animation:ringpop .45s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes ringpop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  .done-wrap h3{font-family:'Poppins';font-weight:800;font-size:21px;margin-top:12px}
+  .done-wrap p{font-size:13.5px;color:var(--soft);margin-top:6px;line-height:1.5}
+  .done-wrap p b{color:var(--ink)}
+
+  .foot{text-align:center;font-size:11.5px;color:#b3aa99;margin-top:14px}
+
+  /* confetti */
+  .cf{position:fixed;top:-12px;width:9px;height:14px;border-radius:2.5px;z-index:99;
+    pointer-events:none;will-change:transform,opacity}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>Know a <span>gadget spot?</span></h1>
+    <p>Drop a clip or screenshot of it. If it makes the site, your name goes on the placement — forever.</p>
+  </div>
+
+  <div class="card">
+    <div class="cardhead">
+      <h2>Submit a placement <em>· 30 seconds</em></h2>
+      <div class="tag">A clip or a screenshot works — file, TikTok, or YouTube link.</div>
+    </div>
+
+    <div class="steps" id="steps">
+      <div class="step on"><div class="dot">1</div><div class="lb">DROP CLIP</div></div>
+      <div class="step"><div class="dot">2</div><div class="lb">TAG THE SPOT</div></div>
+      <div class="step"><div class="dot">3</div><div class="lb">GET CREDIT</div></div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="pane on" id="p1">
+      <div class="dz" id="dz">
+        <div class="big">🎬</div>
+        <div class="t1">Drag your clip or screenshot here</div>
+        <div class="t2">or <b>click to browse</b> · mp4 / mov / png · under 100MB</div>
+      </div>
+      <div class="orlink">OR PASTE A LINK</div>
+      <div class="linkrow">
+        <input id="link" placeholder="tiktok.com / youtube.com / medal.tv link…">
+      </div>
+      <button class="btn" id="next1" disabled>Next → tag the spot</button>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="pane" id="p2">
+      <div class="filechip on">
+        <div class="ic">▶</div>
+        <div class="nm" id="fname">kafe_valk_cocktail_cam.mp4</div>
+        <div class="sz">14.2 MB</div>
+        <div class="ok">✓</div>
+      </div>
+      <div class="frow">
+        <div><label>MAP</label><div class="selwrap">
+          <select id="map"><option>Chalet</option><option>Clubhouse</option><option>Oregon</option>
+          <option>Kafe</option><option>Bank</option><option>Border</option><option>Villa</option>
+          <option>Consulate</option></select></div></div>
+        <div><label>BOMB SITE</label><div class="selwrap">
+          <select id="site"><option>Master / Office</option><option>Bar / Gaming</option>
+          <option>Wine / Snowmobile</option><option>Kitchen / Trophy</option></select></div></div>
+      </div>
+      <div class="frow">
+        <div><label>OPERATOR</label><div class="selwrap">
+          <select id="op"><option>Valkyrie</option><option>Kapkan</option><option>Denari</option></select></div></div>
+        <div><label>SPOT NAME</label><div class="pkwrap">
+          <input class="txt" id="peek" placeholder="type it… e.g. Fireplace Cam" autocomplete="off">
+          <div class="sug" id="sug"></div>
+        </div></div>
+      </div>
+      <div class="hint" id="pkhint">Start typing — we'll match it to a placement we already have.</div>
+      <button class="btn" id="next2">Next → get credit</button>
+      <button class="back" data-to="1">← back</button>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="pane" id="p3">
+      <label>YOUR NAME OR HANDLE</label>
+      <input class="txt" id="who" placeholder="e.g. gingr2clutch" maxlength="24">
+      <div class="credprev">
+        <div class="k" id="prevlabel">YOUR NAME, LIVE ON THE FIREPLACE CAM PLACEMENT:</div>
+        <div class="minicard">
+          <div class="vid"><div class="pinmark">📍</div><div class="gr" id="prevop">V</div></div>
+          <div class="bd">
+            <div class="pn" id="prevpeek">Fireplace Cam</div>
+            <div class="pl" id="prevmap">Kafe · Kitchen / Trophy</div>
+            <div class="by"><span class="av" id="av">?</span>Placed by&nbsp;<b id="credname">you</b></div>
+          </div>
+        </div>
+      </div>
+      <div class="hint">No account needed. We review every placement before it goes live.</div>
+      <button class="btn" id="submit" disabled>Submit placement 🚀</button>
+      <button class="back" data-to="2">← back</button>
+    </div>
+
+    <!-- DONE -->
+    <div class="pane" id="p4">
+      <div class="done-wrap">
+        <div class="ring">✅</div>
+        <h3>Placement submitted!</h3>
+        <p>We review placements within <b>48 hours</b>. If it makes the cut,<br>
+        <b id="donewho">your name</b> goes on that pin for good.</p>
+        <button class="btn" id="again">Submit another</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">312 community placements submitted · Valkyrie · Kapkan · Denari</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let step=1;
+function show(n){
+  step=n;
+  [1,2,3,4].forEach(i=>$('p'+i).classList.toggle('on',i===n));
+  document.querySelectorAll('#steps .step').forEach((el,i)=>{
+    el.classList.toggle('done',i+1<n);
+    el.classList.toggle('on',i+1===n||n===4&&i===2);
+  });
+}
+/* step 1 — fake the drop */
+const dz=$('dz'),link=$('link'),next1=$('next1');
+let picked=false;
+function pick(name){picked=true;$('fname').textContent=name;next1.disabled=false;
+  dz.querySelector('.t1').textContent='✓ '+name;
+  dz.querySelector('.t2').innerHTML='ready to go — hit <b>Next</b>';
+  dz.style.borderColor='var(--teal)';dz.style.background='#f6faf4';}
+dz.onclick=()=>pick('kafe_valk_cocktail_cam.mp4');
+dz.ondragover=e=>{e.preventDefault();dz.classList.add('hot');};
+dz.ondragleave=()=>dz.classList.remove('hot');
+dz.ondrop=e=>{e.preventDefault();dz.classList.remove('hot');
+  pick(e.dataTransfer.files[0]?.name||'your_clip.mp4');};
+link.oninput=()=>{if(link.value.trim().length>10){picked=true;next1.disabled=false;
+  $('fname').textContent=link.value.trim().slice(0,40);}};
+next1.onclick=()=>show(2);
+/* step 2 — peek name typeahead */
+const KNOWN={Valkyrie:['Fireplace Cam','Bar Sign Cam','Freezer Vent Cam','Balcony Ledge Cam','Stairs Overwatch Cam'],
+  Kapkan:['Kitchen Door Trap','Back Stairs Trap','Service Door Trap','Freezer Door Trap'],
+  Denari:['Pillar Anchor Spot','Window Frame Spot','Hatch Edge Spot']};
+const pk=$('peek'),sug=$('sug'),pkhint=$('pkhint');
+let isNew=false;
+function pksug(){
+  const v=pk.value.trim().toLowerCase(), list=KNOWN[$('op').value]||[];
+  if(!v){sug.classList.remove('on');
+    pkhint.className='hint';pkhint.innerHTML='Start typing — we\'ll match it to a peek we already have.';return;}
+  const hits=list.filter(n=>n.toLowerCase().includes(v)).slice(0,4);
+  const exact=list.some(n=>n.toLowerCase()===v);
+  isNew=hits.length===0;
+  if(hits.length&&!exact){
+    sug.innerHTML=hits.map(n=>`<div class="s" data-n="${n}">📍 ${n}<span class="sg">✓</span></div>`).join('');
+    sug.classList.add('on');
+    sug.querySelectorAll('.s').forEach(el=>el.onclick=()=>{pk.value=el.dataset.n;sug.classList.remove('on');pksug();});
+  }else sug.classList.remove('on');
+  if(exact){pkhint.className='hint';pkhint.innerHTML='✓ Matched — your clip gets added to <b>'+pk.value+'</b>.';}
+  else if(isNew){pkhint.className='hint new';pkhint.innerHTML='👀 We don\'t have this one — submit it as a <b>NEW placement</b> and claim the <b>FIRST FIND</b> badge.';}
+}
+pk.addEventListener('input',pksug);
+$('op').addEventListener('change',pksug);
+document.addEventListener('click',e=>{if(!e.target.closest('.pkwrap'))sug.classList.remove('on');});
+$('next2').onclick=()=>{
+  const pkv=pk.value.trim()||'Fireplace Cam', mp=$('map').value;
+  $('prevpeek').textContent=pkv+(isNew?' 🆕':'');
+  $('prevmap').textContent=mp+' · '+$('site').value;
+  $('prevop').textContent=$('op').value[0];
+  $('prevlabel').textContent='YOUR NAME, LIVE ON THE '+pkv.toUpperCase()+' PLACEMENT:';
+  show(3);
+};
+/* step 3 */
+const who=$('who');
+who.oninput=()=>{
+  const v=who.value.trim();
+  $('credname').textContent=v||'you';
+  const av=$('av');
+  const c=(v[0]||'?').toUpperCase();
+  if(av.textContent!==c){av.textContent=c;
+    av.classList.remove('pop');void av.offsetWidth;av.classList.add('pop');}
+  $('submit').disabled=!v;
+};
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const cols=['#2e6f96','#3f8f7d','#69ab4a','#8fc3e0','#22597a','#f2ead8'];
+  for(let i=0;i<26;i++){
+    const s=document.createElement('div');s.className='cf';
+    s.style.left=(8+Math.random()*84)+'vw';
+    s.style.background=cols[i%cols.length];
+    document.body.appendChild(s);
+    const dur=1400+Math.random()*1200, drift=(Math.random()-.5)*160;
+    s.animate([
+      {transform:`translate(0,0) rotate(0deg)`,opacity:1},
+      {transform:`translate(${drift}px,${innerHeight+40}px) rotate(${480+Math.random()*540}deg)`,opacity:.85}
+    ],{duration:dur,easing:'cubic-bezier(.2,.6,.4,1)',delay:Math.random()*250}).onfinish=()=>s.remove();
+  }
+}
+$('submit').onclick=()=>{$('donewho').textContent=who.value.trim();show(4);confetti();};
+$('again').onclick=()=>location.reload();
+document.querySelectorAll('.back').forEach(b=>b.onclick=()=>show(+b.dataset.to));
+</script>
+</body>
+</html>
