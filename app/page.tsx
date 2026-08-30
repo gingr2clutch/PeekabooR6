@@ -39,34 +39,6 @@ export default async function Home() {
 
   return (
     <>
-      {/* Open at the top. The browser's default scrollRestoration is 'auto',
-          so a reload or a fresh hit restores wherever you last were — which,
-          now that blocks hold opacity 0 through their stagger, means staring
-          at a blank screen mid-page for over a second before content fades in
-          around you. Nothing here is caused by the animation itself: opacity
-          and transform never affect layout. This just declines the restore.
-
-          Deliberately narrow:
-            • Only 'navigate' and 'reload'. A 'back_forward' entry is skipped,
-              so returning to the homepage still lands where you were.
-            • Skipped entirely when there is a hash — /#maps from the Browse
-              Maps links on /top and /underrated must still jump to the grid.
-            • scrollRestoration is handed back to 'auto' on load, so this
-              affects only this entry and never other pages.
-          No layout is touched, so no shift and nothing near an ad moves. */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `(function(){try{
-if(location.hash)return;
-var n=performance.getEntriesByType('navigation')[0];
-var t=n&&n.type;
-if(t&&t!=='navigate'&&t!=='reload')return;
-history.scrollRestoration='manual';
-window.scrollTo(0,0);
-addEventListener('load',function(){window.scrollTo(0,0);try{history.scrollRestoration='auto';}catch(e){}},{once:true});
-}catch(e){}})()`,
-        }}
-      />
       {/* Pin-drop gate. Runs in document order before the body paints, so the
           blocks start hidden rather than flashing in at full opacity first.
           Bails on reduced motion, and on any repeat view in this tab — Next

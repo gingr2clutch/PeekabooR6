@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Space_Grotesk, Inter, IBM_Plex_Mono } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import { Analytics } from "@vercel/analytics/next";
 import { SiteFooter } from "@/components/SiteFooter";
 import { FavoritesProvider } from "@/components/FavoritesProvider";
@@ -71,6 +72,21 @@ export default function RootLayout({
           data-cfasync="false"
           src="https://scripts.scriptwrapper.com/tags/cf3a28fc-8c16-4c04-9940-96ae46697dfa.js"
         ></script>
+        {/* Every page opens at the top. scrollRestoration defaults to 'auto',
+            which makes the browser restore the previous position on reload and
+            on back/forward — that is what left routes starting partway down.
+            Set here, in <head>, so it applies before first paint on every
+            route rather than after hydration on one.
+
+            Note this is a global, session-wide setting: back/forward no longer
+            return to where the reader was. That is the explicit intent — every
+            navigation lands at 0. ScrollToTop in <body> handles the
+            client-side half. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{history.scrollRestoration='manual';}catch(e){}`,
+          }}
+        />
         {/* Scroll reveal. Self-contained — does not depend on the app bundle,
             so if React fails to hydrate, content is never left hidden. Bails
             (leaving everything visible) when reduced-motion is set or
@@ -104,6 +120,7 @@ export default function RootLayout({
         />
       </head>
       <body className="flex min-h-screen flex-col bg-bg text-ink">
+        <ScrollToTop />
         <FavoritesProvider>
           <div className="flex-1">{children}</div>
         </FavoritesProvider>
