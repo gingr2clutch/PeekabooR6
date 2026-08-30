@@ -256,12 +256,14 @@ export function SiteNav({
             aria-modal="true"
             aria-label="Site navigation"
             tabIndex={-1}
-            // 400px is a phone-first width. On desktop it left only ~258px for the
-            // label and subtitle after the 40px icon chip, the chevron and the
-            // padding, so the longer subtitles ("Counter every spawn peek") hit
-            // their truncate and ellipsed. Widening at lg: only — the drawer is a
-            // fixed overlay, so this moves nothing on the page behind it.
-            className="fixed inset-y-0 right-0 z-[100] flex w-[85vw] max-w-[400px] flex-col rounded-l-2xl bg-bg shadow-[-8px_0_30px_rgba(0,0,0,0.14)] outline-none lg:max-w-[460px]"
+            // Width is set at both ends because the item text was ellipsing at
+            // both. 85vw left only ~130px of text column at a 320px viewport
+            // (the 40px icon chip, chevron, gaps and padding take 142px), and
+            // the 400px desktop cap left ~258px. 92vw and 460px give ~152px and
+            // ~318px. The max-w caps out at a 435px viewport, so the vw change
+            // only ever affects phones. The drawer is a fixed overlay, so none
+            // of this moves the page behind it.
+            className="fixed inset-y-0 right-0 z-[100] flex w-[92vw] max-w-[400px] flex-col rounded-l-2xl bg-bg shadow-[-8px_0_30px_rgba(0,0,0,0.14)] outline-none lg:max-w-[460px]"
             style={{
               transform: reduce ? "none" : show ? "translateX(0)" : "translateX(100%)",
               opacity: reduce ? (show ? 1 : 0) : 1,
@@ -511,7 +513,14 @@ function MenuCard({
             </span>
           )}
         </span>
-        <span className="mt-0.5 block truncate text-[13px] text-muted">
+        {/* Wraps rather than truncating. The width bump above gets 320px to
+            ~152px of text column, which is within measurement error of what
+            the longest subtitle needs — so relying on width alone would leave
+            it ellipsing on the narrowest phones. Wrapping is exact. The label
+            above keeps truncate: those are short, and a two-line title would
+            read as a different item. min-h-[44px] already sets the row floor,
+            so a wrapped row grows rather than breaking the layout. */}
+        <span className="mt-0.5 block text-[13px] leading-snug text-muted">
           {item.subtitle}
         </span>
       </span>
