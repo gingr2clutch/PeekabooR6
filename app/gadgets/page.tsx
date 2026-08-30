@@ -3,7 +3,11 @@ import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { MapCardImage } from "@/components/MapCardImage";
 import { LiveStats } from "@/components/LiveStats";
-import { getGadgetStats, getMaps } from "@/lib/db";
+import {
+  getGadgetStats,
+  getMapIdsWithGadgetPlacements,
+  getMaps,
+} from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +29,13 @@ export const metadata: Metadata = {
 // this and duplicated the wrapper while reusing MapCardImage; this follows that
 // precedent, so the homepage stays untouched.
 export default async function GadgetsIndexPage() {
-  const [allMaps, stats] = await Promise.all([getMaps(), getGadgetStats()]);
+  const [allMaps, stats, mapsWithPlacements] = await Promise.all([
+    getMaps(),
+    getGadgetStats(),
+    // One query for the whole grid, not one per card — see the reader in
+    // lib/db.ts. Runs alongside the other two, so it adds no round trip.
+    getMapIdsWithGadgetPlacements(),
+  ]);
   const maps = allMaps.filter((m) => m.published);
 
   return (
@@ -83,34 +93,80 @@ export default async function GadgetsIndexPage() {
           <p className="text-center text-sm text-muted">No maps yet.</p>
         ) : (
           <ul className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-4">
-            {maps.map((map) => (
-              <li key={map.id}>
-                <Link
-                  href={`/gadgets/${map.slug}`}
-                  className="map-card group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card border-2 border-white text-center text-base font-medium elev-card outline-none transition-all duration-[180ms] ease-out focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.99]"
-                >
-                  {map.cover_image_url ? (
-                    <MapCardImage
-                      src={map.cover_image_url}
-                      published={map.published}
-                    />
-                  ) : null}
-                  {/* Taller, deeper scrim than the peek cards: the name sits on
-                      top of it, and a lighter one left thin type hard to read
-                      over pale covers. */}
+            {maps.map((map) => {
+              // Enabled purely on data: a map becomes clickable once it has a
+              // publicly visible placement, and greys itself out when it has
+              // none. Publishing content is the only step — no code change.
+              const hasContent = mapsWithPlacements.has(map.id);
+
+              // Shared by both branches so they cannot drift in size or
+              // position. The disabled card keeps every box-affecting class;
+              // only colour, opacity and interactivity differ, so swapping
+              // between them can never move the grid.
+              const cardBase =
+                "group relative flex aspect-square items-center justify-center overflow-hidden rounded-card border-2 border-white text-center text-base font-medium elev-card";
+
+              // published={hasContent} drives MapCardImage's existing
+              // greyscale branch — the same treatment the homepage already
+              // uses for its coming-soon maps, so no new styling is added.
+              const cover = map.cover_image_url ? (
+                <MapCardImage
+                  src={map.cover_image_url}
+                  published={hasContent}
+                />
+              ) : null;
+
+              // Taller, deeper scrim than the peek cards: the name sits on
+              // top of it, and a lighter one left thin type hard to read
+              // over pale covers.
+              const label = (
+                <>
                   <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
-                  {/* Blue edge on hover/focus — the Gadgets accent, drawn
-                      inside the card's overflow so it reads as a crisp ring
-                      rather than a glow. */}
-                  <span className="pointer-events-none absolute inset-0 rounded-card ring-0 ring-inset ring-blue transition-all duration-[180ms] ease-out group-hover:ring-2 group-focus-visible:ring-2" />
                   <span className="relative z-10 mt-auto w-full px-3 pb-2.5 text-left">
                     <span className="block truncate text-sm font-semibold text-white drop-shadow-sm sm:text-base">
                       {map.name}
                     </span>
                   </span>
-                </Link>
-              </li>
-            ))}
+                </>
+              );
+
+              if (!hasContent) {
+                return (
+                  <li key={map.id}>
+                    {/* A div rather than a link: there is nothing to navigate
+                        to, so it is unreachable by keyboard and announced as
+                        disabled instead of being a focusable dead end. */}
+                    <div
+                      aria-disabled="true"
+                      aria-label={`${map.name} — coming soon`}
+                      className={`${cardBase} !cursor-default opacity-60`}
+                    >
+                      {cover}
+                      {label}
+                      <span className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-btn border border-border bg-bg/90 px-2.5 py-1 text-[11px] uppercase tracking-wide text-muted backdrop-blur-sm">
+                        Coming soon
+                      </span>
+                    </div>
+                  </li>
+                );
+              }
+
+              return (
+                <li key={map.id}>
+                  <Link
+                    href={`/gadgets/${map.slug}`}
+                    className={`${cardBase} map-card cursor-pointer outline-none transition-all duration-[180ms] ease-out focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.99]`}
+                  >
+                    {cover}
+                    {/* Blue edge on hover/focus — the Gadgets accent, drawn
+                        inside the card's overflow so it reads as a crisp ring
+                        rather than a glow. */}
+                    <span className="pointer-events-none absolute inset-0 rounded-card ring-0 ring-inset ring-blue transition-all duration-[180ms] ease-out group-hover:ring-2 group-focus-visible:ring-2" />
+                    {label}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
       </main>

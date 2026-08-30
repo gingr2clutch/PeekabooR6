@@ -674,6 +674,35 @@ export type GadgetStats = {
   thumbsUp: number;
 };
 
+// Map ids that have at least one publicly visible gadget placement, for the
+// /gadgets grid's enabled/disabled split.
+//
+// One query for the whole grid, not one per card: every published placement is
+// fetched with just its site's map_id, then deduped here.
+//
+// The single .eq() is enough because supabasePublic() uses the anon key, so
+// RLS applies and gadget_sites carries a published = true policy — the !inner
+// join drops any placement whose SITE is still a draft. That matters: such a
+// placement is invisible on the public page, so counting it would leave a map
+// clickable that leads nowhere.
+export async function getMapIdsWithGadgetPlacements(): Promise<Set<string>> {
+  const { data, error } = await supabasePublic()
+    .from("gadget_placements")
+    .select("gadget_sites!inner(map_id)")
+    .eq("published", true);
+  if (error) throw error;
+
+  const rows = (data ?? []) as unknown as {
+    gadget_sites: { map_id: string } | null;
+  }[];
+
+  const ids = new Set<string>();
+  for (const r of rows) {
+    if (r.gadget_sites?.map_id) ids.add(r.gadget_sites.map_id);
+  }
+  return ids;
+}
+
 // Stat bar for /gadgets. One query: RLS already limits gadget_placements to
 // published rows, and the !inner join to gadget_sites drops any placement whose
 // site is still a draft — so "published gadget content" means both are live,
