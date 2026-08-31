@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
@@ -6,22 +5,14 @@ import {
   MAX_UPLOAD_BYTES,
   isAllowedSourceUrl,
 } from "@/lib/submit-config";
+import {
+  RATE_LIMIT,
+  RATE_WINDOW_MS,
+  hashIp,
+  splitStoragePath,
+} from "@/lib/submission-limits";
 
 export const dynamic = "force-dynamic";
-
-const RATE_LIMIT = 5; // submissions per IP per hour
-const RATE_WINDOW_MS = 60 * 60 * 1000;
-
-// Hashed, never stored raw: the address is only ever compared, so keeping it
-// in the clear would be personal data with no added use. Salted with a
-// server-only secret so the hashes are not reversible from a list of IPs.
-function hashIp(req: Request): string | null {
-  const fwd = req.headers.get("x-forwarded-for");
-  const ip = fwd?.split(",")[0]?.trim() || req.headers.get("x-real-ip");
-  if (!ip) return null;
-  const salt = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-  return createHash("sha256").update(`${salt}:${ip}`).digest("hex");
-}
 
 // Strip anything that would let a display name break out of the text it is
 // rendered into, and hold it to the demo's 24-character limit.
@@ -81,13 +72,15 @@ export async function POST(req: Request) {
   // client declared when it asked for the signed URL. A caller that lied about
   // type or size at that step fails here.
   if (file_path) {
-    if (!file_path.startsWith("pending/") || file_path.includes("..")) {
-      return bad("Bad request");
-    }
-    const name = file_path.slice("pending/".length);
+    // Handles both key shapes: the nested pending/<hash>/<uuid> written now,
+    // and the flat pending/<uuid> rows created before uploads were
+    // attributable. Also rejects traversal.
+    const parts = splitStoragePath(file_path);
+    if (!parts) return bad("Bad request");
+    const { dir, name } = parts;
     const { data: found, error: listErr } = await sb.storage
       .from("submissions")
-      .list("pending", { search: name, limit: 1 });
+      .list(dir, { search: name, limit: 1 });
 
     const obj = found?.find((o) => o.name === name);
     if (listErr || !obj) return bad("Upload not found. Try again.");
