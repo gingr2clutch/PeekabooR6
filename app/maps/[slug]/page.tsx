@@ -59,7 +59,12 @@ export default async function MapPage({
   const map = await getMapBySlug(params.slug);
   if (!map || !map.published) notFound();
 
-  const floors = await getFloorsForMap(map.id);
+  // gemIds is a sitewide list and does not depend on this map, so it rides
+  // along with the floors lookup instead of waiting for it.
+  const [floors, gemIds] = await Promise.all([
+    getFloorsForMap(map.id),
+    getUnderratedTopIds(),
+  ]);
 
   const floorIds = floors.map((f) => f.id);
   const peekCountByFloor = new Map<string, number>();
@@ -71,14 +76,25 @@ export default async function MapPage({
   let mapBTier = 0; // B+, B, B-
   let mapCTier = 0; // C+, C, C-
   let latestPeekAt: string | null = null;
-  if (floorIds.length > 0) {
-    const { data: peeks } = await supabasePublic()
-      .from("peeks")
-      .select(
-        "floor_id, created_at, vote_count, worked_votes, base_success_rate"
-      )
-      .in("floor_id", floorIds)
-      .eq("published", true);
+  // These three all key off floorIds and nothing else, so they run together.
+  // getTopPeekForMap and getRankedPeeksForMap both short-circuit on an empty
+  // floor list, so no guard is needed around them.
+  const [peekRollupRes, topPeek, rankedPeeks] = await Promise.all([
+    floorIds.length > 0
+      ? supabasePublic()
+          .from("peeks")
+          .select(
+            "floor_id, created_at, vote_count, worked_votes, base_success_rate"
+          )
+          .in("floor_id", floorIds)
+          .eq("published", true)
+      : Promise.resolve({ data: [] }),
+    getTopPeekForMap(floorIds),
+    getRankedPeeksForMap(floorIds),
+  ]);
+
+  {
+    const peeks = peekRollupRes.data;
     for (const p of (peeks ?? []) as {
       floor_id: string;
       created_at: string;
@@ -108,12 +124,6 @@ export default async function MapPage({
       }
     }
   }
-
-  const topPeek = await getTopPeekForMap(floorIds);
-  const rankedPeeks = await getRankedPeeksForMap(floorIds);
-  // The sitewide top-10 hidden gems — used to badge cards and to decide which
-  // (if any) of this map's peeks show in "Underrated on this map".
-  const gemIds = await getUnderratedTopIds();
 
   // Batched 7-vs-7 trend direction for the ranked-list arrows (one query).
   const rankedTrends = await getSnapshotsForPeeks(

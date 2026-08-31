@@ -181,9 +181,17 @@ export default async function PeekDetailPage({
     notFound();
   }
 
-  const peek = await fetchBySlug(params.slug);
+  // The session read does not depend on the peek, so it runs alongside it.
+  // Each promise carries its own catch: a rejection inside Promise.all would
+  // reject the whole batch, and neither of these may ever 500 a public page.
+  // Pro tier is not launched, so every peek is fully public.
+  const [peek, user] = await Promise.all([
+    fetchBySlug(params.slug),
+    getCurrentUser().catch(() => null),
+  ]);
   if (!peek || !peek.floors || !peek.floors.maps || !peek.floors.maps.published)
     notFound();
+  const locked = false;
 
   const floor = peek.floors;
   const map = floor.maps;
@@ -196,27 +204,21 @@ export default async function PeekDetailPage({
   const steps = Array.isArray(peek.instructions) ? peek.instructions : [];
   const hasInstructionsContent = steps.length > 0 || !!peek.tip;
 
-  // A public peek page must never 500 over an auth hiccup — fall back to the
-  // logged-out view. (Pro tier isn't launched, so every peek is fully public.)
-  let user: Awaited<ReturnType<typeof getCurrentUser>> = null;
-  try {
-    user = await getCurrentUser();
-  } catch {
-    user = null;
-  }
-  const locked = false;
-
-  // Logged-in voters get a replaceable vote with a 7-day cadence; read their
-  // latest vote so the buttons render the right state on first paint. Never let
-  // an auth/DB hiccup 500 the page — fall back to "no vote yet".
-  let myVote: Awaited<ReturnType<typeof getMyLatestPeekVote>> = null;
-  if (user && !locked) {
-    try {
-      myVote = await getMyLatestPeekVote(peek.id, user.id);
-    } catch {
-      myVote = null;
-    }
-  }
+  // Three reads that all key off the peek and nothing else, so they run
+  // together rather than in series.
+  //   myVote      — the voter's latest vote, so the buttons render correctly on
+  //                 first paint. Falls back to "no vote yet" on any hiccup.
+  //   sameFloor   — candidates for the "close by" list.
+  //   trendPoints — 30 days of effectiveness history for the chart.
+  const [myVote, sameFloor, trendPoints] = await Promise.all([
+    user && !locked
+      ? getMyLatestPeekVote(peek.id, user.id).catch(() => null)
+      : Promise.resolve(null),
+    locked
+      ? Promise.resolve([])
+      : fetchSameFloorPeeks(peek.floor_id, peek.id),
+    getSnapshotsForPeek(peek.id, 30),
+  ]);
 
   // Don't emit VideoObject JSON-LD for locked content (would expose the clip).
   const videoJsonLd = locked ? null : buildVideoJsonLd(peek, map, floor);
@@ -224,9 +226,6 @@ export default async function PeekDetailPage({
 
   // Closest 4 peeks on this floor by Euclidean distance over (x_pct, y_pct).
   // Skipped when locked — nearby positions are part of the gated detail.
-  const sameFloor = locked
-    ? []
-    : await fetchSameFloorPeeks(peek.floor_id, peek.id);
   const nearby = sameFloor
     .map((p) => {
       const ok = Number.isFinite(p.x_pct) && Number.isFinite(p.y_pct);
@@ -238,9 +237,6 @@ export default async function PeekDetailPage({
     .slice(0, 4)
     .map((x) => x.p);
 
-  // Effectiveness history (server-side; peek_snapshots is RLS-locked to the
-  // service role). 30 days for the trend chart.
-  const trendPoints = await getSnapshotsForPeek(peek.id, 30);
   // Effectiveness rating for the hero grade tile + measured stat line.
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   // Batched arrows for the "close by" list — one query, direction per peek.

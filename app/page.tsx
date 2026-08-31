@@ -16,11 +16,15 @@ import type { CSSProperties } from "react";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const all = await getMaps();
-  const stats = await getHomeStats();
-  const activity = await getMapVoteActivity();
-  // Published-peek counts per map → the map card status line ("N peeks · N S-tier").
-  const mapPeekCounts = await getMapPeekCounts();
+  // All four are independent — none takes another's output — so they run
+  // together rather than in series. Matches how /gadgets already does it.
+  const [all, stats, activity, mapPeekCounts] = await Promise.all([
+    getMaps(),
+    getHomeStats(),
+    getMapVoteActivity(),
+    // Published-peek counts per map → the map card status line ("N peeks").
+    getMapPeekCounts(),
+  ]);
   const votesFor = (id: string) =>
     activity.get(id) ?? { sevenDayVotes: 0, allTimeVotes: 0 };
 
