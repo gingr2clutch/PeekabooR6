@@ -206,7 +206,10 @@ export function SiteNav({
           so the inline desktop list is gone. Everything it held (Maps, Top,
           Underrated, Partner) already appears in SECTIONS below, so nothing is
           lost. Order puts the hamburger last, i.e. hard right. */}
-      <div className="flex items-center gap-0.5">
+      {/* Reveals as one unit after the intro flip — AuthNavIcon and
+          SiteSearch take no className, so the cluster staggers together
+          rather than icon by icon. Inert off the homepage. */}
+      <div className="reveal flex items-center gap-0.5">
         {/* Compact Discord button, desktop only. Below lg: the homepage keeps
             its full-width Discord bar instead (app/page.tsx hides that bar at
             lg:), so the two never both appear. */}

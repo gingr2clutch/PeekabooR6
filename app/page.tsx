@@ -9,6 +9,7 @@ import {
   getMapVoteActivity,
 } from "@/lib/map-activity";
 import { BackToTop } from "@/components/BackToTop";
+import PeekabooIntro from "@/components/PeekabooIntro";
 import { SubmitSpot } from "@/components/SubmitSpot";
 import { PEEK_SUBMIT } from "@/lib/submit-config";
 import type { CSSProperties } from "react";
@@ -45,37 +46,30 @@ export default async function Home() {
 
   return (
     <>
-      {/* Pin-drop gate. Runs in document order before the body paints, so the
-          blocks start hidden rather than flashing in at full opacity first.
-          Bails on reduced motion, and on any repeat view in this tab — Next
-          remounts this page on back-navigation from a map, and replaying the
-          drop every time would feel broken. sessionStorage (not local) so a
-          fresh tab gets the animation again. */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `(function(){try{
-if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-if(sessionStorage.getItem('pinDropPlayed'))return;
-sessionStorage.setItem('pinDropPlayed','1');
-document.documentElement.classList.add('pin-ready');
-}catch(e){}})()`,
+      {/* Cinematic lock-on intro. Plays once per session, skips itself under
+          prefers-reduced-motion and on hash arrivals (/#submit must land on
+          the form). Replaces the pin-drop load animation — two session-gated
+          load-ins fighting over the same blocks made no sense, so the reveal
+          stagger below is now the only homepage entrance. */}
+      <PeekabooIntro
+        stats={{
+          maps: stats.mapsLive,
+          peeks: stats.gradedPeeks,
+          votes: stats.communityVotes,
+          tier: stats.saTierPeeks,
         }}
       />
-      {/* Block 1 of the pin drop. A plain wrapper — PageHeader is shared with
-          every other page, so the marker goes here, not inside it. */}
-      <div data-pin style={{ "--pin-delay": "0ms" } as CSSProperties}>
-        <PageHeader home />
-      </div>
+      <PageHeader home />
       <main className="mx-auto max-w-6xl px-6 pb-20 pt-10">
         {/* Homepage hero. The drifting map filmstrip is anchored to the Maps
             heading below (not here) so it stays clear of the stats card. */}
         <div>
           {/* lg: hides this bar — on desktop the Discord link lives in the top
               nav next to the profile icon (components/SiteNav.tsx) instead. */}
-          <div data-pin style={{ "--pin-delay": "140ms" } as CSSProperties} className="mb-5 lg:hidden">
+          <div className="reveal mb-5 lg:hidden" style={{ "--i": 1 } as CSSProperties}>
             <DiscordBanner />
         </div>
-        <div data-pin style={{ "--pin-delay": "280ms" } as CSSProperties} className="mb-5">
+        <div data-intro-target="stats" className="mb-5">
           {/* DOM/source order stays Maps, Peeks, Votes, S-Tier (keeps the
               desktop single-row order); the `order-*` classes reshuffle the
               mobile 2x2 to Peeks | Votes (top) / Maps | S-Tier (bottom), and
@@ -90,10 +84,10 @@ document.documentElement.classList.add('pin-ready');
             ]}
           />
         </div>
-        <div data-pin style={{ "--pin-delay": "420ms" } as CSSProperties} className="mb-8 text-center lg:mb-10">
-          <h1 className="text-3xl font-semibold tracking-tight lg:text-5xl">Maps</h1>
-          <p className="mt-2 text-lg font-medium text-[#6f716a] lg:mt-3 lg:text-[1.75rem]">Click the map you're on</p>
-          <div className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand lg:mt-4 lg:text-sm">
+        <div className="mb-8 text-center lg:mb-10">
+          <h1 className="reveal text-3xl font-semibold tracking-tight lg:text-5xl" style={{ "--i": 2 } as CSSProperties}>Maps</h1>
+          <p className="reveal mt-2 text-lg font-medium text-[#6f716a] lg:mt-3 lg:text-[1.75rem]" style={{ "--i": 3 } as CSSProperties}>Click the map you're on</p>
+          <div className="reveal mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand lg:mt-4 lg:text-sm" style={{ "--i": 4 } as CSSProperties}>
             <span className="relative flex h-2 w-2" aria-hidden>
               <span className="relative inline-flex h-2 w-2 rounded-full bg-brand" />
             </span>
@@ -104,11 +98,13 @@ document.documentElement.classList.add('pin-ready');
 
         <ul
           id="maps"
-          data-pin
-          style={{ "--pin-delay": "560ms" } as CSSProperties}
           className="grid scroll-mt-24 grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4"
         >
-          {maps.map((map) => {
+          {maps.map((map, i) => {
+            // Stagger resets every 4 cards so rows sweep in together — a
+            // running index would put the last card ~2s behind for no one to
+            // see (it is below the fold when the intro hands off).
+            const revealStyle = { "--i": 5 + (i % 4) } as CSSProperties;
             const hasCover = !!map.cover_image_url;
             // Live per-map counts → one short status line under the name.
             const counts = mapPeekCounts.get(map.id);
@@ -151,7 +147,7 @@ document.documentElement.classList.add('pin-ready');
 
             if (map.published) {
               return (
-                <li key={map.id}>
+                <li key={map.id} className="reveal" style={revealStyle}>
                   <MapCardLink
                     href={`/maps/${map.slug}`}
                     className={`${cardBase} map-card border-2 border-white ${
@@ -166,7 +162,7 @@ document.documentElement.classList.add('pin-ready');
             }
 
             return (
-              <li key={map.id}>
+              <li key={map.id} className="reveal" style={revealStyle}>
                 <div
                   aria-disabled="true"
                   className={`${cardBase} !cursor-not-allowed border-2 border-white ${

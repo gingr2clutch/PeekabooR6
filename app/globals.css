@@ -440,41 +440,6 @@ h4 {
   }
 }
 
-/* --- Homepage pin drop ----------------------------------------------------
-   Load-in for the homepage's six blocks. Each drops 16px with a firm stop:
-   opacity 360ms linear, transform 590ms on a curve that decelerates without
-   overshooting, both starting together and staggered 140ms in document order.
-   Every value is double the original spec — half speed, same shape.
-
-   Transform/opacity only, and the animation is applied to elements that are
-   already in their final layout position, so nothing reflows — no CLS.
-
-   Gated on `.pin-ready`, which an inline script on the homepage adds to <html>
-   before first paint. If that script never runs (JS disabled, reduced motion,
-   or a repeat visit in the same tab) the rule never matches and every block
-   renders in its final state — content can never be stranded invisible. */
-.pin-ready [data-pin] {
-  animation:
-    pin-fade 360ms linear both,
-    pin-drop 590ms cubic-bezier(0.55, 0.06, 0.28, 1) both;
-  animation-delay: var(--pin-delay, 0ms);
-}
-@keyframes pin-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes pin-drop {
-  from { transform: translateY(-16px); }
-  to { transform: none; }
-}
-/* Belt-and-suspenders: the script already bails on reduced motion, but if the
-   class is present for any other reason, never animate. */
-@media (prefers-reduced-motion: reduce) {
-  .pin-ready [data-pin] {
-    animation: none;
-  }
-}
-
 /* --- Peek Roulette --------------------------------------------------------
    Felt/gold palette, scoped to .pr-* so it never leaks into the site's
    cream/dark-green/orange language. Orange is deliberately absent here — it
@@ -2680,4 +2645,26 @@ h4 {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* --- Cinematic homepage intro (PeekabooIntro) ------------------------------
+   Used by components/PeekabooIntro.tsx to hide the real nav/stats until the
+   flip lands, then stagger the rest of the homepage in.
+
+   This REPLACES the pin-drop load animation, which was removed with it: both
+   were once-per-session homepage load-ins animating the same blocks, and the
+   two would have fought over the same elements' opacity. */
+
+body.intro-locked { overflow: hidden; }
+
+/* real elements the clones fly onto — kept in layout, invisible until handoff */
+body[data-intro-pending] [data-intro-target] { visibility: hidden; }
+
+/* anything else that fades up after the flip: className="reveal" style={{ '--i': n }} */
+body[data-intro-pending] .reveal { opacity: 0; transform: translateY(16px); }
+body.is-live .reveal {
+  opacity: 1;
+  transform: none;
+  transition: opacity .7s cubic-bezier(.2, .7, .2, 1) calc(var(--i, 0) * 90ms),
+              transform .8s cubic-bezier(.2, .7, .2, 1) calc(var(--i, 0) * 90ms);
 }

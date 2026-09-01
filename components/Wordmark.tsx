@@ -41,6 +41,10 @@ export function Wordmark({ href = "/", showText = false, large = false }: Props)
         width={36}
         height={36}
         aria-hidden
+        // Intro flip target. Inert everywhere except the homepage while the
+        // intro is playing — visibility:hidden only applies under
+        // body[data-intro-pending], which only PeekabooIntro sets.
+        data-intro-target="mark"
         className={`h-8 w-8 md:h-9 md:w-9 ${large ? "lg:h-11 lg:w-11" : ""}`}
       >
         <rect width="64" height="64" rx="12" fill="#ffffff" />
@@ -59,7 +63,7 @@ export function Wordmark({ href = "/", showText = false, large = false }: Props)
           would hide it. Deciding it here rather than at the 29 call sites keeps
           every page file untouched. */}
       {(showText || gadgets) && (
-        <span>
+        <span data-intro-target="word">
           <span className="text-ink">peekaboo</span>
           <span className={gadgets ? "text-blue" : "text-brand"}>R6</span>
         </span>

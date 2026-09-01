@@ -17,7 +17,7 @@ export function PageHeader({ home = false }: Props) {
     <header className="flex items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-6">
       <Wordmark showText={home} large={home} />
       <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
-        <ModeToggle className="hidden sm:inline-flex" home={home} />
+        <ModeToggle className="reveal hidden sm:inline-flex" home={home} />
         <SiteNav version={pkg.version} home={home} />
       </div>
     </header>
