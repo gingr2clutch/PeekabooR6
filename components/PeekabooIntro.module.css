@@ -26,6 +26,7 @@
   --w: clamp(42px, 7.2vw, 78px);
 
   position: fixed; inset: 0; z-index: 1000;
+  visibility: visible; /* opts out of the boot-phase body hide */
   background: var(--cream); color: var(--ink); overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;

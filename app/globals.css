@@ -2657,6 +2657,12 @@ h4 {
 
 html.intro-locked { overflow: hidden; }
 
+/* Boot phase: everything hidden until the intro overlay is mounted. This is
+   what stops the Suspense skeleton (and anything else without intro classes)
+   painting before the overlay exists. visibility, not display, so the intro
+   can set itself visible from inside the hidden body. */
+html[data-intro-boot] body { visibility: hidden; }
+
 /* real elements the clones fly onto — kept in layout, invisible until handoff */
 html[data-intro-pending] [data-intro-target] { visibility: hidden; }
 

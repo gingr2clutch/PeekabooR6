@@ -100,6 +100,7 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
     setActive(play);
     const h = document.documentElement;
     if (!play) {
+      h.removeAttribute('data-intro-boot');
       // The pre-paint gate in the layout head may have hidden the page under
       // the same conditions — if it and this ever disagree, un-hide here so
       // the page can never stay blank.
@@ -115,6 +116,10 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
 
   useEffect(() => {
     if (!active) return;
+    // The overlay is in the DOM by the time this effect runs (active flipped
+    // true last render), so the wholesale boot hide can lift — the overlay
+    // now covers the screen and the per-element flags take over beneath it.
+    document.documentElement.removeAttribute('data-intro-boot');
     const el = root.current!;
     const add = (c: string) => setPhase((p) => new Set(p).add(c));
     const at = (ms: number, fn: () => void) => timers.current.push(window.setTimeout(fn, ms));
@@ -155,6 +160,7 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
       doneRef.current = true;
       timers.current.forEach(clearTimeout);
       try { sessionStorage.setItem(SESSION_KEY, '1'); } catch {}
+      document.documentElement.removeAttribute('data-intro-boot');
       document.documentElement.removeAttribute('data-intro-pending');
       document.documentElement.classList.add('is-live');
       document.documentElement.classList.remove('intro-locked');
@@ -202,6 +208,7 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
       // body keeps intro-locked (no scroll) and data-intro-pending (invisible
       // nav + stats) forever. Restore the page exactly as finish() would.
       if (!doneRef.current) {
+        document.documentElement.removeAttribute('data-intro-boot');
         document.documentElement.removeAttribute('data-intro-pending');
         document.documentElement.classList.remove('intro-locked');
         document.documentElement.classList.add('is-live');
@@ -235,7 +242,7 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
           </div>
         </div>
 
-        <div className={s.tag}>Know where they peek before they do.</div>
+        <div className={s.tag}>Rainbow Six Siege database</div>
 
         <div className={s.statsWrap}>
           <div ref={statsEl} className={`${s.stats} ${s.flip} ${clone}`}>

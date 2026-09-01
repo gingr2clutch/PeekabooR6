@@ -58,6 +58,34 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {/* Cinematic-intro gate — deliberately the FIRST thing in <head> so
+            nothing can run or paint before it. The intro component decides
+            whether to play in a useEffect, which is after first paint, and the
+            homepage streams behind a Suspense shell whose skeleton grid was
+            flashing before the overlay mounted. This mirrors shouldPlay()
+            exactly and sets two flags pre-paint:
+              data-intro-boot    — hides the whole <body> (covers the skeleton
+                                   and anything else without intro classes);
+                                   the overlay opts back in via visibility.
+              data-intro-pending — the per-element hiding the handoff needs.
+            Flags live on <html> because document.body does not exist yet in
+            <head>. The 9s dead-man's switch un-hides everything if hydration
+            ever fails — a permanently blank site is the one failure this
+            pattern cannot be allowed to have. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{
+if(location.pathname!=='/'||location.hash)return;
+if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+if(sessionStorage.getItem('pbr6_intro_seen')==='1')return;
+var h=document.documentElement;
+h.setAttribute('data-intro-boot','');
+h.setAttribute('data-intro-pending','');
+h.classList.add('intro-locked');
+setTimeout(function(){if(!h.classList.contains('is-live')){h.removeAttribute('data-intro-boot');h.removeAttribute('data-intro-pending');h.classList.remove('intro-locked');h.classList.add('is-live');}},9000);
+}catch(e){}})()`,
+          }}
+        />
         {/* Open connections to the image hosts early: wsrv.nl serves resized
             cover WebPs, R2 serves the rest (floor blueprints, peek posters). */}
         <link rel="preconnect" href="https://wsrv.nl" />
@@ -86,28 +114,6 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `try{history.scrollRestoration='manual';}catch(e){}`,
-          }}
-        />
-        {/* Cinematic-intro gate. The intro component decides whether to play
-            inside a useEffect, which is AFTER first paint — so the real page
-            (and the Suspense loading shell's header) flashed before the
-            overlay mounted. This runs pre-paint, mirrors shouldPlay() exactly
-            (homepage only, no hash, no reduced motion, once per session), and
-            hides the intro-managed elements before anything is drawn. Flags
-            live on <html> because document.body does not exist yet in <head>.
-            The 9s fallback un-hides everything if hydration ever fails, so a
-            broken bundle can never leave the page blank. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{
-if(location.pathname!=='/'||location.hash)return;
-if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-if(sessionStorage.getItem('pbr6_intro_seen')==='1')return;
-var h=document.documentElement;
-h.setAttribute('data-intro-pending','');
-h.classList.add('intro-locked');
-setTimeout(function(){if(!h.classList.contains('is-live')){h.removeAttribute('data-intro-pending');h.classList.remove('intro-locked');h.classList.add('is-live');}},9000);
-}catch(e){}})()`,
           }}
         />
         {/* Scroll reveal. Self-contained — does not depend on the app bundle,
