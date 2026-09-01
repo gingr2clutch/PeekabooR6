@@ -98,9 +98,9 @@
 .lbl { margin-top: 4px; font-size: 13px; font-weight: 600; letter-spacing: .12em; color: var(--orange); text-transform: uppercase; }
 
 /* progress + skip */
-.prog { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--orange); transform: scaleX(0); transform-origin: left; transition: transform 5s linear; }
+.prog { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--orange); transform: scaleX(0); transform-origin: left; transition: transform 6.2s linear; }
 .isOn .prog { transform: scaleX(1); }
-.isExit .prog { opacity: 0; transition: transform 5s linear, opacity .3s ease; }
+.isExit .prog { opacity: 0; transition: transform 6.2s linear, opacity .3s ease; }
 .skip { position: absolute; right: 28px; bottom: calc(10vh + 22px); font: inherit; font-size: 14px; font-weight: 600; color: var(--grey-soft); background: none; border: 0; cursor: pointer; opacity: 0; transition: opacity .5s ease .9s; }
 .isOn .skip { opacity: 1; }
 .isExit .skip { opacity: 0; transition-delay: 0s; }

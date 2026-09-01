@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * PeekabooIntro — 5s cinematic lock-on intro that flies into the real nav + stats bar.
+ * PeekabooIntro — ~6s cinematic lock-on intro that flies into the real nav + stats bar.
  *
  * Wiring (3 things):
  *  1. Render <PeekabooIntro stats={{ maps, peeks, votes, tier }} /> once, at the top of the homepage.
@@ -21,13 +21,13 @@ const SESSION_KEY = 'pbr6_intro_seen';
 
 // ms → class to add
 const TIMELINE: Array<[number, string]> = [
-  [150, 'isDot'],
-  [950, 'isLock'],
-  [1550, 'isWord'],
-  [2100, 'isR6'],
-  [2350, 'isTag'],
-  [2750, 'isStats'],
-  [3850, 'isExit'],
+  [180, 'isDot'],
+  [1200, 'isLock'],
+  [2350, 'isWord'],
+  [3050, 'isR6'],
+  [3350, 'isTag'],
+  [3850, 'isStats'],
+  [5200, 'isExit'],
 ];
 
 const POS = { tl: 'pTL', tr: 'pTR', br: 'pBR', bl: 'pBL' } as const;
@@ -163,22 +163,22 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
     requestAnimationFrame(() => {
       add('isOn');
       TIMELINE.forEach(([ms, cls]) => at(ms, () => add(cls)));
-      at(2750, () => countUp(950));
-      at(3850, () => {
-        flip(mark.current, target('mark'), 780);
-        flip(word.current, target('word'), 780);
-        flip(statsEl.current, target('stats'), 820);
+      at(3850, () => countUp(1200));
+      at(5200, () => {
+        flip(mark.current, target('mark'), 950);
+        flip(word.current, target('word'), 950);
+        flip(statsEl.current, target('stats'), 1000);
       });
-      at(4000, () => document.body.classList.add('is-live'));
+      at(5350, () => document.body.classList.add('is-live'));
       // Swap clones for the real elements in the same frame. By now the
       // overlay's background is transparent (isExit) and the page has been
       // staggering in beneath since 4000ms, so nothing fades — the flown
       // pieces simply ARE the nav from this frame on.
-      at(4680, () => {
+      at(6220, () => {
         document.body.removeAttribute('data-intro-pending');
         setHanded(true);
       });
-      at(4720, () => finish(false));
+      at(6260, () => finish(false));
     });
 
     const skip = () => finish(true);
