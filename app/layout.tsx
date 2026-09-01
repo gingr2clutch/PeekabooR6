@@ -88,6 +88,28 @@ export default function RootLayout({
             __html: `try{history.scrollRestoration='manual';}catch(e){}`,
           }}
         />
+        {/* Cinematic-intro gate. The intro component decides whether to play
+            inside a useEffect, which is AFTER first paint — so the real page
+            (and the Suspense loading shell's header) flashed before the
+            overlay mounted. This runs pre-paint, mirrors shouldPlay() exactly
+            (homepage only, no hash, no reduced motion, once per session), and
+            hides the intro-managed elements before anything is drawn. Flags
+            live on <html> because document.body does not exist yet in <head>.
+            The 9s fallback un-hides everything if hydration ever fails, so a
+            broken bundle can never leave the page blank. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{
+if(location.pathname!=='/'||location.hash)return;
+if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+if(sessionStorage.getItem('pbr6_intro_seen')==='1')return;
+var h=document.documentElement;
+h.setAttribute('data-intro-pending','');
+h.classList.add('intro-locked');
+setTimeout(function(){if(!h.classList.contains('is-live')){h.removeAttribute('data-intro-pending');h.classList.remove('intro-locked');h.classList.add('is-live');}},9000);
+}catch(e){}})()`,
+          }}
+        />
         {/* Scroll reveal. Self-contained — does not depend on the app bundle,
             so if React fails to hydrate, content is never left hidden. Bails
             (leaving everything visible) when reduced-motion is set or

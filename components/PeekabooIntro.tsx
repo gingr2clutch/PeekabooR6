@@ -98,12 +98,18 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
   useEffect(() => {
     const play = shouldPlay();
     setActive(play);
+    const h = document.documentElement;
     if (!play) {
-      document.body.classList.add('is-live');
+      // The pre-paint gate in the layout head may have hidden the page under
+      // the same conditions — if it and this ever disagree, un-hide here so
+      // the page can never stay blank.
+      h.removeAttribute('data-intro-pending');
+      h.classList.remove('intro-locked');
+      h.classList.add('is-live');
       return;
     }
-    document.body.setAttribute('data-intro-pending', '');
-    document.body.classList.add('intro-locked');
+    h.setAttribute('data-intro-pending', '');
+    h.classList.add('intro-locked');
     window.scrollTo(0, 0);
   }, []);
 
@@ -149,9 +155,9 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
       doneRef.current = true;
       timers.current.forEach(clearTimeout);
       try { sessionStorage.setItem(SESSION_KEY, '1'); } catch {}
-      document.body.removeAttribute('data-intro-pending');
-      document.body.classList.add('is-live');
-      document.body.classList.remove('intro-locked');
+      document.documentElement.removeAttribute('data-intro-pending');
+      document.documentElement.classList.add('is-live');
+      document.documentElement.classList.remove('intro-locked');
       if (skipped) {
         setGone(true);
         window.setTimeout(() => setActive(false), 400);
@@ -169,13 +175,13 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
         flip(word.current, target('word'), 950);
         flip(statsEl.current, target('stats'), 1000);
       });
-      at(5350, () => document.body.classList.add('is-live'));
+      at(5350, () => document.documentElement.classList.add('is-live'));
       // Swap clones for the real elements in the same frame. By now the
       // overlay's background is transparent (isExit) and the page has been
       // staggering in beneath since 4000ms, so nothing fades — the flown
       // pieces simply ARE the nav from this frame on.
       at(6220, () => {
-        document.body.removeAttribute('data-intro-pending');
+        document.documentElement.removeAttribute('data-intro-pending');
         setHanded(true);
       });
       at(6260, () => finish(false));
@@ -196,9 +202,9 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
       // body keeps intro-locked (no scroll) and data-intro-pending (invisible
       // nav + stats) forever. Restore the page exactly as finish() would.
       if (!doneRef.current) {
-        document.body.removeAttribute('data-intro-pending');
-        document.body.classList.remove('intro-locked');
-        document.body.classList.add('is-live');
+        document.documentElement.removeAttribute('data-intro-pending');
+        document.documentElement.classList.remove('intro-locked');
+        document.documentElement.classList.add('is-live');
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

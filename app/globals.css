@@ -2655,14 +2655,14 @@ h4 {
    were once-per-session homepage load-ins animating the same blocks, and the
    two would have fought over the same elements' opacity. */
 
-body.intro-locked { overflow: hidden; }
+html.intro-locked { overflow: hidden; }
 
 /* real elements the clones fly onto — kept in layout, invisible until handoff */
-body[data-intro-pending] [data-intro-target] { visibility: hidden; }
+html[data-intro-pending] [data-intro-target] { visibility: hidden; }
 
 /* anything else that fades up after the flip: className="reveal" style={{ '--i': n }} */
-body[data-intro-pending] .reveal { opacity: 0; transform: translateY(16px); }
-body.is-live .reveal {
+html[data-intro-pending] .reveal { opacity: 0; transform: translateY(16px); }
+html.is-live .reveal {
   opacity: 1;
   transform: none;
   transition: opacity .7s cubic-bezier(.2, .7, .2, 1) calc(var(--i, 0) * 90ms),
