@@ -55,6 +55,12 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${spaceGrotesk.variable} ${inter.variable} ${plexMono.variable}`}
+      // Inline, not from the stylesheet: on a hard reload the browser clears
+      // the viewport to default white and holds it until the CSS loads. An
+      // inline background applies the instant the tag is parsed, so the very
+      // first painted frame is cream — which is what makes the intro read as
+      // one continuous surface instead of white, then cream.
+      style={{ backgroundColor: "#f6f3ea" }}
       suppressHydrationWarning
     >
       <head>
