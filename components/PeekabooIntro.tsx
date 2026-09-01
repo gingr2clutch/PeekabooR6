@@ -121,6 +121,23 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
     // now covers the screen and the per-element flags take over beneath it.
     document.documentElement.removeAttribute('data-intro-boot');
     const el = root.current!;
+
+    // The clone's box copies the REAL stats bar, measured, not guessed. The
+    // real bar is in this same render tree (visibility:hidden still has
+    // layout), so its rect is readable now — before the clone is ever shown.
+    // With identical outer boxes the flip is translate-only and the swap
+    // cannot show a size adjustment.
+    {
+      const t = document.querySelector<HTMLElement>('[data-intro-target="stats"]');
+      const c = statsEl.current;
+      if (t && c) {
+        const r = t.getBoundingClientRect();
+        if (r.width > 0) {
+          c.style.width = `${r.width}px`;
+          c.style.height = `${r.height}px`;
+        }
+      }
+    }
     const add = (c: string) => setPhase((p) => new Set(p).add(c));
     const at = (ms: number, fn: () => void) => timers.current.push(window.setTimeout(fn, ms));
     const target = (name: string) => document.querySelector<HTMLElement>(`[data-intro-target="${name}"]`);
@@ -131,8 +148,11 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
       const b = to.getBoundingClientRect();
       from.animate(
         [
-          { transform: 'translate(0,0) scale(1)' },
-          { transform: `translate(${b.left - a.left}px,${b.top - a.top}px) scale(${b.width / a.width})` },
+          { transform: 'translate(0,0) scale(1,1)' },
+          // X and Y scaled independently: a uniform scale lands the top-left
+          // and width but leaves any height mismatch as a visible jump at the
+          // swap. Ratios are near 1, so no distortion is perceptible.
+          { transform: `translate(${b.left - a.left}px,${b.top - a.top}px) scale(${b.width / a.width},${b.height / a.height})` },
         ],
         { duration: ms, easing: 'cubic-bezier(.7,0,.15,1)', fill: 'forwards' },
       );
