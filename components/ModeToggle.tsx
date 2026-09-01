@@ -23,6 +23,7 @@ export function ModeToggle({
   className,
   onNavigate,
   home = false,
+  variant = "segmented",
 }: {
   /* Header passes "hidden sm:inline-flex": at 320px the header row is already
      over budget before this exists (wordmark + three 44px icons ≈ 294px in
@@ -35,6 +36,11 @@ export function ModeToggle({
   /* Homepage header only: one size step at lg to match the larger wordmark
      there. Defaults false, so every other page and the drawer are unchanged. */
   home?: boolean;
+  /* "segmented" is the compact pill for the header. "split" renders the two
+     modes as separate side-by-side cards in the drawer's own card language —
+     each a full 44px tap target with its accent, instead of two tiny options
+     crammed into one pill. */
+  variant?: "segmented" | "split";
 }) {
   const pathname = usePathname();
   const gadgets = isGadgetsPath(pathname);
@@ -43,6 +49,38 @@ export function ModeToggle({
     { label: "Peeks", href: "/", active: !gadgets },
     { label: "Gadgets", href: "/gadgets", active: gadgets },
   ];
+
+  if (variant === "split") {
+    return (
+      <div role="group" aria-label="Content mode" className={`grid grid-cols-2 gap-2 ${className ?? ""}`}>
+        {options.map((o) => {
+          const accent =
+            o.label === "Gadgets"
+              ? { dot: "bg-blue", card: "border-blue/40 bg-blue/[0.05]" }
+              : { dot: "bg-brand", card: "border-brand/40 bg-brand/[0.05]" };
+          return (
+            <Link
+              key={o.label}
+              href={o.href}
+              aria-current={o.active ? "page" : undefined}
+              onClick={onNavigate}
+              className={`flex min-h-[44px] items-center justify-center gap-2 rounded-xl border p-2.5 text-[14px] font-semibold transition-[transform,background-color,border-color] duration-[120ms] ease-out active:scale-[0.98] ${
+                o.active
+                  ? `${accent.card} text-ink`
+                  : "border-border bg-card text-muted active:bg-ink/[0.04]"
+              }`}
+            >
+              <span
+                aria-hidden
+                className={`h-1.5 w-1.5 shrink-0 rounded-full ${o.active ? accent.dot : "bg-border"}`}
+              />
+              {o.label}
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div

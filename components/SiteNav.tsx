@@ -345,7 +345,7 @@ export function SiteNav({
                     to navigate anyway. Hidden at sm: and up, where the header
                     copy takes over. */}
                 <div className="mb-5 sm:hidden" style={revealStyle(stagger++)}>
-                  <ModeToggle className="flex w-full justify-center" onNavigate={closeDrawer} />
+                  <ModeToggle variant="split" onNavigate={closeDrawer} />
                 </div>
 
                 {SECTIONS.map((section) => {
