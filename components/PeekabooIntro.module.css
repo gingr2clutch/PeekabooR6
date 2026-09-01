@@ -29,7 +29,13 @@
   background: var(--cream); color: var(--ink); overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background-color .5s ease;
 }
+/* Handoff without a crossfade: at isExit the overlay's cream goes transparent
+   (identical to the page background, so nothing visibly changes) and the real
+   page staggers in BENEATH the flying clones. When the clones swap for the
+   real nav there is nothing left to fade — the swap is one frame, in place. */
+.isExit { background-color: transparent; pointer-events: none; }
 .isGone { opacity: 0; pointer-events: none; transition: opacity .35s ease; }
 
 /* letterbox bands */
@@ -38,17 +44,6 @@
 .bandB { bottom: 0; transform-origin: bottom; }
 .isOn .band { transform: scaleY(1); }
 .isExit .band { transform: scaleY(0); transition-duration: .6s; }
-
-/* scope hairlines */
-.hair { position: absolute; background: var(--ink); opacity: 0; transition: transform .7s cubic-bezier(.3, .8, .2, 1), opacity .35s ease; }
-.hairHA, .hairHB { left: 0; right: 0; height: 1px; }
-.hairVA, .hairVB { top: 0; bottom: 0; width: 1px; }
-.hairHA { top: var(--my1); transform: translateY(-45vh); }
-.hairHB { top: var(--my2); transform: translateY(45vh); }
-.hairVA { left: var(--mx1); transform: translateX(-45vw); }
-.hairVB { left: var(--mx2); transform: translateX(45vw); }
-.isFrame .hair { opacity: .22; transform: none; }
-.isLock .hair { opacity: 0; transition: opacity .4s ease .1s, transform .7s; }
 
 /* stage */
 .stage { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 6vh; }
@@ -81,7 +76,7 @@
 @keyframes tick { 0% { transform: scale(1); } 35% { transform: scale(.965); } 100% { transform: scale(1); } }
 
 /* wordmark — real nav is font-semibold tracking-tight, R6 in brand */
-.word { font-size: var(--w); font-weight: 600; letter-spacing: -.025em; line-height: 1; white-space: nowrap; clip-path: inset(0 100% 0 0); transform: translateX(-6px); }
+.word { font-size: var(--w); font-weight: 600; letter-spacing: -.025em; line-height: 1.35; white-space: nowrap; clip-path: inset(0 100% 0 0); transform: translateX(-6px); }
 .word b { display: inline-block; font-weight: 600; color: var(--orange); opacity: 0; transform: scale(1.35) translateY(2px); }
 .isWord .word { clip-path: inset(0 -2% 0 0); transform: none; transition: clip-path .7s cubic-bezier(.65, 0, .15, 1), transform .7s cubic-bezier(.65, 0, .15, 1); }
 .isR6 .word b { opacity: 1; transform: none; transition: opacity .28s ease, transform .5s cubic-bezier(.2, .9, .2, 1.25); }

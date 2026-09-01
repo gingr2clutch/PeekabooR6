@@ -22,7 +22,6 @@ const SESSION_KEY = 'pbr6_intro_seen';
 // ms → class to add
 const TIMELINE: Array<[number, string]> = [
   [150, 'isDot'],
-  [300, 'isFrame'],
   [950, 'isLock'],
   [1550, 'isWord'],
   [2100, 'isR6'],
@@ -115,14 +114,6 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
     const at = (ms: number, fn: () => void) => timers.current.push(window.setTimeout(fn, ms));
     const target = (name: string) => document.querySelector<HTMLElement>(`[data-intro-target="${name}"]`);
 
-    const placeHairlines = () => {
-      const r = mark.current!.getBoundingClientRect();
-      el.style.setProperty('--my1', `${r.top}px`);
-      el.style.setProperty('--my2', `${r.bottom}px`);
-      el.style.setProperty('--mx1', `${r.left}px`);
-      el.style.setProperty('--mx2', `${r.right}px`);
-    };
-
     const flip = (from: HTMLElement | null, to: HTMLElement | null, ms: number) => {
       if (!from || !to) return;
       const a = from.getBoundingClientRect();
@@ -169,7 +160,6 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
       }
     };
 
-    placeHairlines();
     requestAnimationFrame(() => {
       add('isOn');
       TIMELINE.forEach(([ms, cls]) => at(ms, () => add(cls)));
@@ -180,12 +170,15 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
         flip(statsEl.current, target('stats'), 820);
       });
       at(4000, () => document.body.classList.add('is-live'));
+      // Swap clones for the real elements in the same frame. By now the
+      // overlay's background is transparent (isExit) and the page has been
+      // staggering in beneath since 4000ms, so nothing fades — the flown
+      // pieces simply ARE the nav from this frame on.
       at(4680, () => {
         document.body.removeAttribute('data-intro-pending');
         setHanded(true);
       });
-      at(4750, () => setGone(true));
-      at(5150, () => finish(false));
+      at(4720, () => finish(false));
     });
 
     const skip = () => finish(true);
@@ -193,15 +186,12 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
       if (['Tab', 'Shift', 'Alt', 'Meta', 'Control'].includes(e.key)) return;
       skip();
     };
-    const onResize = () => { if (!doneRef.current && !el.classList.contains(s.isExit)) placeHairlines(); };
     el.addEventListener('click', skip);
     window.addEventListener('keydown', onKey);
-    window.addEventListener('resize', onResize);
     return () => {
       timers.current.forEach(clearTimeout);
       el.removeEventListener('click', skip);
       window.removeEventListener('keydown', onKey);
-      window.removeEventListener('resize', onResize);
       // Unmount before finish() — e.g. browser-back mid-intro. Without this the
       // body keeps intro-locked (no scroll) and data-intro-pending (invisible
       // nav + stats) forever. Restore the page exactly as finish() would.
@@ -223,10 +213,6 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
     <div ref={root} className={cls} role="status" aria-label="peekabooR6 is loading">
       <div className={`${s.band} ${s.bandT}`} />
       <div className={`${s.band} ${s.bandB}`} />
-      <div className={`${s.hair} ${s.hairHA}`} />
-      <div className={`${s.hair} ${s.hairHB}`} />
-      <div className={`${s.hair} ${s.hairVA}`} />
-      <div className={`${s.hair} ${s.hairVB}`} />
 
       <div className={s.stage}>
         <div className={s.lockup}>
