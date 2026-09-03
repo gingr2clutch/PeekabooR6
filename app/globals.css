@@ -2674,3 +2674,36 @@ html.is-live .reveal {
   transition: opacity .7s cubic-bezier(.2, .7, .2, 1) calc(var(--i, 0) * 90ms),
               transform .8s cubic-bezier(.2, .7, .2, 1) calc(var(--i, 0) * 90ms);
 }
+
+/* --- Mediavine disclosure (privacy policy) --------------------------------
+   The block is injected as raw HTML so their health check sees their exact
+   wording, which means it arrives with no utility classes. These rules give
+   it the same rhythm as the hand-written sections around it. Scoped to
+   .mv-disclosure so nothing here can reach other markup. */
+.mv-disclosure h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: normal;
+}
+.mv-disclosure p + p,
+.mv-disclosure ul + p,
+.mv-disclosure p + ul {
+  margin-top: 0.75rem;
+}
+.mv-disclosure ul {
+  margin-top: 0.5rem;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+.mv-disclosure li + li {
+  margin-top: 0.25rem;
+}
+.mv-disclosure a {
+  color: #f2640e;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.mv-disclosure a:hover {
+  text-decoration-thickness: 2px;
+}
