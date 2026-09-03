@@ -29,12 +29,6 @@ export function SiteFooter() {
         <span aria-hidden>·</span>
         <span>© 2026 peekabooR6</span>
       </div>
-      <div className="mx-auto mt-3 flex max-w-6xl flex-wrap items-center justify-center gap-x-2 text-center">
-        <span>More from the network:</span>
-        <a href="https://how-it-ends.com" className={linkCls} rel="noopener">
-          How It Ends — daily clip prediction game
-        </a>
-      </div>
     </footer>
   );
 }
