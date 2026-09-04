@@ -178,8 +178,10 @@ async function CommunityTab() {
     <div className="space-y-4">
       <p className="text-sm text-muted">
         Clips and screenshots from the submit sections on the homepage and
-        /gadgets. Approve and reject only set status for now — attaching an
-        approved clip to a peek page is a later step.
+        /gadgets. Edit &amp; publish turns a peek submission into a real peek —
+        it opens the peek form prefilled, moves the clip into peek storage, and
+        approves the submission on save. Approve and reject only set status,
+        which is all a gadget submission can do for now.
       </p>
       {rows.length === 0 ? (
         <p className="rounded-card border border-border bg-card p-6 text-sm text-muted">

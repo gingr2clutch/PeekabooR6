@@ -13,9 +13,13 @@ import { copySubmissionClipToR2 } from "@/lib/submission-media";
 // draft peeks on approve. Sharing a file would invite one to be edited for the
 // other's sake.
 //
-// PHASE 1 ONLY: approve flips status and nothing else. Attaching an approved
-// clip to a peek page and rendering "Clipped by {name}" is phase 2, so
-// linked_peek_id stays null and no peek row is created, read or altered here.
+// The plain approve/reject/reopen/delete actions below only set status — they
+// create nothing. publishSubmissionAction at the end of this file is the one
+// that builds a real peek, moves the clip and sets linked_peek_id.
+//
+// Still outstanding: contributor attribution. contributor_id exists on the
+// table (migration 032) but nothing writes it yet, so "Clipped by {name}" has
+// no source of truth and the leaderboard has nothing to rank.
 //
 // Form-action signature in Next 14 must return void | Promise<void>, so errors
 // are thrown — Next surfaces them and the row stays put for a retry.
