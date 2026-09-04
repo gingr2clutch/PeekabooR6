@@ -23,6 +23,7 @@ export type Row = {
   source_url: string | null;
   file_path: string | null;
   status: "pending" | "approved" | "rejected";
+  linked_peek_id: string | null;
 };
 
 
@@ -132,19 +133,35 @@ export function CommunityCard({ r, previewUrl }: { r: Row; previewUrl?: string }
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
+        {/* Shown on approved rows as well as pending: approving only sets a
+            status, so an approved submission that never became a peek is
+            exactly the thing still waiting to be published. What retires the
+            button is linked_peek_id, not the status.
+
+            Peek submissions only — the flow builds a peek, and there is no
+            equivalent creation path for a gadget placement yet. */}
+        {r.kind === "peek" && !r.linked_peek_id && r.status !== "rejected" && (
+          <Link
+            href={`/admin/submissions/${r.id}/publish`}
+            className="rounded-btn bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-[#d95a0c]"
+          >
+            Edit &amp; publish
+          </Link>
+        )}
+
+        {/* Once it has a peek, the card should still be able to reach it —
+            otherwise hiding the button above leaves no route to the result. */}
+        {r.linked_peek_id && (
+          <Link
+            href={`/admin/peeks/${r.linked_peek_id}/edit`}
+            className="rounded-btn border border-border px-3 py-1.5 text-sm text-ink hover:border-brand hover:text-brand"
+          >
+            View peek →
+          </Link>
+        )}
+
         {r.status === "pending" ? (
           <>
-            {/* Only offered for peek submissions: the flow builds a peek, and
-                there is no equivalent creation path for a gadget placement
-                yet. Gadget rows keep plain approve/reject. */}
-            {r.kind === "peek" && (
-              <Link
-                href={`/admin/submissions/${r.id}/publish`}
-                className="rounded-btn bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-[#d95a0c]"
-              >
-                Edit &amp; publish
-              </Link>
-            )}
             <form action={approveCommunitySubmissionAction}>
               <input type="hidden" name="id" value={r.id} />
               <button className="rounded-btn bg-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-brand">
