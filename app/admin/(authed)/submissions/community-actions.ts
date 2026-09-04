@@ -1,7 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
+import { createPeek } from "../peeks/actions";
+import { copySubmissionClipToR2 } from "@/lib/submission-media";
 
 // Approve/reject for the community submission queue.
 //
@@ -70,4 +73,85 @@ export async function deleteCommunitySubmissionAction(formData: FormData) {
     .eq("id", id);
   if (error) throw error;
   revalidate();
+}
+
+/**
+ * Turns an approved-in-principle submission into a real peek.
+ *
+ * The peek is created through createPeek — the same function /admin/peeks/new
+ * uses — so every validation rule, default and side effect is identical. No
+ * peek row is written here directly.
+ *
+ * Order is deliberate: copy the clip FIRST, then create the peek, then approve
+ * the submission. The copy is the flakiest step, so it runs while there is
+ * still nothing to undo. That gives:
+ *   copy fails    -> nothing created, submission still pending
+ *   create fails  -> an orphaned R2 object, submission still pending
+ *   approve fails -> peek exists (with video), submission still pending
+ * In every case the submission stays pending and comes back around, which is
+ * the guarantee that matters: it is never marked handled unless the peek is
+ * genuinely there.
+ *
+ * There is no cross-service transaction available here, so errors name the
+ * peek id whenever one exists — a silent half-finish is the thing to avoid.
+ *
+ * The submission id arrives via .bind() rather than a hidden input, so the
+ * bound action matches PeekForm's existing action prop exactly and PeekForm
+ * needs no changes.
+ */
+export async function publishSubmissionAction(
+  submissionId: string,
+  formData: FormData
+) {
+  if (!submissionId) throw new Error("submission_id required");
+
+  const sb = supabaseAdmin();
+  const { data: sub, error: subErr } = await sb
+    .from("community_submissions")
+    .select("id, kind, file_path, source_url, status")
+    .eq("id", submissionId)
+    .maybeSingle();
+  if (subErr) throw subErr;
+  if (!sub) throw new Error("Submission not found.");
+
+  // 1. Clip first. A link-only submission has nothing to copy and publishes
+  //    without a video — the admin can attach one on the peek's edit page.
+  let videoUrl: string | null = null;
+  if (sub.file_path) {
+    try {
+      videoUrl = await copySubmissionClipToR2(sub.file_path as string);
+    } catch (e) {
+      throw new Error(
+        `Clip copy failed, so nothing was created and the submission is still pending. ${
+          e instanceof Error ? e.message : String(e)
+        }`
+      );
+    }
+  }
+
+  // 2. Then the peek, through the shared creation path.
+  let peekId: string;
+  try {
+    peekId = await createPeek(formData, videoUrl);
+  } catch (e) {
+    if (e instanceof Error && e.message === "MISSING_REQUIRED_FIELD") {
+      throw new Error("Pick a floor and give the peek a name before publishing.");
+    }
+    throw e;
+  }
+
+  // 3. Only now is the submission handled.
+  const { error: updErr } = await sb
+    .from("community_submissions")
+    .update({ status: "approved", linked_peek_id: peekId })
+    .eq("id", submissionId);
+  if (updErr) {
+    throw new Error(
+      `Peek ${peekId} was created, but marking the submission approved failed — it is still pending. ${updErr.message}`
+    );
+  }
+
+  revalidatePath("/admin/submissions");
+  revalidatePath("/admin/peeks");
+  redirect(`/admin/submissions?published=${peekId}`);
 }

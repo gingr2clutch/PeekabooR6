@@ -50,9 +50,25 @@ async function mapSlugForFloor(floorId: string): Promise<string> {
   return maps?.slug ?? "";
 }
 
-export async function createPeekAction(formData: FormData) {
+/**
+ * Creates a peek from a PeekForm submission and returns its id.
+ *
+ * Split out of createPeekAction so a second caller — publishing a community
+ * submission — can create a peek through this exact path and then keep
+ * working with the new id. createPeekAction below is now a thin wrapper that
+ * redirects; every parse rule, default and side effect lives here, so the two
+ * callers cannot drift.
+ *
+ * videoUrl is optional and defaults to null, which is what the plain
+ * /admin/peeks/new form passes — that path had no video field before and
+ * behaves identically now.
+ */
+export async function createPeek(
+  formData: FormData,
+  videoUrl: string | null = null
+): Promise<string> {
   console.log(
-    "[createPeekAction] start. form keys:",
+    "[createPeek] start. form keys:",
     Array.from(formData.keys())
   );
 
@@ -89,7 +105,7 @@ export async function createPeekAction(formData: FormData) {
       ((maxRow?.queue_position as number | null | undefined) ?? 0) + 1;
   }
 
-  console.log("[createPeekAction] parsed payload:", {
+  console.log("[createPeek] parsed payload:", {
     floor_id,
     name,
     x_pct,
@@ -103,11 +119,15 @@ export async function createPeekAction(formData: FormData) {
   });
 
   if (!floor_id || !name) {
-    console.warn("[createPeekAction] aborting — missing required field", {
+    console.warn("[createPeek] aborting — missing required field", {
       hasFloorId: !!floor_id,
       hasName: !!name,
     });
-    return;
+    // Throws rather than returning early: this function owes its caller an id,
+    // and the old silent return would become a confusing undefined downstream.
+    // createPeekAction catches it below to preserve its previous no-op
+    // behaviour for the plain new-peek form.
+    throw new Error("MISSING_REQUIRED_FIELD");
   }
 
   const mapSlug = await mapSlugForFloor(floor_id);
@@ -132,10 +152,11 @@ export async function createPeekAction(formData: FormData) {
       queue_position,
       is_pro_only,
       instructions: instructions.length ? instructions : null,
+      video_url: videoUrl,
     })
     .select("id")
     .single();
-  console.log("[createPeekAction] insert result:", { data, error });
+  console.log("[createPeek] insert result:", { data, error });
   if (error) throw error;
 
   // Announce in Discord if it was created already-published. Idempotent and
@@ -144,7 +165,22 @@ export async function createPeekAction(formData: FormData) {
   if (published) await postPeekToDiscord(data.id);
 
   revalidatePath("/admin/peeks");
-  redirect(`/admin/peeks/${data.id}/edit`);
+  return data.id as string;
+}
+
+// The /admin/peeks/new form action. Unchanged in behaviour: create, then
+// redirect to the new peek's edit page.
+export async function createPeekAction(formData: FormData) {
+  let id: string;
+  try {
+    id = await createPeek(formData);
+  } catch (e) {
+    // Preserves the previous behaviour of this form: a missing floor or name
+    // was a silent no-op, not an error page. Anything else still propagates.
+    if (e instanceof Error && e.message === "MISSING_REQUIRED_FIELD") return;
+    throw e;
+  }
+  redirect(`/admin/peeks/${id}/edit`);
 }
 
 export async function updatePeekAction(formData: FormData) {

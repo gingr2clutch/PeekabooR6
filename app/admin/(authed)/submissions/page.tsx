@@ -40,13 +40,14 @@ const STATUS_ORDER: Record<CommunityRow["status"], number> = {
   rejected: 2,
 };
 
-type Params = { searchParams?: { tab?: string } };
+type Params = { searchParams?: { tab?: string; published?: string } };
 
 // Two queues on one page. The tab lives in the URL rather than client state so
 // that a server action's revalidate — which re-renders the page from scratch —
 // lands the reader back where they were instead of snapping to the default.
 export default async function SubmissionsPage({ searchParams }: Params) {
   const tab = searchParams?.tab === "legacy" ? "legacy" : "community";
+  const publishedId = searchParams?.published;
   const sb = supabaseAdmin();
 
   // Counts for both badges regardless of which tab is open; rows only for the
@@ -82,6 +83,18 @@ export default async function SubmissionsPage({ searchParams }: Params) {
           />
         </nav>
       </div>
+
+      {publishedId && (
+        <div className="rounded-card border border-teal/40 bg-teal/[0.06] p-3 text-sm text-ink">
+          Peek created and submission approved.{" "}
+          <Link
+            href={`/admin/peeks/${publishedId}/edit`}
+            className="font-medium text-brand hover:underline"
+          >
+            Open the peek →
+          </Link>
+        </div>
+      )}
 
       {tab === "community" ? <CommunityTab /> : <LegacyTab />}
     </div>

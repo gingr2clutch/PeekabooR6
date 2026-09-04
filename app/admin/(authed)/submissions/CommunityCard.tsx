@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import {
   approveCommunitySubmissionAction,
@@ -133,6 +134,17 @@ export function CommunityCard({ r, previewUrl }: { r: Row; previewUrl?: string }
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {r.status === "pending" ? (
           <>
+            {/* Only offered for peek submissions: the flow builds a peek, and
+                there is no equivalent creation path for a gadget placement
+                yet. Gadget rows keep plain approve/reject. */}
+            {r.kind === "peek" && (
+              <Link
+                href={`/admin/submissions/${r.id}/publish`}
+                className="rounded-btn bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-[#d95a0c]"
+              >
+                Edit &amp; publish
+              </Link>
+            )}
             <form action={approveCommunitySubmissionAction}>
               <input type="hidden" name="id" value={r.id} />
               <button className="rounded-btn bg-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-brand">
