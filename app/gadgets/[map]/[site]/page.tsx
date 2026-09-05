@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
+import { OperatorIcon } from "@/components/OperatorIcon";
 import {
   getMaps,
   getGadgetSiteBySlug,
@@ -73,7 +74,15 @@ export default async function SiteOperatorsPage({ params }: Params) {
                 href={`/gadgets/${map.slug}/${site.slug}/${o.slug}`}
                 className="flex items-center justify-between gap-3 rounded-card border border-border bg-card px-4 py-4 transition-colors duration-150 ease-out hover:border-blue"
               >
-                <span className="min-w-0">
+                {/* 56px on phones, 64px from lg. The wrapper reserves the box
+                    before anything loads, so a later icon shifts nothing. */}
+                <OperatorIcon
+                  slug={o.slug}
+                  name={o.name}
+                  size={64}
+                  className="h-14 w-14 lg:h-16 lg:w-16"
+                />
+                <span className="min-w-0 flex-1">
                   <span className="block text-lg font-semibold text-ink">
                     {o.name}
                   </span>

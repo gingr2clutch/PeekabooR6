@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
+import { OperatorIcon } from "@/components/OperatorIcon";
 import { BackToTop } from "@/components/BackToTop";
 import {
   getMapBySlug,
@@ -71,6 +72,14 @@ export default async function OperatorPlacementsPage({ params }: Params) {
           <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-blue">
             {map.name} · {site.name}
           </p>
+          {/* Same component as the picker cards, deliberately smaller — the
+              header is a confirmation of the choice, not the choice itself. */}
+          <OperatorIcon
+            slug={op.slug}
+            name={op.name}
+            size={40}
+            className="mx-auto mt-3"
+          />
           <h1 className="mt-2 text-3xl font-semibold tracking-tight lg:text-4xl">
             {op.name}
           </h1>
