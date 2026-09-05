@@ -77,7 +77,7 @@ export default async function SiteOperatorsPage({ params }: Params) {
                 {/* 56px on phones, 64px from lg. The wrapper reserves the box
                     before anything loads, so a later icon shifts nothing. */}
                 <OperatorIcon
-                  slug={o.slug}
+                  iconUrl={o.icon_url}
                   name={o.name}
                   size={64}
                   className="h-14 w-14 lg:h-16 lg:w-16"

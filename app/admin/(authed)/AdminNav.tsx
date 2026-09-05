@@ -22,7 +22,10 @@ const PEEK_LINKS = [
   { href: "/admin/creators", label: "Creators" },
 ];
 
-const GADGET_LINKS = [{ href: "/admin/gadgets", label: "Gadgets" }];
+const GADGET_LINKS = [
+  { href: "/admin/gadgets", label: "Gadgets" },
+  { href: "/admin/gadgets/operators", label: "Operators" },
+];
 
 export function AdminNav() {
   const pathname = usePathname();

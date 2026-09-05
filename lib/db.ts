@@ -540,6 +540,8 @@ export type GadgetOperator = {
   id: string;
   slug: string;
   name: string;
+  // Public R2 URL of the operator icon; null renders the initial disc.
+  icon_url: string | null;
   role: string | null;
   gadget_name: string | null;
   display_order: number;
@@ -621,7 +623,7 @@ export async function getGadgetOperatorBySlug(
 ): Promise<GadgetOperator | null> {
   const { data, error } = await supabasePublic()
     .from("gadget_operators")
-    .select("id, slug, name, role, gadget_name, display_order")
+    .select("id, slug, name, role, gadget_name, display_order, icon_url")
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw error;
@@ -636,7 +638,7 @@ export async function getGadgetOperatorsForSite(
   const { data, error } = await supabasePublic()
     .from("gadget_placements")
     .select(
-      "operator_id, gadget_operators!inner(id, slug, name, role, gadget_name, display_order)"
+      "operator_id, gadget_operators!inner(id, slug, name, role, gadget_name, display_order, icon_url)"
     )
     .eq("site_id", siteId);
   if (error) throw error;

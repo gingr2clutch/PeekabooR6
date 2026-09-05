@@ -75,7 +75,7 @@ export default async function OperatorPlacementsPage({ params }: Params) {
           {/* Same component as the picker cards, deliberately smaller — the
               header is a confirmation of the choice, not the choice itself. */}
           <OperatorIcon
-            slug={op.slug}
+            iconUrl={op.icon_url}
             name={op.name}
             size={40}
             className="mx-auto mt-3"
