@@ -1,11 +1,17 @@
 import Link from "next/link";
 import { ConfirmButton } from "@/components/ConfirmButton";
+import { ContributorField } from "@/components/ContributorField";
+import type { Contributor } from "@/lib/contributors";
 import {
   approveCommunitySubmissionAction,
   deleteCommunitySubmissionAction,
   reopenCommunitySubmissionAction,
   rejectCommunitySubmissionAction,
 } from "./community-actions";
+import {
+  attachContributorAction,
+  detachContributorAction,
+} from "./contributor-actions";
 
 // One row of the community queue. Split out of the page so the tab shell stays
 // readable with two very different card layouts in it.
@@ -24,6 +30,7 @@ export type Row = {
   file_path: string | null;
   status: "pending" | "approved" | "rejected";
   linked_peek_id: string | null;
+  contributor_id: string | null;
 };
 
 
@@ -36,7 +43,19 @@ function formatDate(s: string): string {
 }
 
 
-export function CommunityCard({ r, previewUrl }: { r: Row; previewUrl?: string }) {
+export function CommunityCard({
+  r,
+  previewUrl,
+  contributors,
+  creditedTo,
+}: {
+  r: Row;
+  previewUrl?: string;
+  /** Suggestion list for the attach field. */
+  contributors: Contributor[];
+  /** The contributor already credited, if any. */
+  creditedTo?: Contributor;
+}) {
   const labelCls =
     "text-[10px] font-semibold uppercase tracking-[0.12em] text-muted";
   const valueCls = "mt-0.5 text-sm text-ink break-words";
@@ -129,6 +148,52 @@ export function CommunityCard({ r, previewUrl }: { r: Row; previewUrl?: string }
           </a>
         ) : (
           <div className={valueCls}>—</div>
+        )}
+      </div>
+
+      {/* Credit. Deliberately separate from Approve: attribution is a fact
+          about who filmed the clip, not a verdict on it, so it can be set on a
+          pending row and survives approve/reject/reopen untouched.
+
+          This is also the only attribution path a gadget submission has —
+          Edit & publish is peek-only, so without this control gadget clips
+          could never be credited and would never reach the leaderboard. */}
+      <div className="mt-4 border-t border-border pt-4">
+        <div className={labelCls}>Credit</div>
+        {r.contributor_id ? (
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <span className="rounded-btn bg-teal/10 px-2 py-0.5 text-[11px] font-semibold text-teal">
+              {creditedTo ? creditedTo.display_name : "Credited"}
+            </span>
+            {creditedTo && (
+              <span className="font-mono text-[11px] text-muted">
+                /contributors/{creditedTo.slug}
+              </span>
+            )}
+            <form action={detachContributorAction}>
+              <input type="hidden" name="submission_id" value={r.id} />
+              <button className="rounded-btn border border-border px-2 py-1 text-xs text-muted hover:border-brand hover:text-brand">
+                Remove credit
+              </button>
+            </form>
+          </div>
+        ) : (
+          <form
+            action={attachContributorAction}
+            className="mt-1.5 flex flex-wrap items-end gap-2"
+          >
+            <input type="hidden" name="submission_id" value={r.id} />
+            <div className="min-w-[12rem] flex-1">
+              <ContributorField
+                contributors={contributors}
+                defaultValue={r.submitter_name}
+                label="Prefilled with what they typed — check it before attaching"
+              />
+            </div>
+            <button className="rounded-btn border border-border px-3 py-2 text-sm text-ink hover:border-brand hover:text-brand">
+              Attach
+            </button>
+          </form>
         )}
       </div>
 

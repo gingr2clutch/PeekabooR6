@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createPeek } from "../peeks/actions";
 import { copySubmissionClipToR2 } from "@/lib/submission-media";
+import { resolveContributor } from "@/lib/contributors";
 
 // Approve/reject for the community submission queue.
 //
@@ -17,9 +18,10 @@ import { copySubmissionClipToR2 } from "@/lib/submission-media";
 // create nothing. publishSubmissionAction at the end of this file is the one
 // that builds a real peek, moves the clip and sets linked_peek_id.
 //
-// Still outstanding: contributor attribution. contributor_id exists on the
-// table (migration 032) but nothing writes it yet, so "Clipped by {name}" has
-// no source of truth and the leaderboard has nothing to rank.
+// Attribution lives in ./contributor-actions.ts, which can attach credit to any
+// submission at any time. publishSubmissionAction accepts a contributor name
+// too, so crediting and publishing are one action on the screen where both
+// decisions are being made anyway.
 //
 // Form-action signature in Next 14 must return void | Promise<void>, so errors
 // are thrown — Next surfaces them and the row stays put for a retry.
@@ -144,10 +146,38 @@ export async function publishSubmissionAction(
     throw e;
   }
 
-  // 3. Only now is the submission handled.
+  // 3. Credit, if the admin named someone. Resolved here rather than up front
+  //    so a failure cannot leave a contributor row behind for a peek that was
+  //    never created; the cost is that a bad name fails after the peek exists,
+  //    which is the same recoverable state as every other late failure below.
+  //
+  //    An empty field is not an error. Plenty of submissions arrive from people
+  //    who do not want credit, and forcing a name would produce junk rows.
+  const contributorName = String(formData.get("contributor_name") ?? "").trim();
+  let contributorId: string | null = null;
+  if (contributorName) {
+    try {
+      const { contributor } = await resolveContributor(contributorName);
+      contributorId = contributor.id;
+    } catch (e) {
+      throw new Error(
+        `Peek ${peekId} was created, but the contributor could not be resolved, so the submission is still pending. ${
+          e instanceof Error ? e.message : String(e)
+        }`
+      );
+    }
+  }
+
+  // 4. Only now is the submission handled. Credit and approval go in one
+  //    statement so an approved submission can never be missing the attribution
+  //    that was chosen in the same breath.
   const { error: updErr } = await sb
     .from("community_submissions")
-    .update({ status: "approved", linked_peek_id: peekId })
+    .update({
+      status: "approved",
+      linked_peek_id: peekId,
+      ...(contributorId ? { contributor_id: contributorId } : {}),
+    })
     .eq("id", submissionId);
   if (updErr) {
     throw new Error(

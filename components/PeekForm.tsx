@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { displayRate } from "@/lib/rate";
 import { InstructionsEditor } from "./InstructionsEditor";
 import { PinPlacer } from "./PinPlacer";
@@ -24,6 +24,11 @@ type Props = {
   // Shows the "Add to release queue" checkbox (new-peek form only). A queued
   // peek is saved unpublished with a queue slot, then auto-published on schedule.
   showQueue?: boolean;
+  // Extra inputs rendered inside the form, just above the submit button, so
+  // their values reach the same action without this component knowing what they
+  // are. Added for the publish-a-submission screen, which needs a contributor
+  // field the plain new/edit forms have no business showing.
+  extraFields?: ReactNode;
   initial?: {
     id?: string;
     floor_id?: string;
@@ -49,6 +54,7 @@ export function PeekForm({
   initial,
   showPublished = true,
   showQueue = false,
+  extraFields,
 }: Props) {
   const [floorId, setFloorId] = useState(
     initial?.floor_id ?? floors[0]?.id ?? ""
@@ -224,6 +230,8 @@ export function PeekForm({
           />
           <span>Pro-only (listed to all; detail locked behind Pro)</span>
         </label>
+
+        {extraFields}
 
         <button
           type="submit"

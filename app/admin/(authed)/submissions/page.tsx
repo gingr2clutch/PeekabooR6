@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { listContributors } from "@/lib/contributors";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   approveSubmissionAction,
@@ -138,10 +139,13 @@ function TabLink({
 
 async function CommunityTab() {
   const sb = supabaseAdmin();
-  const { data, error } = await sb
-    .from("community_submissions")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const [{ data, error }, contributors] = await Promise.all([
+    sb
+      .from("community_submissions")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    listContributors(),
+  ]);
 
   if (error) {
     return (
@@ -152,6 +156,7 @@ async function CommunityTab() {
   }
 
   const rows = (data ?? []) as CommunityRow[];
+  const byId = new Map(contributors.map((c) => [c.id, c]));
   // Pending first, then newest within each status. Done here because PostgREST
   // cannot order by a custom status ranking.
   rows.sort(
@@ -181,7 +186,9 @@ async function CommunityTab() {
         /gadgets. Edit &amp; publish turns a peek submission into a real peek —
         it opens the peek form prefilled, moves the clip into peek storage, and
         approves the submission on save. Approve and reject only set status,
-        which is all a gadget submission can do for now.
+        which is all a gadget submission can do for now. Credit is separate from
+        both: attach it whenever you have verified who filmed the clip, and it
+        stays put through approve, reject and reopen.
       </p>
       {rows.length === 0 ? (
         <p className="rounded-card border border-border bg-card p-6 text-sm text-muted">
@@ -194,6 +201,10 @@ async function CommunityTab() {
               key={r.id}
               r={r}
               previewUrl={r.file_path ? signed.get(r.file_path) : undefined}
+              contributors={contributors}
+              creditedTo={
+                r.contributor_id ? byId.get(r.contributor_id) : undefined
+              }
             />
           ))}
         </ul>

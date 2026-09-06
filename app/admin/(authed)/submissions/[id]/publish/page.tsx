@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ContributorField } from "@/components/ContributorField";
 import { PeekForm } from "@/components/PeekForm";
 import { getFloorOptions } from "@/lib/admin-data";
+import { listContributors } from "@/lib/contributors";
 import { supabaseAdmin } from "@/lib/supabase";
 import { isVideoPath } from "@/lib/submission-media";
 import { publishSubmissionAction } from "../../community-actions";
@@ -17,13 +19,14 @@ type Params = { params: { id: string } };
 export default async function PublishSubmissionPage({ params }: Params) {
   const sb = supabaseAdmin();
 
-  const [{ data: sub, error }, floors] = await Promise.all([
+  const [{ data: sub, error }, floors, contributors] = await Promise.all([
     sb
       .from("community_submissions")
       .select("*")
       .eq("id", params.id)
       .maybeSingle(),
     getFloorOptions(),
+    listContributors(),
   ]);
   if (error) throw error;
   if (!sub) notFound();
@@ -37,7 +40,23 @@ export default async function PublishSubmissionPage({ params }: Params) {
     source_url: string | null;
     file_path: string | null;
     status: string;
+    contributor_id: string | null;
   };
+
+  // Prefill order: whoever is already credited, else what the submitter typed.
+  // The already-credited name is read from the table rather than matched
+  // against the picker list, because that list excludes hidden contributors —
+  // falling back to submitter_name for one of those would quietly re-attribute
+  // the submission to a different person on save.
+  let creditedName: string | null = null;
+  if (s.contributor_id) {
+    const { data: c } = await sb
+      .from("contributors")
+      .select("display_name")
+      .eq("id", s.contributor_id)
+      .maybeSingle();
+    creditedName = (c as { display_name: string } | null)?.display_name ?? null;
+  }
 
   // The submission stores a map NAME and no floor, so the best available
   // prefill is the first floor of the matching map. The admin picks the real
@@ -149,6 +168,13 @@ export default async function PublishSubmissionPage({ params }: Params) {
               floor_id: mapMatch?.id,
               name: s.spot_name,
             }}
+            extraFields={
+              <ContributorField
+                contributors={contributors}
+                defaultValue={creditedName ?? s.submitter_name}
+                label={`Credit this to (they submitted as “${s.submitter_name}”)`}
+              />
+            }
           />
         </>
       )}
