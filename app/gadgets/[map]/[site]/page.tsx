@@ -94,7 +94,7 @@ export default async function SiteOperatorsPage({ params }: Params) {
                     the card's overflow so it reads as a crisp ring. */}
                 <span className="pointer-events-none absolute inset-0 rounded-card ring-0 ring-inset ring-blue transition-all duration-[180ms] ease-out group-hover:ring-2 group-focus-visible:ring-2" />
 
-                <span className="relative z-10 mt-auto w-full px-2.5 pb-2 text-left">
+                <span className="relative z-10 mt-auto w-full px-2.5 pb-2 text-center">
                   <span className="block truncate text-sm font-semibold text-white drop-shadow-sm">
                     {o.name}
                   </span>
