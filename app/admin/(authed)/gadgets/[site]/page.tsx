@@ -6,10 +6,13 @@ import { DirectGadgetSiteImageUpload } from "@/components/DirectGadgetSiteImageU
 import { GadgetClipUpload } from "@/components/GadgetClipUpload";
 import { PinPlacer } from "@/components/PinPlacer";
 import { supabaseAdmin } from "@/lib/supabase";
+import { AdminBackLink } from "../../AdminBackLink";
 import {
   createPlacementAction,
   deletePlacementAction,
+  deleteSiteAndReturnAction,
   togglePlacementPublishedAction,
+  toggleSitePublishedAction,
   updatePlacementAction,
   updateSiteAction,
 } from "../actions";
@@ -89,16 +92,45 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
 
   return (
     <main>
-      <Link href="/admin/gadgets" className="text-sm text-muted hover:text-brand">
-        ← All gadget sites
-      </Link>
+      {/* Back to this site's map, not to the whole gadget section — the map
+          screen is where you came from and where the sibling sites are. */}
+      <AdminBackLink
+        href={`/admin/gadgets/map/${site.map_id}`}
+        label={site.maps?.name ?? "Gadgets"}
+        accent="blue"
+      />
 
-      <h1 className="mt-3 text-2xl font-semibold tracking-tight text-ink">
-        {site.maps?.name} · {site.name}
-      </h1>
-      <p className="mt-1 text-sm text-muted">
-        {placements.length} placements · {site.published ? "published" : "draft"}
-      </p>
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">
+            {site.name}
+          </h1>
+          <p className="mt-1 text-sm text-muted">
+            /{site.slug} · {placements.length} placement
+            {placements.length === 1 ? "" : "s"}
+          </p>
+        </div>
+
+        {/* Publish moved here from the map list, where it sat fifth in a
+            wrapping row of controls. Full width on a phone. */}
+        <form action={toggleSitePublishedAction} className="shrink-0">
+          <input type="hidden" name="id" value={site.id} />
+          <input
+            type="hidden"
+            name="published"
+            value={site.published ? "false" : "true"}
+          />
+          <button
+            className={`w-full rounded-btn border px-3 py-2 text-sm font-medium transition-colors sm:w-auto ${
+              site.published
+                ? "border-teal/40 bg-teal/10 text-teal"
+                : "border-border bg-bg text-muted hover:border-blue hover:text-blue"
+            }`}
+          >
+            {site.published ? "Published" : "Draft"}
+          </button>
+        </form>
+      </div>
 
       {/* Card photo. Thumbnail only — the blueprint below is still what the
           public page draws pins on after you click into the site. */}
@@ -268,6 +300,30 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
           Add placement
         </button>
       </form>
+
+      {/* Deleting the site cascades to its placements (migration 029). This
+          used to be a small button in the map list's wrapping control row,
+          one mis-tap away from Publish. Here it is last, separated, confirmed,
+          and it names what goes with it. */}
+      <section className="mt-8 rounded-card border border-red-200 bg-red-50 p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-red-700">
+          Danger zone
+        </h2>
+        <p className="mt-1 text-xs text-red-700">
+          Deleting {site.name} also deletes its {placements.length} placement
+          {placements.length === 1 ? "" : "s"}.
+        </p>
+        <form action={deleteSiteAndReturnAction} className="mt-3">
+          <input type="hidden" name="id" value={site.id} />
+          <input type="hidden" name="map_id" value={site.map_id} />
+          <ConfirmButton
+            message={`Delete "${site.name}"? This also deletes its ${placements.length} placement(s). This cannot be undone.`}
+            className="w-full rounded-btn border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-100 sm:w-auto"
+          >
+            Delete site
+          </ConfirmButton>
+        </form>
+      </section>
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminBackLink } from "../AdminBackLink";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   bulkDeletePeeksAction,
@@ -97,6 +98,7 @@ export default async function AdminPeeksPage() {
 
   return (
     <div className="space-y-6">
+      <AdminBackLink />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Peeks</h1>
         <Link

@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminBackLink } from "../AdminBackLink";
 import { useEffect, useRef, useState } from "react";
 import { getLiveStats, type LiveStats } from "./actions";
 
@@ -41,6 +42,7 @@ export default function AdminLivePage() {
 
   return (
     <div className="space-y-6">
+      <AdminBackLink />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Live</h1>
         <p className="text-xs text-muted">

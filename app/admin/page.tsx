@@ -25,7 +25,7 @@ export default async function AdminLoginPage({
   if (await cookieIsValid(cookie, process.env.ADMIN_PASSWORD)) {
     redirect(searchParams.next?.startsWith("/admin/")
       ? searchParams.next
-      : "/admin/maps");
+      : "/admin/home");
   }
 
   const errorMessage = searchParams.error ? ERRORS[searchParams.error] : null;

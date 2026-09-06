@@ -115,6 +115,14 @@ export async function deleteMapAction(formData: FormData) {
   revalidatePath("/");
 }
 
+// Same delete, called from a map's own screen. Redirects because staying put
+// would land on a map that no longer exists and 404 on the next render.
+// redirect() throws, so it sits after the write rather than inside a try.
+export async function deleteMapAndReturnAction(formData: FormData) {
+  await deleteMapAction(formData);
+  redirect("/admin/maps");
+}
+
 export async function createFloorAction(formData: FormData) {
   const mapId = String(formData.get("map_id") ?? "");
   const name = String(formData.get("name") ?? "").trim();

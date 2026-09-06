@@ -1,3 +1,4 @@
+import { AdminBackLink } from "../AdminBackLink";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Creator } from "@/lib/db";
 import { CreatorsTable } from "./CreatorsTable";
@@ -21,6 +22,7 @@ export default async function AdminCreatorsPage() {
 
   return (
     <div className="space-y-6">
+      <AdminBackLink />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Creators</h1>
         <GenerateCodeButton />

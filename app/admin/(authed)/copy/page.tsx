@@ -1,3 +1,4 @@
+import { AdminBackLink } from "../AdminBackLink";
 import type { Metadata } from "next";
 import { supabaseAdmin } from "@/lib/supabase";
 import { CopyCleanupList, type CopyRow } from "./CopyCleanupList";
@@ -62,7 +63,8 @@ export default async function CopyCleanupPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-      <h1 className="text-2xl font-semibold tracking-tight text-ink">
+      <AdminBackLink />
+      <h1 className="mt-4 text-2xl font-semibold tracking-tight text-ink">
         Copy cleanup
       </h1>
       <p className="mt-2 text-sm text-muted">

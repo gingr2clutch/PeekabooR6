@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // Gadget admin writes. All go through supabaseAdmin() (service role), which
@@ -103,6 +104,16 @@ export async function deleteSiteAction(formData: FormData) {
     .eq("id", id);
   if (error) throw error;
   revalidateGadgets(mapSlug);
+}
+
+// Same delete, called from the site's own screen. Redirects to the map, since
+// staying on a deleted site would 404 on the next render. The map id comes in
+// on the form because the row is gone by the time we could look it up.
+// redirect() throws, so it sits after the write rather than inside a try.
+export async function deleteSiteAndReturnAction(formData: FormData) {
+  const mapId = String(formData.get("map_id") ?? "");
+  await deleteSiteAction(formData);
+  redirect(mapId ? `/admin/gadgets/map/${mapId}` : "/admin/gadgets");
 }
 
 /* --------------------------- placements -------------------------------- */

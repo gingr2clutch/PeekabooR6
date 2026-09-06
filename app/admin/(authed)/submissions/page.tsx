@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminBackLink } from "../AdminBackLink";
 import { listContributors } from "@/lib/contributors";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
@@ -67,6 +68,7 @@ export default async function SubmissionsPage({ searchParams }: Params) {
 
   return (
     <div className="space-y-6">
+      <AdminBackLink />
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Submissions</h1>
         <nav className="mt-4 flex flex-wrap gap-2" aria-label="Submission queues">

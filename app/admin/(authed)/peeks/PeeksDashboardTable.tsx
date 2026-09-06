@@ -74,6 +74,9 @@ const DIFFICULTY_BUCKETS: Array<{
   { label: "Hard", value: 4, matches: (n) => n >= 4 },
 ];
 
+// How many cards the phone list renders before asking you to filter.
+const MOBILE_LIMIT = 50;
+
 function bucketFor(n: number) {
   return (
     DIFFICULTY_BUCKETS.find((b) => b.matches(n)) ?? DIFFICULTY_BUCKETS[1]
@@ -424,7 +427,60 @@ export function PeeksDashboardTable({
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-card border border-border bg-card">
+      {/* Mobile list. Capped, because an unfiltered view is 215 rows and
+          nobody scrolls that on a phone — narrow it with the filters above
+          instead. The cap is stated rather than silent. */}
+      <div className="space-y-2 lg:hidden">
+        {sorted.length === 0 && (
+          <p className="rounded-card border border-border bg-card p-6 text-center text-sm text-muted">
+            No peeks match those filters.
+          </p>
+        )}
+        {sorted.slice(0, MOBILE_LIMIT).map((r) => (
+          <Link
+            key={r.id}
+            href={`/admin/peeks/${r.id}/edit`}
+            className="block rounded-card border border-border bg-card p-4 transition-colors hover:border-brand"
+          >
+            <div className="flex items-start gap-3">
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium text-ink">{r.name}</span>
+                <span className="mt-0.5 block text-xs text-muted">
+                  {r.map?.name ?? "—"}
+                  {r.floor?.name ? ` · ${r.floor.name}` : ""}
+                </span>
+              </span>
+              <span
+                className={`shrink-0 rounded-btn px-2 py-0.5 text-[11px] font-semibold ${
+                  r.published
+                    ? "bg-teal/10 text-teal"
+                    : "bg-ink/[0.06] text-muted"
+                }`}
+              >
+                {r.published ? "Live" : "Draft"}
+              </span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+              <span>Difficulty {r.difficulty}</span>
+              <span>Risk {r.risk}</span>
+              <span>{r.success_rate}% success</span>
+              <span>{r.view_count.toLocaleString()} views</span>
+            </div>
+          </Link>
+        ))}
+        {sorted.length > MOBILE_LIMIT && (
+          <p className="rounded-card border border-dashed border-border p-4 text-center text-sm text-muted">
+            Showing {MOBILE_LIMIT} of {sorted.length}. Use the filters above to
+            narrow it down.
+          </p>
+        )}
+      </div>
+
+      {/* The table is 1080px wide and inline-editable — usable with a mouse,
+          not with a thumb inside a horizontal scroller. Below lg it is replaced
+          by the card list above, which carries the same data and links to the
+          edit form for anything the cards cannot change in place. */}
+      <div className="hidden overflow-x-auto rounded-card border border-border bg-card lg:block">
         <table className="w-full min-w-[1080px] text-sm">
           <thead className="border-b border-border bg-bg text-xs uppercase tracking-wide text-muted">
             <tr>

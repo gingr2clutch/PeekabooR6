@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminBackLink } from "../AdminBackLink";
 import Image from "next/image";
 import { supabaseAdmin } from "@/lib/supabase";
 import { coverThumb } from "@/lib/cover-image";
@@ -79,6 +80,7 @@ export default async function AdminQueuePage() {
 
   return (
     <div className="space-y-8">
+      <AdminBackLink />
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Release queue</h1>
         <p className="mt-1 text-sm text-muted">
