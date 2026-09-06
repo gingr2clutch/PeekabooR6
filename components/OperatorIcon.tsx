@@ -9,6 +9,12 @@ type Props = {
   iconUrl?: string | null;
   /** Rendered size in px. The box is reserved at this size before anything loads. */
   size?: number;
+  /**
+   * Fill the parent as a square instead of drawing a fixed-size circle. Used by
+   * the picker grid, where the parent card owns the aspect ratio, the rounding
+   * and the border — so this contributes only the image and the fallback.
+   */
+  fill?: boolean;
   className?: string;
 };
 
@@ -29,21 +35,33 @@ export function OperatorIcon({
   name,
   iconUrl,
   size = 56,
+  fill = false,
   className = "",
 }: Props) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const letter = (name.trim()[0] ?? "?").toUpperCase();
 
+  // Icons are stored at 256 square. Passing that as the intrinsic size in both
+  // modes keeps next/image's dimensions explicit; the box itself is reserved by
+  // the wrapper (fixed size) or the parent card (aspect-square).
+  const INTRINSIC = 256;
+
   return (
     <span
-      className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-blue ${className}`}
-      style={{ width: size, height: size }}
+      className={
+        fill
+          ? `absolute inset-0 flex items-center justify-center bg-blue ${className}`
+          : `relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-blue ${className}`
+      }
+      style={fill ? undefined : { width: size, height: size }}
     >
       <span
         aria-hidden
-        className="select-none font-semibold text-white"
-        style={{ fontSize: Math.round(size * 0.42) }}
+        className={`select-none font-semibold text-white ${
+          fill ? "text-4xl lg:text-5xl" : ""
+        }`}
+        style={fill ? undefined : { fontSize: Math.round(size * 0.42) }}
       >
         {letter}
       </span>
@@ -52,8 +70,8 @@ export function OperatorIcon({
         <Image
           src={iconUrl}
           alt=""
-          width={size}
-          height={size}
+          width={fill ? INTRINSIC : size}
+          height={fill ? INTRINSIC : size}
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ${
             loaded ? "opacity-100" : "opacity-0"
           }`}

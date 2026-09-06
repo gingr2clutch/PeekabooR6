@@ -67,31 +67,37 @@ export default async function SiteOperatorsPage({ params }: Params) {
             No placements published for {site.name} yet.
           </p>
         ) : (
-        <ul className="mt-8 space-y-3">
+        /* Square image cards in the homepage maps-grid language: same
+           aspect-square, rounded-card, elev-card shadow, white border and
+           hover lift. Three across on phones, four from lg.
+
+           The role/gadget subtitle is dropped here — it is on the operator's
+           own page, and over an image it competed with the name.
+
+           OperatorIcon in fill mode supplies the image and, when there is no
+           icon yet, a steel-blue letter panel — so the grid never has holes
+           and every cell is the same square regardless. */
+        <ul className="mt-8 grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-4">
           {operators.map((o) => (
             <li key={o.slug}>
               <Link
                 href={`/gadgets/${map.slug}/${site.slug}/${o.slug}`}
-                className="flex items-center justify-between gap-3 rounded-card border border-border bg-card px-4 py-4 transition-colors duration-150 ease-out hover:border-blue"
+                className="map-card group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-card border-2 border-white text-center elev-card outline-none transition-all duration-[180ms] ease-out focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.99]"
               >
-                {/* 56px on phones, 64px from lg. The wrapper reserves the box
-                    before anything loads, so a later icon shifts nothing. */}
-                <OperatorIcon
-                  iconUrl={o.icon_url}
-                  name={o.name}
-                  size={64}
-                  className="h-14 w-14 lg:h-16 lg:w-16"
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-lg font-semibold text-ink">
+                <OperatorIcon iconUrl={o.icon_url} name={o.name} fill />
+
+                {/* Same bottom-up scrim the map cards use, so the name reads
+                    over a light icon as well as a dark one. */}
+                <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+
+                {/* Blue edge on hover/focus — the gadget accent, drawn inside
+                    the card's overflow so it reads as a crisp ring. */}
+                <span className="pointer-events-none absolute inset-0 rounded-card ring-0 ring-inset ring-blue transition-all duration-[180ms] ease-out group-hover:ring-2 group-focus-visible:ring-2" />
+
+                <span className="relative z-10 mt-auto w-full px-2.5 pb-2 text-left">
+                  <span className="block truncate text-sm font-semibold text-white drop-shadow-sm">
                     {o.name}
                   </span>
-                  <span className="block text-xs text-muted">
-                    {[o.role, o.gadget_name].filter(Boolean).join(" · ")}
-                  </span>
-                </span>
-                <span aria-hidden className="shrink-0 text-blue">
-                  →
                 </span>
               </Link>
             </li>
