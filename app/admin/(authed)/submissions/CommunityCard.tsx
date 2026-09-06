@@ -190,14 +190,14 @@ export function CommunityCard({
                 label="Prefilled with what they typed — check it before attaching"
               />
             </div>
-            <button className="rounded-btn border border-border px-3 py-2 text-sm text-ink hover:border-brand hover:text-brand">
+            <button className="w-full rounded-btn border border-border px-3 py-2 text-sm text-ink hover:border-brand hover:text-brand sm:w-auto">
               Attach
             </button>
           </form>
         )}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
         {/* Shown on approved rows as well as pending: approving only sets a
             status, so an approved submission that never became a peek is
             exactly the thing still waiting to be published. What retires the
@@ -208,7 +208,7 @@ export function CommunityCard({
         {r.kind === "peek" && !r.linked_peek_id && r.status !== "rejected" && (
           <Link
             href={`/admin/submissions/${r.id}/publish`}
-            className="rounded-btn bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-[#d95a0c]"
+            className="block w-full rounded-btn bg-brand px-3 py-2 text-center text-sm font-medium text-white hover:bg-[#d95a0c] sm:w-auto"
           >
             Edit &amp; publish
           </Link>
@@ -219,7 +219,7 @@ export function CommunityCard({
         {r.linked_peek_id && (
           <Link
             href={`/admin/peeks/${r.linked_peek_id}/edit`}
-            className="rounded-btn border border-border px-3 py-1.5 text-sm text-ink hover:border-brand hover:text-brand"
+            className="block w-full rounded-btn border border-border px-3 py-2 text-center text-sm text-ink hover:border-brand hover:text-brand sm:w-auto"
           >
             View peek →
           </Link>
@@ -229,13 +229,13 @@ export function CommunityCard({
           <>
             <form action={approveCommunitySubmissionAction}>
               <input type="hidden" name="id" value={r.id} />
-              <button className="rounded-btn bg-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-brand">
+              <button className="w-full rounded-btn bg-ink px-3 py-2 text-sm font-medium text-white hover:bg-brand sm:w-auto">
                 Approve
               </button>
             </form>
             <form action={rejectCommunitySubmissionAction}>
               <input type="hidden" name="id" value={r.id} />
-              <button className="rounded-btn border border-border px-3 py-1.5 text-sm text-ink hover:border-brand hover:text-brand">
+              <button className="block w-full rounded-btn border border-border px-3 py-2 text-center text-sm text-ink hover:border-brand hover:text-brand sm:w-auto">
                 Reject
               </button>
             </form>
@@ -243,7 +243,7 @@ export function CommunityCard({
         ) : (
           <form action={reopenCommunitySubmissionAction}>
             <input type="hidden" name="id" value={r.id} />
-            <button className="rounded-btn border border-border px-3 py-1.5 text-sm text-ink hover:border-brand hover:text-brand">
+            <button className="block w-full rounded-btn border border-border px-3 py-2 text-center text-sm text-ink hover:border-brand hover:text-brand sm:w-auto">
               Back to pending
             </button>
           </form>
@@ -251,12 +251,12 @@ export function CommunityCard({
 
         {/* Separate from reject: rejecting keeps the record, this destroys it
             and the uploaded file. */}
-        <form action={deleteCommunitySubmissionAction} className="ml-auto">
+        <form action={deleteCommunitySubmissionAction} className="sm:ml-auto">
           <input type="hidden" name="id" value={r.id} />
           <input type="hidden" name="file_path" value={r.file_path ?? ""} />
           <ConfirmButton
             message={`Delete this submission from ${r.submitter_name}? The uploaded file goes with it. This cannot be undone.`}
-            className="rounded-btn border border-border px-3 py-1.5 text-sm text-muted hover:border-brand hover:text-brand"
+            className="w-full rounded-btn border border-border px-3 py-2 text-sm text-muted hover:border-brand hover:text-brand sm:w-auto"
           >
             Delete
           </ConfirmButton>

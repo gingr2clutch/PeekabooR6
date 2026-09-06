@@ -272,13 +272,13 @@ export function PeeksDashboardTable({
   return (
     <div className="space-y-4">
       {/* Filter / search row */}
-      <div className="flex flex-wrap items-end gap-3 rounded-card border border-border bg-card p-4">
-        <label className="text-xs text-muted">
+      <div className="grid grid-cols-1 gap-3 rounded-card border border-border bg-card p-4 sm:flex sm:flex-wrap sm:items-end">
+        <label className="block text-xs text-muted">
           <span className="mb-1 block">Map</span>
           <select
             value={filterMap}
             onChange={(e) => setFilterMap(e.target.value)}
-            className="min-w-[160px] rounded-btn border border-border bg-card px-3 py-1.5 text-sm outline-none focus:border-brand"
+            className="w-full rounded-btn border border-border bg-card px-3 py-2 text-sm outline-none focus:border-brand sm:w-auto sm:min-w-[160px]"
           >
             <option value="">All maps</option>
             {maps.map((m) => (
@@ -288,7 +288,7 @@ export function PeeksDashboardTable({
             ))}
           </select>
         </label>
-        <label className="text-xs text-muted">
+        <label className="block text-xs text-muted">
           <span className="mb-1 block">Status</span>
           <select
             value={filterStatus}
@@ -302,7 +302,7 @@ export function PeeksDashboardTable({
             <option value="draft">Draft</option>
           </select>
         </label>
-        <label className="text-xs text-muted">
+        <label className="block text-xs text-muted">
           <span className="mb-1 block">Sort by</span>
           <select
             value={`${sortKey}:${sortDir}` as SortChoice}
@@ -314,7 +314,7 @@ export function PeeksDashboardTable({
               setSortKey(k);
               setSortDir(d);
             }}
-            className="min-w-[200px] rounded-btn border border-border bg-card px-3 py-1.5 text-sm outline-none focus:border-brand"
+            className="w-full rounded-btn border border-border bg-card px-3 py-2 text-sm outline-none focus:border-brand sm:w-auto sm:min-w-[200px]"
           >
             {SORT_CHOICES.map((c) => (
               <option key={c.value} value={c.value}>
@@ -339,7 +339,7 @@ export function PeeksDashboardTable({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="e.g. construction"
-            className="w-full min-w-[180px] rounded-btn border border-border bg-card px-3 py-1.5 text-sm outline-none focus:border-brand"
+            className="w-full rounded-btn border border-border bg-card px-3 py-2 text-sm outline-none focus:border-brand sm:min-w-[180px]"
           />
         </label>
         <div className="self-end text-xs text-muted">

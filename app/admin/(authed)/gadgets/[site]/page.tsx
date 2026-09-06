@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { DirectGadgetSiteImageUpload } from "@/components/DirectGadgetSiteImageUpload";
@@ -153,14 +152,14 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
           pins on; without it the page falls back to guessing a floor. */}
       <form
         action={updateSiteAction}
-        className="mt-6 flex flex-wrap items-end gap-2 rounded-card border border-border bg-card p-3"
+        className="mt-6 space-y-3 rounded-card border border-border bg-card p-4 sm:grid sm:grid-cols-2 sm:items-end sm:gap-3 sm:space-y-0"
       >
         <input type="hidden" name="id" value={site.id} />
-        <label className="min-w-[9rem] flex-1">
+        <label className="block">
           <span className="mb-1 block text-xs text-muted">Name</span>
           <input name="name" defaultValue={site.name} className={input} />
         </label>
-        <label className="min-w-[10rem] flex-1">
+        <label className="block">
           <span className="mb-1 block text-xs text-muted">Floor (blueprint)</span>
           <select name="floor_id" defaultValue={site.floor_id ?? ""} className={input}>
             <option value="">— none —</option>
@@ -169,11 +168,11 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
             ))}
           </select>
         </label>
-        <label className="w-20">
+        <label className="block">
           <span className="mb-1 block text-xs text-muted">Order</span>
           <input name="display_order" type="number" defaultValue={site.display_order} className={input} />
         </label>
-        <button className="rounded-btn border border-border px-3 py-2 text-sm text-ink hover:border-brand hover:text-brand">
+        <button className="w-full rounded-btn border border-border px-3 py-2 text-sm text-ink hover:border-brand hover:text-brand">
           Save site
         </button>
       </form>
@@ -191,10 +190,10 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
       <ul className="mt-3 space-y-2">
         {placements.map((p) => (
           <li key={p.id} className="rounded-card border border-border bg-card p-3">
-            <form action={updatePlacementAction} className="flex flex-wrap items-end gap-2">
+            <form action={updatePlacementAction} className="space-y-3">
               <input type="hidden" name="id" value={p.id} />
               <input type="hidden" name="site_id" value={site.id} />
-              <label className="min-w-[8rem]">
+              <label className="block">
                 <span className="mb-1 block text-xs text-muted">Operator</span>
                 <select name="operator_id" defaultValue={p.operator_id} className={input}>
                   {operators.map((o) => (
@@ -202,7 +201,7 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
                   ))}
                 </select>
               </label>
-              <label className="min-w-[8rem] flex-1">
+              <label className="block">
                 <span className="mb-1 block text-xs text-muted">Label</span>
                 <input name="label" defaultValue={p.label ?? ""} className={input} />
               </label>
@@ -222,15 +221,15 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
                   />
                 </div>
               </details>
-              <div className="min-w-[14rem] flex-1">
+              <div className="w-full">
                 <span className="mb-1 block text-xs text-muted">Clip</span>
                 <GadgetClipUpload siteId={site.id} initialUrl={p.video_url} />
               </div>
-              <label className="min-w-[10rem] flex-1">
+              <label className="block">
                 <span className="mb-1 block text-xs text-muted">Note</span>
                 <input name="note" defaultValue={p.note ?? ""} className={input} />
               </label>
-              <button className="rounded-btn border border-border px-2 py-1.5 text-xs text-ink hover:border-brand hover:text-brand">
+              <button className="w-full rounded-btn border border-border px-3 py-2 text-sm text-ink hover:border-brand hover:text-brand sm:w-auto">
                 Save
               </button>
             </form>
@@ -248,7 +247,7 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
                 <input type="hidden" name="id" value={p.id} />
                 <input type="hidden" name="site_id" value={site.id} />
                 <input type="hidden" name="published" value={p.published ? "false" : "true"} />
-                <button className="rounded-btn border border-border px-2 py-0.5 hover:border-brand hover:text-brand">
+                <button className="rounded-btn border border-border px-3 py-1.5 hover:border-brand hover:text-brand">
                   {p.published ? "Unpublish" : "Publish"}
                 </button>
               </form>
@@ -257,7 +256,7 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
                 <input type="hidden" name="site_id" value={site.id} />
                 <ConfirmButton
                   message={`Delete placement "${p.label ?? "untitled"}"? This cannot be undone.`}
-                  className="rounded-btn border border-border px-2 py-0.5 hover:border-brand hover:text-brand"
+                  className="rounded-btn border border-border px-3 py-1.5 hover:border-brand hover:text-brand"
                 >
                   Delete
                 </ConfirmButton>
@@ -270,10 +269,10 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
       {/* Add a placement. */}
       <form
         action={createPlacementAction}
-        className="mt-4 flex flex-wrap items-end gap-2 rounded-card border border-dashed border-border p-3"
+        className="mt-4 space-y-3 rounded-card border border-dashed border-border p-4"
       >
         <input type="hidden" name="site_id" value={site.id} />
-        <label className="min-w-[8rem]">
+        <label className="block">
           <span className="mb-1 block text-xs text-muted">Operator</span>
           <select name="operator_id" required className={input}>
             {operators.map((o) => (
@@ -296,7 +295,7 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
           <span className="mb-1 block text-xs text-muted">Clip</span>
           <GadgetClipUpload siteId={site.id} />
         </div>
-        <button className="rounded-btn bg-ink px-3 py-2 text-sm font-medium text-white hover:bg-brand">
+        <button className="w-full rounded-btn bg-ink px-3 py-2 text-sm font-medium text-white hover:bg-brand sm:w-auto">
           Add placement
         </button>
       </form>

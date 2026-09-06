@@ -71,7 +71,7 @@ export default async function SubmissionsPage({ searchParams }: Params) {
       <AdminBackLink />
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Submissions</h1>
-        <nav className="mt-4 flex flex-wrap gap-2" aria-label="Submission queues">
+        <nav className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap" aria-label="Submission queues">
           <TabLink
             href="/admin/submissions"
             label="Community"
@@ -119,7 +119,7 @@ function TabLink({
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`inline-flex items-center gap-2 rounded-btn border px-3 py-1.5 text-sm font-medium transition-colors ${
+      className={`inline-flex items-center justify-center gap-2 rounded-btn border px-3 py-2 text-sm font-medium transition-colors ${
         active
           ? "border-brand bg-brand/[0.06] text-ink"
           : "border-border text-muted hover:border-brand hover:text-ink"

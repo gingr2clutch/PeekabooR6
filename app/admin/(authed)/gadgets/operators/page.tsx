@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { OperatorIconUpload } from "@/components/OperatorIconUpload";
 import { supabaseAdmin } from "@/lib/supabase";
+import { AdminBackLink } from "../../AdminBackLink";
 import {
   createOperatorAction,
   deleteOperatorAction,
@@ -64,12 +64,7 @@ export default async function AdminOperatorsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <Link
-          href="/admin/gadgets"
-          className="text-sm text-muted transition-colors hover:text-blue"
-        >
-          ← Gadget sites
-        </Link>
+        <AdminBackLink href="/admin/gadgets" label="Gadgets" accent="blue" />
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">Operators</h1>
         <p className="mt-1 text-sm text-muted">
           {operators.length} operators, {withIcon} with an icon. Icons are
@@ -101,10 +96,10 @@ export default async function AdminOperatorsPage() {
                     public URL segment, so changing it breaks shared links. */}
                 <form
                   action={updateOperatorAction}
-                  className="flex flex-wrap items-end gap-2"
+                  className="space-y-3 sm:grid sm:grid-cols-2 sm:items-end sm:gap-3 sm:space-y-0"
                 >
                   <input type="hidden" name="id" value={o.id} />
-                  <label className="min-w-[8rem] flex-1">
+                  <label className="block">
                     <span className="mb-1 block text-xs text-muted">Name</span>
                     <input
                       name="name"
@@ -113,7 +108,7 @@ export default async function AdminOperatorsPage() {
                       className={input}
                     />
                   </label>
-                  <label className="min-w-[7rem] flex-1">
+                  <label className="block">
                     <span className="mb-1 block text-xs text-muted">Role</span>
                     <input
                       name="role"
@@ -122,7 +117,7 @@ export default async function AdminOperatorsPage() {
                       className={input}
                     />
                   </label>
-                  <label className="min-w-[9rem] flex-1">
+                  <label className="block">
                     <span className="mb-1 block text-xs text-muted">
                       Gadget name
                     </span>
@@ -133,7 +128,7 @@ export default async function AdminOperatorsPage() {
                       className={input}
                     />
                   </label>
-                  <label className="w-20">
+                  <label className="block">
                     <span className="mb-1 block text-xs text-muted">Order</span>
                     <input
                       name="display_order"
@@ -142,7 +137,7 @@ export default async function AdminOperatorsPage() {
                       className={input}
                     />
                   </label>
-                  <button className="rounded-btn border border-border px-3 py-2 text-sm text-ink hover:border-blue hover:text-blue">
+                  <button className="w-full rounded-btn border border-border px-3 py-2 text-sm text-ink hover:border-blue hover:text-blue">
                     Save
                   </button>
                 </form>
@@ -211,17 +206,17 @@ export default async function AdminOperatorsPage() {
       {/* Same dashed-card language as "Add a site" on the gadget sites page. */}
       <form
         action={createOperatorAction}
-        className="flex flex-wrap items-end gap-2 rounded-card border border-dashed border-border p-3"
+        className="space-y-3 rounded-card border border-dashed border-border p-4"
       >
-        <label className="min-w-[9rem] flex-1">
+        <label className="block">
           <span className="mb-1 block text-xs text-muted">Name</span>
           <input name="name" required placeholder="Mute" className={input} />
         </label>
-        <label className="min-w-[7rem] flex-1">
+        <label className="block">
           <span className="mb-1 block text-xs text-muted">Role</span>
           <input name="role" placeholder="Trapper" className={input} />
         </label>
-        <label className="min-w-[9rem] flex-1">
+        <label className="block">
           <span className="mb-1 block text-xs text-muted">Gadget name</span>
           <input
             name="gadget_name"
@@ -229,11 +224,11 @@ export default async function AdminOperatorsPage() {
             className={input}
           />
         </label>
-        <label className="min-w-[8rem] flex-1">
+        <label className="block">
           <span className="mb-1 block text-xs text-muted">Slug (optional)</span>
           <input name="slug" placeholder="mute" className={input} />
         </label>
-        <label className="w-20">
+        <label className="block">
           <span className="mb-1 block text-xs text-muted">Order</span>
           <input
             name="display_order"
@@ -242,7 +237,7 @@ export default async function AdminOperatorsPage() {
             className={input}
           />
         </label>
-        <button className="rounded-btn bg-ink px-3 py-2 text-sm font-medium text-white hover:bg-blue">
+        <button className="w-full rounded-btn bg-ink px-3 py-2 text-sm font-medium text-white hover:bg-blue sm:w-auto">
           Add operator
         </button>
       </form>
