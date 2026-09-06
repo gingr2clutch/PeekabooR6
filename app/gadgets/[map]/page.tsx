@@ -42,7 +42,7 @@ export default async function MapSitesPage({ params }: Params) {
           href="/gadgets"
           className="text-sm font-medium text-muted transition-colors hover:text-blue"
         >
-          ← All maps
+          ← Maps
         </Link>
 
         <header className="mt-4 text-center">

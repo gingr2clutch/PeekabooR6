@@ -65,7 +65,7 @@ export default async function OperatorPlacementsPage({ params }: Params) {
           href={`/gadgets/${map.slug}/${site.slug}`}
           className="text-sm font-medium text-muted transition-colors hover:text-blue"
         >
-          ← {site.name} operators
+          ← Operators
         </Link>
 
         <header className="mt-4 text-center">

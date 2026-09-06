@@ -47,7 +47,7 @@ export default async function SiteOperatorsPage({ params }: Params) {
           href={`/gadgets/${map.slug}`}
           className="text-sm font-medium text-muted transition-colors hover:text-blue"
         >
-          ← {map.name} sites
+          ← Sites
         </Link>
 
         <header className="mt-4 text-center">
