@@ -51,14 +51,49 @@ export async function createSiteAction(formData: FormData) {
   const display_order = Number(formData.get("display_order") ?? 0);
   if (!map_id || !name) return;
 
-  const { error } = await supabaseAdmin().from("gadget_sites").insert({
+  const slug = slugify(slugInput || name);
+
+  // gadget_sites has unique (map_id, slug) — migration 029. That constraint is
+  // the guarantee and stays the guarantee; this lookup only decides what the
+  // admin reads on screen. Without it a duplicate surfaces as a raw Postgres
+  // unique-violation, which says nothing about what to do next.
+  //
+  // Note the scope: a slug is unique WITHIN a map, not across the site. Two
+  // maps both having a Kitchen / Dining is legitimate and resolves to two
+  // distinct public URLs, so this must never widen into a global check.
+  const sb = supabaseAdmin();
+  const { data: clash, error: clashErr } = await sb
+    .from("gadget_sites")
+    .select("name")
+    .eq("map_id", map_id)
+    .eq("slug", slug)
+    .maybeSingle();
+  if (clashErr) throw clashErr;
+  if (clash) {
+    const taken = (clash as { name: string }).name;
+    throw new Error(
+      `This map already has a site at /${slug} ("${taken}"). Pick a different name, or set the slug explicitly.`
+    );
+  }
+
+  const { error } = await sb.from("gadget_sites").insert({
     map_id,
     name,
-    slug: slugify(slugInput || name),
+    slug,
     floor_id,
     display_order: Number.isNaN(display_order) ? 0 : display_order,
   });
-  if (error) throw error;
+  // 23505 is unique_violation: two adds raced past the check above. The
+  // constraint caught it, so turn that into the same readable message rather
+  // than leaking a raw error.
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error(
+        `This map already has a site at /${slug}. Pick a different name, or set the slug explicitly.`
+      );
+    }
+    throw error;
+  }
   revalidateGadgets();
 }
 
