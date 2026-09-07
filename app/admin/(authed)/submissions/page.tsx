@@ -190,7 +190,13 @@ async function CommunityTab() {
         approves the submission on save. Approve and reject only set status,
         which is all a gadget submission can do for now. Credit is separate from
         both: attach it whenever you have verified who filmed the clip, and it
-        stays put through approve, reject and reopen.
+        stays put through approve, reject and reopen.{" "}
+        <Link
+          href="/admin/contributors"
+          className="font-medium text-brand hover:underline"
+        >
+          Manage contributors →
+        </Link>
       </p>
       {rows.length === 0 ? (
         <p className="rounded-card border border-border bg-card p-6 text-sm text-muted">

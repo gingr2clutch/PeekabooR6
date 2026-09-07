@@ -23,6 +23,11 @@ export default function AdminToolsPage() {
     >
       <div className="space-y-3">
         <AdminListCard
+          href="/admin/contributors"
+          title="Contributors"
+          meta="Rename, merge duplicates, hide someone from the leaderboard"
+        />
+        <AdminListCard
           href="/admin/copy"
           title="Copy cleanup"
           meta="Every peek's instructions and tip on one page, edited in place"
