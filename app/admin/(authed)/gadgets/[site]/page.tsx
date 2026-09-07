@@ -6,6 +6,7 @@ import { GadgetClipUpload } from "@/components/GadgetClipUpload";
 import { PinPlacer } from "@/components/PinPlacer";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AdminBackLink } from "../../AdminBackLink";
+import { PlacementFilter } from "./PlacementFilter";
 import {
   createPlacementAction,
   deletePlacementAction,
@@ -55,7 +56,10 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
   };
 
   const [opsRes, floorsRes, placementsRes] = await Promise.all([
-    sb.from("gadget_operators").select("id, slug, name").order("display_order"),
+    sb
+      .from("gadget_operators")
+      .select("id, slug, name, icon_url")
+      .order("display_order"),
     sb.from("floors").select("id, name, birds_eye_url").eq("map_id", site.map_id).order("name"),
     sb
       .from("gadget_placements")
@@ -65,7 +69,12 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
   ]);
   for (const r of [opsRes, floorsRes, placementsRes]) if (r.error) throw r.error;
 
-  const operators = (opsRes.data ?? []) as { id: string; slug: string; name: string }[];
+  const operators = (opsRes.data ?? []) as {
+    id: string;
+    slug: string;
+    name: string;
+    icon_url: string | null;
+  }[];
   const floors = (floorsRes.data ?? []) as {
     id: string;
     name: string;
@@ -88,6 +97,23 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
     thumbs_down: number;
     published: boolean;
   }[];
+
+  // Filter chips, derived from the placements already loaded — no extra query.
+  // Only operators with at least one placement HERE, so a site using two of the
+  // six operators shows two chips. Counted first, then ordered by the operator
+  // list so the chips follow the same order as the dropdowns on this page.
+  const perOperator = new Map<string, number>();
+  for (const p of placements) {
+    perOperator.set(p.operator_id, (perOperator.get(p.operator_id) ?? 0) + 1);
+  }
+  const filterChips = operators
+    .filter((o) => perOperator.has(o.id))
+    .map((o) => ({
+      operatorId: o.id,
+      name: o.name,
+      iconUrl: o.icon_url,
+      count: perOperator.get(o.id) ?? 0,
+    }));
 
   return (
     <main>
@@ -187,9 +213,16 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
         Placements
       </h2>
 
-      <ul className="mt-3 space-y-2">
-        {placements.map((p) => (
-          <li key={p.id} className="rounded-card border border-border bg-card p-3">
+      {/* The cards below are still server-rendered — PlacementFilter receives
+          them as nodes and only decides which are visible, so no form, action
+          or uploader inside them changes. */}
+      <PlacementFilter
+        chips={filterChips}
+        items={placements.map((p) => ({
+          id: p.id,
+          operatorId: p.operator_id,
+          node: (
+            <>
             <form action={updatePlacementAction} className="space-y-3">
               <input type="hidden" name="id" value={p.id} />
               <input type="hidden" name="site_id" value={site.id} />
@@ -262,9 +295,10 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
                 </ConfirmButton>
               </form>
             </div>
-          </li>
-        ))}
-      </ul>
+            </>
+          ),
+        }))}
+      />
 
       {/* Add a placement. */}
       <form
