@@ -26,10 +26,25 @@ const nextConfig = {
     // anyway, so this just makes back-nav honest.
     staleTimes: { dynamic: 0 },
   },
-  // Serve ads.txt via Grow by Mediavine's hosted redirect so it stays
-  // auto-updated (no static file to maintain). redirects() run before the
-  // filesystem, and the static public/ads.txt has been removed, so /ads.txt
-  // always 301s to Grow's hosted file. ads.txt crawlers follow this redirect.
+  // /ads.txt is a redirect to a network's hosted file rather than a static
+  // file we maintain. redirects() run before the filesystem and public/ads.txt
+  // has been removed, so the rule below is the only thing serving that path.
+  // ads.txt crawlers follow redirects.
+  //
+  // It currently points at NitroPay while Mediavine is still serving the ads.
+  // That is deliberate, not a mismatch: Nitro's AdX approval requires their
+  // lines live on the domain first (1-2 weeks), so this is an overlap period
+  // authorised in writing by Nitro, with go-live 2026-09-29. Nitro's file
+  // carries Mediavine's seller lines too — including
+  // journeymv.com, cf3a28fc-8c16-4c04-9940-96ae46697dfa, DIRECT — so the
+  // sellers actually transacting this inventory stay authorised throughout.
+  //
+  // Two things follow from that, and both matter:
+  //   - The ad script in app/layout.tsx is still Mediavine's and must stay
+  //     that way until go-live. If you change one of these, check the other.
+  //   - The status is 302, not 301. This reverses on 2026-09-29, and a
+  //     permanent redirect is the kind crawlers cache past the point of
+  //     usefulness.
   async redirects() {
     return [
       {
@@ -62,11 +77,8 @@ const nextConfig = {
       },
       {
         source: "/ads.txt",
-        // Grow's hosted file lives at .../sites/{id}/ads.txt — the bare
-        // /sites/{id} path returns a 403 from their API gateway.
-        destination:
-          "https://adstxt.journeymv.com/sites/cf3a28fc-8c16-4c04-9940-96ae46697dfa/ads.txt",
-        statusCode: 301,
+        destination: "https://api.nitropay.com/v1/ads-2632.txt",
+        statusCode: 302,
       },
     ];
   },
