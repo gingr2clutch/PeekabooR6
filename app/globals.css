@@ -23,6 +23,24 @@ body {
   padding-bottom: var(--nitro-anchor-h, 0px);
 }
 
+/* The padding above must not shrink the page.
+
+   body is `min-h-screen flex flex-col` with border-box sizing, so on a page
+   shorter than the viewport the footer is held down by flex-1. Adding
+   padding-bottom eats into that 100vh content box, flex-1 shrinks, and the
+   footer slides UP the moment the anchor loads — measured at CLS 0.163 on the
+   floor page, which is the one short page in the funnel.
+
+   Growing min-height by the same amount keeps the content box at exactly 100vh,
+   so the footer does not move and the padding becomes extra room below it,
+   which is what the anchor covers.
+
+   Selector is body.min-h-screen, not body: a bare element selector loses to
+   Tailwind's .min-h-screen class. */
+body.min-h-screen {
+  min-height: calc(100vh + var(--nitro-anchor-h, 0px));
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
     sans-serif;
