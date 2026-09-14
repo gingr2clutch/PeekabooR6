@@ -6,6 +6,7 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { Analytics } from "@vercel/analytics/next";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SubmitCta } from "@/components/SubmitCta";
+import { NitroScripts } from "@/components/NitroScripts";
 import { FavoritesProvider } from "@/components/FavoritesProvider";
 import "./globals.css";
 
@@ -107,6 +108,10 @@ setTimeout(function(){if(!h.classList.contains('is-live')){h.removeAttribute('da
           data-cfasync="false"
           src="https://scripts.scriptwrapper.com/tags/cf3a28fc-8c16-4c04-9940-96ae46697dfa.js"
         ></script>
+        {/* Nitro loader + anchor. Renders NOTHING in production — see
+            components/NitroScripts.tsx. Mediavine above is untouched and stays
+            the only loader on the live site until 2026-09-29. */}
+        <NitroScripts />
         {/* Every page opens at the top. scrollRestoration defaults to 'auto',
             which makes the browser restore the previous position on reload and
             on back/forward — that is what left routes starting partway down.

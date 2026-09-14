@@ -11,6 +11,7 @@ import {
 import { BackToTop } from "@/components/BackToTop";
 import PeekabooIntro from "@/components/PeekabooIntro";
 import { SubmitSpot } from "@/components/SubmitSpot";
+import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { PEEK_SUBMIT } from "@/lib/submit-config";
 import type { CSSProperties } from "react";
 
@@ -188,6 +189,10 @@ export default async function Home() {
           </p>
           <p className="mt-1 text-muted">More peeks added every week.</p>
         </div>
+
+        {/* pkb-home-mid. Between the maps grid and the submit section — the
+            natural mid-content break. Staging only. */}
+        <NitroAdSlot id="pkb-home-mid" className="mt-16" />
 
         {/* Community submissions. Below the maps grid and above the footer, and
             deliberately outside the pin drop: it is far below the fold on every

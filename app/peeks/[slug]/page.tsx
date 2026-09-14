@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
+import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { PeekMedia } from "@/components/PeekMedia";
 import { VoteButtons } from "@/components/VoteButtons";
 import { FavoriteButton } from "@/components/FavoriteButton";
@@ -249,6 +250,11 @@ export default async function PeekDetailPage({
     <>
       <PageHeader />
       <main className="fade-in-up mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">
+        {/* pkb-peek-top. Staging only — renders null in production. Box is
+            reserved at 250px before any script runs, so the title below it
+            never moves. */}
+        <NitroAdSlot id="pkb-peek-top" className="mb-6" />
+
         {/* Page header */}
         <div className="relative text-center">
           {/* Favorite heart — absolutely pinned to the top-right so it never
