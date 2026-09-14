@@ -7,7 +7,6 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { GradeBadge } from "@/components/GradeBadge";
 import { MapStats } from "@/components/MapStats";
 import { MapEntryScope } from "@/components/MapEntryScope";
-import { Fragment } from "react";
 import { MapViewToggle } from "@/components/MapViewToggle";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { PageHeader } from "@/components/PageHeader";
@@ -275,6 +274,15 @@ export default async function MapPage({
                 })}
               </ul>
             }
+            floorsFooter={
+              /* pkb-map-feed. In the Floors view because that is the default
+                 one — MapViewToggle mounts one view or the other, so a slot in
+                 the ranked list would be absent for most visitors. Placed
+                 after the floor cards, and a SINGLE slot: the id is one DOM id
+                 and Nitro fills the first element carrying it, so repeating it
+                 would mean duplicate ids and reserved boxes that never fill. */
+              <NitroAdSlot id="pkb-map-feed" className="mt-4" />
+            }
             rankedView={
               rankedPeeks.length === 0 ? (
                 <p className="text-center text-sm text-muted">
@@ -289,8 +297,8 @@ export default async function MapPage({
                       peek.vote_count
                     );
                     return (
-                      <Fragment key={peek.id}>
                       <li
+                        key={peek.id}
                         data-reveal="quick"
                         style={
                           {
@@ -336,21 +344,6 @@ export default async function MapPage({
                           />
                         </div>
                       </li>
-                      {/* pkb-map-feed, after the 6th card.
-                          ONE slot, not one per six. The id is a single DOM id
-                          and Nitro fills the first element carrying it, so
-                          repeating it would render duplicate ids — invalid
-                          markup, and every slot after the first would be a
-                          reserved 250px box that never fills. Dead space on
-                          every map page is worse than one fewer impression.
-                          To actually repeat: register pkb-map-feed-2, -3 … with
-                          Nitro and give each its own id. */}
-                      {i === 5 && (
-                        <li>
-                          <NitroAdSlot id="pkb-map-feed" className="my-2" />
-                        </li>
-                      )}
-                      </Fragment>
                     );
                   })}
                 </ol>

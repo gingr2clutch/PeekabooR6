@@ -10,6 +10,17 @@ html,
 body {
   background-color: #f6f3ea;
   color: #1e211d;
+  /* Room at the bottom for the Nitro anchor, which is fixed to the viewport
+     and would otherwise sit on top of SubmitCta and the footer.
+
+     The value is written by components/NitroAnchor.tsx from a ResizeObserver
+     on the real anchor element, so it tracks the actual height per breakpoint
+     and per creative, and collapses to 0 when the reader dismisses it.
+
+     Fallback 0px means this line is a no-op wherever the variable is never
+     set — which is every production page, since NitroScripts renders nothing
+     there. Production spacing is unchanged. */
+  padding-bottom: var(--nitro-anchor-h, 0px);
 }
 
 body {
