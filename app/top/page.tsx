@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
+import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { ExploreNext } from "@/components/ExploreNext";
 import { getTopPeeks, type PeekWithContext } from "@/lib/db";
 import { rating, gradeTierColor } from "@/lib/rate";
@@ -143,6 +144,12 @@ export default async function TopPeeksPage() {
                 <Banner key={peek.id} peek={peek} rank={i + 1} />
               ))}
 
+              {/* content-1 — below the podium, above CLIMBING. Inside the
+                  <ol>, so it is wrapped in an <li> to stay valid. */}
+              <li>
+                <NitroAdSlot id="pkb-content-1" className="my-6" />
+              </li>
+
               {climbing.length > 0 && (
                 <li className="arena-climb-head" aria-hidden="true">
                   <span className="arena-climb-dot" />
@@ -164,6 +171,9 @@ export default async function TopPeeksPage() {
             </ol>
           )}
         </div>
+
+        {/* content-2 — bottom, above the submit line. */}
+        <NitroAdSlot id="pkb-content-2" className="mt-12" />
 
         <ExploreNext
           line="The community's highest-rated peeks. Think one's ranked wrong? Cast your vote."

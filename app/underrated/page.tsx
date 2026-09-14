@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
+import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { ExploreNext } from "@/components/ExploreNext";
 import { getUnderratedPeeks, type PeekWithContext } from "@/lib/db";
 import { rating, gradeTierColor } from "@/lib/rate";
@@ -114,6 +115,11 @@ export default async function UnderratedPage() {
                 <Podium key={peek.id} peek={peek} rank={i + 1} />
               ))}
 
+              {/* content-1 — below the podium, above MORE GEMS. */}
+              <li>
+                <NitroAdSlot id="pkb-content-1" className="my-6" />
+              </li>
+
               {gems.length > 0 && (
                 <li className="arena-climb-head" aria-hidden="true">
                   <span className="arena-climb-dot" />
@@ -135,6 +141,9 @@ export default async function UnderratedPage() {
             </ol>
           )}
         </div>
+
+        {/* content-2 — bottom, above the submit line. */}
+        <NitroAdSlot id="pkb-content-2" className="mt-12" />
 
         <ExploreNext
           line="Great peeks almost nobody's found yet. Vote one up and help it get discovered."

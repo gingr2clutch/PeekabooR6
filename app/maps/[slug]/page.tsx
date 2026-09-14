@@ -374,6 +374,11 @@ export default async function MapPage({
           </div>
         )}
 
+        {/* content-1 — between "Underrated on this map" and the 7-day chart.
+            map-feed sits inside the floor list well above, with the underrated
+            grid between them, so the two are never in one viewport. */}
+        <NitroAdSlot id="pkb-content-1" className="mt-8" />
+
         {/* Effectiveness trend — always visible, below the floor picker. The
             7-day chart lives here; the full 30-day chart + Movers are one tap
             away. Card matches the stats box width/styling. */}
@@ -436,6 +441,9 @@ export default async function MapPage({
             {lastUpdatedLabel ? ` Updated ${lastUpdatedLabel}.` : ""}
           </p>
         )}
+        {/* content-2 — bottom of the page. SubmitCta renders from the root
+            layout right after </main>, so this is above the submit line. */}
+        <NitroAdSlot id="pkb-content-2" className="mt-12" />
         </MapEntryScope>
       </main>
     </>

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
+import { NitroAdSlot } from "@/components/NitroAdSlot";
+import { Fragment } from "react";
 import {
   articleExcerpt,
   articleSlugFor,
@@ -61,11 +63,12 @@ export default async function BlogIndexPage() {
         )}
 
         <ul className="space-y-5">
-          {articles.map(({ entry, intro }) => {
+          {articles.map(({ entry, intro }, i) => {
             const slug = articleSlugFor(entry.map.slug);
             const cover = entry.map.cover_image_url;
             return (
-              <li key={entry.map.id}>
+              <Fragment key={entry.map.id}>
+              <li>
                 <Link
                   href={`/blog/${slug}`}
                   className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-lg sm:flex-row"
@@ -100,9 +103,21 @@ export default async function BlogIndexPage() {
                   </div>
                 </Link>
               </li>
+              {/* pkb-content-1 — between guide cards, after the second. These
+                  cards are tall (4:3 cover on mobile), so two of them already
+                  fill the first viewport. */}
+              {i === 1 && (
+                <li>
+                  <NitroAdSlot id="pkb-content-1" />
+                </li>
+              )}
+              </Fragment>
             );
           })}
         </ul>
+
+        {/* content-2 — below the guide list, above the submit line. */}
+        <NitroAdSlot id="pkb-content-2" className="mt-12" />
       </main>
     </>
   );

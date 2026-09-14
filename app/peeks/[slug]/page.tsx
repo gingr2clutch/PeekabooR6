@@ -250,11 +250,6 @@ export default async function PeekDetailPage({
     <>
       <PageHeader />
       <main className="fade-in-up mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">
-        {/* pkb-peek-top. Staging only — renders null in production. Box is
-            reserved at 250px before any script runs, so the title below it
-            never moves. */}
-        <NitroAdSlot id="pkb-peek-top" className="mb-6" />
-
         {/* Page header */}
         <div className="relative text-center">
           {/* Favorite heart — absolutely pinned to the top-right so it never
@@ -343,6 +338,11 @@ export default async function PeekDetailPage({
           </div>
         </section>
 
+        {/* content-1 — between the vote bar and How to do it. First slot on the
+            page and deliberately below the fold: the hero, title and stats bar
+            all sit above it. */}
+        <NitroAdSlot id="pkb-content-1" className="mt-12" />
+
         {/* Content — media ("Watch the peek") + how-to. Moved directly under
             the stats so the clip and steps come before rating. Styling
             unchanged; when there are no steps/tip the media spans the row. */}
@@ -378,6 +378,10 @@ export default async function PeekDetailPage({
             />
           </div>
         </section>
+
+        {/* content-2 — at the Trend Chart block. Two sections after content-1
+            (How to do it, then Rate this peek) separate them. */}
+        <NitroAdSlot id="pkb-content-2" className="mt-12" />
 
         {/* Trend Chart — daily snapshots. Cold-start grace: < 2 points shows a
             "coming soon" note instead of an empty chart. */}
@@ -420,6 +424,10 @@ export default async function PeekDetailPage({
           </section>
         )}
 
+        {/* content-3 — below Peeks close by. SubmitCta renders from the root
+            layout immediately after </main>, so this is the "above the submit
+            line" position. */}
+        <NitroAdSlot id="pkb-content-3" className="mt-16" />
       </main>
 
       {videoJsonLd && (

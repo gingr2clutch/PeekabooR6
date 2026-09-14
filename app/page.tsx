@@ -13,7 +13,7 @@ import PeekabooIntro from "@/components/PeekabooIntro";
 import { SubmitSpot } from "@/components/SubmitSpot";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { PEEK_SUBMIT } from "@/lib/submit-config";
-import type { CSSProperties } from "react";
+import { Fragment, type CSSProperties } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -148,7 +148,8 @@ export default async function Home() {
 
             if (map.published) {
               return (
-                <li key={map.id} className="reveal" style={revealStyle}>
+                <Fragment key={map.id}>
+                <li className="reveal" style={revealStyle}>
                   <MapCardLink
                     href={`/maps/${map.slug}`}
                     className={`${cardBase} map-card border-2 border-white ${
@@ -159,11 +160,24 @@ export default async function Home() {
                     {label}
                   </MapCardLink>
                 </li>
+            {/* pkb-map-feed — a full-width row inside the grid, after the
+                8th card. Two columns on a phone means that is the end of row
+                four, so it is comfortably below the fold, and it lands on a
+                row boundary at every breakpoint (2/3/4 columns all divide 8).
+                Spanning every column keeps the card rhythm intact instead of
+                leaving a hole in one cell. */}
+            {i === 7 && (
+              <li className="col-span-2 sm:col-span-3 md:col-span-4">
+                <NitroAdSlot id="pkb-map-feed" />
+              </li>
+            )}
+                </Fragment>
               );
             }
 
             return (
-              <li key={map.id} className="reveal" style={revealStyle}>
+              <Fragment key={map.id}>
+              <li className="reveal" style={revealStyle}>
                 <div
                   aria-disabled="true"
                   className={`${cardBase} !cursor-not-allowed border-2 border-white ${
@@ -177,6 +191,18 @@ export default async function Home() {
                   </span>
                 </div>
               </li>
+            {/* pkb-map-feed — a full-width row inside the grid, after the
+                8th card. Two columns on a phone means that is the end of row
+                four, so it is comfortably below the fold, and it lands on a
+                row boundary at every breakpoint (2/3/4 columns all divide 8).
+                Spanning every column keeps the card rhythm intact instead of
+                leaving a hole in one cell. */}
+            {i === 7 && (
+              <li className="col-span-2 sm:col-span-3 md:col-span-4">
+                <NitroAdSlot id="pkb-map-feed" />
+              </li>
+            )}
+              </Fragment>
             );
           })}
         </ul>
@@ -190,9 +216,9 @@ export default async function Home() {
           <p className="mt-1 text-muted">More peeks added every week.</p>
         </div>
 
-        {/* pkb-home-mid. Between the maps grid and the submit section — the
-            natural mid-content break. Staging only. */}
-        <NitroAdSlot id="pkb-home-mid" className="mt-16" />
+        {/* content-1 — between the maps grid and the submit section. The
+            "explored all maps" note separates it from map-feed above. */}
+        <NitroAdSlot id="pkb-content-1" className="mt-16" />
 
         {/* Community submissions. Below the maps grid and above the footer, and
             deliberately outside the pin drop: it is far below the fold on every
@@ -222,6 +248,9 @@ export default async function Home() {
             .filter((m) => m.published)
             .map((m) => ({ slug: m.slug, name: m.name }))}
         />
+        {/* content-2 — bottom of the page, under the submit form. SubmitCta
+            and the footer render after </main>. */}
+        <NitroAdSlot id="pkb-content-2" className="mt-16" />
       </main>
       <BackToTop />
     </>
