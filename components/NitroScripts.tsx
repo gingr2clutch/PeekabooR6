@@ -1,3 +1,4 @@
+import { nitroEnabled } from "@/lib/ad-env";
 import { NitroAnchor } from "./NitroAnchor";
 
 // Nitro base loader + the site-wide anchor.
@@ -18,10 +19,6 @@ import { NitroAnchor } from "./NitroAnchor";
 // TO GO LIVE on 2026-09-29: delete this gate and remove the Mediavine script
 // from app/layout.tsx in the same commit. Never both loaders at once.
 // ─────────────────────────────────────────────────────────────────────────────
-
-export function nitroEnabled(): boolean {
-  return process.env.VERCEL_ENV !== "production";
-}
 
 // The stub queues createAd calls made before ads-2632.js lands, so slot
 // components never have to care whether the loader has arrived. Copied

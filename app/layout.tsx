@@ -7,6 +7,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SubmitCta } from "@/components/SubmitCta";
 import { NitroScripts } from "@/components/NitroScripts";
+import { mediavineEnabled } from "@/lib/ad-env";
 import { FavoritesProvider } from "@/components/FavoritesProvider";
 import "./globals.css";
 
@@ -100,17 +101,28 @@ setTimeout(function(){if(!h.classList.contains('is-live')){h.removeAttribute('da
           rel="preconnect"
           href="https://pub-c11cdf7d63734d52945843745d8e60a8.r2.dev"
         />
-        {/* Grow by Mediavine (Journey) — site-wide ad loader. */}
-        <script
-          type="text/javascript"
-          async
-          data-noptimize="1"
-          data-cfasync="false"
-          src="https://scripts.scriptwrapper.com/tags/cf3a28fc-8c16-4c04-9940-96ae46697dfa.js"
-        ></script>
-        {/* Nitro loader + anchor. Renders NOTHING in production — see
-            components/NitroScripts.tsx. Mediavine above is untouched and stays
-            the only loader on the live site until 2026-09-29. */}
+        {/* Grow by Mediavine (Journey) — site-wide ad loader.
+
+            PRODUCTION ONLY. The tag itself is untouched; it is the same script
+            with the same attributes it has always had, now behind a gate so it
+            does not also load on preview deploys. Two loaders were stacking
+            anchors on staging.
+
+            mediavineEnabled() is true exactly when VERCEL_ENV === "production",
+            so the live site renders this identically to before. */}
+        {mediavineEnabled() && (
+          <script
+            type="text/javascript"
+            async
+            data-noptimize="1"
+            data-cfasync="false"
+            src="https://scripts.scriptwrapper.com/tags/cf3a28fc-8c16-4c04-9940-96ae46697dfa.js"
+          ></script>
+        )}
+        {/* Nitro loader + anchor. The inverse gate — preview and local only,
+            never production. Exactly one of these two blocks renders; see
+            lib/ad-env.ts, where that is a single function rather than two
+            conditions that could drift into both or neither. */}
         <NitroScripts />
         {/* Every page opens at the top. scrollRestoration defaults to 'auto',
             which makes the browser restore the previous position on reload and

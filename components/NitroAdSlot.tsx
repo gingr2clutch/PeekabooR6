@@ -1,5 +1,5 @@
 import { AdSlot, type AdSlotProps } from "./AdSlot";
-import { nitroEnabled } from "./NitroScripts";
+import { nitroEnabled } from "@/lib/ad-env";
 
 // Environment-gated wrapper around AdSlot.
 //
