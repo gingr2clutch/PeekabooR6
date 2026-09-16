@@ -44,7 +44,7 @@ export default async function AdminGadgetMapPage({
 }) {
   const sb = supabaseAdmin();
 
-  const [mapRes, floorsRes, sitesRes, placementsRes] = await Promise.all([
+  const [mapRes, floorsRes, sitesRes, setupsRes] = await Promise.all([
     sb.from("maps").select("id, slug, name").eq("id", params.id).maybeSingle(),
     sb.from("floors").select("id, name").eq("map_id", params.id).order("name"),
     sb
@@ -54,7 +54,7 @@ export default async function AdminGadgetMapPage({
       )
       .eq("map_id", params.id)
       .order("display_order"),
-    sb.from("gadget_placements").select("site_id"),
+    sb.from("gadget_setups").select("site_id"),
   ]);
   if (mapRes.error) throw mapRes.error;
   if (!mapRes.data) notFound();
@@ -64,9 +64,9 @@ export default async function AdminGadgetMapPage({
   const sites = (sitesRes.data ?? []) as SiteRow[];
   const floorName = new Map(floors.map((f) => [f.id, f.name]));
 
-  const placements = new Map<string, number>();
-  for (const p of (placementsRes.data ?? []) as { site_id: string }[]) {
-    placements.set(p.site_id, (placements.get(p.site_id) ?? 0) + 1);
+  const setupCount = new Map<string, number>();
+  for (const p of (setupsRes.data ?? []) as { site_id: string }[]) {
+    setupCount.set(p.site_id, (setupCount.get(p.site_id) ?? 0) + 1);
   }
 
   const published = sites.filter((s) => s.published).length;
@@ -86,7 +86,7 @@ export default async function AdminGadgetMapPage({
       ) : (
         <div className="space-y-2">
           {sites.map((s) => {
-            const n = placements.get(s.id) ?? 0;
+            const n = setupCount.get(s.id) ?? 0;
             return (
               <AdminListCard
                 key={s.id}
@@ -99,7 +99,7 @@ export default async function AdminGadgetMapPage({
                     {s.floor_id
                       ? floorName.get(s.floor_id) ?? "unknown floor"
                       : "no floor set"}{" "}
-                    · {n} placement{n === 1 ? "" : "s"}
+                    · {n} setup{n === 1 ? "" : "s"}
                     {!s.preview_image_url && " · no photo"}
                   </>
                 }

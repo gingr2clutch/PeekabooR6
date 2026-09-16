@@ -3,17 +3,16 @@ import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { DirectGadgetSiteImageUpload } from "@/components/DirectGadgetSiteImageUpload";
 import { GadgetClipUpload } from "@/components/GadgetClipUpload";
-import { PinPlacer } from "@/components/PinPlacer";
+import { MultiPinPlacer } from "@/components/MultiPinPlacer";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AdminBackLink } from "../../AdminBackLink";
-import { PlacementFilter } from "./PlacementFilter";
 import {
-  createPlacementAction,
-  deletePlacementAction,
+  createSetupAction,
+  deleteSetupAction,
   deleteSiteAndReturnAction,
-  togglePlacementPublishedAction,
+  toggleSetupPublishedAction,
   toggleSitePublishedAction,
-  updatePlacementAction,
+  updateSetupAction,
   updateSiteAction,
 } from "../actions";
 
@@ -55,19 +54,22 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
     maps: { name: string; slug: string } | null;
   };
 
-  const [opsRes, floorsRes, placementsRes] = await Promise.all([
+  const [opsRes, floorsRes, setupsRes] = await Promise.all([
     sb
       .from("gadget_operators")
       .select("id, slug, name, icon_url")
       .order("display_order"),
     sb.from("floors").select("id, name, birds_eye_url").eq("map_id", site.map_id).order("name"),
     sb
-      .from("gadget_placements")
-      .select("id, operator_id, label, note, x_pct, y_pct, video_url, thumbs_up, thumbs_down, published")
+      .from("gadget_setups")
+      .select(
+        "id, operator_id, name, display_order, video_url, published, gadget_setup_pins(x_pct, y_pct, display_order)"
+      )
       .eq("site_id", site.id)
-      .order("created_at"),
+      .order("operator_id")
+      .order("display_order"),
   ]);
-  for (const r of [opsRes, floorsRes, placementsRes]) if (r.error) throw r.error;
+  for (const r of [opsRes, floorsRes, setupsRes]) if (r.error) throw r.error;
 
   const operators = (opsRes.data ?? []) as {
     id: string;
@@ -85,35 +87,17 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
   // nothing to click, and PinPlacer falls back to numeric inputs by itself.
   const blueprint =
     (site.floor_id ? floors.find((f) => f.id === site.floor_id) : null) ?? null;
-  const placements = (placementsRes.data ?? []) as {
+  const setups = (setupsRes.data ?? []) as unknown as {
     id: string;
     operator_id: string;
-    label: string | null;
-    note: string | null;
-    x_pct: number;
-    y_pct: number;
-    video_url: string | null;
-    thumbs_up: number;
-    thumbs_down: number;
+    name: string;
+    display_order: number;
+    video_url: string;
     published: boolean;
+    gadget_setup_pins: { x_pct: number; y_pct: number; display_order: number }[] | null;
   }[];
 
-  // Filter chips, derived from the placements already loaded — no extra query.
-  // Only operators with at least one placement HERE, so a site using two of the
-  // six operators shows two chips. Counted first, then ordered by the operator
-  // list so the chips follow the same order as the dropdowns on this page.
-  const perOperator = new Map<string, number>();
-  for (const p of placements) {
-    perOperator.set(p.operator_id, (perOperator.get(p.operator_id) ?? 0) + 1);
-  }
-  const filterChips = operators
-    .filter((o) => perOperator.has(o.id))
-    .map((o) => ({
-      operatorId: o.id,
-      name: o.name,
-      iconUrl: o.icon_url,
-      count: perOperator.get(o.id) ?? 0,
-    }));
+  const operatorName = new Map(operators.map((o) => [o.id, o.name]));
 
   return (
     <main>
@@ -131,8 +115,8 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
             {site.name}
           </h1>
           <p className="mt-1 text-sm text-muted">
-            /{site.slug} · {placements.length} placement
-            {placements.length === 1 ? "" : "s"}
+            /{site.slug} · {setups.length} setup
+            {setups.length === 1 ? "" : "s"}
           </p>
         </div>
 
@@ -210,127 +194,139 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
       )}
 
       <h2 className="mt-8 text-sm font-bold uppercase tracking-[0.12em] text-ink">
-        Placements
+        Setups
       </h2>
+      <p className="mt-1 text-xs text-muted">
+        A setup is one plan: several pins and one clip explaining them. Pins are
+        numbered in the order you place them, which is the order the clip should
+        cover them.
+      </p>
 
-      {/* The cards below are still server-rendered — PlacementFilter receives
-          them as nodes and only decides which are visible, so no form, action
-          or uploader inside them changes. */}
-      <PlacementFilter
-        chips={filterChips}
-        items={placements.map((p) => ({
-          id: p.id,
-          operatorId: p.operator_id,
-          node: (
-            <>
-            <form action={updatePlacementAction} className="space-y-3">
-              <input type="hidden" name="id" value={p.id} />
+      {setups.length === 0 && (
+        <p className="mt-3 rounded-card border border-dashed border-border p-4 text-center text-sm text-muted">
+          No setups on this site yet.
+        </p>
+      )}
+
+      <ul className="mt-3 space-y-3">
+        {setups.map((su) => (
+          <li key={su.id} className="rounded-card border border-border bg-card p-3">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="rounded-btn bg-blue/10 px-2 py-0.5 text-[11px] font-semibold text-blue">
+                {operatorName.get(su.operator_id) ?? "Unknown operator"}
+              </span>
+              <span
+                className={`rounded-btn px-2 py-0.5 text-[11px] font-semibold ${
+                  su.published ? "bg-teal/10 text-teal" : "bg-ink/[0.06] text-muted"
+                }`}
+              >
+                {su.published ? "Published" : "Draft"}
+              </span>
+              <span className="text-xs text-muted">
+                {(su.gadget_setup_pins ?? []).length} pin
+                {(su.gadget_setup_pins ?? []).length === 1 ? "" : "s"}
+              </span>
+            </div>
+
+            <form action={updateSetupAction} className="space-y-3">
+              <input type="hidden" name="id" value={su.id} />
               <input type="hidden" name="site_id" value={site.id} />
               <label className="block">
-                <span className="mb-1 block text-xs text-muted">Operator</span>
-                <select name="operator_id" defaultValue={p.operator_id} className={input}>
-                  {operators.map((o) => (
-                    <option key={o.id} value={o.id}>{o.name}</option>
-                  ))}
-                </select>
+                <span className="mb-1 block text-xs text-muted">Name</span>
+                <input name="name" defaultValue={su.name} className={input} />
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs text-muted">Label</span>
-                <input name="label" defaultValue={p.label ?? ""} className={input} />
+                <span className="mb-1 block text-xs text-muted">Tab order</span>
+                <input
+                  name="display_order"
+                  type="number"
+                  defaultValue={su.display_order}
+                  className={input}
+                />
               </label>
-              {/* Collapsed by default: one expanded blueprint per placement
-                  would be a wall of images. The hidden x_pct/y_pct inputs
-                  PinPlacer renders submit whether or not it is open. */}
-              <details className="w-full">
-                <summary className="cursor-pointer text-xs text-muted">
-                  Position — {p.x_pct}%, {p.y_pct}% (click to place)
-                </summary>
-                <div className="mt-2">
-                  <PinPlacer
-                    src={blueprint?.birds_eye_url ?? null}
-                    initialX={p.x_pct}
-                    initialY={p.y_pct}
-                    name={`${site.name} blueprint`}
-                  />
-                </div>
-              </details>
               <div className="w-full">
-                <span className="mb-1 block text-xs text-muted">Clip</span>
-                <GadgetClipUpload siteId={site.id} initialUrl={p.video_url} />
+                <span className="mb-1 block text-xs text-muted">
+                  Clip (required)
+                </span>
+                <GadgetClipUpload siteId={site.id} initialUrl={su.video_url} />
               </div>
-              <label className="block">
-                <span className="mb-1 block text-xs text-muted">Note</span>
-                <input name="note" defaultValue={p.note ?? ""} className={input} />
-              </label>
-              <button className="w-full rounded-btn border border-border px-3 py-2 text-sm text-ink hover:border-brand hover:text-brand sm:w-auto">
-                Save
+              <div className="w-full">
+                <span className="mb-1 block text-xs text-muted">Pins</span>
+                <MultiPinPlacer
+                  src={blueprint?.birds_eye_url ?? null}
+                  initial={[...(su.gadget_setup_pins ?? [])]
+                    .sort((a, b) => a.display_order - b.display_order)
+                    .map((pn) => ({ x: pn.x_pct, y: pn.y_pct }))}
+                />
+              </div>
+              <button className="w-full rounded-btn border border-border px-3 py-2 text-sm text-ink hover:border-blue hover:text-blue sm:w-auto">
+                Save setup
               </button>
             </form>
 
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
-              <span>👍 {p.thumbs_up} · 👎 {p.thumbs_down}</span>
-              <span
-                className={`rounded-btn px-2 py-0.5 font-semibold ${
-                  p.published ? "bg-teal/10 text-teal" : "bg-ink/[0.06] text-muted"
-                }`}
-              >
-                {p.published ? "Published" : "Draft"}
-              </span>
-              <form action={togglePlacementPublishedAction}>
-                <input type="hidden" name="id" value={p.id} />
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3 text-xs">
+              <form action={toggleSetupPublishedAction}>
+                <input type="hidden" name="id" value={su.id} />
                 <input type="hidden" name="site_id" value={site.id} />
-                <input type="hidden" name="published" value={p.published ? "false" : "true"} />
-                <button className="rounded-btn border border-border px-3 py-1.5 hover:border-brand hover:text-brand">
-                  {p.published ? "Unpublish" : "Publish"}
+                <input
+                  type="hidden"
+                  name="published"
+                  value={su.published ? "false" : "true"}
+                />
+                <button className="rounded-btn border border-border px-3 py-1.5 hover:border-blue hover:text-blue">
+                  {su.published ? "Unpublish" : "Publish"}
                 </button>
               </form>
-              <form action={deletePlacementAction}>
-                <input type="hidden" name="id" value={p.id} />
+              <form action={deleteSetupAction} className="sm:ml-auto">
+                <input type="hidden" name="id" value={su.id} />
                 <input type="hidden" name="site_id" value={site.id} />
                 <ConfirmButton
-                  message={`Delete placement "${p.label ?? "untitled"}"? This cannot be undone.`}
-                  className="rounded-btn border border-border px-3 py-1.5 hover:border-brand hover:text-brand"
+                  message={`Delete "${su.name}"? Its pins go with it. This cannot be undone.`}
+                  className="rounded-btn border border-border px-3 py-1.5 text-muted hover:border-blue hover:text-blue"
                 >
                   Delete
                 </ConfirmButton>
               </form>
             </div>
-            </>
-          ),
-        }))}
-      />
+          </li>
+        ))}
+      </ul>
 
-      {/* Add a placement. */}
+      {/* Add a setup. Name is optional — blank becomes "Setup N". */}
       <form
-        action={createPlacementAction}
+        action={createSetupAction}
         className="mt-4 space-y-3 rounded-card border border-dashed border-border p-4"
       >
         <input type="hidden" name="site_id" value={site.id} />
+        <h3 className="text-sm font-bold uppercase tracking-[0.12em] text-ink">
+          Add a setup
+        </h3>
         <label className="block">
           <span className="mb-1 block text-xs text-muted">Operator</span>
           <select name="operator_id" required className={input}>
             {operators.map((o) => (
-              <option key={o.id} value={o.id}>{o.name}</option>
+              <option key={o.id} value={o.id}>
+                {o.name}
+              </option>
             ))}
           </select>
         </label>
-        <div className="w-full">
+        <label className="block">
           <span className="mb-1 block text-xs text-muted">
-            Position — click the blueprint
+            Name (blank = &ldquo;Setup N&rdquo;)
           </span>
-          <PinPlacer
-            src={blueprint?.birds_eye_url ?? null}
-            initialX={50}
-            initialY={50}
-            name={`${site.name} blueprint`}
-          />
-        </div>
+          <input name="name" placeholder="Standard" className={input} />
+        </label>
         <div className="w-full">
-          <span className="mb-1 block text-xs text-muted">Clip</span>
+          <span className="mb-1 block text-xs text-muted">Clip (required)</span>
           <GadgetClipUpload siteId={site.id} />
         </div>
-        <button className="w-full rounded-btn bg-ink px-3 py-2 text-sm font-medium text-white hover:bg-brand sm:w-auto">
-          Add placement
+        <div className="w-full">
+          <span className="mb-1 block text-xs text-muted">Pins</span>
+          <MultiPinPlacer src={blueprint?.birds_eye_url ?? null} />
+        </div>
+        <button className="w-full rounded-btn bg-ink px-3 py-2 text-sm font-medium text-white hover:bg-blue sm:w-auto">
+          Add setup
         </button>
       </form>
 
@@ -343,14 +339,14 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
           Danger zone
         </h2>
         <p className="mt-1 text-xs text-red-700">
-          Deleting {site.name} also deletes its {placements.length} placement
-          {placements.length === 1 ? "" : "s"}.
+          Deleting {site.name} also deletes its {setups.length} setup
+          {setups.length === 1 ? "" : "s"}.
         </p>
         <form action={deleteSiteAndReturnAction} className="mt-3">
           <input type="hidden" name="id" value={site.id} />
           <input type="hidden" name="map_id" value={site.map_id} />
           <ConfirmButton
-            message={`Delete "${site.name}"? This also deletes its ${placements.length} placement(s). This cannot be undone.`}
+            message={`Delete "${site.name}"? This also deletes its ${setups.length} setup(s). This cannot be undone.`}
             className="w-full rounded-btn border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-100 sm:w-auto"
           >
             Delete site

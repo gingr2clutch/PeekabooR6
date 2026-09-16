@@ -559,17 +559,23 @@ export type GadgetSite = {
   preview_image_url: string | null;
 };
 
-export type GadgetPlacement = {
-  id: string;
-  site_id: string;
-  operator_id: string;
-  label: string | null;
-  note: string | null;
+// A setup is the unit of gadget content: one plan for one bomb site by one
+// operator, with ONE video and several pins. The pins are visual only — no
+// grades, no votes, not clickable. The video explains them and the numbered
+// dots let a viewer follow along, which is why pins carry a position and an
+// order and nothing else.
+export type GadgetSetupPin = {
   x_pct: number;
   y_pct: number;
-  video_url: string | null;
-  thumbs_up: number;
-  thumbs_down: number;
+  display_order: number;
+};
+
+export type GadgetSetup = {
+  id: string;
+  name: string;
+  display_order: number;
+  video_url: string;
+  pins: GadgetSetupPin[];
 };
 
 const GADGET_SITE_COLUMNS =
@@ -579,8 +585,10 @@ const GADGET_SITE_COLUMNS =
 // card's fallback thumbnail (when a site has no photo) and what the pins are
 // drawn on after clicking in.
 const GADGET_SITE_WITH_FLOOR_COLUMNS = `${GADGET_SITE_COLUMNS}, floors(name, birds_eye_url)`;
-const GADGET_PLACEMENT_COLUMNS =
-  "id, site_id, operator_id, label, note, x_pct, y_pct, video_url, thumbs_up, thumbs_down";
+// Pins come back nested. One query per site+operator rather than one for the
+// setups and another for their pins.
+const GADGET_SETUP_COLUMNS =
+  "id, name, display_order, video_url, gadget_setup_pins(x_pct, y_pct, display_order)";
 
 export type GadgetSiteWithFloor = GadgetSite & {
   floor: { name: string; birds_eye_url: string | null } | null;
@@ -630,13 +638,13 @@ export async function getGadgetOperatorBySlug(
   return data;
 }
 
-// Only operators that actually have a published placement on this site — an
+// Only operators that actually have a published setup on this site — an
 // operator with nothing to show would be a dead end for the visitor.
 export async function getGadgetOperatorsForSite(
   siteId: string
 ): Promise<GadgetOperator[]> {
   const { data, error } = await supabasePublic()
-    .from("gadget_placements")
+    .from("gadget_setups")
     .select(
       "operator_id, gadget_operators!inner(id, slug, name, role, gadget_name, display_order, icon_url)"
     )
@@ -655,43 +663,68 @@ export async function getGadgetOperatorsForSite(
   );
 }
 
-export async function getGadgetPlacements(
+/**
+ * Every published setup for one operator on one bomb site, in tab order, each
+ * with its pins already sorted.
+ *
+ * RLS does the publishing logic: the gadget_setups policy requires the setup to
+ * be published AND its site to be published, so a draft setup on a live site
+ * and a live setup on a draft site are both invisible here. Nothing in this
+ * function needs to re-check either.
+ *
+ * Pins are sorted in JS because PostgREST cannot order an embedded resource
+ * independently of its parent. The count is tiny — a handful per setup.
+ */
+export async function getGadgetSetups(
   siteId: string,
   operatorId: string
-): Promise<GadgetPlacement[]> {
+): Promise<GadgetSetup[]> {
   const { data, error } = await supabasePublic()
-    .from("gadget_placements")
-    .select(GADGET_PLACEMENT_COLUMNS)
+    .from("gadget_setups")
+    .select(GADGET_SETUP_COLUMNS)
     .eq("site_id", siteId)
     .eq("operator_id", operatorId)
-    .order("created_at", { ascending: true });
+    .order("display_order", { ascending: true });
   if (error) throw error;
-  return data ?? [];
+
+  const rows = (data ?? []) as unknown as (Omit<GadgetSetup, "pins"> & {
+    gadget_setup_pins: GadgetSetupPin[] | null;
+  })[];
+
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    display_order: r.display_order,
+    video_url: r.video_url,
+    pins: [...(r.gadget_setup_pins ?? [])].sort(
+      (a, b) => a.display_order - b.display_order
+    ),
+  }));
 }
 
 export type GadgetStats = {
   maps: number;
-  placements: number;
+  setups: number;
   operators: number;
-  thumbsUp: number;
+  /** Pins across every visible setup — the "spots marked" figure. */
+  pins: number;
 };
 
-// Map ids that have at least one publicly visible gadget placement, for the
-// /gadgets grid's enabled/disabled split.
+// Map ids that have at least one publicly visible setup, for the /gadgets
+// grid's enabled/disabled split.
 //
-// One query for the whole grid, not one per card: every published placement is
+// One query for the whole grid, not one per card: every visible setup is
 // fetched with just its site's map_id, then deduped here.
 //
-// The single .eq() is enough because supabasePublic() uses the anon key, so
-// RLS applies and gadget_sites carries a published = true policy — the !inner
-// join drops any placement whose SITE is still a draft. That matters: such a
-// placement is invisible on the public page, so counting it would leave a map
-// clickable that leads nowhere.
+// No .eq("published") needed any more. The gadget_setups RLS policy already
+// requires the setup AND its site to be published, so anything this query can
+// see is genuinely reachable on the public site — which is the whole point,
+// since counting an unreachable one would leave a map clickable that leads
+// nowhere.
 export async function getMapIdsWithGadgetPlacements(): Promise<Set<string>> {
   const { data, error } = await supabasePublic()
-    .from("gadget_placements")
-    .select("gadget_sites!inner(map_id)")
-    .eq("published", true);
+    .from("gadget_setups")
+    .select("gadget_sites!inner(map_id)");
   if (error) throw error;
 
   const rows = (data ?? []) as unknown as {
@@ -738,35 +771,38 @@ export async function getGadgetOperatorNames(): Promise<string[]> {
   return ((data ?? []) as { name: string }[]).map((o) => o.name);
 }
 
-// Stat bar for /gadgets. One query: RLS already limits gadget_placements to
-// published rows, and the !inner join to gadget_sites drops any placement whose
-// site is still a draft — so "published gadget content" means both are live,
-// which is exactly what the public pages render.
+// Stat bar for /gadgets. One query — RLS already limits gadget_setups to rows
+// whose setup and site are both published, so everything counted here is
+// content a visitor can actually reach.
+//
+// "Thumbs Up" is gone from this bar along with placement votes. Pins replaces
+// it: it is the closest honest equivalent, being the number of spots actually
+// marked on a blueprint.
 export async function getGadgetStats(): Promise<GadgetStats> {
   const { data, error } = await supabasePublic()
-    .from("gadget_placements")
-    .select("operator_id, thumbs_up, gadget_sites!inner(map_id)");
+    .from("gadget_setups")
+    .select("operator_id, gadget_sites!inner(map_id), gadget_setup_pins(id)");
   if (error) throw error;
 
   const rows = (data ?? []) as unknown as {
     operator_id: string;
-    thumbs_up: number | null;
     gadget_sites: { map_id: string } | null;
+    gadget_setup_pins: { id: string }[] | null;
   }[];
 
   const mapIds = new Set<string>();
   const operatorIds = new Set<string>();
-  let thumbsUp = 0;
+  let pins = 0;
   for (const r of rows) {
     if (r.gadget_sites?.map_id) mapIds.add(r.gadget_sites.map_id);
     if (r.operator_id) operatorIds.add(r.operator_id);
-    thumbsUp += r.thumbs_up ?? 0;
+    pins += r.gadget_setup_pins?.length ?? 0;
   }
 
   return {
     maps: mapIds.size,
-    placements: rows.length,
+    setups: rows.length,
     operators: operatorIds.size,
-    thumbsUp,
+    pins,
   };
 }

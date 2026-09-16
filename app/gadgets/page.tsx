@@ -91,9 +91,9 @@ export default async function GadgetsIndexPage() {
             accent="blue"
             cells={[
               { label: "Maps", value: stats.maps, icon: "pin", cellClass: "order-3 sm:order-none" },
-              { label: "Placements", value: stats.placements, icon: "eye", cellClass: "order-1 sm:order-none sm:border-l" },
+              { label: "Setups", value: stats.setups, icon: "eye", cellClass: "order-1 sm:order-none sm:border-l" },
               { label: "Operators", value: stats.operators, icon: "check", cellClass: "order-2 border-l sm:order-none" },
-              { label: "Thumbs Up", value: stats.thumbsUp, icon: "trophy", cellClass: "order-4 border-l sm:order-none" },
+              { label: "Pins", value: stats.pins, icon: "trophy", cellClass: "order-4 border-l sm:order-none" },
             ]}
           />
         </div>

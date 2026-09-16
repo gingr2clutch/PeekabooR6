@@ -92,13 +92,13 @@ export async function deleteOperatorAction(formData: FormData) {
 
   const sb = supabaseAdmin();
 
-  // The database already refuses this: gadget_placements.operator_id is
-  // ON DELETE RESTRICT (migration 029). Counting first only changes the
+  // The database already refuses this: gadget_setups.operator_id is
+  // ON DELETE RESTRICT (migration 034). Counting first only changes the
   // message — a raw foreign-key violation on screen says nothing about what
-  // to do next. The constraint remains the real guarantee, so a placement
-  // added between this count and the delete still cannot slip through.
+  // to do next. The constraint remains the real guarantee, so a setup added
+  // between this count and the delete still cannot slip through.
   const { count, error: countErr } = await sb
-    .from("gadget_placements")
+    .from("gadget_setups")
     .select("id", { count: "exact", head: true })
     .eq("operator_id", id);
   if (countErr) throw countErr;
@@ -111,7 +111,7 @@ export async function deleteOperatorAction(formData: FormData) {
       .maybeSingle();
     const who = (op as { name: string } | null)?.name ?? "This operator";
     throw new Error(
-      `${who} still has ${count} placement${count === 1 ? "" : "s"}. Delete those first — removing the operator would orphan them.`
+      `${who} still has ${count} setup${count === 1 ? "" : "s"}. Delete those first — removing the operator would orphan them.`
     );
   }
 

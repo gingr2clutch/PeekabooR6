@@ -44,11 +44,17 @@ create table if not exists gadget_setups (
   display_order int  not null default 0,
   video_url     text not null,
   published     boolean not null default false,
-  created_at    timestamptz not null default now(),
-  -- Tab order has to be deterministic, and this doubles as the index for the
-  -- public read (every setup for a site+operator, in order).
-  unique (site_id, operator_id, display_order)
+  created_at    timestamptz not null default now()
 );
+
+-- Tab order has to be deterministic, and this doubles as the index for the
+-- public read (every setup for a site+operator, in order).
+--
+-- A separate statement rather than an inline table constraint: `create table
+-- if not exists` skips the whole table on a re-run, so an inline constraint is
+-- only ever created the first time, whereas this carries its own guard.
+create unique index if not exists setups_order_idx
+on gadget_setups (site_id, operator_id, display_order);
 
 -- ---------------------------------------------------------------------------
 -- Pins. Deliberately thin: coordinates and an order, nothing else.
@@ -69,8 +75,8 @@ create table if not exists gadget_setup_pins (
   display_order int not null default 0
 );
 
-create index if not exists gadget_setup_pins_setup_order_idx
-  on gadget_setup_pins (setup_id, display_order);
+create index if not exists setup_pins_order_idx
+on gadget_setup_pins (setup_id, display_order);
 
 -- ---------------------------------------------------------------------------
 -- RLS. Same shape as the rest of the gadget tables: public reads see published

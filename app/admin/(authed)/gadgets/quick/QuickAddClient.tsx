@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { GadgetClipUpload } from "@/components/GadgetClipUpload";
-import { PinPlacer } from "@/components/PinPlacer";
-import { quickAddPlacement, quickUndoPlacement } from "./actions";
+import { MultiPinPlacer } from "@/components/MultiPinPlacer";
+import { quickAddSetup, quickUndoSetup } from "./actions";
 
 export type QuickMap = { id: string; name: string };
 export type QuickSite = {
@@ -20,17 +20,18 @@ type Props = {
   operators: QuickOperator[];
 };
 
-// Quick-add: place many pins on one site without re-walking the admin tree.
+// Quick-add: enter setup after setup on one site without re-walking the admin
+// tree.
 //
-// The loop this exists for is pick map/site/operator ONCE, then pin → clip →
-// save, repeated. So saving deliberately does not navigate and does not reset
-// the three selectors; it clears only the pin and the clip.
+// The loop is pick map/site/operator ONCE, then pins → clip → save, repeated.
+// Saving deliberately does not navigate and does not reset the three selectors;
+// it clears only the pins, the clip and the name.
 //
-// Resetting those two is done by remounting them with a changed key rather than
-// by adding reset props. PinPlacer keeps its position in internal state and
-// GadgetClipUpload keeps the uploaded URL in its own — neither exposes a way to
-// clear from outside, and a key bump gets both back to their initial state
-// without touching components the existing per-site editor also depends on.
+// Those are cleared by remounting them with a changed key rather than by adding
+// reset props. MultiPinPlacer and GadgetClipUpload each hold their state
+// internally and neither exposes a way to clear from outside, so a key bump
+// returns both to their initial state without growing an API that the per-site
+// editor would also inherit.
 
 const STORAGE_KEY = "pkb_quickadd_v1";
 
@@ -100,7 +101,7 @@ export function QuickAddClient({ maps, sites, operators }: Props) {
       const fd = new FormData(e.currentTarget);
       fd.set("site_id", siteId);
       fd.set("operator_id", operatorId);
-      const res = await quickAddPlacement(fd);
+      const res = await quickAddSetup(fd);
       setPlaced((n) => n + 1);
       setLast(res);
       // Clear pin + clip only. Selectors stay exactly as they were.
@@ -116,7 +117,7 @@ export function QuickAddClient({ maps, sites, operators }: Props) {
     if (!last || undoing) return;
     setUndoing(true);
     try {
-      await quickUndoPlacement(last.id);
+      await quickUndoSetup(last.id);
       setPlaced((n) => Math.max(0, n - 1));
       setLast(null);
     } catch (err) {
@@ -200,34 +201,45 @@ export function QuickAddClient({ maps, sites, operators }: Props) {
 
         {placed > 0 && (
           <p className="mt-2 text-xs font-medium text-teal">
-            {placed} placement{placed === 1 ? "" : "s"} added this session
+            {placed} setup{placed === 1 ? "" : "s"} added this session
           </p>
         )}
       </div>
 
       {!ready ? (
         <p className="mt-6 rounded-card border border-dashed border-border p-6 text-center text-sm text-muted">
-          Pick a map, bomb site and operator to start placing pins.
+          Pick a map, bomb site and operator to start adding setups.
         </p>
       ) : (
         <div className="mt-4 space-y-4">
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium text-muted">
+              Name — blank becomes &ldquo;Setup N&rdquo;
+            </span>
+            <input
+              key={`name-${siteId}-${resetKey}`}
+              name="name"
+              placeholder="Standard"
+              className={select}
+            />
+          </label>
+
           <div>
             <span className="mb-1 block text-xs font-medium text-muted">
-              Pin — tap the blueprint
+              Pins
             </span>
-            {/* key remounts this after each save, which is what clears the pin
-                back to centre without PinPlacer needing a reset prop. */}
-            <PinPlacer
-              key={`pin-${siteId}-${resetKey}`}
+            {/* key remounts this after each save, clearing the pins without
+                MultiPinPlacer needing a reset prop. */}
+            <MultiPinPlacer
+              key={`pins-${siteId}-${resetKey}`}
               src={site?.blueprintUrl ?? null}
-              initialX={50}
-              initialY={50}
-              name={site?.name}
             />
           </div>
 
           <div>
-            <span className="mb-1 block text-xs font-medium text-muted">Clip</span>
+            <span className="mb-1 block text-xs font-medium text-muted">
+              Clip — required
+            </span>
             <GadgetClipUpload key={`clip-${siteId}-${resetKey}`} siteId={siteId} />
           </div>
 
@@ -263,7 +275,7 @@ export function QuickAddClient({ maps, sites, operators }: Props) {
           disabled={!ready || saving}
           className="w-full rounded-btn bg-ink px-4 py-3 text-base font-semibold text-white transition-colors hover:bg-blue disabled:opacity-40"
         >
-          {saving ? "Saving…" : "Save placement"}
+          {saving ? "Saving…" : "Save setup"}
         </button>
       </div>
     </form>

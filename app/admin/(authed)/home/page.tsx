@@ -25,7 +25,7 @@ type Counts = {
   floors: number;
   sites: number;
   sitesPublished: number;
-  sitesWithPlacements: number;
+  sitesWithSetups: number;
   operators: number;
   pending: number;
 };
@@ -58,9 +58,9 @@ async function loadCounts(): Promise<Counts> {
     head("gadget_sites", (q) => q.eq("published", true)),
     head("gadget_operators"),
     head("community_submissions", (q) => q.eq("status", "pending")),
-    // Not a count: how many DISTINCT sites have a placement, which is the
+    // Not a count: how many DISTINCT sites have a setup, which is the
     // number that says how much of the gadget section is actually built out.
-    sb.from("gadget_placements").select("site_id"),
+    sb.from("gadget_setups").select("site_id"),
   ]);
 
   const siteIds = new Set(
@@ -75,7 +75,7 @@ async function loadCounts(): Promise<Counts> {
     floors: floors.count ?? 0,
     sites: sites.count ?? 0,
     sitesPublished: sitesPublished.count ?? 0,
-    sitesWithPlacements: siteIds.size,
+    sitesWithSetups: siteIds.size,
     operators: operators.count ?? 0,
     pending: pending.count ?? 0,
   };
@@ -115,7 +115,7 @@ export default async function AdminHomePage() {
           href="/admin/gadgets"
           title="Gadgets"
           accent="blue"
-          detail={`${c.sites} sites · ${c.sitesPublished} published, ${c.sitesWithPlacements} with placements`}
+          detail={`${c.sites} sites · ${c.sitesPublished} published, ${c.sitesWithSetups} with setups`}
         />
         <AdminHubCard
           href="/admin/gadgets/operators"

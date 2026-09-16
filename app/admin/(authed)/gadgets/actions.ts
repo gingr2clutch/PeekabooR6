@@ -131,7 +131,8 @@ export async function toggleSitePublishedAction(formData: FormData) {
 export async function deleteSiteAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  // gadget_placements cascades from the site, so this removes its pins too.
+  // gadget_setups cascades from the site, and pins cascade from the setups,
+  // so this removes the whole tree beneath it.
   const mapSlug = await mapSlugForSite(id);
   const { error } = await supabaseAdmin()
     .from("gadget_sites")
@@ -151,63 +152,164 @@ export async function deleteSiteAndReturnAction(formData: FormData) {
   redirect(mapId ? `/admin/gadgets/map/${mapId}` : "/admin/gadgets");
 }
 
-/* --------------------------- placements -------------------------------- */
+/* ----------------------------- setups ---------------------------------- */
 
-export async function createPlacementAction(formData: FormData) {
+/**
+ * A setup is the unit of gadget content: one site, one operator, one video,
+ * many pins. These replace the old per-pin placement actions entirely.
+ *
+ * Pins are written by replacing the whole set rather than diffing. A setup is
+ * edited as "here are its pins now", never one pin at a time, so a delete-then-
+ * insert is both simpler and a closer match to what the admin actually did.
+ * The delete is scoped to the setup, so it can only ever affect its own pins.
+ *
+ * Writes gadget_setups and gadget_setup_pins. No peek table is touched.
+ */
+
+type PinInput = { x_pct: number; y_pct: number };
+
+// Pins arrive from the form as a JSON array, because their number varies per
+// submit and named form fields cannot express that cleanly.
+function parsePins(raw: FormDataEntryValue | null): PinInput[] {
+  if (!raw) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(String(raw));
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+  return parsed
+    .filter(
+      (p): p is { x: number; y: number } =>
+        !!p && typeof p === "object" && "x" in p && "y" in p
+    )
+    .map((p) => ({
+      x_pct: clamp(Number(p.x), 0, 100),
+      y_pct: clamp(Number(p.y), 0, 100),
+    }))
+    .filter((p) => !Number.isNaN(p.x_pct) && !Number.isNaN(p.y_pct));
+}
+
+async function replacePins(setupId: string, pins: PinInput[]) {
+  const sb = supabaseAdmin();
+  const { error: delErr } = await sb
+    .from("gadget_setup_pins")
+    .delete()
+    .eq("setup_id", setupId);
+  if (delErr) throw delErr;
+  if (pins.length === 0) return;
+
+  const { error } = await sb.from("gadget_setup_pins").insert(
+    pins.map((p, i) => ({
+      setup_id: setupId,
+      x_pct: p.x_pct,
+      y_pct: p.y_pct,
+      // Order is the order they were placed, which is the order the clip
+      // covers them — that is what the numbers on the blueprint mean.
+      display_order: i,
+    }))
+  );
+  if (error) throw error;
+}
+
+// "Setup 3" needs to know how many already exist for this site and operator.
+// The database only insists a name exists; the default is application logic.
+async function nextSetupNumber(
+  siteId: string,
+  operatorId: string
+): Promise<number> {
+  const { count } = await supabaseAdmin()
+    .from("gadget_setups")
+    .select("id", { count: "exact", head: true })
+    .eq("site_id", siteId)
+    .eq("operator_id", operatorId);
+  return (count ?? 0) + 1;
+}
+
+export async function createSetupAction(formData: FormData) {
   const site_id = String(formData.get("site_id") ?? "");
   const operator_id = String(formData.get("operator_id") ?? "");
-  const label = String(formData.get("label") ?? "").trim() || null;
-  const note = String(formData.get("note") ?? "").trim() || null;
-  const video_url = String(formData.get("video_url") ?? "").trim() || null;
-  const x_pct = clamp(Number(formData.get("x_pct") ?? 50), 0, 100);
-  const y_pct = clamp(Number(formData.get("y_pct") ?? 50), 0, 100);
+  const video_url = String(formData.get("video_url") ?? "").trim();
   if (!site_id || !operator_id) return;
+  // video_url is NOT NULL in the schema: a setup without a clip explains
+  // nothing, since the pins carry no information on their own.
+  if (!video_url) {
+    throw new Error("A setup needs a clip — the pins alone explain nothing.");
+  }
 
-  const { error } = await supabaseAdmin()
-    .from("gadget_placements")
-    .insert({ site_id, operator_id, label, note, video_url, x_pct, y_pct });
+  const n = await nextSetupNumber(site_id, operator_id);
+  const name = String(formData.get("name") ?? "").trim() || `Setup ${n}`;
+
+  const { data, error } = await supabaseAdmin()
+    .from("gadget_setups")
+    .insert({ site_id, operator_id, name, video_url, display_order: n })
+    .select("id")
+    .single();
   if (error) throw error;
+
+  await replacePins((data as { id: string }).id, parsePins(formData.get("pins")));
   revalidateGadgets(await mapSlugForSite(site_id));
 }
 
-export async function updatePlacementAction(formData: FormData) {
+export async function updateSetupAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const site_id = String(formData.get("site_id") ?? "");
-  const operator_id = String(formData.get("operator_id") ?? "");
-  const label = String(formData.get("label") ?? "").trim() || null;
-  const note = String(formData.get("note") ?? "").trim() || null;
-  const video_url = String(formData.get("video_url") ?? "").trim() || null;
-  const x_pct = clamp(Number(formData.get("x_pct") ?? 50), 0, 100);
-  const y_pct = clamp(Number(formData.get("y_pct") ?? 50), 0, 100);
-  if (!id || !operator_id) return;
+  const name = String(formData.get("name") ?? "").trim();
+  const video_url = String(formData.get("video_url") ?? "").trim();
+  const display_order = Number(formData.get("display_order") ?? 0);
+  if (!id || !name) return;
+  if (!video_url) {
+    throw new Error("A setup needs a clip — the pins alone explain nothing.");
+  }
 
   const { error } = await supabaseAdmin()
-    .from("gadget_placements")
-    .update({ operator_id, label, note, video_url, x_pct, y_pct })
+    .from("gadget_setups")
+    .update({
+      name,
+      video_url,
+      display_order: Number.isNaN(display_order) ? 0 : display_order,
+    })
     .eq("id", id);
-  if (error) throw error;
+  if (error) {
+    // 23505 is the unique index on (site_id, operator_id, display_order).
+    if (error.code === "23505") {
+      throw new Error(
+        `Another setup for this operator already uses order ${display_order}. Give this one a different number.`
+      );
+    }
+    throw error;
+  }
+
+  // Pins are only replaced when the form actually submitted a set. An edit
+  // that just renames a setup must not wipe its pins.
+  const raw = formData.get("pins");
+  if (raw !== null && String(raw) !== "") {
+    await replacePins(id, parsePins(raw));
+  }
   revalidateGadgets(await mapSlugForSite(site_id));
 }
 
-export async function togglePlacementPublishedAction(formData: FormData) {
+export async function toggleSetupPublishedAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const site_id = String(formData.get("site_id") ?? "");
   const next = String(formData.get("published") ?? "") === "true";
   if (!id) return;
   const { error } = await supabaseAdmin()
-    .from("gadget_placements")
+    .from("gadget_setups")
     .update({ published: next })
     .eq("id", id);
   if (error) throw error;
   revalidateGadgets(await mapSlugForSite(site_id));
 }
 
-export async function deletePlacementAction(formData: FormData) {
+export async function deleteSetupAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const site_id = String(formData.get("site_id") ?? "");
   if (!id) return;
+  // Pins cascade from the setup, so this removes them too.
   const { error } = await supabaseAdmin()
-    .from("gadget_placements")
+    .from("gadget_setups")
     .delete()
     .eq("id", id);
   if (error) throw error;
