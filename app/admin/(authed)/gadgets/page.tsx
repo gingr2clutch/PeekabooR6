@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AdminListCard, AdminPill } from "../AdminCards";
 import { AdminScreen } from "../AdminScreen";
@@ -52,6 +53,16 @@ export default async function AdminGadgetsPage() {
       back={{ href: "/admin/home", label: "Admin", accent: "blue" }}
       subtitle={`${sites.length} sites across ${maps.length} maps · ${totalPublished} published, ${withPlacements.size} with placements`}
     >
+      {/* Quick add — one tap to the repeat-placement screen. First thing on
+          the page because it is the common case; the per-map drill-down below
+          remains the way to edit or publish an existing placement. */}
+      <Link
+        href="/admin/gadgets/quick"
+        className="block rounded-card border border-blue bg-blue/[0.06] px-4 py-3.5 text-center text-sm font-semibold text-blue transition-colors hover:bg-blue/10"
+      >
+        ⚡ Quick add a placement
+      </Link>
+
       <div className="space-y-2">
         {maps.map((m) => {
           const mine = sites.filter((s) => s.map_id === m.id);
