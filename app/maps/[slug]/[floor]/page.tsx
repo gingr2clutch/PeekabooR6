@@ -178,9 +178,10 @@ export default async function FloorPage({
           </p>
         )}
 
-        {/* content-1 — between the floor blueprint (the hero) and Floor stats,
-            per spec. Below the fold on every viewport: the header, floor nav
-            and the 16:10 blueprint all sit above it. */}
+        {/* The page's only in-content slot: below the "ranks Nth of N" line,
+            above Floor stats. mt-12 matches the gap Floor stats already had
+            from the line above it, so the ad sits in the page's own rhythm
+            rather than adding a band of its own. */}
         <NitroAdSlot id="pkb-content-1" className="mt-12" />
 
         {/* Floor-level stats — server-rendered so crawlers and ad units see
@@ -214,15 +215,6 @@ export default async function FloorPage({
           </div>
         </section>
 
-        {/* content-2 — below Floor stats, above the submit line.
-
-            NOTE: this page carries 2 in-content slots, not the funnel quota of
-            3. After the header it has exactly two section boundaries — after
-            the blueprint and after Floor stats. A third would have to go
-            inside FloorView, between the blueprint and its pin list, which is
-            mid-component and the one thing the placement rule forbids. Filler
-            space to justify a third unit would be worse than one fewer ad. */}
-        <NitroAdSlot id="pkb-content-2" className="mt-12" />
       </main>
     </>
   );

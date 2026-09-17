@@ -64,9 +64,20 @@ export const REPORT_CONFIG = {
   position: "top-right",
 } as const;
 
-// How long to wait before deciding nothing is coming. Long enough to cover a
-// slow fill on a phone connection, short enough that the reader is unlikely to
-// have scrolled the slot into view and be staring at it.
+// TIMEOUT FALLBACK — 4 seconds.
+//
+// Nitro documents no "this slot went unfilled" callback. createAd returns a
+// Promise, but its resolution is undocumented for fill status and it resolves
+// the same way whether or not a creative came back, so it cannot be used to
+// tell the two apart. onNavigate is an SPA re-request hook, not a fill signal.
+//
+// So: wait, then look once. Deliberately NOT a MutationObserver polling loop —
+// a single timeout plus one read, with an IntersectionObserver only to decide
+// WHEN it is safe to apply the result.
+//
+// 4s is long enough to cover a slow fill on a phone connection and short enough
+// that a below-the-fold slot is usually still below the fold when it fires,
+// which is what lets it collapse for free.
 const GRACE_MS = 4000;
 
 type SlotState = "reserved" | "filled" | "empty";
@@ -170,9 +181,11 @@ export function AdSlot({
 
   return (
     <div
-      // Margins come off entirely when collapsed, so an unsold slot leaves no
-      // trace — not the box, and not the gap that was separating it.
-      className={collapsed ? "" : `mx-auto ${className}`}
+      // No margin of its own. The call site supplies spacing that matches the
+      // rhythm of the section it sits between, so the visible gap is the ad and
+      // not ad-plus-whitespace. When collapsed even that is dropped, so an
+      // unsold slot leaves no trace — not the box, not the gap around it.
+      className={collapsed ? "" : className}
       style={
         collapsed
           ? { height: 0, overflow: "hidden" }

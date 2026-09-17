@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
-import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { MapCardImage } from "@/components/MapCardImage";
 import { getMaps } from "@/lib/db";
-import { Fragment, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +37,8 @@ export default async function AttackingIndexPage() {
             // Stagger resets every 5 to match this grid's widest column count,
             // so each row sweeps in rather than the page-long index dragging
             // late cards behind the scroll.
-            <Fragment key={map.id}>
             <li
+              key={map.id}
               data-reveal="quick"
               style={{ "--reveal-delay": `${(i % 5) * 60}ms` } as CSSProperties}
             >
@@ -58,20 +57,9 @@ export default async function AttackingIndexPage() {
                 </span>
               </Link>
             </li>
-            {/* pkb-map-feed — a full-width row between grid rows. Card 8 is a
-                row boundary at 2 and 4 columns and below the fold on a
-                phone. */}
-            {i === 7 && (
-              <li className="col-span-2 sm:col-span-3 md:col-span-4 xl:col-span-5">
-                <NitroAdSlot id="pkb-map-feed" />
-              </li>
-            )}
-            </Fragment>
           ))}
         </ul>
 
-        {/* content-1 — below the grid, above the submit line. */}
-        <NitroAdSlot id="pkb-content-1" className="mt-12" />
       </main>
     </>
   );

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
-import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { SubmitPeekForm } from "@/components/SubmitPeekForm";
 import { supabasePublic } from "@/lib/supabase";
 
@@ -61,14 +60,6 @@ export default async function SubmitPage() {
         </div>
         <SubmitPeekForm maps={maps} />
 
-        {/* content-1 — below the form, above the footer, per spec.
-
-            NOTE: 1 in-content slot, not the secondary quota of 2. This page is
-            a heading and a single form — there is exactly one boundary that is
-            not mid-form, and splitting the form to insert an ad would put an
-            advert in the middle of the thing the page exists to get people to
-            finish. */}
-        <NitroAdSlot id="pkb-content-1" className="mt-12" />
       </main>
     </>
   );

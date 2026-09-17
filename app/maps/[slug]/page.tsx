@@ -399,8 +399,8 @@ export default async function MapPage({
           </div>
         )}
 
-        {/* content-3 — below the trend chart, above the guide heading. */}
-        <NitroAdSlot id="pkb-content-3" className="mt-12" />
+        {/* content-2 — below the trend chart, above the guide text. */}
+        <NitroAdSlot id="pkb-content-2" className="mt-12" />
 
         {/* Per-map guide text (SEO + in-content ad anchors). Renders ONLY for
             maps with an entry in content/map-guides.ts — other maps unchanged.
@@ -435,9 +435,9 @@ export default async function MapPage({
             {lastUpdatedLabel ? ` Updated ${lastUpdatedLabel}.` : ""}
           </p>
         )}
-        {/* content-2 — bottom of the page. SubmitCta renders from the root
+        {/* content-3 — bottom of the page. SubmitCta renders from the root
             layout right after </main>, so this is above the submit line. */}
-        <NitroAdSlot id="pkb-content-2" className="mt-12" />
+        <NitroAdSlot id="pkb-content-3" className="mt-12" />
         </MapEntryScope>
       </main>
     </>

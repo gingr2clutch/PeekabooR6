@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
-import { NitroAdSlot } from "@/components/NitroAdSlot";
 import {
   featuredPairings,
   getComparisonMaps,
@@ -72,8 +71,6 @@ export default async function CompareIndexPage() {
           </p>
         </div>
 
-        {/* content-1 — after the hero, before the matchup content. */}
-        <NitroAdSlot id="pkb-content-1" className="mb-10" />
 
         {maps.length < 2 ? (
           <p className="text-center text-muted">
@@ -99,10 +96,6 @@ export default async function CompareIndexPage() {
               </section>
             )}
 
-            {/* content-2 — before All matchups. The Featured matchups grid
-                sits between this and content-1, so they never share a
-                viewport. */}
-            <NitroAdSlot id="pkb-content-2" className="mb-12" />
 
             <section>
               <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">

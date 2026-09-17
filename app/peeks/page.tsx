@@ -7,8 +7,7 @@ import {
   getSTierPeeks,
   type PeekWithContext,
 } from "@/lib/db";
-import { Fragment, type CSSProperties } from "react";
-import { NitroAdSlot } from "@/components/NitroAdSlot";
+import type { CSSProperties } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -88,8 +87,8 @@ export default async function PeeksPage({
               // already on screen at load — capped at 6. Past that, rows
               // arrive one at a time as you scroll and a delay would just
               // read as lag.
-              <Fragment key={peek.id}>
               <li
+                key={peek.id}
                 data-reveal="quick"
                 style={
                   {
@@ -99,28 +98,10 @@ export default async function PeeksPage({
               >
                 <BestPeek peek={peek} showMap from={mode} />
               </li>
-                {/* pkb-map-feed — inside the peek list, on a row boundary
-                    well below the fold. */}
-                {i === 5 && (
-                  <li>
-                    <NitroAdSlot id="pkb-map-feed" />
-                  </li>
-                )}
-                {/* content-1 — further down the same list, with six cards of
-                    content between it and map-feed so the two are never in one
-                    viewport. */}
-                {i === 13 && (
-                  <li>
-                    <NitroAdSlot id="pkb-content-1" />
-                  </li>
-                )}
-              </Fragment>
             ))}
           </ul>
         )}
 
-        {/* content-2 — end of the list, above the submit line. */}
-        <NitroAdSlot id="pkb-content-2" className="mt-12" />
       </main>
     </>
   );
