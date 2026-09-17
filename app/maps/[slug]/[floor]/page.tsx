@@ -182,7 +182,20 @@ export default async function FloorPage({
             above Floor stats. mt-12 matches the gap Floor stats already had
             from the line above it, so the ad sits in the page's own rhythm
             rather than adding a band of its own. */}
-        <NitroAdSlot id="pkb-content-1" className="mt-12" />
+        <NitroAdSlot
+          id="pkb-content-1"
+          className="mt-12"
+          // Measured, not assumed: collapsing this slot while visible costs
+          // 0.0000 CLS across three runs, because nothing visible sits below
+          // it. It is also the only slot on the site that can NEVER scroll out
+          // of view — the floor page is ~1300px against an 844px viewport, so
+          // at maximum scroll the slot is still on screen. Without this it
+          // would be a permanent 250px gap whenever unsold.
+          //
+          // The same measurement on map (0.0446), peek (0.0876) and Top Peeks
+          // (0.0116) came back non-zero, which is why they are not opted in.
+          collapseWhenVisible
+        />
 
         {/* Floor-level stats — server-rendered so crawlers and ad units see
             them on load. All values derived from this floor's peeks. */}

@@ -54,6 +54,15 @@ export type AdSlotProps = {
   className?: string;
   /** Merged into the createAd config. */
   config?: Record<string, unknown>;
+  /**
+   * Collapse even while the slot is on screen.
+   *
+   * Off by default, because collapsing a visible box shifts everything below
+   * it. Turn it on only where the cost has been MEASURED at zero — see the
+   * floor-page call site, the one page where the slot can never scroll out of
+   * view and so would otherwise leave a permanent gap.
+   */
+  collapseWhenVisible?: boolean;
 };
 
 /** Shared across every in-content slot, per the placement spec. */
@@ -87,6 +96,7 @@ export function AdSlot({
   height = 250,
   className = "",
   config,
+  collapseWhenVisible = false,
 }: AdSlotProps) {
   const created = useRef(false);
   const [state, setState] = useState<SlotState>("reserved");
@@ -160,8 +170,9 @@ export function AdSlot({
     const apply = () => {
       if (decision === "reserved") return;
       // Growing is always safe: the space is already reserved. Shrinking waits
-      // until the slot is off screen.
-      if (decision === "empty" && onScreen) return;
+      // until the slot is off screen — unless this call site has opted in after
+      // measuring that collapsing while visible costs nothing there.
+      if (decision === "empty" && onScreen && !collapseWhenVisible) return;
       setState(decision);
     };
 
@@ -175,7 +186,7 @@ export function AdSlot({
       window.clearTimeout(timer);
       io?.disconnect();
     };
-  }, [id]);
+  }, [id, collapseWhenVisible]);
 
   const collapsed = state === "empty";
 
