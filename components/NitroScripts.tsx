@@ -1,5 +1,5 @@
 import { nitroEnabled } from "@/lib/ad-env";
-import { NitroAnchor } from "./NitroAnchor";
+import { NitroAnchorSlot } from "./NitroAnchorSlot";
 
 // Nitro base loader + the site-wide anchor.
 //
@@ -18,6 +18,10 @@ import { NitroAnchor } from "./NitroAnchor";
 //
 // TO GO LIVE on 2026-09-29: delete this gate and remove the Mediavine script
 // from app/layout.tsx in the same commit. Never both loaders at once.
+//
+// demo is passed to the anchor for the same reason it is passed to the slots:
+// this whole subtree only renders outside production, so placeholder creatives
+// cannot reach a real visitor.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // The stub queues createAd calls made before ads-2632.js lands, so slot
@@ -32,29 +36,16 @@ export function NitroScripts() {
   return (
     <>
       <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: NITRO_STUB }} />
-      {/*
-        TODO — CONFIRM WITH NITRO BEFORE GO-LIVE: data-spa="auto"
-
-        This is an App Router SPA. Client-side navigation does not reload the
-        page, so without a re-request hook we serve one impression per visit
-        against ~8.5 pages per session — roughly an 88% loss of inventory.
-        data-spa="auto" is documented by Nitro as the fix, but it is NOT in the
-        setup guide we were given, so it is unverified.
-
-        Two things to check with them, because the failure modes differ:
-          - Does the attribute actually re-request on route change here?
-          - If it is silently ignored, we need a manual re-createAd on
-            navigation instead, and AdSlot's cleanup already clears the
-            container for that.
-        Confirm before 2026-09-29. Do not assume it works because it is present.
-      */}
+      {/* SPA route changes are handled per-slot with onNavigate() on the ad
+          object returned by createAd — see AdSlot. data-spa="auto" was the
+          earlier guess and Nitro confirmed it is not the mechanism, so the
+          attribute is gone rather than left on as a hopeful no-op. */}
       <script
         data-cfasync="false"
         async
-        data-spa="auto"
         src="https://s.nitropay.com/ads-2632.js"
       />
-      <NitroAnchor />
+      <NitroAnchorSlot demo />
     </>
   );
 }

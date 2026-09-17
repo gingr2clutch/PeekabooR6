@@ -13,5 +13,9 @@ import { nitroEnabled } from "@/lib/ad-env";
 // the live site, and equally no un-reserved space on staging.
 export function NitroAdSlot(props: AdSlotProps) {
   if (!nitroEnabled()) return null;
-  return <AdSlot {...props} />;
+  // demo is decided HERE, on the server, where VERCEL_ENV is readable. It is
+  // simply "we are not production" — the same condition that let this render at
+  // all — so demo can never reach the live site: in production this component
+  // returns null before AdSlot exists.
+  return <AdSlot demo {...props} />;
 }

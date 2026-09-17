@@ -10,35 +10,6 @@ html,
 body {
   background-color: #f6f3ea;
   color: #1e211d;
-  /* Room at the bottom for the Nitro anchor, which is fixed to the viewport
-     and would otherwise sit on top of SubmitCta and the footer.
-
-     The value is written by components/NitroAnchor.tsx from a ResizeObserver
-     on the real anchor element, so it tracks the actual height per breakpoint
-     and per creative, and collapses to 0 when the reader dismisses it.
-
-     Fallback 0px means this line is a no-op wherever the variable is never
-     set — which is every production page, since NitroScripts renders nothing
-     there. Production spacing is unchanged. */
-  padding-bottom: var(--nitro-anchor-h, 0px);
-}
-
-/* The padding above must not shrink the page.
-
-   body is `min-h-screen flex flex-col` with border-box sizing, so on a page
-   shorter than the viewport the footer is held down by flex-1. Adding
-   padding-bottom eats into that 100vh content box, flex-1 shrinks, and the
-   footer slides UP the moment the anchor loads — measured at CLS 0.163 on the
-   floor page, which is the one short page in the funnel.
-
-   Growing min-height by the same amount keeps the content box at exactly 100vh,
-   so the footer does not move and the padding becomes extra room below it,
-   which is what the anchor covers.
-
-   Selector is body.min-h-screen, not body: a bare element selector loses to
-   Tailwind's .min-h-screen class. */
-body.min-h-screen {
-  min-height: calc(100vh + var(--nitro-anchor-h, 0px));
 }
 
 body {

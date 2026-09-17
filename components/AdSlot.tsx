@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 // One Nitro ad placement.
@@ -9,36 +10,43 @@ import { useEffect, useRef, useState } from "react";
 // script queues the call if the loader has not arrived yet, so this is safe to
 // run before ads-2632.js finishes downloading.
 //
+// ──────────────────────── never hold createAd ──────────────────────────────
+// The library REASSIGNS window.nitroAds.createAd when it loads. Capturing that
+// function — or the object it hangs off — into a local, a ref or a wrapper
+// means later calls hit the stub that was replaced, and ads orphan across
+// navigations. Every call below reads window.nitroAds.createAd at call time.
+// Do not refactor that back into a variable; it was one before, and that was
+// the bug Nitro warned about.
+//
+// The ad OBJECT that createAd resolves with is a different thing and is safe to
+// hold: it is the documented handle for onNavigate.
+//
+// ───────────────────────────── SPA handling ────────────────────────────────
+// This site averages 8.2 pages a session, so one impression per visit would
+// waste most of the inventory. Route changes are handled by holding the
+// resolved ad object and calling onNavigate() when the pathname changes.
+//
+// That is ONE of Nitro's two approaches, chosen deliberately. The other is full
+// teardown — the container "completely removed and not just hidden" — which is
+// what the previous innerHTML wipe was reaching for. Doing both is incoherent:
+// the wipe would destroy the very object onNavigate needs. The wipe is gone.
+//
 // ───────────────────────────── sizing ──────────────────────────────────────
-// The slot has three states, and which one it is in decides its box:
+//   reserved  height committed at first paint, before any script runs. Protects
+//             CLS while the ad is in flight.
+//   filled    height:auto — the box is the creative and nothing more.
+//   empty     height 0, margins stripped. An unsold slot is invisible.
 //
-//   reserved  height is committed at first paint, before any script runs. This
-//             is what protects CLS while the ad is in flight.
-//   filled    height:auto — the box is the creative and nothing more. No
-//             padding of our own stacked on top of it.
-//   empty     height 0, margins stripped. An unsold slot is invisible, not a
-//             gap.
-//
-// ─────────────────────── why shrinking is deferred ─────────────────────────
-// Collapsing a 250px box to 0 IS a layout shift: everything below it moves up.
-// Doing that while the reader is looking at the slot would trade a blank
-// rectangle for a CLS penalty, which is a bad deal on a page that lives on
-// search traffic.
-//
-// So a shrink only happens while the slot is OUT of the viewport. An unfilled
-// slot the reader has already scrolled past collapses silently; one currently
-// on screen keeps its reservation until it scrolls away, then collapses. Growth
-// is never deferred — a filled slot can take its space immediately, because
-// that space was already reserved.
-//
-// The consequence, stated plainly: an unsold slot sitting in the first viewport
-// stays a gap until the reader scrolls. That is deliberate. CLS is the thing
-// that cannot regress.
+// Shrinking is deferred until the slot is off screen, because collapsing a
+// visible box shifts everything below it. collapseWhenVisible overrides that
+// for call sites where the cost has been measured at zero.
+
+type NitroAd = { onNavigate?: () => void };
 
 declare global {
   interface Window {
     nitroAds?: {
-      createAd: (id: string, config: Record<string, unknown>) => Promise<unknown>;
+      createAd: (id: string, config: Record<string, unknown>) => Promise<NitroAd>;
       addUserToken?: (...args: unknown[]) => void;
       queue: unknown[];
     };
@@ -63,6 +71,15 @@ export type AdSlotProps = {
    * view and so would otherwise leave a permanent gap.
    */
   collapseWhenVisible?: boolean;
+  /**
+   * Nitro placeholder creatives.
+   *
+   * Passed in from the server gate rather than read here. This is a client
+   * component, so process.env.VERCEL_ENV is undefined in the browser — reading
+   * it here would evaluate to "not production" IN production, which is exactly
+   * backwards for the one flag that must never ship live.
+   */
+  demo?: boolean;
 };
 
 /** Shared across every in-content slot, per the placement spec. */
@@ -75,18 +92,10 @@ export const REPORT_CONFIG = {
 
 // TIMEOUT FALLBACK — 4 seconds.
 //
-// Nitro documents no "this slot went unfilled" callback. createAd returns a
-// Promise, but its resolution is undocumented for fill status and it resolves
-// the same way whether or not a creative came back, so it cannot be used to
-// tell the two apart. onNavigate is an SPA re-request hook, not a fill signal.
-//
-// So: wait, then look once. Deliberately NOT a MutationObserver polling loop —
-// a single timeout plus one read, with an IntersectionObserver only to decide
-// WHEN it is safe to apply the result.
-//
-// 4s is long enough to cover a slow fill on a phone connection and short enough
-// that a below-the-fold slot is usually still below the fold when it fires,
-// which is what lets it collapse for free.
+// Nitro documents no "this slot went unfilled" callback. createAd's promise
+// resolves the same way whether or not a creative came back, so it cannot tell
+// the two apart. So: wait, then read the container once. Deliberately not a
+// MutationObserver polling loop.
 const GRACE_MS = 4000;
 
 type SlotState = "reserved" | "filled" | "empty";
@@ -97,8 +106,12 @@ export function AdSlot({
   className = "",
   config,
   collapseWhenVisible = false,
+  demo = false,
 }: AdSlotProps) {
   const created = useRef(false);
+  const adRef = useRef<NitroAd | null>(null);
+  const pathname = usePathname();
+  const seenPath = useRef<string | null>(null);
   const [state, setState] = useState<SlotState>("reserved");
 
   useEffect(() => {
@@ -108,29 +121,40 @@ export function AdSlot({
     if (created.current) return;
     created.current = true;
 
-    const nitro = window.nitroAds;
-    if (!nitro) return;
-
-    nitro
-      .createAd(id, {
+    // Read through window at call time — never captured. See the note above.
+    window.nitroAds
+      ?.createAd(id, {
         height,
-        delayLoading: true,
+        // Defers the request until the slot approaches the viewport, at Nitro's
+        // default visibleMargin. Their stated single biggest blocking-time
+        // lever, so it is on everywhere rather than tuned per slot.
+        renderVisibleOnly: true,
+        ...(demo ? { demo: true } : {}),
         report: REPORT_CONFIG,
         ...config,
+      })
+      .then((ad) => {
+        adRef.current = ad;
       })
       .catch(() => {
         // A failed ad must never surface to a reader or break the page.
       });
 
-    return () => {
-      created.current = false;
-      // Nitro exposes no documented destroy for a single slot. Emptying the
-      // container is what stops a stale creative from persisting across a
-      // client-side route change in this SPA.
-      const el = document.getElementById(id);
-      if (el) el.innerHTML = "";
-    };
-  }, [id, height, config]);
+    // No teardown: onNavigate is the chosen approach and needs this ad object
+    // to survive route changes.
+  }, [id, height, config, demo]);
+
+  // Route change → tell the ad to refresh itself.
+  useEffect(() => {
+    if (seenPath.current === null) {
+      // Skip the run that fires on mount; the ad was just created.
+      seenPath.current = pathname;
+      return;
+    }
+    if (seenPath.current === pathname) return;
+    seenPath.current = pathname;
+    adRef.current?.onNavigate?.();
+  }, [pathname]);
 
   // Decide filled vs empty, then apply it when applying it is free.
   useEffect(() => {
