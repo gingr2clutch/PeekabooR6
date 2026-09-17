@@ -9,12 +9,17 @@ type Props = {
   initialUrl?: string | null;
 };
 
-// Tap-to-add clip field for a gadget placement, replacing the raw URL box.
+// Clip field for a gadget setup: upload a file, or paste a URL that is already
+// hosted.
 //
-// It never writes to the database. The uploaded R2 URL goes into a hidden
-// video_url input, so the surrounding form's existing action persists it — the
-// same field name it always submitted. That is what lets this work on the New
-// Placement form, where no row exists yet to attach an upload to.
+// It never writes to the database. Either route sets the same hidden video_url
+// input, so the surrounding form's existing action persists it unchanged — the
+// same field name it always submitted. That is what lets this work on a create
+// form, where no row exists yet to attach an upload to.
+//
+// The paste route exists because the clips from the old placement model are
+// still in R2; their URLs are recorded in docs/gadget-clips-before-setups.md,
+// and re-entering a setup should not mean uploading the same file twice.
 //
 // accept="video/*" opens straight to the videos in the phone's photo library.
 export function GadgetClipUpload({ siteId, initialUrl }: Props) {
@@ -24,7 +29,34 @@ export function GadgetClipUpload({ siteId, initialUrl }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [size, setSize] = useState<number | null>(null);
+  const [paste, setPaste] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Attach a clip that is already in R2 by URL instead of re-uploading it.
+  // The old placement clips survived the setups migration — their objects were
+  // never deleted — so re-entering a setup should not mean sourcing and
+  // uploading the same file twice.
+  function applyPasted() {
+    const v = paste.trim();
+    if (!v) return;
+    let parsed: URL;
+    try {
+      parsed = new URL(v);
+    } catch {
+      setError("That is not a URL. Paste the full https:// address.");
+      return;
+    }
+    // http(s) only. This value ends up as the src of a <video> on a public
+    // page, so a javascript: or data: URL has no business reaching it.
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      setError("Clip URLs must start with http:// or https://");
+      return;
+    }
+    setError(null);
+    setSize(null);
+    setUrl(parsed.toString());
+    setPaste("");
+  }
 
   async function handleFile(file: File) {
     setError(null);
@@ -115,6 +147,38 @@ export function GadgetClipUpload({ siteId, initialUrl }: Props) {
             {busy ? `Uploading… ${progress}%` : "Tap to add a clip"}
           </span>
         </label>
+      )}
+
+      {/* Paste an existing URL. Shown only while no clip is attached — once one
+          is, Replace clears it and this comes back. */}
+      {!url && !busy && (
+        <div className="mt-2 flex gap-2">
+          <input
+            type="url"
+            inputMode="url"
+            value={paste}
+            onChange={(e) => setPaste(e.target.value)}
+            // Enter inside a text field submits the surrounding form. Here that
+            // would save the setup before the URL had been applied, so Enter is
+            // intercepted and used to attach instead.
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                applyPasted();
+              }
+            }}
+            placeholder="…or paste a clip URL"
+            className="min-w-0 flex-1 rounded-btn border border-border bg-card px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-brand"
+          />
+          <button
+            type="button"
+            onClick={applyPasted}
+            disabled={!paste.trim()}
+            className="shrink-0 rounded-btn border border-border px-3 py-2 text-sm text-ink transition-colors hover:border-brand hover:text-brand disabled:opacity-40"
+          >
+            Use
+          </button>
+        </div>
       )}
 
       {busy && (

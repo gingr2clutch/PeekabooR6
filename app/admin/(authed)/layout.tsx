@@ -1,5 +1,6 @@
 import { Wordmark } from "@/components/Wordmark";
 import { logoutAction } from "../actions";
+import { NoAdsHere } from "./NoAdsHere";
 
 // The header is now two things: get home, and sign out.
 //
@@ -14,6 +15,9 @@ export default function AuthedAdminLayout({
 }) {
   return (
     <>
+      {/* The root layout's ad loader also covers /admin. Its fixed bottom unit
+          sits on top of admin controls — see NoAdsHere. */}
+      <NoAdsHere />
       <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 sm:px-6">
         <Wordmark href="/admin/home" />
         <form action={logoutAction}>

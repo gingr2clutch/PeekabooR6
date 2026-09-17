@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AdminListCard, AdminPill } from "../AdminCards";
 import { AdminScreen } from "../AdminScreen";
@@ -23,7 +24,7 @@ export default async function AdminGadgetsPage() {
   const [mapsRes, sitesRes, placementsRes] = await Promise.all([
     sb.from("maps").select("id, slug, name").order("name"),
     sb.from("gadget_sites").select("id, map_id, published"),
-    sb.from("gadget_placements").select("site_id"),
+    sb.from("gadget_setups").select("site_id"),
   ]);
   for (const r of [mapsRes, sitesRes, placementsRes]) {
     if (r.error) throw r.error;
@@ -40,7 +41,7 @@ export default async function AdminGadgetsPage() {
     published: boolean;
   }[];
 
-  const withPlacements = new Set(
+  const withSetups = new Set(
     ((placementsRes.data ?? []) as { site_id: string }[]).map((p) => p.site_id)
   );
 
@@ -50,13 +51,23 @@ export default async function AdminGadgetsPage() {
     <AdminScreen
       title="Gadgets"
       back={{ href: "/admin/home", label: "Admin", accent: "blue" }}
-      subtitle={`${sites.length} sites across ${maps.length} maps · ${totalPublished} published, ${withPlacements.size} with placements`}
+      subtitle={`${sites.length} sites across ${maps.length} maps · ${totalPublished} published, ${withSetups.size} with setups`}
     >
+      {/* Quick add — one tap to the repeat-entry screen. First thing on the
+          page because it is the common case; the per-map drill-down below
+          remains the way to edit or publish an existing setup. */}
+      <Link
+        href="/admin/gadgets/quick"
+        className="block rounded-card border border-blue bg-blue/[0.06] px-4 py-3.5 text-center text-sm font-semibold text-blue transition-colors hover:bg-blue/10"
+      >
+        ⚡ Quick add a setup
+      </Link>
+
       <div className="space-y-2">
         {maps.map((m) => {
           const mine = sites.filter((s) => s.map_id === m.id);
           const live = mine.filter((s) => s.published).length;
-          const built = mine.filter((s) => withPlacements.has(s.id)).length;
+          const built = mine.filter((s) => withSetups.has(s.id)).length;
           return (
             <AdminListCard
               key={m.id}
@@ -68,7 +79,7 @@ export default async function AdminGadgetsPage() {
                   ? "No sites yet"
                   : `${mine.length} site${
                       mine.length === 1 ? "" : "s"
-                    } · ${built} with placements`
+                    } · ${built} with setups`
               }
               right={
                 <AdminPill tone={live > 0 ? "good" : "muted"}>
@@ -82,7 +93,7 @@ export default async function AdminGadgetsPage() {
 
       <p className="text-sm text-muted">
         Drafts are listed but hidden from the public site until published.
-        Photos and placements live inside each site.
+        Photos and setups live inside each site.
       </p>
     </AdminScreen>
   );

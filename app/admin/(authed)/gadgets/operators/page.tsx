@@ -43,7 +43,7 @@ export default async function AdminOperatorsPage() {
       .order("display_order", { ascending: true }),
     // Counted per operator so a row can say why it cannot be deleted before
     // you click, rather than only after.
-    sb.from("gadget_placements").select("operator_id"),
+    sb.from("gadget_setups").select("operator_id"),
   ]);
   if (opsRes.error) {
     return (

@@ -48,7 +48,7 @@ export async function GET(req: Request) {
     const operator = url.searchParams.get("operator");
 
     let q = sb
-      .from("gadget_placements")
+      .from("gadget_setups")
       .select(
         "label, gadget_sites!inner(map_id, name), gadget_operators!inner(name)"
       )

@@ -209,28 +209,19 @@ export function SiteNav({
       {/* Reveals as one unit after the intro flip — AuthNavIcon and
           SiteSearch take no className, so the cluster staggers together
           rather than icon by icon. Inert off the homepage. */}
-      <div className="reveal flex items-center gap-0.5">
-        {/* Compact Discord button, desktop only. Below lg: the homepage keeps
-            its full-width Discord bar instead (app/page.tsx hides that bar at
-            lg:), so the two never both appear. */}
-        <a
-          href={DISCORD_INVITE}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Join the peekabooR6 Discord (opens in new tab)"
-          title="Join our Discord"
-          className={`mr-1.5 hidden items-center gap-1.5 rounded-btn bg-gradient-to-r from-[#57938b] to-[#497f75] px-2.5 py-1.5 text-xs font-semibold text-white transition-[filter] duration-150 ease-out hover:brightness-95 lg:inline-flex ${
-            home ? "lg:px-3 lg:py-2 lg:text-sm" : ""
-          }`}
-        >
-          <DiscordGlyph size={15} />
-          <span>Join</span>
-        </a>
-        {/* Same lg: gate as the Discord button above. At 360px the row already
-            runs to ~308px of its 328px, so a ~124px button here would overflow
-            and squeeze the wordmark — but neither button exists below 1024px,
-            so narrow widths are untouched. */}
-        <SubmitPeekButton className="mr-1.5 hidden lg:inline-flex" />
+      {/* One primary action, then the icon group. gap-2 from lg gives every
+          item on the right the same spacing — the old row used gap-0.5 plus
+          per-item mr-1.5, so the gaps were uneven. Below lg the gap is
+          unchanged, and the only two items that ever carried mr-1.5 are hidden
+          there, so narrow widths render exactly as before.
+
+          The teal Discord "Join" button is gone from here. It is still in the
+          drawer (SECTIONS → Community → Discord) and the homepage keeps its
+          full-width Discord bar below lg. */}
+      <div className="reveal flex items-center gap-0.5 lg:gap-2">
+        {/* Desktop only. At 360px the row already runs to ~308px of its 328px,
+            so a ~124px button here would overflow and squeeze the wordmark. */}
+        <SubmitPeekButton className="hidden lg:inline-flex" />
         <AuthNavIcon />
         <SiteSearch />
         <button
