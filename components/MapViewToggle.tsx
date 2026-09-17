@@ -53,14 +53,10 @@ function readViewFromUrl(): View | null {
 // re-read on the client. localStorage stays a cross-visit fallback.
 export function MapViewToggle({
   floorsView,
-  floorsFooter,
   rankedView,
   initialView = "floors",
 }: {
   floorsView: ReactNode;
-  /** Rendered under the floors view only — the ad slot lives here so it
-      follows the default view rather than the toggled-to one. */
-  floorsFooter?: ReactNode;
   rankedView: ReactNode;
   // What the server rendered from ?view= (defaults to "floors"). The client
   // reconciles against the live URL + stored preference on mount.
@@ -139,14 +135,7 @@ export function MapViewToggle({
         </div>
       </div>
 
-      {view === "floors" ? (
-        <>
-          {floorsView}
-          {floorsFooter}
-        </>
-      ) : (
-        rankedView
-      )}
+      {view === "floors" ? floorsView : rankedView}
     </div>
   );
 }

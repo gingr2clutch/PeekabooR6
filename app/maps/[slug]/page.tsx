@@ -226,6 +226,11 @@ export default async function MapPage({
           </div>
         )}
 
+        {/* content-1 — between the Map Stats card and the Floors panel. Below
+            the fold on a phone: the hero, the roulette bar and the stats card
+            all sit above it. */}
+        <NitroAdSlot id="pkb-content-1" className="mb-8" />
+
         {floors.length > 0 && (
           <MapViewToggle
             initialView={searchParams.view === "ranked" ? "ranked" : "floors"}
@@ -273,15 +278,6 @@ export default async function MapPage({
                   );
                 })}
               </ul>
-            }
-            floorsFooter={
-              /* pkb-map-feed. In the Floors view because that is the default
-                 one — MapViewToggle mounts one view or the other, so a slot in
-                 the ranked list would be absent for most visitors. Placed
-                 after the floor cards, and a SINGLE slot: the id is one DOM id
-                 and Nitro fills the first element carrying it, so repeating it
-                 would mean duplicate ids and reserved boxes that never fill. */
-              <NitroAdSlot id="pkb-map-feed" className="mt-4" />
             }
             rankedView={
               rankedPeeks.length === 0 ? (
@@ -374,11 +370,6 @@ export default async function MapPage({
           </div>
         )}
 
-        {/* content-1 — between "Underrated on this map" and the 7-day chart.
-            map-feed sits inside the floor list well above, with the underrated
-            grid between them, so the two are never in one viewport. */}
-        <NitroAdSlot id="pkb-content-1" className="mt-8" />
-
         {/* Effectiveness trend — always visible, below the floor picker. The
             7-day chart lives here; the full 30-day chart + Movers are one tap
             away. Card matches the stats box width/styling. */}
@@ -407,6 +398,9 @@ export default async function MapPage({
             </div>
           </div>
         )}
+
+        {/* content-3 — below the trend chart, above the guide heading. */}
+        <NitroAdSlot id="pkb-content-3" className="mt-12" />
 
         {/* Per-map guide text (SEO + in-content ad anchors). Renders ONLY for
             maps with an entry in content/map-guides.ts — other maps unchanged.
