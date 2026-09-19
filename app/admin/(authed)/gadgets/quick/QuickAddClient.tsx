@@ -238,9 +238,15 @@ export function QuickAddClient({ maps, sites, operators }: Props) {
 
           <div>
             <span className="mb-1 block text-xs font-medium text-muted">
-              Clip — required
+              Clip — upload, or paste a Medal link below
             </span>
             <GadgetClipUpload key={`clip-${siteId}-${resetKey}`} siteId={siteId} />
+            <input
+              key={`embed-${siteId}-${resetKey}`}
+              name="embed_url"
+              placeholder="https://medal.tv/games/r6-siege/clips/…"
+              className={`${select} mt-2`}
+            />
           </div>
 
           {error && (

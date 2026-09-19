@@ -574,7 +574,10 @@ export type GadgetSetup = {
   id: string;
   name: string;
   display_order: number;
-  video_url: string;
+  /** Hosted file in R2. Null when the clip is an embed instead. */
+  video_url: string | null;
+  /** External clip link, e.g. Medal. Null when the clip is hosted. */
+  embed_url: string | null;
   pins: GadgetSetupPin[];
 };
 
@@ -588,7 +591,7 @@ const GADGET_SITE_WITH_FLOOR_COLUMNS = `${GADGET_SITE_COLUMNS}, floors(name, bir
 // Pins come back nested. One query per site+operator rather than one for the
 // setups and another for their pins.
 const GADGET_SETUP_COLUMNS =
-  "id, name, display_order, video_url, gadget_setup_pins(x_pct, y_pct, display_order)";
+  "id, name, display_order, video_url, embed_url, gadget_setup_pins(x_pct, y_pct, display_order)";
 
 export type GadgetSiteWithFloor = GadgetSite & {
   floor: { name: string; birds_eye_url: string | null } | null;
@@ -696,6 +699,7 @@ export async function getGadgetSetups(
     name: r.name,
     display_order: r.display_order,
     video_url: r.video_url,
+    embed_url: r.embed_url,
     pins: [...(r.gadget_setup_pins ?? [])].sort(
       (a, b) => a.display_order - b.display_order
     ),

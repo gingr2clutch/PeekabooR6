@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { isEmbeddable } from "@/lib/gadget-embed";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // Gadget admin writes. All go through supabaseAdmin() (service role), which
@@ -166,6 +167,34 @@ export async function deleteSiteAndReturnAction(formData: FormData) {
  * Writes gadget_setups and gadget_setup_pins. No peek table is touched.
  */
 
+// A setup needs a clip, and it can be either kind. The database CHECK from 036
+// is the real guarantee; this only decides what the admin reads on screen,
+// since a raw constraint violation says nothing about what to do next.
+//
+// An embed URL is validated against the same allowlist the public renderer
+// uses. Storing something unembeddable would leave a setup that silently
+// degrades to a click-out link on the live page.
+function readClip(formData: FormData): {
+  video_url: string | null;
+  embed_url: string | null;
+} {
+  const video_url = String(formData.get("video_url") ?? "").trim() || null;
+  const embed_url = String(formData.get("embed_url") ?? "").trim() || null;
+
+  if (!video_url && !embed_url) {
+    throw new Error(
+      "A setup needs a clip — upload one, or paste a Medal link to embed."
+    );
+  }
+  if (embed_url && !isEmbeddable(embed_url)) {
+    throw new Error(
+      `That link cannot be embedded. Medal clip links work; anything else has to be uploaded as a file.`
+    );
+  }
+  // embed_url wins if both were somehow supplied, matching the public page.
+  return embed_url ? { video_url: null, embed_url } : { video_url, embed_url: null };
+}
+
 type PinInput = { x_pct: number; y_pct: number };
 
 // Pins arrive from the form as a JSON array, because their number varies per
@@ -230,20 +259,15 @@ async function nextSetupNumber(
 export async function createSetupAction(formData: FormData) {
   const site_id = String(formData.get("site_id") ?? "");
   const operator_id = String(formData.get("operator_id") ?? "");
-  const video_url = String(formData.get("video_url") ?? "").trim();
   if (!site_id || !operator_id) return;
-  // video_url is NOT NULL in the schema: a setup without a clip explains
-  // nothing, since the pins carry no information on their own.
-  if (!video_url) {
-    throw new Error("A setup needs a clip — the pins alone explain nothing.");
-  }
+  const clip = readClip(formData);
 
   const n = await nextSetupNumber(site_id, operator_id);
   const name = String(formData.get("name") ?? "").trim() || `Setup ${n}`;
 
   const { data, error } = await supabaseAdmin()
     .from("gadget_setups")
-    .insert({ site_id, operator_id, name, video_url, display_order: n })
+    .insert({ site_id, operator_id, name, ...clip, display_order: n })
     .select("id")
     .single();
   if (error) throw error;
@@ -256,18 +280,15 @@ export async function updateSetupAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const site_id = String(formData.get("site_id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
-  const video_url = String(formData.get("video_url") ?? "").trim();
   const display_order = Number(formData.get("display_order") ?? 0);
   if (!id || !name) return;
-  if (!video_url) {
-    throw new Error("A setup needs a clip — the pins alone explain nothing.");
-  }
+  const clip = readClip(formData);
 
   const { error } = await supabaseAdmin()
     .from("gadget_setups")
     .update({
       name,
-      video_url,
+      ...clip,
       display_order: Number.isNaN(display_order) ? 0 : display_order,
     })
     .eq("id", id);

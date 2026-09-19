@@ -1,5 +1,6 @@
 "use server";
 
+import { isEmbeddable } from "@/lib/gadget-embed";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // Quick-add writes, for the repeat-entry screen.
@@ -51,10 +52,24 @@ export async function quickAddSetup(formData: FormData): Promise<QuickAddResult>
   if (!site_id) throw new Error("Pick a bomb site first.");
   if (!operator_id) throw new Error("Pick an operator first.");
 
-  const video_url = String(formData.get("video_url") ?? "").trim();
-  // Mirrors the NOT NULL on gadget_setups.video_url. Pins carry no information
-  // on their own, so a setup without a clip explains nothing.
-  if (!video_url) throw new Error("Add a clip — the pins alone explain nothing.");
+  // A setup needs a clip and it can be either kind — an uploaded file or a
+  // Medal link we embed. The database CHECK from 036 is the real guarantee;
+  // this just makes the failure readable. Embed links are validated against the
+  // same allowlist the public renderer uses, so an unembeddable URL cannot be
+  // stored and then silently degrade to a click-out on the live page.
+  const video_url = String(formData.get("video_url") ?? "").trim() || null;
+  const embed_url = String(formData.get("embed_url") ?? "").trim() || null;
+  if (!video_url && !embed_url) {
+    throw new Error("Add a clip — upload one, or paste a Medal link to embed.");
+  }
+  if (embed_url && !isEmbeddable(embed_url)) {
+    throw new Error(
+      "That link cannot be embedded. Medal clip links work; anything else has to be uploaded."
+    );
+  }
+  const clip = embed_url
+    ? { video_url: null, embed_url }
+    : { video_url, embed_url: null };
 
   const sb = supabaseAdmin();
 
@@ -70,7 +85,7 @@ export async function quickAddSetup(formData: FormData): Promise<QuickAddResult>
 
   const { data, error } = await sb
     .from("gadget_setups")
-    .insert({ site_id, operator_id, name, video_url, display_order: n })
+    .insert({ site_id, operator_id, name, ...clip, display_order: n })
     .select("id")
     .single();
   if (error) {

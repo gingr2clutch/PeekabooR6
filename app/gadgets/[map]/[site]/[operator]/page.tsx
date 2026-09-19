@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
+import { resolveClip } from "@/lib/gadget-embed";
 import { OperatorIcon } from "@/components/OperatorIcon";
 import { BackToTop } from "@/components/BackToTop";
 import {
@@ -69,6 +70,11 @@ export default async function OperatorPlacementsPage({
       : 0;
   const active = setups[activeIndex] ?? null;
   const pins = active?.pins ?? [];
+
+  // A setup carries either a hosted file or an external link, never neither —
+  // the database CHECK guarantees that. embed_url wins when both somehow exist,
+  // because it is the newer, deliberate choice.
+  const clip = active?.embed_url ? resolveClip(active.embed_url) : null;
 
   // The site now names its own blueprint. Falling back to the first floor that
   // has one only matters while floor_id is unset — that is the mismatch the
@@ -185,18 +191,47 @@ export default async function OperatorPlacementsPage({
           </p>
         ) : (
           <>
-            {/* The clip. This is the content — the pins above are an index into
-                it. Height is reserved by the aspect box so nothing shifts when
-                the video loads. */}
+            {/* The clip. This is the content — the pins above are an index
+                into it. Either shape sits in the same aspect-video box, so the
+                height is reserved before anything loads and nothing shifts. */}
             <div className="mt-5 overflow-hidden rounded-card border border-border bg-black">
-              <video
-                key={active.id}
-                src={active.video_url}
-                controls
-                playsInline
-                preload="metadata"
-                className="aspect-video w-full"
-              />
+              {clip?.kind === "embed" ? (
+                // Embedded because the source file is not hotlinkable. Only
+                // hosts verified in lib/gadget-embed.ts reach this branch, so
+                // an arbitrary pasted URL can never be framed on the site.
+                <iframe
+                  key={active.id}
+                  src={clip.src}
+                  title={`${op.name} — ${active.name}`}
+                  loading="lazy"
+                  // No allow-same-origin: the frame gets no access to anything
+                  // of ours. Scripts and presentation are what a player needs.
+                  sandbox="allow-scripts allow-presentation"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allow="fullscreen; picture-in-picture"
+                  className="aspect-video w-full border-0"
+                />
+              ) : clip?.kind === "link" ? (
+                // A link we do not embed. Better an honest click-out than an
+                // iframe pointed at a host nobody has checked.
+                <a
+                  href={clip.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex aspect-video w-full items-center justify-center bg-card text-center text-sm font-semibold text-blue"
+                >
+                  Open the clip in a new tab →
+                </a>
+              ) : (
+                <video
+                  key={active.id}
+                  src={active.video_url ?? undefined}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="aspect-video w-full"
+                />
+              )}
             </div>
 
             <p className="mt-3 text-center text-sm text-muted">
