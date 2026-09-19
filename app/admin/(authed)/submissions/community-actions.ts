@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { createPeek } from "../peeks/actions";
 import { copySubmissionClipToR2 } from "@/lib/submission-media";
 import { resolveContributor } from "@/lib/contributors";
+import { isEmbeddable, normalizeEmbed } from "@/lib/gadget-embed";
 
 // Approve/reject for the community submission queue.
 //
@@ -188,4 +189,146 @@ export async function publishSubmissionAction(
   revalidatePath("/admin/submissions");
   revalidatePath("/admin/peeks");
   redirect(`/admin/submissions?published=${peekId}`);
+}
+
+/**
+ * Turns an approved gadget submission into a live setup.
+ *
+ * The gadget counterpart to publishSubmissionAction above, and deliberately a
+ * separate function rather than a branch inside it: that one is the working
+ * peek path and has its own ordering guarantees around copying a clip.
+ *
+ * There is no clip to copy here. Gadget submissions arrive as Medal links, and
+ * the link is stored as-is and embedded — so the risky step the peek flow is
+ * built around does not exist, and the ordering is simply create-then-link.
+ *
+ * "Published" is derived, not a status value: community_submissions.status is
+ * CHECK-constrained to pending/approved/rejected, so a fourth value would need
+ * a migration. Approved + linked_gadget_setup_id means published, exactly as
+ * approved + linked_peek_id already does for peeks, and the queue filters on
+ * that pair.
+ *
+ * Writes gadget_setups, gadget_setup_pins and community_submissions. No peek
+ * table is touched.
+ */
+export async function publishGadgetSubmissionAction(
+  submissionId: string,
+  formData: FormData
+) {
+  if (!submissionId) throw new Error("submission_id required");
+
+  const site_id = String(formData.get("site_id") ?? "");
+  const operator_id = String(formData.get("operator_id") ?? "");
+  if (!site_id) throw new Error("Pick a bomb site.");
+  if (!operator_id) throw new Error("Pick an operator.");
+
+  const video_url = String(formData.get("video_url") ?? "").trim() || null;
+  const rawEmbed = String(formData.get("embed_url") ?? "").trim() || null;
+  const embed_url = rawEmbed ? normalizeEmbed(rawEmbed) : null;
+  if (!video_url && !embed_url) {
+    throw new Error("A setup needs a clip — upload one, or keep the Medal link.");
+  }
+  if (embed_url && !isEmbeddable(embed_url)) {
+    throw new Error(
+      "That link cannot be embedded. Medal clip links work; anything else has to be uploaded."
+    );
+  }
+
+  const sb = supabaseAdmin();
+
+  // "Setup N" counts what already exists for this site and operator.
+  const { count } = await sb
+    .from("gadget_setups")
+    .select("id", { count: "exact", head: true })
+    .eq("site_id", site_id)
+    .eq("operator_id", operator_id);
+  const n = (count ?? 0) + 1;
+  const name = String(formData.get("name") ?? "").trim() || `Setup ${n}`;
+
+  const { data: created, error: setupErr } = await sb
+    .from("gadget_setups")
+    .insert({
+      site_id,
+      operator_id,
+      name,
+      display_order: n,
+      published: true,
+      ...(embed_url ? { embed_url, video_url: null } : { video_url, embed_url: null }),
+    })
+    .select("id")
+    .single();
+  if (setupErr) throw setupErr;
+  const setupId = (created as { id: string }).id;
+
+  // Pins, if any were placed. A setup with none is legitimate — the clip still
+  // explains it — so this is not an error path.
+  const pins = parsePinsJson(formData.get("pins"));
+  if (pins.length > 0) {
+    const { error: pinErr } = await sb.from("gadget_setup_pins").insert(
+      pins.map((pin, i) => ({
+        setup_id: setupId,
+        x_pct: pin.x,
+        y_pct: pin.y,
+        display_order: i,
+      }))
+    );
+    if (pinErr) {
+      throw new Error(
+        `Setup "${name}" was created but its pins failed to save, so the submission is still open. ${pinErr.message}`
+      );
+    }
+  }
+
+  // Credit. Same rule as the peek flow: an empty field is not an error, because
+  // plenty of submitters do not want credit.
+  const contributorName = String(formData.get("contributor_name") ?? "").trim();
+  let contributorId: string | null = null;
+  if (contributorName) {
+    try {
+      const { contributor } = await resolveContributor(contributorName);
+      contributorId = contributor.id;
+    } catch (e) {
+      throw new Error(
+        `Setup ${setupId} was created, but the contributor could not be resolved, so the submission is still open. ${
+          e instanceof Error ? e.message : String(e)
+        }`
+      );
+    }
+  }
+
+  // Only now is the submission handled. Link and credit land together so a
+  // published submission can never be missing the attribution chosen with it.
+  const { error: updErr } = await sb
+    .from("community_submissions")
+    .update({
+      status: "approved",
+      linked_gadget_setup_id: setupId,
+      ...(contributorId ? { contributor_id: contributorId } : {}),
+    })
+    .eq("id", submissionId);
+  if (updErr) {
+    throw new Error(
+      `Setup ${setupId} was created, but marking the submission handled failed — it is still open. ${updErr.message}`
+    );
+  }
+
+  revalidatePath("/admin/submissions");
+  revalidatePath("/gadgets");
+  redirect(`/admin/submissions?setup=${setupId}`);
+}
+
+// Pins arrive as a JSON array because their number varies per submit.
+function parsePinsJson(raw: FormDataEntryValue | null): { x: number; y: number }[] {
+  if (!raw) return [];
+  try {
+    const v = JSON.parse(String(raw));
+    if (!Array.isArray(v)) return [];
+    const clamp = (n: number) => Math.min(100, Math.max(0, Number(n)));
+    return v
+      .filter((p) => p && typeof p === "object" && "x" in p && "y" in p)
+      .map((p) => ({ x: clamp(p.x), y: clamp(p.y) }))
+      .filter((p) => !Number.isNaN(p.x) && !Number.isNaN(p.y));
+  } catch {
+    return [];
+  }
 }

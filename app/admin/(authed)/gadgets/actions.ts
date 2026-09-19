@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { isEmbeddable } from "@/lib/gadget-embed";
+import { isEmbeddable, normalizeEmbed } from "@/lib/gadget-embed";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // Gadget admin writes. All go through supabaseAdmin() (service role), which
@@ -179,7 +179,8 @@ function readClip(formData: FormData): {
   embed_url: string | null;
 } {
   const video_url = String(formData.get("video_url") ?? "").trim() || null;
-  const embed_url = String(formData.get("embed_url") ?? "").trim() || null;
+  const rawEmbed = String(formData.get("embed_url") ?? "").trim() || null;
+  const embed_url = rawEmbed ? normalizeEmbed(rawEmbed) : null;
 
   if (!video_url && !embed_url) {
     throw new Error(

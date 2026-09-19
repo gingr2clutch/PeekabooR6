@@ -1,6 +1,6 @@
 "use server";
 
-import { isEmbeddable } from "@/lib/gadget-embed";
+import { isEmbeddable, normalizeEmbed } from "@/lib/gadget-embed";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // Quick-add writes, for the repeat-entry screen.
@@ -58,7 +58,8 @@ export async function quickAddSetup(formData: FormData): Promise<QuickAddResult>
   // same allowlist the public renderer uses, so an unembeddable URL cannot be
   // stored and then silently degrade to a click-out on the live page.
   const video_url = String(formData.get("video_url") ?? "").trim() || null;
-  const embed_url = String(formData.get("embed_url") ?? "").trim() || null;
+  const rawEmbed = String(formData.get("embed_url") ?? "").trim() || null;
+  const embed_url = rawEmbed ? normalizeEmbed(rawEmbed) : null;
   if (!video_url && !embed_url) {
     throw new Error("Add a clip — upload one, or paste a Medal link to embed.");
   }

@@ -75,3 +75,18 @@ export function resolveClip(raw: string): ClipRender {
 export function isEmbeddable(raw: string): boolean {
   return resolveClip(raw).kind === "embed";
 }
+
+/**
+ * The form to STORE for an embeddable link.
+ *
+ * The renderer normalises anyway, so this changes nothing a visitor sees — but
+ * what arrives from a submission carries an ?invite= referral token, and
+ * keeping it in our database means holding someone's referral code for no
+ * reason and re-reading it on every render. Normalise once, on write.
+ *
+ * Non-embeddable input is returned untouched; validation is a separate concern.
+ */
+export function normalizeEmbed(raw: string): string {
+  const r = resolveClip(raw);
+  return r.kind === "embed" ? r.src : raw.trim();
+}

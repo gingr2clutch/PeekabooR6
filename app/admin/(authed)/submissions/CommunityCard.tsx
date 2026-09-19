@@ -30,6 +30,7 @@ export type Row = {
   file_path: string | null;
   status: "pending" | "approved" | "rejected";
   linked_peek_id: string | null;
+  linked_gadget_setup_id: string | null;
   contributor_id: string | null;
 };
 
@@ -211,6 +212,29 @@ export function CommunityCard({
             className="block w-full rounded-btn bg-brand px-3 py-2 text-center text-sm font-medium text-white hover:bg-[#d95a0c] sm:w-auto"
           >
             Edit &amp; publish
+          </Link>
+        )}
+
+        {/* Same rule for gadgets, against their own link column: what retires
+            the button is linked_gadget_setup_id, not the status. Blue, because
+            it leads into the gadget side of the admin. */}
+        {r.kind === "gadget" &&
+          !r.linked_gadget_setup_id &&
+          r.status !== "rejected" && (
+            <Link
+              href={`/admin/submissions/${r.id}/publish-gadget`}
+              className="block w-full rounded-btn bg-blue px-3 py-2 text-center text-sm font-medium text-white hover:bg-[#22597a] sm:w-auto"
+            >
+              Edit &amp; publish
+            </Link>
+          )}
+
+        {r.linked_gadget_setup_id && (
+          <Link
+            href={`/admin/gadgets`}
+            className="block w-full rounded-btn border border-border px-3 py-2 text-center text-sm text-ink hover:border-blue hover:text-blue sm:w-auto"
+          >
+            View setup →
           </Link>
         )}
 
