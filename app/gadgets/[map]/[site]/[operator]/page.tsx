@@ -76,6 +76,10 @@ export default async function OperatorPlacementsPage({
   // the database CHECK guarantees that. embed_url wins when both somehow exist,
   // because it is the newer, deliberate choice.
   const clip = active?.embed_url ? resolveClip(active.embed_url) : null;
+  // A rejected URL should never be in the database — the admin write paths
+  // refuse one — but if an older row predates that check, it falls through to
+  // the <video> branch, which wants the ordinary 16:9 box.
+  const clipAspect = clip && clip.kind !== "rejected" ? clip.aspect : "video";
 
   // The site now names its own blueprint. Falling back to the first floor that
   // has one only matters while floor_id is unset — that is the mismatch the
@@ -193,9 +197,19 @@ export default async function OperatorPlacementsPage({
         ) : (
           <>
             {/* The clip. This is the content — the pins above are an index
-                into it. Either shape sits in the same aspect-video box, so the
-                height is reserved before anything loads and nothing shifts. */}
-            <div className="mt-5 overflow-hidden rounded-card border border-border bg-black">
+                into it.
+
+                The box is sized from the platform, not from the media: a
+                TikTok player is 9:16, everything else is 16:9. Because that
+                comes off the resolved clip on the server, the height is fixed
+                before anything loads, so neither shape shifts on arrival. The
+                portrait box is width-capped so a vertical clip does not become
+                a full-viewport-tall column on desktop. */}
+            <div
+              className={`mt-5 overflow-hidden rounded-card border border-border bg-black ${
+                clipAspect === "portrait" ? "mx-auto w-full max-w-[22rem]" : ""
+              }`}
+            >
               {clip?.kind === "embed" ? (
                 // Embedded because the source file is not hotlinkable. Only
                 // hosts verified in lib/gadget-embed.ts reach this branch, so
@@ -205,12 +219,19 @@ export default async function OperatorPlacementsPage({
                   src={clip.src}
                   title={`${op.name} — ${active.name}`}
                   loading="lazy"
-                  // No allow-same-origin: the frame gets no access to anything
-                  // of ours. Scripts and presentation are what a player needs.
-                  sandbox="allow-scripts allow-presentation"
+                  // allow-same-origin lets the frame keep ITS OWN origin
+                  // (youtube.com, tiktok.com) — it does not hand it anything of
+                  // ours. A cross-origin frame can never reach our DOM whatever
+                  // the sandbox says; that is enforced by the origin, not here.
+                  // YouTube and TikTok need it for storage access or they
+                  // refuse to play. allow-popups is so the player's own
+                  // "watch on …" controls still work.
+                  sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
                   referrerPolicy="strict-origin-when-cross-origin"
                   allow="fullscreen; picture-in-picture"
-                  className="aspect-video w-full border-0"
+                  className={`w-full border-0 ${
+                    clip.aspect === "portrait" ? "aspect-[9/16]" : "aspect-video"
+                  }`}
                 />
               ) : clip?.kind === "link" ? (
                 // A host on the allowlist that we do not frame — TikTok,
@@ -218,7 +239,11 @@ export default async function OperatorPlacementsPage({
                 // iframe pointed at a host nobody has checked. Same
                 // aspect-video box as the iframe, so the two are
                 // interchangeable without reflow.
-                <ClipLinkCard href={clip.href} platform={clip.platform} />
+                <ClipLinkCard
+                  href={clip.href}
+                  platform={clip.platform}
+                  aspect={clip.aspect}
+                />
               ) : (
                 <video
                   key={active.id}

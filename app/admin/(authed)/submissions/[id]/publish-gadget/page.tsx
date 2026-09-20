@@ -180,7 +180,7 @@ export default async function PublishGadgetSubmissionPage({ params }: Params) {
           src={clip.src}
           title={s.spot_name}
           loading="lazy"
-          sandbox="allow-scripts allow-presentation"
+          sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
           referrerPolicy="strict-origin-when-cross-origin"
           allow="fullscreen; picture-in-picture"
           className="aspect-video w-full rounded-card border border-border bg-black"

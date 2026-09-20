@@ -15,20 +15,27 @@
 // player — hence a real label naming the platform rather than "this clip could
 // not be embedded".
 
+import type { ClipAspect } from "@/lib/gadget-embed";
+
 export function ClipLinkCard({
   href,
   platform,
+  aspect = "video",
 }: {
   href: string;
   /** "TikTok", "YouTube", … — comes from the allowlist in lib/gadget-embed. */
   platform: string;
+  /** Matches the box an embed of the same platform would have taken. */
+  aspect?: ClipAspect;
 }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex aspect-video w-full flex-col items-center justify-center gap-3 bg-card px-4 text-center"
+      className={`group flex w-full flex-col items-center justify-center gap-3 bg-card px-4 text-center ${
+        aspect === "portrait" ? "aspect-[9/16]" : "aspect-video"
+      }`}
     >
       {/* Play affordance. motion-safe so the scale is dropped entirely for
           anyone who asked for reduced motion, and it is a transform, so it

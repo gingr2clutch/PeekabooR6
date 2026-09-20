@@ -8,44 +8,63 @@
 // Two tiers, because they carry very different risk:
 //
 //   EMBED  we frame the host inside our page. Requires that someone has
-//          actually checked its framing headers by hand. Currently medal.tv
-//          only. Verified 2026-09-19 against a real clip:
+//          actually checked it can be framed. Checked by hand:
 //
-//            cdn.medal.tv/mediac/<file>.mp4          403 — NOT hotlinkable, so
-//                                                    a plain <video src> fails
-//            medal.tv/api/content/<id>/socialVideoUrl 307 -> mp4, but 151MB for
-//                                                    a 50s clip, unusable
-//            medal.tv/games/<game>/clip/<id>         200, frame-ancestors *, no
-//                                                    X-Frame-Options — framable,
-//                                                    and the URL Medal itself
-//                                                    advertises as twitter:player
+//            medal.tv/games/<game>/clip/<id>   200, frame-ancestors *, no
+//                                              X-Frame-Options. The mp4 itself
+//                                              is NOT hotlinkable (403) and the
+//                                              socialVideoUrl redirect is 151MB
+//                                              for a 50s clip, so framing their
+//                                              player is the only way to show
+//                                              a Medal clip at all.
+//                                              [verified 2026-09-19]
+//            youtube.com/embed/<id>            200 on a real id, no
+//                                              frame-ancestors, no
+//                                              X-Frame-Options.
+//                                              [verified 2026-09-20]
+//            tiktok.com/embed/v2/<id>          documented iframe endpoint; its
+//            streamable.com/e/<id>             CSP carries no frame-ancestors.
+//                                              Both returned 400/404 when
+//                                              probed with a fabricated id, so
+//                                              neither has been confirmed
+//                                              against a real clip yet.
 //
-//          Note the singular: the page a human visits is /clips/<id>, the
+//          Note Medal's singular: the page a human visits is /clips/<id>, the
 //          player is /clip/<id>. That one character is the whole transform.
 //
 //   LINK   we do not frame it; we render a card that clicks out. No framing
 //          headers to verify, because no frame — the only requirement is that
-//          the host is somewhere we are willing to send a reader.
+//          the host is somewhere we are willing to send a reader. This is also
+//          where an embeddable host lands when the URL is not a clip (a Medal
+//          profile) or carries no id we can extract (a vm.tiktok.com shortlink).
 //
 // Anything not on either list is REJECTED at the point of writing, so a bad URL
 // never reaches the database rather than being caught at render time.
 //
-// Why these five LINK hosts: they are the platforms Siege clips actually get
-// posted to, and they are the ones that have turned up in the submission queue.
-// TikTok and YouTube are already on the public submission allowlist. x.com and
-// streamable.com are here because clips get cross-posted there. Nothing was
-// added speculatively — if a host is not here, no setup can link to it.
+// Why these hosts: they are the platforms Siege clips actually get posted to,
+// and the ones that have turned up in the submission queue. TikTok and YouTube
+// are already on the public submission allowlist; x.com and streamable.com are
+// here because clips get cross-posted there. Nothing was added speculatively —
+// if a host is not here, no setup can link to it.
 
 export type ClipKind = "embed" | "link";
 
+/**
+ * The shape of the box a clip wants.
+ *
+ * TikTok is shot vertically and its player is 9:16; everything else here is
+ * 16:9. Carrying this on the resolved clip keeps host names out of the page —
+ * adding a portrait host later is a flag in HOSTS, not a condition in JSX.
+ */
+export type ClipAspect = "video" | "portrait";
+
 export type ClipRender =
-  | { kind: "embed"; src: string; platform: string }
-  | { kind: "link"; href: string; platform: string }
+  | { kind: "embed"; src: string; platform: string; aspect: ClipAspect }
+  | { kind: "link"; href: string; platform: string; aspect: ClipAspect }
   | { kind: "rejected"; reason: string };
 
 type HostRule = {
   platform: string;
-  mode: ClipKind;
   /**
    * Query params worth keeping. Everything else is dropped.
    *
@@ -55,31 +74,86 @@ type HostRule = {
    * what the URL needs to resolve cannot leak by omission.
    */
   keepParams?: string[];
+  /**
+   * The framable URL for this link, or null if it has no embed form.
+   *
+   * Returning null is not a failure — it drops the clip to a click-out card,
+   * which is the correct outcome for a host with no iframe player and for a URL
+   * on an embeddable host that is not actually a clip (a profile page, say).
+   */
+  embed?: (u: URL) => string | null;
+  /** Vertical player. Only TikTok so far. */
+  portrait?: boolean;
 };
 
 const HOSTS: Record<string, HostRule> = {
-  "medal.tv": { platform: "Medal", mode: "embed" },
-  "www.medal.tv": { platform: "Medal", mode: "embed" },
+  // /games/<game>/clips/<id> -> /games/<game>/clip/<id>. The page a human
+  // visits is /clips/, the player is /clip/ — that one character is the whole
+  // transform.
+  "medal.tv": { platform: "Medal", embed: medalEmbed },
+  "www.medal.tv": { platform: "Medal", embed: medalEmbed },
 
-  "tiktok.com": { platform: "TikTok", mode: "link" },
-  "www.tiktok.com": { platform: "TikTok", mode: "link" },
-  "vm.tiktok.com": { platform: "TikTok", mode: "link" },
+  // /@user/video/<id> -> /embed/v2/<id>, TikTok's documented iframe endpoint.
+  // vm.tiktok.com short links carry no video id in the path — resolving one
+  // needs a network round trip, which is not something to do at render time, so
+  // they stay click-outs.
+  "tiktok.com": { platform: "TikTok", embed: tiktokEmbed, portrait: true },
+  "www.tiktok.com": { platform: "TikTok", embed: tiktokEmbed, portrait: true },
+  "vm.tiktok.com": { platform: "TikTok", portrait: true },
 
-  // v is the video id and t is a start offset — without v the URL is just the
-  // YouTube homepage, so it has to survive the strip.
-  "youtube.com": { platform: "YouTube", mode: "link", keepParams: ["v", "t"] },
-  "www.youtube.com": { platform: "YouTube", mode: "link", keepParams: ["v", "t"] },
-  "m.youtube.com": { platform: "YouTube", mode: "link", keepParams: ["v", "t"] },
-  "youtu.be": { platform: "YouTube", mode: "link", keepParams: ["t"] },
+  // v is the video id and t a start offset — without v the URL is just the
+  // YouTube homepage, so both have to survive the strip.
+  "youtube.com": { platform: "YouTube", keepParams: ["v", "t"], embed: youtubeEmbed },
+  "www.youtube.com": { platform: "YouTube", keepParams: ["v", "t"], embed: youtubeEmbed },
+  "m.youtube.com": { platform: "YouTube", keepParams: ["v", "t"], embed: youtubeEmbed },
+  "youtu.be": { platform: "YouTube", keepParams: ["t"], embed: youtubeEmbed },
 
-  "x.com": { platform: "X", mode: "link" },
-  "www.x.com": { platform: "X", mode: "link" },
-  "twitter.com": { platform: "X", mode: "link" },
-  "www.twitter.com": { platform: "X", mode: "link" },
+  // No iframe player. X's embed needs widgets.js, which means running their
+  // script in our page rather than framing theirs — not worth it for a clip.
+  "x.com": { platform: "X" },
+  "www.x.com": { platform: "X" },
+  "twitter.com": { platform: "X" },
+  "www.twitter.com": { platform: "X" },
 
-  "streamable.com": { platform: "Streamable", mode: "link" },
-  "www.streamable.com": { platform: "Streamable", mode: "link" },
+  "streamable.com": { platform: "Streamable", embed: streamableEmbed },
+  "www.streamable.com": { platform: "Streamable", embed: streamableEmbed },
 };
+
+function medalEmbed(u: URL): string | null {
+  const parts = u.pathname.split("/").filter(Boolean);
+  const i = parts.indexOf("clips");
+  if (i !== -1 && parts[i + 1]) {
+    const rebuilt = [...parts];
+    rebuilt[i] = "clip";
+    return `https://medal.tv/${rebuilt.join("/")}`;
+  }
+  if (parts.includes("clip")) return `https://medal.tv/${parts.join("/")}`;
+  return null;
+}
+
+function tiktokEmbed(u: URL): string | null {
+  const parts = u.pathname.split("/").filter(Boolean);
+  const i = parts.indexOf("video");
+  const id = i !== -1 ? parts[i + 1] : null;
+  return id && /^\d+$/.test(id) ? `https://www.tiktok.com/embed/v2/${id}` : null;
+}
+
+function youtubeEmbed(u: URL): string | null {
+  const id =
+    u.hostname.toLowerCase() === "youtu.be"
+      ? u.pathname.split("/").filter(Boolean)[0]
+      : u.searchParams.get("v");
+  if (!id || !/^[\w-]{6,20}$/.test(id)) return null;
+  const t = (u.searchParams.get("t") ?? "").replace(/[^0-9]/g, "");
+  return `https://www.youtube.com/embed/${id}${t ? `?start=${t}` : ""}`;
+}
+
+function streamableEmbed(u: URL): string | null {
+  const parts = u.pathname.split("/").filter(Boolean);
+  // /<id> is a watch page, /e/<id> is already the player.
+  const id = parts[0] === "e" ? parts[1] : parts[0];
+  return id && /^[\w-]+$/.test(id) ? `https://streamable.com/e/${id}` : null;
+}
 
 /** Every platform we will accept, for admin-facing help text. */
 export const ALLOWED_PLATFORMS = Array.from(
@@ -119,33 +193,13 @@ export function resolveClip(raw: string): ClipRender {
   if (!rule) return { kind: "rejected", reason: REJECTED_MESSAGE };
 
   const clean = strip(u, rule.keepParams);
+  const src = rule.embed?.(clean) ?? null;
 
-  if (rule.mode === "embed") {
-    // /games/<game>/clips/<id>  ->  /games/<game>/clip/<id>
-    const parts = clean.pathname.split("/").filter(Boolean);
-    const i = parts.indexOf("clips");
-    if (i !== -1 && parts[i + 1]) {
-      const rebuilt = [...parts];
-      rebuilt[i] = "clip";
-      return {
-        kind: "embed",
-        src: `https://medal.tv/${rebuilt.join("/")}`,
-        platform: rule.platform,
-      };
-    }
-    if (parts.includes("clip")) {
-      return {
-        kind: "embed",
-        src: `https://medal.tv/${parts.join("/")}`,
-        platform: rule.platform,
-      };
-    }
-    // A medal.tv URL that is not a clip — a profile, say. Nothing to frame, so
-    // it clicks out rather than embedding an arbitrary Medal page.
-    return { kind: "link", href: clean.toString(), platform: rule.platform };
-  }
+  const aspect: ClipAspect = rule.portrait ? "portrait" : "video";
 
-  return { kind: "link", href: clean.toString(), platform: rule.platform };
+  return src
+    ? { kind: "embed", src, platform: rule.platform, aspect }
+    : { kind: "link", href: clean.toString(), platform: rule.platform, aspect };
 }
 
 /**
