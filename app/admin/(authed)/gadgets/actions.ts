@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { isEmbeddable, normalizeEmbed } from "@/lib/gadget-embed";
+import { acceptClipUrl } from "@/lib/gadget-embed";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // Gadget admin writes. All go through supabaseAdmin() (service role), which
@@ -180,17 +180,12 @@ function readClip(formData: FormData): {
 } {
   const video_url = String(formData.get("video_url") ?? "").trim() || null;
   const rawEmbed = String(formData.get("embed_url") ?? "").trim() || null;
-  const embed_url = rawEmbed ? normalizeEmbed(rawEmbed) : null;
+  // Accepts anything on the allowlist, framed or not — acceptClipUrl throws
+  // with a readable reason for a host we have not vetted.
+  const embed_url = rawEmbed ? acceptClipUrl(rawEmbed) : null;
 
   if (!video_url && !embed_url) {
-    throw new Error(
-      "A setup needs a clip — upload one, or paste a Medal link to embed."
-    );
-  }
-  if (embed_url && !isEmbeddable(embed_url)) {
-    throw new Error(
-      `That link cannot be embedded. Medal clip links work; anything else has to be uploaded as a file.`
-    );
+    throw new Error("A setup needs a clip — upload one, or paste a link.");
   }
   // embed_url wins if both were somehow supplied, matching the public page.
   return embed_url ? { video_url: null, embed_url } : { video_url, embed_url: null };

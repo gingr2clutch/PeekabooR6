@@ -146,7 +146,8 @@ export function GadgetPublishForm({
           <GadgetClipUpload siteId={siteId || "pending"} />
         </div>
         <span className="mt-1 block text-[11px] text-muted">
-          A Medal link is embedded on the page. Uploading a file overrides it.
+          Medal embeds in the page; TikTok, YouTube, X and Streamable render as a
+          watch-on card. Uploading a file overrides it.
         </span>
       </div>
 

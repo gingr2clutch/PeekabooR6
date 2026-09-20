@@ -247,7 +247,7 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
               </label>
               <div className="w-full">
                 <span className="mb-1 block text-xs text-muted">
-                  Clip — upload a file, or paste a Medal link to embed
+                  Clip — upload a file, or paste a link
                 </span>
                 <GadgetClipUpload siteId={site.id} initialUrl={su.video_url} />
                 <input
@@ -257,8 +257,8 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
                   className={`${input} mt-2`}
                 />
                 <span className="mt-1 block text-[11px] text-muted">
-                  A Medal link is embedded on the page. Filling this replaces an
-                  uploaded file for this setup.
+                  Medal embeds in the page; TikTok, YouTube, X and Streamable render as a
+                  watch-on card. Filling this replaces an uploaded file.
                 </span>
               </div>
               <div className="w-full">
@@ -330,7 +330,7 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
         </label>
         <div className="w-full">
           <span className="mb-1 block text-xs text-muted">
-            Clip — upload a file, or paste a Medal link to embed
+            Clip — upload a file, or paste a link
           </span>
           <GadgetClipUpload siteId={site.id} />
           <input

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { resolveClip } from "@/lib/gadget-embed";
+import { ClipLinkCard } from "@/components/ClipLinkCard";
 import { OperatorIcon } from "@/components/OperatorIcon";
 import { BackToTop } from "@/components/BackToTop";
 import {
@@ -212,16 +213,12 @@ export default async function OperatorPlacementsPage({
                   className="aspect-video w-full border-0"
                 />
               ) : clip?.kind === "link" ? (
-                // A link we do not embed. Better an honest click-out than an
-                // iframe pointed at a host nobody has checked.
-                <a
-                  href={clip.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex aspect-video w-full items-center justify-center bg-card text-center text-sm font-semibold text-blue"
-                >
-                  Open the clip in a new tab →
-                </a>
+                // A host on the allowlist that we do not frame — TikTok,
+                // YouTube and friends. Better an honest click-out than an
+                // iframe pointed at a host nobody has checked. Same
+                // aspect-video box as the iframe, so the two are
+                // interchangeable without reflow.
+                <ClipLinkCard href={clip.href} platform={clip.platform} />
               ) : (
                 <video
                   key={active.id}

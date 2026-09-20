@@ -6,7 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { createPeek } from "../peeks/actions";
 import { copySubmissionClipToR2 } from "@/lib/submission-media";
 import { resolveContributor } from "@/lib/contributors";
-import { isEmbeddable, normalizeEmbed } from "@/lib/gadget-embed";
+import { acceptClipUrl } from "@/lib/gadget-embed";
 
 // Approve/reject for the community submission queue.
 //
@@ -224,14 +224,12 @@ export async function publishGadgetSubmissionAction(
 
   const video_url = String(formData.get("video_url") ?? "").trim() || null;
   const rawEmbed = String(formData.get("embed_url") ?? "").trim() || null;
-  const embed_url = rawEmbed ? normalizeEmbed(rawEmbed) : null;
+  // Their submitted link, kept whether or not it can be framed. A TikTok or
+  // YouTube submission now publishes as a click-out card instead of being
+  // refused at this step and needing a manual re-upload.
+  const embed_url = rawEmbed ? acceptClipUrl(rawEmbed) : null;
   if (!video_url && !embed_url) {
-    throw new Error("A setup needs a clip — upload one, or keep the Medal link.");
-  }
-  if (embed_url && !isEmbeddable(embed_url)) {
-    throw new Error(
-      "That link cannot be embedded. Medal clip links work; anything else has to be uploaded."
-    );
+    throw new Error("A setup needs a clip — upload one, or keep their link.");
   }
 
   const sb = supabaseAdmin();

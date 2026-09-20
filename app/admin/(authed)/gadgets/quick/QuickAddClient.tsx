@@ -238,7 +238,7 @@ export function QuickAddClient({ maps, sites, operators }: Props) {
 
           <div>
             <span className="mb-1 block text-xs font-medium text-muted">
-              Clip — upload, or paste a Medal link below
+              Clip — upload, or paste a link below
             </span>
             <GadgetClipUpload key={`clip-${siteId}-${resetKey}`} siteId={siteId} />
             <input
