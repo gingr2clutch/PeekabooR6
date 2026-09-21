@@ -120,6 +120,15 @@ export default async function OperatorPlacementsPage({
           <p className="mt-1 text-sm text-muted">
             {[op.role, op.gadget_name].filter(Boolean).join(" · ")}
           </p>
+          {/* Credited to whoever filmed the ACTIVE setup, so switching tabs
+              switches the name with it. */}
+          {active && (
+            <ClipCredit
+              contributor={active.contributor}
+              label="Setup"
+              className="mt-2"
+            />
+          )}
         </header>
 
         {/* Setup tabs. Real links, so each setup is its own URL and the set is
@@ -256,11 +265,6 @@ export default async function OperatorPlacementsPage({
                 />
               )}
             </div>
-
-            {/* Attribution sits under the clip, never over it. Rendered
-                whether or not anyone is credited, so it cannot appear late and
-                push the caption below it down. */}
-            <ClipCredit contributor={active.contributor} className="mt-2" />
 
             <p className="mt-3 text-center text-sm text-muted">
               {pins.length > 0 ? (

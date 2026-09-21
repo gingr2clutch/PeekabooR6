@@ -275,6 +275,11 @@ export default async function PeekDetailPage({
           <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
             {peek.name}
           </h1>
+          <ClipCredit
+            contributor={peek.contributors}
+            label="Peek"
+            className="mt-2"
+          />
           <p className="mt-3 text-sm text-ink">
             <Link href={`/maps/${map.slug}`} className="hover:text-brand">
               {map.name}
@@ -637,14 +642,12 @@ function RiskPill({ risk }: { risk: string }) {
   );
 }
 
-// The clip plus who filmed it.
+// The clip, whichever kind it is.
 //
-// Both layout branches render this rather than the player directly, so the
-// credit line is attached in exactly one place — the alternative duplicated it
-// into each branch and invited the two to drift.
-//
-// The credit is always present, whichever player is showing, so it holds its
-// row from first paint and the video arriving cannot push it around.
+// Both layout branches render this rather than picking between the players
+// themselves, so the choice lives in one place instead of being duplicated into
+// each branch and left to drift. Credit is not here — it sits under the page
+// title, where it is actually visible.
 function PeekClip({ peek }: { peek: Joined }) {
   return (
     <div>
@@ -653,7 +656,6 @@ function PeekClip({ peek }: { peek: Joined }) {
       ) : (
         <PeekMedia videoUrl={peek.video_url} name={peek.name} />
       )}
-      <ClipCredit contributor={peek.contributors} className="mt-2" />
     </div>
   );
 }
