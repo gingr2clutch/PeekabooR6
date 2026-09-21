@@ -160,7 +160,7 @@ export const ALLOWED_PLATFORMS = Array.from(
   new Set(Object.values(HOSTS).map((h) => h.platform))
 );
 
-/** What an uncredited clip is attributed to, and the only copy of that string. */
+/** Shown to the admin when a pasted URL is refused. */
 export const REJECTED_MESSAGE = `That link is not on the allowlist. Accepted: ${ALLOWED_PLATFORMS.join(
   ", "
 )} — anything else has to be uploaded as a file.`;

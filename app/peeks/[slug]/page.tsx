@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { PeekMedia } from "@/components/PeekMedia";
+import { ClipCredit } from "@/components/ClipCredit";
 import { VoteButtons } from "@/components/VoteButtons";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { supabasePublic } from "@/lib/supabase";
@@ -46,10 +47,16 @@ const GRADE_RATING_VALUE: Record<Grade, number> = {
 type Joined = Peek & {
   created_at: string;
   floors: (Floor & { maps: Map }) | null;
+  /**
+   * Who filmed the clip. PostgREST names the embedded resource after the table
+   * and returns a single object, since the FK points at one row. Null for the
+   * back catalogue, which was made in admin rather than submitted.
+   */
+  contributors: { display_name: string; slug: string } | null;
 };
 
 const JOIN_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, total_casts, success_rate, base_success_rate, published, is_pro_only, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, total_casts, success_rate, base_success_rate, published, is_pro_only, created_at, contributors(display_name, slug), floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
 
 async function fetchBySlug(slug: string): Promise<Joined | null> {
   const { data, error } = await supabasePublic()
@@ -342,20 +349,12 @@ export default async function PeekDetailPage({
             unchanged; when there are no steps/tip the media spans the row. */}
         {hasInstructionsContent ? (
           <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
-            {peek.tiktok_url ? (
-              <TikTokLinkCard url={peek.tiktok_url} />
-            ) : (
-              <PeekMedia videoUrl={peek.video_url} name={peek.name} />
-            )}
+            <PeekClip peek={peek} />
             <Instructions steps={steps} tip={peek.tip} />
           </div>
         ) : (
           <div className="mt-16">
-            {peek.tiktok_url ? (
-              <TikTokLinkCard url={peek.tiktok_url} />
-            ) : (
-              <PeekMedia videoUrl={peek.video_url} name={peek.name} />
-            )}
+            <PeekClip peek={peek} />
           </div>
         )}
 
@@ -635,6 +634,27 @@ function RiskPill({ risk }: { risk: string }) {
     >
       {risk}
     </span>
+  );
+}
+
+// The clip plus who filmed it.
+//
+// Both layout branches render this rather than the player directly, so the
+// credit line is attached in exactly one place — the alternative duplicated it
+// into each branch and invited the two to drift.
+//
+// The credit is always present, whichever player is showing, so it holds its
+// row from first paint and the video arriving cannot push it around.
+function PeekClip({ peek }: { peek: Joined }) {
+  return (
+    <div>
+      {peek.tiktok_url ? (
+        <TikTokLinkCard url={peek.tiktok_url} />
+      ) : (
+        <PeekMedia videoUrl={peek.video_url} name={peek.name} />
+      )}
+      <ClipCredit contributor={peek.contributors} className="mt-2" />
+    </div>
   );
 }
 

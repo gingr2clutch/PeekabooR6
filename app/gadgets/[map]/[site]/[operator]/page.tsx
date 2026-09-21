@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { resolveClip } from "@/lib/gadget-embed";
 import { ClipLinkCard } from "@/components/ClipLinkCard";
+import { ClipCredit } from "@/components/ClipCredit";
 import { OperatorIcon } from "@/components/OperatorIcon";
 import { BackToTop } from "@/components/BackToTop";
 import {
@@ -255,6 +256,11 @@ export default async function OperatorPlacementsPage({
                 />
               )}
             </div>
+
+            {/* Attribution sits under the clip, never over it. Rendered
+                whether or not anyone is credited, so it cannot appear late and
+                push the caption below it down. */}
+            <ClipCredit contributor={active.contributor} className="mt-2" />
 
             <p className="mt-3 text-center text-sm text-muted">
               {pins.length > 0 ? (

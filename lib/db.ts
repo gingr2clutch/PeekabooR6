@@ -578,6 +578,11 @@ export type GadgetSetup = {
   video_url: string | null;
   /** External clip link, e.g. Medal. Null when the clip is hosted. */
   embed_url: string | null;
+  /**
+   * Who filmed it. Null for anything made in admin rather than submitted, which
+   * is most of the back catalogue — those render the house credit.
+   */
+  contributor: { display_name: string; slug: string } | null;
   pins: GadgetSetupPin[];
 };
 
@@ -591,7 +596,7 @@ const GADGET_SITE_WITH_FLOOR_COLUMNS = `${GADGET_SITE_COLUMNS}, floors(name, bir
 // Pins come back nested. One query per site+operator rather than one for the
 // setups and another for their pins.
 const GADGET_SETUP_COLUMNS =
-  "id, name, display_order, video_url, embed_url, gadget_setup_pins(x_pct, y_pct, display_order)";
+  "id, name, display_order, video_url, embed_url, contributors(display_name, slug), gadget_setup_pins(x_pct, y_pct, display_order)";
 
 export type GadgetSiteWithFloor = GadgetSite & {
   floor: { name: string; birds_eye_url: string | null } | null;
@@ -690,8 +695,14 @@ export async function getGadgetSetups(
     .order("display_order", { ascending: true });
   if (error) throw error;
 
-  const rows = (data ?? []) as unknown as (Omit<GadgetSetup, "pins"> & {
+  const rows = (data ?? []) as unknown as (Omit<
+    GadgetSetup,
+    "pins" | "contributor"
+  > & {
     gadget_setup_pins: GadgetSetupPin[] | null;
+    // PostgREST names the embedded resource after the table, and returns an
+    // object rather than an array because the FK is to a single row.
+    contributors: { display_name: string; slug: string } | null;
   })[];
 
   return rows.map((r) => ({
@@ -700,6 +711,7 @@ export async function getGadgetSetups(
     display_order: r.display_order,
     video_url: r.video_url,
     embed_url: r.embed_url,
+    contributor: r.contributors ?? null,
     pins: [...(r.gadget_setup_pins ?? [])].sort(
       (a, b) => a.display_order - b.display_order
     ),
