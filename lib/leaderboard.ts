@@ -234,14 +234,42 @@ export async function getContributorProfile(
     }
   }
 
-  return {
-    slug: c.slug,
-    displayName: c.display_name,
-    avatarUrl: c.avatar_url,
-    linkUrl: c.link_url,
-    peekCount: rows.filter((r) => r.kind === "peek").length,
-    gadgetCount: rows.filter((r) => r.kind === "gadget").length,
-    items: rows.map((r) => ({
+  // Peeks credited to this person DIRECTLY, with no submission behind them.
+  //
+  // Everything above is submission-shaped, which covers community work: someone
+  // sends a clip, it is approved, it becomes a peek. It does not cover a peek
+  // built in the admin and credited by hand — the house back catalogue, and any
+  // peek an admin attributes after the fact. Those have peeks.contributor_id
+  // set and no community_submissions row pointing at them, so without this
+  // query the profile page is empty for them.
+  //
+  // The `not in` is what stops double counting. A submission that produced a
+  // peek is ONE contribution with two rows describing it; it is already listed
+  // above, and adding the peek again would inflate the count. Only peeks with
+  // no submission behind them are new information.
+  //
+  // Deliberately NOT mirrored into getLeaderboard. The ranked board is built
+  // from submissions and stays that way, so adding a house account with a large
+  // back catalogue cannot reorder or inflate the community standings — the
+  // board is unchanged by construction rather than by careful merging.
+  const claimedPeekIds = new Set(peekIds);
+  const { data: direct, error: dErr } = await sb
+    .from("peeks")
+    .select("id, slug, name, created_at, published, floors(maps(name))")
+    .eq("contributor_id", c.id)
+    .eq("published", true);
+  if (dErr) throw dErr;
+
+  const directRows = ((direct ?? []) as unknown as {
+    id: string;
+    slug: string;
+    name: string;
+    created_at: string;
+    floors: { maps: { name: string } | null } | null;
+  }[]).filter((x) => !claimedPeekIds.has(x.id));
+
+  const items = [
+    ...rows.map((r) => ({
       id: r.id,
       kind: r.kind,
       spotName: r.spot_name,
@@ -252,5 +280,27 @@ export async function getContributorProfile(
         ? peekBySlug.get(r.linked_peek_id) ?? null
         : null,
     })),
+    ...directRows.map((x) => ({
+      id: x.id,
+      kind: "peek" as Kind,
+      spotName: x.name,
+      map: x.floors?.maps?.name ?? "",
+      // is_new_spot is a claim a SUBMITTER makes about their own find. A peek
+      // with no submission behind it was never claimed, so it is not a first
+      // find — asserting otherwise would invent a badge nobody earned.
+      isNewSpot: false,
+      createdAt: x.created_at,
+      peekSlug: x.slug,
+    })),
+  ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+  return {
+    slug: c.slug,
+    displayName: c.display_name,
+    avatarUrl: c.avatar_url,
+    linkUrl: c.link_url,
+    peekCount: items.filter((r) => r.kind === "peek").length,
+    gadgetCount: items.filter((r) => r.kind === "gadget").length,
+    items,
   };
 }
