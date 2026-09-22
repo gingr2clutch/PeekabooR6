@@ -65,7 +65,16 @@ async function mapSlugForFloor(floorId: string): Promise<string> {
  */
 export async function createPeek(
   formData: FormData,
-  videoUrl: string | null = null
+  videoUrl: string | null = null,
+  /**
+   * Who filmed it, written onto the peek itself.
+   *
+   * Credit used to live only on community_submissions, which meant the public
+   * page — reading peeks with the anon key, which cannot see that table — had
+   * no way to reach it and fell back to the house credit for everyone. It has
+   * to land on the row being inserted.
+   */
+  contributorId: string | null = null
 ): Promise<string> {
   console.log(
     "[createPeek] start. form keys:",
@@ -153,6 +162,7 @@ export async function createPeek(
       is_pro_only,
       instructions: instructions.length ? instructions : null,
       video_url: videoUrl,
+      contributor_id: contributorId,
     })
     .select("id")
     .single();
