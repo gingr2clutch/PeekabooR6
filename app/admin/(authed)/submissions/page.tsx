@@ -42,7 +42,64 @@ const STATUS_ORDER: Record<CommunityRow["status"], number> = {
   rejected: 2,
 };
 
-type Params = { searchParams?: { tab?: string; published?: string } };
+type Params = {
+  searchParams?: {
+    tab?: string;
+    published?: string;
+    setup?: string;
+    show?: string;
+  };
+};
+
+// The public URL for a setup we just created.
+//
+// The tab index is its position among the site+operator's setups in
+// display_order, not the raw display_order value — a deleted setup leaves a gap
+// and the two stop agreeing, which would deep-link to the wrong tab.
+async function publicSetupUrl(setupId: string): Promise<string | null> {
+  const sb = supabaseAdmin();
+  const { data } = await sb
+    .from("gadget_setups")
+    .select(
+      "id, site_id, operator_id, display_order, gadget_sites(slug, maps(slug)), gadget_operators(slug)"
+    )
+    .eq("id", setupId)
+    .maybeSingle();
+  const row = data as unknown as {
+    site_id: string;
+    operator_id: string;
+    gadget_sites: { slug: string; maps: { slug: string } | null } | null;
+    gadget_operators: { slug: string } | null;
+  } | null;
+  if (!row?.gadget_sites?.maps?.slug || !row.gadget_operators?.slug) return null;
+
+  const { data: siblings } = await sb
+    .from("gadget_setups")
+    .select("id")
+    .eq("site_id", row.site_id)
+    .eq("operator_id", row.operator_id)
+    .order("display_order", { ascending: true });
+  const idx = ((siblings ?? []) as { id: string }[]).findIndex(
+    (x) => x.id === setupId
+  );
+  const tab = idx >= 0 ? idx + 1 : 1;
+  return `/gadgets/${row.gadget_sites.maps.slug}/${row.gadget_sites.slug}/${row.gadget_operators.slug}?setup=${tab}`;
+}
+
+// Which pile a submission belongs in.
+//
+// "Published" is derived rather than stored: community_submissions.status is
+// CHECK-constrained to pending/approved/rejected, so approved + a linked id IS
+// published. Anything approved WITHOUT a linked id is still work — approving
+// alone creates nothing — which is exactly the state that used to sit in the
+// queue looking finished.
+type Pile = "todo" | "published" | "rejected";
+
+function pileOf(r: CommunityRow): Pile {
+  if (r.status === "rejected") return "rejected";
+  if (r.linked_peek_id || r.linked_gadget_setup_id) return "published";
+  return "todo";
+}
 
 // Two queues on one page. The tab lives in the URL rather than client state so
 // that a server action's revalidate — which re-renders the page from scratch —
@@ -50,6 +107,14 @@ type Params = { searchParams?: { tab?: string; published?: string } };
 export default async function SubmissionsPage({ searchParams }: Params) {
   const tab = searchParams?.tab === "legacy" ? "legacy" : "community";
   const publishedId = searchParams?.published;
+  const setupId = searchParams?.setup;
+  const liveUrl = setupId ? await publicSetupUrl(setupId) : null;
+  const show: Pile =
+    searchParams?.show === "rejected"
+      ? "rejected"
+      : searchParams?.show === "published"
+        ? "published"
+        : "todo";
   const sb = supabaseAdmin();
 
   // Counts for both badges regardless of which tab is open; rows only for the
@@ -87,6 +152,26 @@ export default async function SubmissionsPage({ searchParams }: Params) {
         </nav>
       </div>
 
+      {setupId && (
+        <div className="rounded-card border border-blue/40 bg-blue/[0.06] p-3 text-sm text-ink">
+          Setup published and submission closed.{" "}
+          {liveUrl ? (
+            <a
+              href={liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-blue hover:underline"
+            >
+              See it live →
+            </a>
+          ) : (
+            <Link href="/admin/gadgets" className="font-medium text-blue hover:underline">
+              Open Gadgets admin →
+            </Link>
+          )}
+        </div>
+      )}
+
       {publishedId && (
         <div className="rounded-card border border-teal/40 bg-teal/[0.06] p-3 text-sm text-ink">
           Peek created and submission approved.{" "}
@@ -99,7 +184,7 @@ export default async function SubmissionsPage({ searchParams }: Params) {
         </div>
       )}
 
-      {tab === "community" ? <CommunityTab /> : <LegacyTab />}
+      {tab === "community" ? <CommunityTab show={show} /> : <LegacyTab />}
     </div>
   );
 }
@@ -139,7 +224,7 @@ function TabLink({
 
 /* ----------------------------- community ------------------------------- */
 
-async function CommunityTab() {
+async function CommunityTab({ show }: { show: Pile }) {
   const sb = supabaseAdmin();
   const [{ data, error }, contributors] = await Promise.all([
     sb
@@ -157,8 +242,14 @@ async function CommunityTab() {
     );
   }
 
-  const rows = (data ?? []) as CommunityRow[];
+  const all = (data ?? []) as CommunityRow[];
   const byId = new Map(contributors.map((c) => [c.id, c]));
+
+  // Split before rendering so the counts on the filter chips are honest and the
+  // default view contains only things that still need a decision.
+  const piles = { todo: [] as CommunityRow[], published: [] as CommunityRow[], rejected: [] as CommunityRow[] };
+  for (const r of all) piles[pileOf(r)].push(r);
+  const rows = piles[show];
   // Pending first, then newest within each status. Done here because PostgREST
   // cannot order by a custom status ranking.
   rows.sort(
@@ -183,24 +274,50 @@ async function CommunityTab() {
 
   return (
     <div className="space-y-4">
+      {/* Filter chips. The default is Needs you, so the queue is a to-do list
+          rather than an archive — rejected and published rows are still one tap
+          away but are not mixed in with work. */}
+      <nav aria-label="Filter" className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
+        {([
+          ["todo", "Needs you", piles.todo.length],
+          ["published", "Published", piles.published.length],
+          ["rejected", "Rejected", piles.rejected.length],
+        ] as const).map(([key, label, n]) => (
+          <Link
+            key={key}
+            href={key === "todo" ? "/admin/submissions" : `/admin/submissions?show=${key}`}
+            aria-current={show === key ? "page" : undefined}
+            className={`inline-flex items-center justify-center gap-2 rounded-btn border px-3 py-2 text-sm font-medium transition-colors ${
+              show === key
+                ? "border-brand bg-brand/[0.06] text-ink"
+                : "border-border text-muted hover:border-brand hover:text-ink"
+            }`}
+          >
+            {label}
+            <span
+              className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${
+                n > 0 && key === "todo" ? "bg-brand text-white" : "bg-ink/[0.06] text-muted"
+              }`}
+            >
+              {n}
+            </span>
+          </Link>
+        ))}
+      </nav>
+
       <p className="text-sm text-muted">
-        Clips and screenshots from the submit sections on the homepage and
-        /gadgets. Edit &amp; publish turns a peek submission into a real peek —
-        it opens the peek form prefilled, moves the clip into peek storage, and
-        approves the submission on save. Approve and reject only set status,
-        which is all a gadget submission can do for now. Credit is separate from
-        both: attach it whenever you have verified who filmed the clip, and it
-        stays put through approve, reject and reopen.{" "}
-        <Link
-          href="/admin/contributors"
-          className="font-medium text-brand hover:underline"
-        >
-          Manage contributors →
-        </Link>
+        Edit &amp; publish turns a submission into the real thing — a peek, or a
+        gadget setup — and closes it. Approve and reject only set a status, so an
+        approved submission still shows under Needs you until it has been
+        published. Credit can be attached at any point and survives all of it.
       </p>
       {rows.length === 0 ? (
         <p className="rounded-card border border-border bg-card p-6 text-sm text-muted">
-          No community submissions yet.
+          {show === "todo"
+            ? "Nothing needs you right now."
+            : show === "published"
+              ? "Nothing published yet."
+              : "Nothing rejected."}
         </p>
       ) : (
         <ul className="space-y-4">

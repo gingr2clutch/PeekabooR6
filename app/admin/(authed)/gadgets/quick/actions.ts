@@ -1,5 +1,6 @@
 "use server";
 
+import { acceptClipUrl } from "@/lib/gadget-embed";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // Quick-add writes, for the repeat-entry screen.
@@ -51,10 +52,22 @@ export async function quickAddSetup(formData: FormData): Promise<QuickAddResult>
   if (!site_id) throw new Error("Pick a bomb site first.");
   if (!operator_id) throw new Error("Pick an operator first.");
 
-  const video_url = String(formData.get("video_url") ?? "").trim();
-  // Mirrors the NOT NULL on gadget_setups.video_url. Pins carry no information
-  // on their own, so a setup without a clip explains nothing.
-  if (!video_url) throw new Error("Add a clip — the pins alone explain nothing.");
+  // A setup needs a clip and it can be either kind — an uploaded file or a
+  // link. The database CHECK from 036 is the real guarantee; this just makes
+  // the failure readable.
+  //
+  // A link is accepted whether or not we can frame it: Medal embeds, everything
+  // else on the allowlist renders as a click-out card. What is refused is a host
+  // nobody has vetted, so the check is "allowed", not "embeddable".
+  const video_url = String(formData.get("video_url") ?? "").trim() || null;
+  const rawEmbed = String(formData.get("embed_url") ?? "").trim() || null;
+  const embed_url = rawEmbed ? acceptClipUrl(rawEmbed) : null;
+  if (!video_url && !embed_url) {
+    throw new Error("Add a clip — upload one, or paste a link.");
+  }
+  const clip = embed_url
+    ? { video_url: null, embed_url }
+    : { video_url, embed_url: null };
 
   const sb = supabaseAdmin();
 
@@ -70,7 +83,7 @@ export async function quickAddSetup(formData: FormData): Promise<QuickAddResult>
 
   const { data, error } = await sb
     .from("gadget_setups")
-    .insert({ site_id, operator_id, name, video_url, display_order: n })
+    .insert({ site_id, operator_id, name, ...clip, display_order: n })
     .select("id")
     .single();
   if (error) {

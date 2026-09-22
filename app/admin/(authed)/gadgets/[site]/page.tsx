@@ -63,7 +63,7 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
     sb
       .from("gadget_setups")
       .select(
-        "id, operator_id, name, display_order, video_url, published, gadget_setup_pins(x_pct, y_pct, display_order)"
+        "id, operator_id, name, display_order, video_url, embed_url, published, gadget_setup_pins(x_pct, y_pct, display_order)"
       )
       .eq("site_id", site.id)
       .order("operator_id")
@@ -92,7 +92,8 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
     operator_id: string;
     name: string;
     display_order: number;
-    video_url: string;
+    video_url: string | null;
+    embed_url: string | null;
     published: boolean;
     gadget_setup_pins: { x_pct: number; y_pct: number; display_order: number }[] | null;
   }[];
@@ -246,9 +247,19 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
               </label>
               <div className="w-full">
                 <span className="mb-1 block text-xs text-muted">
-                  Clip (required)
+                  Clip — upload a file, or paste a link
                 </span>
                 <GadgetClipUpload siteId={site.id} initialUrl={su.video_url} />
+                <input
+                  name="embed_url"
+                  defaultValue={su.embed_url ?? ""}
+                  placeholder="https://medal.tv/games/r6-siege/clips/…"
+                  className={`${input} mt-2`}
+                />
+                <span className="mt-1 block text-[11px] text-muted">
+                  Medal embeds in the page; TikTok, YouTube, X and Streamable render as a
+                  watch-on card. Filling this replaces an uploaded file.
+                </span>
               </div>
               <div className="w-full">
                 <span className="mb-1 block text-xs text-muted">Pins</span>
@@ -318,8 +329,15 @@ export default async function AdminSitePlacementsPage({ params }: Params) {
           <input name="name" placeholder="Standard" className={input} />
         </label>
         <div className="w-full">
-          <span className="mb-1 block text-xs text-muted">Clip (required)</span>
+          <span className="mb-1 block text-xs text-muted">
+            Clip — upload a file, or paste a link
+          </span>
           <GadgetClipUpload siteId={site.id} />
+          <input
+            name="embed_url"
+            placeholder="https://medal.tv/games/r6-siege/clips/…"
+            className={`${input} mt-2`}
+          />
         </div>
         <div className="w-full">
           <span className="mb-1 block text-xs text-muted">Pins</span>

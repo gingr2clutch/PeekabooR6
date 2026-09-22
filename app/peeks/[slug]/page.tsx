@@ -4,6 +4,8 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { PeekMedia } from "@/components/PeekMedia";
+import { ClipCredit } from "@/components/ClipCredit";
+import { clipPlatform } from "@/lib/gadget-embed";
 import { VoteButtons } from "@/components/VoteButtons";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { supabasePublic } from "@/lib/supabase";
@@ -47,10 +49,16 @@ const GRADE_RATING_VALUE: Record<Grade, number> = {
 type Joined = Peek & {
   created_at: string;
   floors: (Floor & { maps: Map }) | null;
+  /**
+   * Who filmed the clip. PostgREST names the embedded resource after the table
+   * and returns a single object, since the FK points at one row. Null for the
+   * back catalogue, which was made in admin rather than submitted.
+   */
+  contributors: { display_name: string; slug: string } | null;
 };
 
 const JOIN_COLUMNS =
-  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, total_casts, success_rate, base_success_rate, published, is_pro_only, created_at, floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
+  "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, total_casts, success_rate, base_success_rate, published, is_pro_only, created_at, contributors(display_name, slug), floors(id, map_id, slug, name, display_order, birds_eye_url, maps(id, slug, name, published, cover_image_url))";
 
 async function fetchBySlug(slug: string): Promise<Joined | null> {
   const { data, error } = await supabasePublic()
@@ -269,6 +277,18 @@ export default async function PeekDetailPage({
           <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
             {peek.name}
           </h1>
+          <ClipCredit
+            contributor={peek.contributors}
+            // A peek's external clip is tiktok_url — the one off-site field it
+            // has. Resolved through the same classifier the gadget side uses so
+            // the platform name comes from one table, not a literal here.
+            platform={peek.tiktok_url ? clipPlatform(peek.tiktok_url) : null}
+            externalUnknown={
+              !!peek.tiktok_url && clipPlatform(peek.tiktok_url) === null
+            }
+            label="Peek"
+            className="mt-2"
+          />
           <p className="mt-3 text-sm text-ink">
             <Link href={`/maps/${map.slug}`} className="hover:text-brand">
               {map.name}
@@ -348,20 +368,12 @@ export default async function PeekDetailPage({
             unchanged; when there are no steps/tip the media spans the row. */}
         {hasInstructionsContent ? (
           <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
-            {peek.tiktok_url ? (
-              <TikTokLinkCard url={peek.tiktok_url} />
-            ) : (
-              <PeekMedia videoUrl={peek.video_url} name={peek.name} />
-            )}
+            <PeekClip peek={peek} />
             <Instructions steps={steps} tip={peek.tip} />
           </div>
         ) : (
           <div className="mt-16">
-            {peek.tiktok_url ? (
-              <TikTokLinkCard url={peek.tiktok_url} />
-            ) : (
-              <PeekMedia videoUrl={peek.video_url} name={peek.name} />
-            )}
+            <PeekClip peek={peek} />
           </div>
         )}
 
@@ -649,6 +661,24 @@ function RiskPill({ risk }: { risk: string }) {
     >
       {risk}
     </span>
+  );
+}
+
+// The clip, whichever kind it is.
+//
+// Both layout branches render this rather than picking between the players
+// themselves, so the choice lives in one place instead of being duplicated into
+// each branch and left to drift. Credit is not here — it sits under the page
+// title, where it is actually visible.
+function PeekClip({ peek }: { peek: Joined }) {
+  return (
+    <div>
+      {peek.tiktok_url ? (
+        <TikTokLinkCard url={peek.tiktok_url} />
+      ) : (
+        <PeekMedia videoUrl={peek.video_url} name={peek.name} />
+      )}
+    </div>
   );
 }
 

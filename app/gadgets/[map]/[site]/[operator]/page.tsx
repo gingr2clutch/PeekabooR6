@@ -3,6 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
+import { resolveClip } from "@/lib/gadget-embed";
+import { ClipLinkCard } from "@/components/ClipLinkCard";
+import { ClipCredit } from "@/components/ClipCredit";
 import { OperatorIcon } from "@/components/OperatorIcon";
 import { BackToTop } from "@/components/BackToTop";
 import {
@@ -70,6 +73,15 @@ export default async function OperatorPlacementsPage({
   const active = setups[activeIndex] ?? null;
   const pins = active?.pins ?? [];
 
+  // A setup carries either a hosted file or an external link, never neither —
+  // the database CHECK guarantees that. embed_url wins when both somehow exist,
+  // because it is the newer, deliberate choice.
+  const clip = active?.embed_url ? resolveClip(active.embed_url) : null;
+  // A rejected URL should never be in the database — the admin write paths
+  // refuse one — but if an older row predates that check, it falls through to
+  // the <video> branch, which wants the ordinary 16:9 box.
+  const clipAspect = clip && clip.kind !== "rejected" ? clip.aspect : "video";
+
   // The site now names its own blueprint. Falling back to the first floor that
   // has one only matters while floor_id is unset — that is the mismatch the
   // column was added to fix, so a site with floor_id set is always correct.
@@ -108,6 +120,20 @@ export default async function OperatorPlacementsPage({
           <p className="mt-1 text-sm text-muted">
             {[op.role, op.gadget_name].filter(Boolean).join(" · ")}
           </p>
+          {/* Credited to whoever filmed the ACTIVE setup, so switching tabs
+              switches the name with it. */}
+          {active && (
+            <ClipCredit
+              contributor={active.contributor}
+              // embed_url means the clip lives on someone else's platform,
+              // whether we frame it or link to it. Either way it is not ours to
+              // claim, so the house credit is only reachable for a hosted file.
+              platform={clip && clip.kind !== "rejected" ? clip.platform : null}
+              externalUnknown={!!active.embed_url && clip?.kind === "rejected"}
+              label="Setup"
+              className="mt-2"
+            />
+          )}
         </header>
 
         {/* Setup tabs. Real links, so each setup is its own URL and the set is
@@ -185,18 +211,64 @@ export default async function OperatorPlacementsPage({
           </p>
         ) : (
           <>
-            {/* The clip. This is the content — the pins above are an index into
-                it. Height is reserved by the aspect box so nothing shifts when
-                the video loads. */}
-            <div className="mt-5 overflow-hidden rounded-card border border-border bg-black">
-              <video
-                key={active.id}
-                src={active.video_url}
-                controls
-                playsInline
-                preload="metadata"
-                className="aspect-video w-full"
-              />
+            {/* The clip. This is the content — the pins above are an index
+                into it.
+
+                The box is sized from the platform, not from the media: a
+                TikTok player is 9:16, everything else is 16:9. Because that
+                comes off the resolved clip on the server, the height is fixed
+                before anything loads, so neither shape shifts on arrival. The
+                portrait box is width-capped so a vertical clip does not become
+                a full-viewport-tall column on desktop. */}
+            <div
+              className={`mt-5 overflow-hidden rounded-card border border-border bg-black ${
+                clipAspect === "portrait" ? "mx-auto w-full max-w-[22rem]" : ""
+              }`}
+            >
+              {clip?.kind === "embed" ? (
+                // Embedded because the source file is not hotlinkable. Only
+                // hosts verified in lib/gadget-embed.ts reach this branch, so
+                // an arbitrary pasted URL can never be framed on the site.
+                <iframe
+                  key={active.id}
+                  src={clip.src}
+                  title={`${op.name} — ${active.name}`}
+                  loading="lazy"
+                  // allow-same-origin lets the frame keep ITS OWN origin
+                  // (youtube.com, tiktok.com) — it does not hand it anything of
+                  // ours. A cross-origin frame can never reach our DOM whatever
+                  // the sandbox says; that is enforced by the origin, not here.
+                  // YouTube and TikTok need it for storage access or they
+                  // refuse to play. allow-popups is so the player's own
+                  // "watch on …" controls still work.
+                  sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allow="fullscreen; picture-in-picture"
+                  className={`w-full border-0 ${
+                    clip.aspect === "portrait" ? "aspect-[9/16]" : "aspect-video"
+                  }`}
+                />
+              ) : clip?.kind === "link" ? (
+                // A host on the allowlist that we do not frame — TikTok,
+                // YouTube and friends. Better an honest click-out than an
+                // iframe pointed at a host nobody has checked. Same
+                // aspect-video box as the iframe, so the two are
+                // interchangeable without reflow.
+                <ClipLinkCard
+                  href={clip.href}
+                  platform={clip.platform}
+                  aspect={clip.aspect}
+                />
+              ) : (
+                <video
+                  key={active.id}
+                  src={active.video_url ?? undefined}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="aspect-video w-full"
+                />
+              )}
             </div>
 
             <p className="mt-3 text-center text-sm text-muted">

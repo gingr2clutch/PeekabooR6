@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { createPeek } from "../peeks/actions";
 import { copySubmissionClipToR2 } from "@/lib/submission-media";
 import { resolveContributor } from "@/lib/contributors";
+import { acceptClipUrl } from "@/lib/gadget-embed";
 
 // Approve/reject for the community submission queue.
 //
@@ -81,6 +82,39 @@ export async function deleteCommunitySubmissionAction(formData: FormData) {
   revalidate();
 }
 
+
+/**
+ * Read back the row we just wrote and confirm the credit actually landed.
+ *
+ * Belt and braces over trusting the insert, because the failure this catches is
+ * silent from every angle that matters: the submission still shows the
+ * contributor in the admin, so the queue looks correct, while the public page
+ * reads the peek or setup and finds nothing, and renders the house credit. The
+ * only way to notice is to look at the live page for a specific clip.
+ *
+ * Throws rather than repairing. A mismatch here means an assumption above is
+ * wrong, and quietly patching the row would hide that.
+ */
+async function assertCreditLanded(
+  table: "peeks" | "gadget_setups",
+  id: string,
+  expected: string,
+  name: string
+): Promise<void> {
+  const { data, error } = await supabaseAdmin()
+    .from(table)
+    .select("contributor_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  const got = (data as { contributor_id: string | null } | null)?.contributor_id;
+  if (got !== expected) {
+    throw new Error(
+      `Credit for "${name}" did not save onto ${table} ${id} — it would have published as the house credit, so the submission has been left open. Nothing was lost; retry it.`
+    );
+  }
+}
+
 /**
  * Turns an approved-in-principle submission into a real peek.
  *
@@ -88,12 +122,13 @@ export async function deleteCommunitySubmissionAction(formData: FormData) {
  * uses — so every validation rule, default and side effect is identical. No
  * peek row is written here directly.
  *
- * Order is deliberate: copy the clip FIRST, then create the peek, then approve
- * the submission. The copy is the flakiest step, so it runs while there is
- * still nothing to undo. That gives:
+ * Order is deliberate: resolve the credit, copy the clip, create the peek,
+ * then approve the submission. Everything that can fail cheaply runs while
+ * there is still nothing to undo. That gives:
+ *   credit fails  -> nothing created, submission still pending
  *   copy fails    -> nothing created, submission still pending
  *   create fails  -> an orphaned R2 object, submission still pending
- *   approve fails -> peek exists (with video), submission still pending
+ *   approve fails -> peek exists (with video and credit), still pending
  * In every case the submission stays pending and comes back around, which is
  * the guarantee that matters: it is never marked handled unless the peek is
  * genuinely there.
@@ -120,7 +155,34 @@ export async function publishSubmissionAction(
   if (subErr) throw subErr;
   if (!sub) throw new Error("Submission not found.");
 
-  // 1. Clip first. A link-only submission has nothing to copy and publishes
+  // 1. Credit first, before anything is created.
+  //
+  //    This used to run AFTER the peek, on the reasoning that a failed lookup
+  //    should not leave a contributor row behind for a peek that never
+  //    existed. That was the wrong thing to protect: a stray contributor row
+  //    is harmless, whereas resolving late meant the id was not in hand when
+  //    the peek was inserted, and the credit ended up on the submission only —
+  //    somewhere the public page cannot read. Failing here costs nothing,
+  //    because nothing has been created yet.
+  //
+  //    An empty field is not an error. Plenty of submissions arrive from people
+  //    who do not want credit, and forcing a name would produce junk rows.
+  const contributorName = String(formData.get("contributor_name") ?? "").trim();
+  let contributorId: string | null = null;
+  if (contributorName) {
+    try {
+      const { contributor } = await resolveContributor(contributorName);
+      contributorId = contributor.id;
+    } catch (e) {
+      throw new Error(
+        `Could not resolve the contributor, so nothing was created and the submission is still pending. ${
+          e instanceof Error ? e.message : String(e)
+        }`
+      );
+    }
+  }
+
+  // 2. Clip. A link-only submission has nothing to copy and publishes
   //    without a video — the admin can attach one on the peek's edit page.
   let videoUrl: string | null = null;
   if (sub.file_path) {
@@ -135,10 +197,11 @@ export async function publishSubmissionAction(
     }
   }
 
-  // 2. Then the peek, through the shared creation path.
+  // 3. Then the peek, through the shared creation path, with the credit as
+  //    part of the insert rather than a follow-up write.
   let peekId: string;
   try {
-    peekId = await createPeek(formData, videoUrl);
+    peekId = await createPeek(formData, videoUrl, contributorId);
   } catch (e) {
     if (e instanceof Error && e.message === "MISSING_REQUIRED_FIELD") {
       throw new Error("Pick a floor and give the peek a name before publishing.");
@@ -146,29 +209,16 @@ export async function publishSubmissionAction(
     throw e;
   }
 
-  // 3. Credit, if the admin named someone. Resolved here rather than up front
-  //    so a failure cannot leave a contributor row behind for a peek that was
-  //    never created; the cost is that a bad name fails after the peek exists,
-  //    which is the same recoverable state as every other late failure below.
-  //
-  //    An empty field is not an error. Plenty of submissions arrive from people
-  //    who do not want credit, and forcing a name would produce junk rows.
-  const contributorName = String(formData.get("contributor_name") ?? "").trim();
-  let contributorId: string | null = null;
-  if (contributorName) {
-    try {
-      const { contributor } = await resolveContributor(contributorName);
-      contributorId = contributor.id;
-    } catch (e) {
-      throw new Error(
-        `Peek ${peekId} was created, but the contributor could not be resolved, so the submission is still pending. ${
-          e instanceof Error ? e.message : String(e)
-        }`
-      );
-    }
+  // 4. Guard. If the admin named someone, the peek must carry them — a publish
+  //    that silently drops credit is the bug this whole ordering exists to
+  //    prevent, and it is invisible from the admin screen because the
+  //    submission still shows the name. Read it back rather than trusting the
+  //    insert.
+  if (contributorId) {
+    await assertCreditLanded("peeks", peekId, contributorId, contributorName);
   }
 
-  // 4. Only now is the submission handled. Credit and approval go in one
+  // 5. Only now is the submission handled. Credit and approval go in one
   //    statement so an approved submission can never be missing the attribution
   //    that was chosen in the same breath.
   const { error: updErr } = await sb
@@ -188,4 +238,152 @@ export async function publishSubmissionAction(
   revalidatePath("/admin/submissions");
   revalidatePath("/admin/peeks");
   redirect(`/admin/submissions?published=${peekId}`);
+}
+
+/**
+ * Turns an approved gadget submission into a live setup.
+ *
+ * The gadget counterpart to publishSubmissionAction above, and deliberately a
+ * separate function rather than a branch inside it: that one is the working
+ * peek path and has its own ordering guarantees around copying a clip.
+ *
+ * There is no clip to copy here. Gadget submissions arrive as Medal links, and
+ * the link is stored as-is and embedded — so the risky step the peek flow is
+ * built around does not exist, and the ordering is simply create-then-link.
+ *
+ * "Published" is derived, not a status value: community_submissions.status is
+ * CHECK-constrained to pending/approved/rejected, so a fourth value would need
+ * a migration. Approved + linked_gadget_setup_id means published, exactly as
+ * approved + linked_peek_id already does for peeks, and the queue filters on
+ * that pair.
+ *
+ * Writes gadget_setups, gadget_setup_pins and community_submissions. No peek
+ * table is touched.
+ */
+export async function publishGadgetSubmissionAction(
+  submissionId: string,
+  formData: FormData
+) {
+  if (!submissionId) throw new Error("submission_id required");
+
+  const site_id = String(formData.get("site_id") ?? "");
+  const operator_id = String(formData.get("operator_id") ?? "");
+  if (!site_id) throw new Error("Pick a bomb site.");
+  if (!operator_id) throw new Error("Pick an operator.");
+
+  const video_url = String(formData.get("video_url") ?? "").trim() || null;
+  const rawEmbed = String(formData.get("embed_url") ?? "").trim() || null;
+  // Their submitted link, kept whether or not it can be framed. A TikTok or
+  // YouTube submission now publishes as a click-out card instead of being
+  // refused at this step and needing a manual re-upload.
+  const embed_url = rawEmbed ? acceptClipUrl(rawEmbed) : null;
+  if (!video_url && !embed_url) {
+    throw new Error("A setup needs a clip — upload one, or keep their link.");
+  }
+
+  const sb = supabaseAdmin();
+
+  // Credit first, same reasoning as the peek flow: the id has to be in hand
+  // when the setup is inserted, or it lands on the submission only — where the
+  // public page, reading with the anon key, cannot see it.
+  const contributorName = String(formData.get("contributor_name") ?? "").trim();
+  let contributorId: string | null = null;
+  if (contributorName) {
+    try {
+      const { contributor } = await resolveContributor(contributorName);
+      contributorId = contributor.id;
+    } catch (e) {
+      throw new Error(
+        `Could not resolve the contributor, so nothing was created and the submission is still open. ${
+          e instanceof Error ? e.message : String(e)
+        }`
+      );
+    }
+  }
+
+  // "Setup N" counts what already exists for this site and operator.
+  const { count } = await sb
+    .from("gadget_setups")
+    .select("id", { count: "exact", head: true })
+    .eq("site_id", site_id)
+    .eq("operator_id", operator_id);
+  const n = (count ?? 0) + 1;
+  const name = String(formData.get("name") ?? "").trim() || `Setup ${n}`;
+
+  const { data: created, error: setupErr } = await sb
+    .from("gadget_setups")
+    .insert({
+      site_id,
+      operator_id,
+      name,
+      display_order: n,
+      published: true,
+      contributor_id: contributorId,
+      ...(embed_url ? { embed_url, video_url: null } : { video_url, embed_url: null }),
+    })
+    .select("id")
+    .single();
+  if (setupErr) throw setupErr;
+  const setupId = (created as { id: string }).id;
+
+  // Pins, if any were placed. A setup with none is legitimate — the clip still
+  // explains it — so this is not an error path.
+  const pins = parsePinsJson(formData.get("pins"));
+  if (pins.length > 0) {
+    const { error: pinErr } = await sb.from("gadget_setup_pins").insert(
+      pins.map((pin, i) => ({
+        setup_id: setupId,
+        x_pct: pin.x,
+        y_pct: pin.y,
+        display_order: i,
+      }))
+    );
+    if (pinErr) {
+      throw new Error(
+        `Setup "${name}" was created but its pins failed to save, so the submission is still open. ${pinErr.message}`
+      );
+    }
+  }
+
+  // Same guard as the peek flow — a setup that published as the house credit
+  // looks correct in the admin and wrong only on the live page.
+  if (contributorId) {
+    await assertCreditLanded("gadget_setups", setupId, contributorId, contributorName);
+  }
+
+  // Only now is the submission handled. Link and credit land together so a
+  // published submission can never be missing the attribution chosen with it.
+  const { error: updErr } = await sb
+    .from("community_submissions")
+    .update({
+      status: "approved",
+      linked_gadget_setup_id: setupId,
+      ...(contributorId ? { contributor_id: contributorId } : {}),
+    })
+    .eq("id", submissionId);
+  if (updErr) {
+    throw new Error(
+      `Setup ${setupId} was created, but marking the submission handled failed — it is still open. ${updErr.message}`
+    );
+  }
+
+  revalidatePath("/admin/submissions");
+  revalidatePath("/gadgets");
+  redirect(`/admin/submissions?setup=${setupId}`);
+}
+
+// Pins arrive as a JSON array because their number varies per submit.
+function parsePinsJson(raw: FormDataEntryValue | null): { x: number; y: number }[] {
+  if (!raw) return [];
+  try {
+    const v = JSON.parse(String(raw));
+    if (!Array.isArray(v)) return [];
+    const clamp = (n: number) => Math.min(100, Math.max(0, Number(n)));
+    return v
+      .filter((p) => p && typeof p === "object" && "x" in p && "y" in p)
+      .map((p) => ({ x: clamp(p.x), y: clamp(p.y) }))
+      .filter((p) => !Number.isNaN(p.x) && !Number.isNaN(p.y));
+  } catch {
+    return [];
+  }
 }
