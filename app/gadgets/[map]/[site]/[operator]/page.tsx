@@ -125,6 +125,11 @@ export default async function OperatorPlacementsPage({
           {active && (
             <ClipCredit
               contributor={active.contributor}
+              // embed_url means the clip lives on someone else's platform,
+              // whether we frame it or link to it. Either way it is not ours to
+              // claim, so the house credit is only reachable for a hosted file.
+              platform={clip && clip.kind !== "rejected" ? clip.platform : null}
+              externalUnknown={!!active.embed_url && clip?.kind === "rejected"}
               label="Setup"
               className="mt-2"
             />

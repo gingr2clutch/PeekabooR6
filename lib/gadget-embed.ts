@@ -221,6 +221,18 @@ function strip(u: URL, keep?: string[]): URL {
   return out;
 }
 
+/**
+ * The platform behind a clip URL, or null if we do not recognise it.
+ *
+ * For attribution rather than rendering: an external clip was filmed by
+ * someone on that platform, and where nobody is credited by name the honest
+ * line is "the TikTok creator", not our own house credit.
+ */
+export function clipPlatform(raw: string): string | null {
+  const r = resolveClip(raw);
+  return r.kind === "rejected" ? null : r.platform;
+}
+
 /** Whether we will store this URL at all. Used to validate admin input. */
 export function isAllowedClip(raw: string): boolean {
   return resolveClip(raw).kind !== "rejected";

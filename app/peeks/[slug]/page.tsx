@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { PeekMedia } from "@/components/PeekMedia";
 import { ClipCredit } from "@/components/ClipCredit";
+import { clipPlatform } from "@/lib/gadget-embed";
 import { VoteButtons } from "@/components/VoteButtons";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { supabasePublic } from "@/lib/supabase";
@@ -277,6 +278,13 @@ export default async function PeekDetailPage({
           </h1>
           <ClipCredit
             contributor={peek.contributors}
+            // A peek's external clip is tiktok_url — the one off-site field it
+            // has. Resolved through the same classifier the gadget side uses so
+            // the platform name comes from one table, not a literal here.
+            platform={peek.tiktok_url ? clipPlatform(peek.tiktok_url) : null}
+            externalUnknown={
+              !!peek.tiktok_url && clipPlatform(peek.tiktok_url) === null
+            }
             label="Peek"
             className="mt-2"
           />
