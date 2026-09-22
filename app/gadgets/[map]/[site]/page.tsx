@@ -7,6 +7,7 @@ import {
   getMaps,
   getGadgetSiteBySlug,
   getGadgetOperatorsForSite,
+  siteHasPublishedSetups,
 } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -23,9 +24,17 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!map) return { title: "Not found" };
   const site = await getGadgetSiteBySlug(map.id, params.site);
   if (!site) return { title: "Not found" };
+
+  // Most bomb sites are published but have no setups yet, so this page is an
+  // operator grid leading nowhere. noindex,follow keeps it out of the index
+  // while still letting the operator links be crawled; it lifts on its own once
+  // a setup lands. See app/gadgets/layout.tsx.
+  const hasSetups = await siteHasPublishedSetups(site.id);
+
   return {
     title: `${site.name} on ${map.name} — gadget operators`,
     description: `Operators with gadget placements on ${site.name}, ${map.name}.`,
+    ...(hasSetups ? {} : { robots: { index: false, follow: true } }),
   };
 }
 

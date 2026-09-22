@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { getMaps } from "@/lib/db";
-import { getGadgetSitesForMap } from "@/lib/db";
+import { getGadgetSitesForMap, mapHasPublishedSetups } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +18,24 @@ async function findMap(slug: string) {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const map = await findMap(params.map);
   if (!map) return { title: "Not found" };
+
+  // Every bomb site is published, but most maps have no setups behind them
+  // yet, so this page and the site pages under it are currently an index of
+  // empty rooms. Asking Google not to index that keeps a pile of thin,
+  // near-identical pages out of the index while the section fills up.
+  //
+  // follow, not nofollow: the links are real and should still be crawled, so
+  // the sites are discovered and ready to rank the moment they have content.
+  //
+  // Self-lifting. The condition is "does this map have a visible setup", read
+  // live on every request (the route is force-dynamic), so publishing the first
+  // setup removes the tag on the next crawl with nothing to remember to undo.
+  const hasSetups = await mapHasPublishedSetups(map.id);
+
   return {
     title: `${map.name} bomb sites — gadgets`,
     description: `Pick a bomb site on ${map.name} to see gadget placements for each operator.`,
+    ...(hasSetups ? {} : { robots: { index: false, follow: true } }),
   };
 }
 

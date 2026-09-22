@@ -726,6 +726,38 @@ export type GadgetStats = {
   pins: number;
 };
 
+/**
+ * Whether one map has any publicly visible setup.
+ *
+ * A count query rather than reusing getMapIdsWithGadgetPlacements(), which
+ * pulls every setup on the site to build a Set — fine for the hub, which needs
+ * all of them at once, wasteful for a single map's metadata.
+ *
+ * No .eq("published") needed: the gadget_setups RLS policy already requires the
+ * setup AND its parent site to be published, so anything supabasePublic() can
+ * see is genuinely reachable. That is also what makes this self-lifting — the
+ * moment a setup is published it becomes visible here, with no second flag to
+ * remember to flip.
+ */
+export async function mapHasPublishedSetups(mapId: string): Promise<boolean> {
+  const { count, error } = await supabasePublic()
+    .from("gadget_setups")
+    .select("id, gadget_sites!inner(map_id)", { count: "exact", head: true })
+    .eq("gadget_sites.map_id", mapId);
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}
+
+/** The same question for one bomb site. See mapHasPublishedSetups. */
+export async function siteHasPublishedSetups(siteId: string): Promise<boolean> {
+  const { count, error } = await supabasePublic()
+    .from("gadget_setups")
+    .select("id", { count: "exact", head: true })
+    .eq("site_id", siteId);
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}
+
 // Map ids that have at least one publicly visible setup, for the /gadgets
 // grid's enabled/disabled split.
 //

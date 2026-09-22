@@ -31,9 +31,17 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     getGadgetOperatorBySlug(params.operator),
   ]);
   if (!site || !op) return { title: "Not found" };
+
+  // The leaf. Its own setups are the content, so an operator with none is the
+  // thinnest page in the section — the grid above links every operator whether
+  // or not they have anything here. Same self-lifting rule; see
+  // app/gadgets/layout.tsx.
+  const setups = await getGadgetSetups(site.id, op.id);
+
   return {
     title: `${op.name} on ${site.name} — ${map.name}`,
     description: `${op.name} gadget setups for ${site.name} on ${map.name} — where the pins go and a clip showing the setup.`,
+    ...(setups.length > 0 ? {} : { robots: { index: false, follow: true } }),
   };
 }
 

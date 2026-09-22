@@ -1,19 +1,23 @@
-import type { Metadata } from "next";
-
-// noindex for the whole /gadgets tree while the data is placeholder.
+// Pass-through layout.
 //
-// Set here rather than on each page so it covers every current route and any
-// gadget route added later. Next merges metadata down the tree: the pages below
-// define title/description but no `robots`, so they inherit this. Removing the
-// export is the single switch to flip when real data lands.
+// This used to export `robots: { index: false, follow: false }` for the whole
+// /gadgets tree, from when every row here was placeholder data. Chalet and
+// Clubhouse now carry real setups with real clips, so a blanket noindex was
+// suppressing the pages that have earned indexing along with the ones that have
+// not.
 //
-// The sitemap does not list these routes either, so nothing is being submitted
-// for indexing at the same time as being told not to index.
-export const metadata: Metadata = {
-  robots: { index: false, follow: false },
-};
-
-// Pass-through: this exists only to carry the metadata above.
+// Indexing is now decided per page, by the only question that matters: does
+// this page have a published setup behind it? Each of /gadgets/[map],
+// /gadgets/[map]/[site] and .../[operator] answers it in its own
+// generateMetadata and emits noindex,follow when the answer is no. Those routes
+// are force-dynamic, so the answer is read live and the tag lifts on the next
+// crawl after the first setup publishes — nothing to remember to undo.
+//
+// follow rather than nofollow throughout: the links are real and should still
+// be crawled, so pages are discovered and ready the moment they have content.
+//
+// The layout stays because gadget routes may want shared chrome later; it
+// simply asserts nothing about indexing now.
 export default function GadgetsLayout({
   children,
 }: {
