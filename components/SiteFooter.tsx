@@ -31,6 +31,15 @@ export function SiteFooter() {
           Contact
         </Link>
         <span aria-hidden>·</span>
+        {/* Anchors into the CCPA section of the privacy policy. Note this is
+            OUR statement of the right; the control that actually applies an
+            opt-out is injected by the ad partner (Mediavine renders
+            button.consumer-privacy-btn site-wide), and the section explains
+            that rather than duplicating a button we do not own. */}
+        <Link href="/privacy-policy#do-not-sell" className={linkCls}>
+          Do Not Sell or Share
+        </Link>
+        <span aria-hidden>·</span>
         <span>© 2026 peekabooR6</span>
       </div>
     </footer>
