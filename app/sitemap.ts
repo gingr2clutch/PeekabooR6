@@ -154,6 +154,81 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  // Gadget routes.
+  //
+  // Only pages that pass the same test their generateMetadata uses: is there a
+  // published setup behind this page? Anything that answers no emits
+  // noindex,follow (see app/gadgets/layout.tsx), and submitting a URL we are
+  // simultaneously asking Google not to index is a contradiction worth
+  // avoiding.
+  //
+  // Derived from ONE query rather than re-asking per map, per site and per
+  // operator. Every published setup already names its site, its map and its
+  // operator, so the full set of qualifying URLs at all three levels falls out
+  // of that single list — and because it is the same underlying fact the
+  // metadata check reads, the sitemap cannot drift from the robots tag.
+  //
+  // No .eq("published") on the setup or the site: the gadget_setups RLS policy
+  // already requires both. The map's published flag is NOT covered by that
+  // policy, so it is filtered explicitly, matching how peekEntries above guards
+  // against an unpublished parent map.
+  const { data: setupRows } = await supabase
+    .from("gadget_setups")
+    .select(
+      "gadget_sites!inner(slug, maps!inner(slug, published)), gadget_operators!inner(slug)"
+    )
+    .eq("gadget_sites.maps.published", true);
+
+  const gadgetMaps = new Set<string>();
+  const gadgetSites = new Set<string>();
+  const gadgetOperators = new Set<string>();
+
+  for (const row of (setupRows ?? []) as unknown as {
+    gadget_sites: { slug: string; maps: { slug: string } | null } | null;
+    gadget_operators: { slug: string } | null;
+  }[]) {
+    const mapSlug = row.gadget_sites?.maps?.slug;
+    const siteSlug = row.gadget_sites?.slug;
+    const opSlug = row.gadget_operators?.slug;
+    if (!mapSlug || !siteSlug) continue;
+    gadgetMaps.add(mapSlug);
+    gadgetSites.add(`${mapSlug}/${siteSlug}`);
+    if (opSlug) gadgetOperators.add(`${mapSlug}/${siteSlug}/${opSlug}`);
+  }
+
+  // The hub is listed only once something is reachable from it. It is
+  // indexable either way, but submitting a grid of "coming soon" tiles is not
+  // worth a crawl.
+  const gadgetEntries: MetadataRoute.Sitemap =
+    gadgetMaps.size === 0
+      ? []
+      : [
+          {
+            url: `${BASE_URL}/gadgets`,
+            lastModified: now,
+            changeFrequency: "weekly" as const,
+            priority: 0.7,
+          },
+          ...Array.from(gadgetMaps).map((m) => ({
+            url: `${BASE_URL}/gadgets/${m}`,
+            lastModified: now,
+            changeFrequency: "weekly" as const,
+            priority: 0.6,
+          })),
+          ...Array.from(gadgetSites).map((s) => ({
+            url: `${BASE_URL}/gadgets/${s}`,
+            lastModified: now,
+            changeFrequency: "weekly" as const,
+            priority: 0.6,
+          })),
+          ...Array.from(gadgetOperators).map((o) => ({
+            url: `${BASE_URL}/gadgets/${o}`,
+            lastModified: now,
+            changeFrequency: "weekly" as const,
+            priority: 0.7,
+          })),
+        ];
+
   return [
     ...staticEntries,
     ...mapEntries,
@@ -162,5 +237,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...peekEntries,
     ...blogEntries,
     ...compareEntries,
+    ...gadgetEntries,
   ];
 }
