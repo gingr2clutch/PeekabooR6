@@ -7,7 +7,8 @@ import { Analytics } from "@vercel/analytics/next";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SubmitCta } from "@/components/SubmitCta";
 import { NitroScripts } from "@/components/NitroScripts";
-import { mediavineEnabled } from "@/lib/ad-env";
+import { NitroConsentLinks } from "@/components/NitroConsentLinks";
+import { mediavineEnabled, nitroEnabled } from "@/lib/ad-env";
 import { FavoritesProvider } from "@/components/FavoritesProvider";
 import "./globals.css";
 
@@ -181,6 +182,12 @@ setTimeout(function(){if(!h.classList.contains('is-live')){h.removeAttribute('da
             on /admin and on the auth screens. */}
         <SubmitCta />
         <SiteFooter />
+        {/* Re-arms the consent + CCPA links after client-side navigation.
+            Gated on the SERVER for the same reason AdSlot takes `demo` as a
+            prop: VERCEL_ENV is undefined in the browser, so a client-side
+            check reads "not production" IN production — backwards for the one
+            flag that must never ship live. */}
+        {nitroEnabled() && <NitroConsentLinks />}
         <Script
           defer
           src="https://static.cloudflareinsights.com/beacon.min.js"

@@ -34,6 +34,21 @@ export type AdPartner = {
    * partner's control rather than as ours.
    */
   providesOptOutControl: boolean;
+  /**
+   * Whether that control is shown to EVERY visitor, or only to those in a
+   * region whose law triggers it.
+   *
+   * Mediavine renders button.consumer-privacy-btn site-wide, so the policy can
+   * tell any reader to use it. NitroPay's are conditional — the CCPA link is
+   * California, the CMP consent button mainly GDPR — so the policy must not
+   * promise a control most readers will never see. The email route is offered
+   * either way and is the only universal one.
+   *
+   * Deliberately NOT folded into providesOptOutControl. One boolean carrying
+   * both "a control exists" and "every reader sees it" is what would put
+   * Mediavine's site-wide wording in front of NitroPay's regional links.
+   */
+  optOutControlReach: "every-visitor" | "by-region";
 };
 
 const PARTNERS: Record<ReturnType<typeof activeAdNetwork>, AdPartner> = {
@@ -41,14 +56,22 @@ const PARTNERS: Record<ReturnType<typeof activeAdNetwork>, AdPartner> = {
     name: "Mediavine",
     hasOfficialDisclosure: true,
     providesOptOutControl: true,
+    optOutControlReach: "every-visitor",
   },
   nitro: {
     name: "NitroPay",
-    // UNVERIFIED — no official disclosure text on file, and nobody has
-    // confirmed NitroPay renders an opt-out control. Both must be settled
-    // before this partner is live in production.
+    // UNVERIFIED — no official disclosure text on file. Must be settled before
+    // this partner is live in production.
     hasOfficialDisclosure: false,
-    providesOptOutControl: false,
+    // Confirmed 2026-09-23: NitroPay injects both the CMP consent link
+    // (#ncmp-consent-link) and a CCPA opt-out link ([data-ccpa-link]) into
+    // markup we provide — see components/NitroConsentLinks.tsx and the
+    // containers in SiteFooter, the homepage and this policy.
+    providesOptOutControl: true,
+    // Regional, not site-wide: the CCPA link is shown to California visitors
+    // and the CMP consent button mainly under GDPR. Most readers see neither,
+    // which is why the policy points at email as the route that always works.
+    optOutControlReach: "by-region",
   },
 };
 

@@ -12,6 +12,7 @@ import { BackToTop } from "@/components/BackToTop";
 import PeekabooIntro from "@/components/PeekabooIntro";
 import { SubmitSpot } from "@/components/SubmitSpot";
 import { PEEK_SUBMIT } from "@/lib/submit-config";
+import { nitroEnabled } from "@/lib/ad-env";
 import type { CSSProperties } from "react";
 
 export const dynamic = "force-dynamic";
@@ -218,6 +219,14 @@ export default async function Home() {
             .filter((m) => m.published)
             .map((m) => ({ slug: m.slug, name: m.name }))}
         />
+        {/* Nitro's CCPA opt-out. Empty until __uspapi injects into it, so it
+            sits on its own line below the form with a committed height — an
+            injection here cannot move the form above it. */}
+        {nitroEnabled() && (
+          <div className="mt-10 flex min-h-[1.25rem] items-center justify-center text-xs text-muted">
+            <span data-ccpa-link="1" />
+          </div>
+        )}
       </main>
       <BackToTop />
     </>

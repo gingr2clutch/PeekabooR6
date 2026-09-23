@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 import { adPartner } from "@/lib/ad-partner";
+import { nitroEnabled } from "@/lib/ad-env";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -165,12 +166,20 @@ export default function PrivacyPolicyPage() {
             </p>
             <p className="mt-3">
               <strong>How to opt out.</strong>{" "}
-              {partner.providesOptOutControl ? (
+              {partner.providesOptOutControl &&
+              partner.optOutControlReach === "every-visitor" ? (
                 <>
                   Use the <em>Do Not Sell or Share My Personal Information</em>{" "}
                   button that {partner.name} places at the bottom of every page
                   on this site. That control is operated by {partner.name} and
                   applies your choice to the advertising on this site.
+                </>
+              ) : partner.providesOptOutControl ? (
+                <>
+                  If you are in a region where it applies, a privacy/opt-out
+                  link from {partner.name} appears at the bottom of the page.
+                  You can also email us at the address below and we will apply
+                  your opt-out.
                 </>
               ) : (
                 <>
@@ -188,6 +197,15 @@ export default function PrivacyPolicyPage() {
               </a>{" "}
               signal where your browser sends one.
             </p>
+            {/* Nitro's own CCPA control, next to the prose describing the
+                right it exercises. Own line with a committed height rather
+                than inline mid-sentence, which would reflow the paragraph as
+                the link lands. */}
+            {nitroEnabled() && (
+              <p className="mt-3 flex min-h-[1.25rem] items-center">
+                <span data-ccpa-link="1" />
+              </p>
+            )}
             <p className="mt-3">
               <strong>Your other rights.</strong> You can ask us what personal
               information we hold about you, ask us to delete it, ask us to
