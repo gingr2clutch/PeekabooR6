@@ -177,7 +177,18 @@ export default function PrivacyPolicyPage() {
                 </p>
               </section>
 
-              <section>
+              {/* Carries the footer's "Do Not Sell or Share" anchor on the
+                  Nitro path, because under Nitro this is where the opt-out
+                  route actually is — the CCPA section below keeps only the
+                  know/delete/correct rights. On the Mediavine path the anchor
+                  stays on that section, which is where its opt-out prose is.
+
+                  Exactly one #do-not-sell exists on the page either way:
+                  activeAdNetwork() returns one value, so this section and the
+                  CCPA section can never both claim the id, and never both
+                  drop it. scroll-mt clears the sticky header so the heading is
+                  not hidden under it on arrival. */}
+              <section id="do-not-sell" className="scroll-mt-24">
                 <h2 className="mb-2 text-lg font-semibold">Your choices</h2>
                 <p>
                   <strong>Consent (EU, UK and similar regions).</strong> If
@@ -241,11 +252,21 @@ export default function PrivacyPolicyPage() {
             </>
           )}
 
-          {/* id is the footer's "Do Not Sell or Share" target. Anchoring to a
-              section rather than a separate page keeps one canonical statement
-              of these rights. scroll-mt clears the sticky header so the heading
-              is not hidden under it on arrival. */}
-          <section id="do-not-sell" className="scroll-mt-24">
+          {/* Holds the footer's "Do Not Sell or Share" anchor on the MEDIAVINE
+              path only — production, unchanged from before. That is where this
+              section's own opt-out prose lives (the gated block below), so the
+              link lands on the control it promises.
+
+              On the Nitro path the id moves to "Your choices" above, which is
+              where the opt-out route is in that environment; this section then
+              carries only the know/delete/correct rights and does not claim the
+              anchor. Anchoring to a section rather than a separate page keeps
+              one canonical statement of these rights. scroll-mt clears the
+              sticky header so the heading is not hidden under it on arrival. */}
+          <section
+            id={mediavineEnabled() ? "do-not-sell" : undefined}
+            className="scroll-mt-24"
+          >
             <h2 className="mb-2 text-lg font-semibold">
               California privacy rights (CCPA/CPRA)
             </h2>
