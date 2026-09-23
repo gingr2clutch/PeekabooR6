@@ -191,6 +191,7 @@ export function AdSlot({
     }
 
     let decision: SlotState = "reserved";
+    let timer: number | undefined;
     const apply = () => {
       if (decision === "reserved") return;
       // Growing is always safe: the space is already reserved. Shrinking waits
@@ -200,15 +201,45 @@ export function AdSlot({
       setState(decision);
     };
 
-    const timer = window.setTimeout(() => {
-      settled = true;
-      decision = isFilled() ? "filled" : "empty";
-      apply();
-    }, GRACE_MS);
+    // The grace period starts when the slot first comes NEAR the viewport, not
+    // at mount. renderVisibleOnly defers the REQUEST until then, so a timer
+    // started at mount measures how long the page has been open rather than how
+    // long the ad has had to arrive. Every slot more than a few seconds' scroll
+    // down the page was being judged empty before Nitro had asked for it, then
+    // collapsed to zero — and since the decision is made once, scrolling to it
+    // never brought it back. That was most of the inventory on long pages.
+    const startGrace = () => {
+      if (timer !== undefined) return;
+      timer = window.setTimeout(() => {
+        settled = true;
+        decision = isFilled() ? "filled" : "empty";
+        apply();
+      }, GRACE_MS);
+    };
+
+    // rootMargin approximates Nitro's visibleMargin: start the clock when THEY
+    // start requesting. Slightly early is safe — the decision still waits the
+    // full GRACE_MS after that.
+    let nearIo: IntersectionObserver | null = null;
+    const nearEl = el?.parentElement ?? el;
+    if (nearEl) {
+      nearIo = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) startGrace();
+        },
+        { rootMargin: "600px", threshold: 0 }
+      );
+      nearIo.observe(nearEl);
+    } else {
+      // Nothing to observe — fall back to the old behaviour rather than
+      // reserving a box forever.
+      startGrace();
+    }
 
     return () => {
       window.clearTimeout(timer);
       io?.disconnect();
+      nearIo?.disconnect();
     };
   }, [id, collapseWhenVisible]);
 
