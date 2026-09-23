@@ -204,6 +204,15 @@ export default function PrivacyPolicyPage() {
                   </a>{" "}
                   and we&apos;ll apply your opt-out.
                 </p>
+                {/* Nitro's own CCPA control, moved up from the CCPA section to
+                    sit directly under the prose describing the right it
+                    exercises. No gate of its own — this whole section is
+                    already nitroEnabled(). Own line with a committed height
+                    rather than inline mid-sentence, which would reflow the
+                    paragraph as the link lands. */}
+                <p className="mt-3 flex min-h-[1.25rem] items-center">
+                  <span data-ccpa-link="1" />
+                </p>
                 <p className="mt-3">
                   <strong>Other options.</strong> You can also opt out of
                   interest-based ads through the Digital Advertising Alliance (
@@ -243,60 +252,66 @@ export default function PrivacyPolicyPage() {
             <p>
               This section applies to California residents.
             </p>
-            <p className="mt-3">
-              <strong>Do we sell your personal information?</strong> No. We do
-              not sell personal information for money, and we never have.
-            </p>
-            <p className="mt-3">
-              <strong>Do we share it?</strong> Yes, in the specific sense the
-              CPRA uses. We show interest-based advertising through{" "}
-              {partner.name}, and that involves disclosing information such as
-              your IP address, device and browser details, and activity on this
-              site to advertising partners so they can select ads for you. The
-              CPRA calls that &ldquo;sharing&rdquo; for cross-context behavioural
-              advertising, and you have the right to opt out of it.
-            </p>
-            <p className="mt-3">
-              <strong>How to opt out.</strong>{" "}
-              {partner.providesOptOutControl &&
-              partner.optOutControlReach === "every-visitor" ? (
-                <>
-                  Use the <em>Do Not Sell or Share My Personal Information</em>{" "}
-                  button that {partner.name} places at the bottom of every page
-                  on this site. That control is operated by {partner.name} and
-                  applies your choice to the advertising on this site.
-                </>
-              ) : partner.providesOptOutControl ? (
-                <>
-                  If you are in a region where it applies, a privacy/opt-out
-                  link from {partner.name} appears at the bottom of the page.
-                  You can also email us at the address below and we will apply
-                  your opt-out.
-                </>
-              ) : (
-                <>
-                  Email us at the address below and we will apply your opt-out.
-                </>
-              )}{" "}
-              We also honour the{" "}
-              <a
-                href="https://globalprivacycontrol.org/"
-                target="_blank"
-                rel="noreferrer noopener"
-                className="text-brand hover:underline"
-              >
-                Global Privacy Control
-              </a>{" "}
-              signal where your browser sends one.
-            </p>
-            {/* Nitro's own CCPA control, next to the prose describing the
-                right it exercises. Own line with a committed height rather
-                than inline mid-sentence, which would reflow the paragraph as
-                the link lands. */}
-            {nitroEnabled() && (
-              <p className="mt-3 flex min-h-[1.25rem] items-center">
-                <span data-ccpa-link="1" />
-              </p>
+            {/* ─────────────────── sale/share + opt-out mechanics ───────────
+                Mediavine only. Under Nitro the "Your choices" section above
+                already states both, in Nitro's own terms and next to Nitro's
+                own CCPA control, and repeating them here said the same thing
+                twice in two different voices.
+
+                Gated rather than deleted because the Mediavine branch renders
+                no "Your choices" section. Removing these outright would leave
+                the live site with no opt-out route described at the very anchor
+                its own footer link points at — a compliance regression on the
+                revenue path, not a copy cleanup.
+
+                Also gone, in BOTH environments: the flat "we do not sell
+                personal information for money, and we never have". It was the
+                one claim that read as contradicting the sale/share disclosure
+                immediately below it.
+
+                And the "we also honour the Global Privacy Control signal"
+                sentence is gone, deliberately and everywhere. Nothing in the
+                codebase reads Sec-GPC, so it was a promise the site did not
+                keep. Put it back when the handling exists, not before. */}
+            {mediavineEnabled() && (
+              <>
+                <p className="mt-3">
+                  <strong>Do we share it?</strong> Yes, in the specific sense
+                  the CPRA uses. We show interest-based advertising through{" "}
+                  {partner.name}, and that involves disclosing information such
+                  as your IP address, device and browser details, and activity
+                  on this site to advertising partners so they can select ads
+                  for you. The CPRA calls that &ldquo;sharing&rdquo; for
+                  cross-context behavioural advertising, and you have the right
+                  to opt out of it.
+                </p>
+                <p className="mt-3">
+                  <strong>How to opt out.</strong>{" "}
+                  {partner.providesOptOutControl &&
+                  partner.optOutControlReach === "every-visitor" ? (
+                    <>
+                      Use the{" "}
+                      <em>Do Not Sell or Share My Personal Information</em>{" "}
+                      button that {partner.name} places at the bottom of every
+                      page on this site. That control is operated by{" "}
+                      {partner.name} and applies your choice to the advertising
+                      on this site.
+                    </>
+                  ) : partner.providesOptOutControl ? (
+                    <>
+                      If you are in a region where it applies, a privacy/opt-out
+                      link from {partner.name} appears at the bottom of the
+                      page. You can also email us at the address below and we
+                      will apply your opt-out.
+                    </>
+                  ) : (
+                    <>
+                      Email us at the address below and we will apply your
+                      opt-out.
+                    </>
+                  )}
+                </p>
+              </>
             )}
             <p className="mt-3">
               <strong>Your other rights.</strong> You can ask us what personal
