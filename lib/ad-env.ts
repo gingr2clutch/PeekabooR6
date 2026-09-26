@@ -10,20 +10,23 @@
 // says that is wrong. Here it is unrepresentable: activeAdNetwork() returns one
 // value, so mediavineEnabled() and nitroEnabled() cannot both be true.
 //
-//   production  -> Mediavine   (the live site, unchanged, revenue)
-//   preview     -> Nitro       (branch deploys, staging)
-//   local       -> Nitro       (so the new placements are testable in dev)
+// WENT LIVE 2026-09-26: Nitro in every environment, production included. The
+// Mediavine script is gone from app/layout.tsx as of the same commit, so there
+// is no second loader left to collide with.
 //
-// Vercel sets VERCEL_ENV itself: "production" only on the production domain.
-// Anything else — preview builds, local dev — is not production.
+// The function is kept — rather than deleting the module and inlining `true` —
+// for two reasons. It is the single switch the go-live reverts through, and
+// mediavineEnabled() still gates the verbatim Mediavine disclosure block in the
+// privacy policy, which stays in the file against a rollback. That block now
+// renders nowhere, which is correct: the site no longer loads their script.
 //
-// GO-LIVE 2026-09-29: flip the condition so production returns "nitro", then
-// delete this module and the Mediavine script once the switch has held.
+// Delete this module once the switch has held and the Mediavine block is cut
+// from app/privacy-policy/page.tsx for good.
 
 export type AdNetwork = "mediavine" | "nitro";
 
 export function activeAdNetwork(): AdNetwork {
-  return process.env.VERCEL_ENV === "production" ? "mediavine" : "nitro";
+  return "nitro";
 }
 
 export function mediavineEnabled(): boolean {
@@ -32,4 +35,22 @@ export function mediavineEnabled(): boolean {
 
 export function nitroEnabled(): boolean {
   return activeAdNetwork() === "nitro";
+}
+
+// Nitro's placeholder creatives — NEVER in production.
+//
+// Read here, on the server, where VERCEL_ENV is actually set. Vercel defines it
+// as "production" only on the production domain; "preview" on branch deploys;
+// undefined locally. So the safe value is the one a missing variable produces:
+// anything that is not literally "production" gets demo ads, and only the real
+// production domain gets real ones.
+//
+// This used to be implicit. Every Nitro surface was gated on nitroEnabled(),
+// which was itself "not production", so call sites could hardcode `demo` and be
+// correct by accident. Flipping production to Nitro broke that coupling — those
+// same hardcoded flags would have shipped placeholder creatives to live
+// traffic. demo is now its own question with its own answer, asked separately
+// from which network loads.
+export function adDemoMode(): boolean {
+  return process.env.VERCEL_ENV !== "production";
 }

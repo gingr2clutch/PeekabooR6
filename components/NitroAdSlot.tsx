@@ -1,21 +1,27 @@
 import { AdSlot, type AdSlotProps } from "./AdSlot";
-import { nitroEnabled } from "@/lib/ad-env";
+import { adDemoMode, nitroEnabled } from "@/lib/ad-env";
 
 // Environment-gated wrapper around AdSlot.
 //
-// A server component, so the gate is evaluated during render and a production
-// build ships no slot markup at all — not a hidden div, not a reserved box,
-// nothing. Pages import this rather than AdSlot directly so the production
-// check lives in exactly one place and cannot be forgotten at a call site.
+// A server component, so both decisions below are evaluated during render and
+// no client bundle ever sees them. Pages import this rather than AdSlot
+// directly so the gate and the demo flag live in exactly one place and cannot
+// be forgotten at a call site.
 //
-// The corollary matters for CLS testing: because production renders nothing,
-// the reserved 250px box exists ONLY where ads exist. There is no empty gap on
-// the live site, and equally no un-reserved space on staging.
+// Two SEPARATE questions, and keeping them separate is the point:
+//
+//   nitroEnabled()  does this slot render at all
+//   adDemoMode()    if it renders, are the creatives placeholders
+//
+// Until go-live they were the same question — Nitro rendered only outside
+// production, so `demo` could be hardcoded and was still correct. That is no
+// longer true: as of 2026-09-26 Nitro renders in production too. A bare `demo`
+// here would now request placeholder creatives on the live site, earning
+// nothing on every impression. See lib/ad-env.ts.
+//
+// demo is passed LAST, after the spread, so a call site cannot override the
+// environment gate by putting demo in its own props.
 export function NitroAdSlot(props: AdSlotProps) {
   if (!nitroEnabled()) return null;
-  // demo is decided HERE, on the server, where VERCEL_ENV is readable. It is
-  // simply "we are not production" — the same condition that let this render at
-  // all — so demo can never reach the live site: in production this component
-  // returns null before AdSlot exists.
-  return <AdSlot demo {...props} />;
+  return <AdSlot {...props} demo={adDemoMode()} />;
 }

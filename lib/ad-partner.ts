@@ -4,8 +4,9 @@ import { activeAdNetwork } from "./ad-env";
 // them — the privacy policy, chiefly.
 //
 // Driven by activeAdNetwork() so the name cannot drift from the script that is
-// actually loading. On 2026-09-29 the gate in lib/ad-env.ts flips and this
-// follows it in the same commit, rather than being a second place to remember.
+// actually loading. On 2026-09-26 the gate in lib/ad-env.ts flipped to Nitro
+// and this followed it automatically, which is the whole reason it reads from
+// there rather than being a second place to remember.
 //
 // Separate module from ad-env.ts on purpose: that one decides which SCRIPT
 // loads and is imported by the layout on every render. This is prose about a
@@ -60,8 +61,11 @@ const PARTNERS: Record<ReturnType<typeof activeAdNetwork>, AdPartner> = {
   },
   nitro: {
     name: "NitroPay",
-    // UNVERIFIED — no official disclosure text on file. Must be settled before
-    // this partner is live in production.
+    // Still no official verbatim block from Nitro on file — unlike Mediavine,
+    // they publish none. The Advertising section in the privacy policy is our
+    // own prose plus a link to nitropay.com/privacy, which is what shipped on
+    // go-live 2026-09-26. This flag is metadata only; nothing renders off it.
+    // Flip it to true if Nitro ever supplies official text to paste in.
     hasOfficialDisclosure: false,
     // Confirmed 2026-09-23: NitroPay injects both the CMP consent link
     // (#ncmp-consent-link) and a CCPA opt-out link ([data-ccpa-link]) into

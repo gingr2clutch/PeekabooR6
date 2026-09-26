@@ -31,20 +31,21 @@ const nextConfig = {
   // has been removed, so the rule below is the only thing serving that path.
   // ads.txt crawlers follow redirects.
   //
-  // It currently points at NitroPay while Mediavine is still serving the ads.
-  // That is deliberate, not a mismatch: Nitro's AdX approval requires their
-  // lines live on the domain first (1-2 weeks), so this is an overlap period
-  // authorised in writing by Nitro, with go-live 2026-09-29. Nitro's file
+  // It points at NitroPay, which as of go-live on 2026-09-26 is also the only
+  // ad script the site loads — so file and loader now agree.
+  //
+  // They did not always. Nitro's AdX approval required their lines live on the
+  // domain 1-2 weeks BEFORE their script went in, an overlap period authorised
+  // in writing by Nitro, during which this redirect pointed at Nitro while
+  // Mediavine was still serving. That was survivable only because Nitro's file
   // carries Mediavine's seller lines too — including
   // journeymv.com, cf3a28fc-8c16-4c04-9940-96ae46697dfa, DIRECT — so the
-  // sellers actually transacting this inventory stay authorised throughout.
+  // sellers actually transacting the inventory stayed authorised throughout.
+  // Those lines are why a rollback to Mediavine still has valid ads.txt.
   //
-  // Two things follow from that, and both matter:
-  //   - The ad script in app/layout.tsx is still Mediavine's and must stay
-  //     that way until go-live. If you change one of these, check the other.
-  //   - The status is 302, not 301. This reverses on 2026-09-29, and a
-  //     permanent redirect is the kind crawlers cache past the point of
-  //     usefulness.
+  // The status stays 302, not 301. The destination has changed once and could
+  // change again on a rollback, and a permanent redirect is the kind crawlers
+  // cache past the point of usefulness.
   async redirects() {
     return [
       {

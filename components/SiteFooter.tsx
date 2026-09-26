@@ -32,11 +32,15 @@ export function SiteFooter() {
           Contact
         </Link>
         <span aria-hidden>·</span>
-        {/* Anchors into the CCPA section of the privacy policy. Note this is
-            OUR statement of the right; the control that actually applies an
-            opt-out is injected by the ad partner (Mediavine renders
-            button.consumer-privacy-btn site-wide), and the section explains
-            that rather than duplicating a button we do not own. */}
+        {/* Anchors into the privacy policy's opt-out section — "Your choices"
+            under Nitro, which is where #do-not-sell now lives. Note this is OUR
+            statement of the right; the control that actually applies an opt-out
+            is injected by the ad partner, into the [data-ccpa-link] span that
+            section carries, and only for readers in a region where it applies.
+            The prose names email as the route that always works, which matters
+            more since go-live: Mediavine's site-wide
+            button.consumer-privacy-btn is gone with their script, and Nitro's
+            equivalent is regional. */}
         <Link href="/privacy-policy#do-not-sell" className={linkCls}>
           Do Not Sell or Share
         </Link>
@@ -49,9 +53,10 @@ export function SiteFooter() {
           beside it. A dedicated row with a committed height can only grow into
           space that was already reserved, so nothing above it moves.
 
-          Gated like every other Nitro surface — see lib/ad-env.ts. In
-          production this renders nothing and Mediavine's own
-          button.consumer-privacy-btn remains the opt-out control. */}
+          Gated like every other Nitro surface — see lib/ad-env.ts. Since
+          go-live on 2026-09-26 that gate is true in production too, so this row
+          is now the site's only CMP entry point; Mediavine's
+          button.consumer-privacy-btn went away with their script. */}
       {nitroEnabled() && (
         <div className="mx-auto mt-3 flex min-h-[1.25rem] max-w-6xl items-center justify-center">
           <div id="ncmp-consent-link" />

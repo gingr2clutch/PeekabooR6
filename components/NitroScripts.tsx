@@ -1,27 +1,26 @@
-import { nitroEnabled } from "@/lib/ad-env";
+import { adDemoMode, nitroEnabled } from "@/lib/ad-env";
 import { NitroAnchorSlot } from "./NitroAnchorSlot";
 
 // Nitro base loader + the site-wide anchor.
 //
 // ─────────────────────────────────────────────────────────────────────────────
-// STAGING ONLY. Renders nothing when VERCEL_ENV === "production".
+// LIVE EVERYWHERE as of 2026-09-26. This used to render nothing in production
+// because Mediavine was still serving there and two ad loaders on one page
+// would compete for the same inventory. That script is gone from
+// app/layout.tsx, so the gate below is now simply "is Nitro the active
+// network", which it always is — see lib/ad-env.ts.
 //
-// Mediavine is still serving live ads in production until 2026-09-29, and two
-// ad loaders on one page would compete for the same inventory. The gate is an
-// environment check rather than a branch so that merging this to main cannot
-// put Nitro in front of a real visitor by accident — the safe state is the
-// default, and turning it on is a deliberate act.
+// The gate stays rather than being deleted so there is still one switch that
+// turns the whole Nitro surface off, and so this file does not have to change
+// again on a rollback.
 //
-// Vercel sets VERCEL_ENV automatically: "production" on the production domain,
-// "preview" on every branch deploy. Locally it is undefined, so ads render in
-// dev, which is what makes them testable.
-//
-// TO GO LIVE on 2026-09-29: delete this gate and remove the Mediavine script
-// from app/layout.tsx in the same commit. Never both loaders at once.
-//
-// demo is passed to the anchor for the same reason it is passed to the slots:
-// this whole subtree only renders outside production, so placeholder creatives
-// cannot reach a real visitor.
+// demo is the part that did NOT survive the flip unchanged. It used to be a
+// bare `demo` on the anchor below, which was safe only because this entire
+// subtree was non-production; the same flag under the new gate would have put
+// placeholder creatives in front of live traffic. It is now asked as its own
+// question — adDemoMode(), which is VERCEL_ENV !== "production" — evaluated
+// here on the server, because VERCEL_ENV does not exist in the browser and a
+// client-side read would resolve to "not production" IN production.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // The stub queues createAd calls made before ads-2632.js lands, so slot
@@ -45,7 +44,7 @@ export function NitroScripts() {
         async
         src="https://s.nitropay.com/ads-2632.js"
       />
-      <NitroAnchorSlot demo />
+      <NitroAnchorSlot demo={adDemoMode()} />
     </>
   );
 }
