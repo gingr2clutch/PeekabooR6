@@ -77,3 +77,31 @@ export function adDemoMode(): boolean {
 export function adCollapseUnfilled(): boolean {
   return process.env.VERCEL_ENV !== "production";
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TEMPORARY — Nitro domain-casing workaround.
+//
+// Site 2632's config at Nitro has the domain recorded as "peekabooR6.com" with
+// a capital R. Their createAd path compares that against location.hostname
+// case-sensitively, so on first load every unit fails with
+// "domain mismatch: ad unit not created" and nothing renders.
+//
+// window.nitroAds.navigate() — their public SPA entry point — refreshes the
+// units that are already registered and does NOT repeat that check, so they
+// fill. Confirmed on production with ?nitroads_debug=1: after navigate(),
+// pkb-content-1 filled (msft 970x250).
+//
+// TURN THIS OFF THE DAY NITRO LOWERCASES THE DOMAIN ON SITE 2632. Once
+// createAd succeeds on its own, this call stops being a rescue and becomes a
+// SECOND auction on every unit, on every page view — which is exactly the
+// invalid-traffic pattern that gets a publisher looked at.
+//
+// Production only. Preview and local are on the same broken config, but
+// leaving the workaround off there keeps an environment where the real
+// behaviour is observable, which is how we will know Nitro has shipped the fix.
+// ─────────────────────────────────────────────────────────────────────────────
+export const NITRO_DOMAIN_WORKAROUND = true;
+
+export function nitroDomainWorkaround(): boolean {
+  return NITRO_DOMAIN_WORKAROUND && process.env.VERCEL_ENV === "production";
+}

@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { noteUnitCreated } from "@/lib/nitro-refresh";
 
 // One Nitro ad placement.
 //
@@ -51,6 +52,13 @@ declare global {
     nitroAds?: {
       createAd: (id: string, config: Record<string, unknown>) => Promise<NitroAd>;
       addUserToken?: (...args: unknown[]) => void;
+      /**
+       * Nitro's public SPA entry point: refreshes every registered unit at
+       * once. Used only by the domain-casing workaround — see
+       * lib/nitro-refresh.ts. Optional because it only exists once
+       * ads-2632.js has loaded.
+       */
+      navigate?: () => void;
       queue: unknown[];
     };
   }
@@ -92,6 +100,19 @@ export type AdSlotProps = {
    */
   collapseUnfilled?: boolean;
   /**
+   * Suppress this slot's own onNavigate() on route change.
+   *
+   * On while the domain-casing workaround is active. That workaround already
+   * calls nitroAds.navigate() once per page view, and navigate() refreshes
+   * every registered unit — so a slot that ALSO called onNavigate() for itself
+   * would run two auctions on one impression. See lib/nitro-refresh.ts.
+   *
+   * Only matters for slots that survive a route change: navigating between two
+   * map pages reuses the same component instance, so createAd is not re-issued
+   * and onNavigate is the refresh that would otherwise fire.
+   */
+  skipOwnNavigate?: boolean;
+  /**
    * Nitro placeholder creatives.
    *
    * Passed in from the server gate rather than read here. This is a client
@@ -127,6 +148,7 @@ export function AdSlot({
   config,
   collapseWhenVisible = false,
   collapseUnfilled = true,
+  skipOwnNavigate = false,
   demo = false,
 }: AdSlotProps) {
   const created = useRef(false);
@@ -156,6 +178,10 @@ export function AdSlot({
       })
       .then((ad) => {
         adRef.current = ad;
+        // Registered, not merely queued — this promise does not resolve until
+        // the real library has processed the call. That is the point at which
+        // navigate() can refresh this unit. No-op unless the workaround is on.
+        noteUnitCreated();
       })
       .catch(() => {
         // A failed ad must never surface to a reader or break the page.
@@ -174,8 +200,11 @@ export function AdSlot({
     }
     if (seenPath.current === pathname) return;
     seenPath.current = pathname;
+    // seenPath is updated either way — the bookkeeping must stay correct so
+    // this slot resumes refreshing itself the moment the workaround comes off.
+    if (skipOwnNavigate) return;
     adRef.current?.onNavigate?.();
-  }, [pathname]);
+  }, [pathname, skipOwnNavigate]);
 
   // Decide filled vs empty, then apply it when applying it is free.
   useEffect(() => {

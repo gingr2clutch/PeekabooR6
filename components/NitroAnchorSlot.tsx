@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { REPORT_CONFIG } from "./AdSlot";
+import { noteUnitCreated } from "@/lib/nitro-refresh";
 
 // pkb-anchor — the site-wide bottom anchor.
 //
@@ -39,7 +40,18 @@ const ANCHOR_CONFIG = {
 
 type NitroAd = { onNavigate?: () => void };
 
-export function NitroAnchorSlot({ demo = false }: { demo?: boolean }) {
+export function NitroAnchorSlot({
+  demo = false,
+  // On while the domain-casing workaround is active. navigate() already
+  // refreshes the anchor on every page view, so calling onNavigate() here too
+  // would run two auctions on one impression — see lib/nitro-refresh.ts. This
+  // is the slot that matters most for that: it lives in the layout and never
+  // unmounts, so onNavigate is its refresh on EVERY route change.
+  skipOwnNavigate = false,
+}: {
+  demo?: boolean;
+  skipOwnNavigate?: boolean;
+}) {
   const created = useRef(false);
   const adRef = useRef<NitroAd | null>(null);
   const pathname = usePathname();
@@ -58,6 +70,9 @@ export function NitroAnchorSlot({ demo = false }: { demo?: boolean }) {
       })
       .then((ad) => {
         adRef.current = ad;
+        // Registered with the real library, so navigate() can now refresh it.
+        // No-op unless the workaround is on.
+        noteUnitCreated();
       })
       .catch(() => {
         // Never surface an ad failure to a reader.
@@ -71,8 +86,11 @@ export function NitroAnchorSlot({ demo = false }: { demo?: boolean }) {
     }
     if (seenPath.current === pathname) return;
     seenPath.current = pathname;
+    // Updated either way, so the anchor resumes refreshing itself as soon as
+    // the workaround comes off.
+    if (skipOwnNavigate) return;
     adRef.current?.onNavigate?.();
-  }, [pathname]);
+  }, [pathname, skipOwnNavigate]);
 
   return null;
 }
