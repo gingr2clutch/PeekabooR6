@@ -54,3 +54,26 @@ export function nitroEnabled(): boolean {
 export function adDemoMode(): boolean {
   return process.env.VERCEL_ENV !== "production";
 }
+
+// Whether an in-content slot may collapse to zero when it looks unfilled.
+//
+// OFF in production, as of 2026-09-26. Go-live showed the anchor serving real
+// ads while every in-content slot reserved its box, collapsed, and never came
+// back. AdSlot decides filled-vs-empty once, GRACE_MS after the slot comes
+// NEAR the viewport (rootMargin 600px) — but that clock starts when Nitro
+// starts requesting, not when the auction returns, and a real auction can take
+// longer than the grace period. Slots were being judged empty mid-auction and
+// then never re-checked, so a creative arriving afterwards had nowhere to go.
+//
+// The stopgap is to stop collapsing rather than to lengthen the timer: any
+// fixed timeout is the same bet, just with different odds, and the cost of
+// losing it is unsold inventory on every page. An unfilled slot now holds its
+// reserved box — visible whitespace, but whitespace that a late creative can
+// still fill.
+//
+// Kept ON outside production so the collapse path stays exercisable while the
+// proper fix is built: collapse only when Nitro reports no fill, and re-expand
+// if an ad arrives late. This function goes away with it.
+export function adCollapseUnfilled(): boolean {
+  return process.env.VERCEL_ENV !== "production";
+}

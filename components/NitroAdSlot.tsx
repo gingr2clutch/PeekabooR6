@@ -1,5 +1,5 @@
 import { AdSlot, type AdSlotProps } from "./AdSlot";
-import { adDemoMode, nitroEnabled } from "@/lib/ad-env";
+import { adCollapseUnfilled, adDemoMode, nitroEnabled } from "@/lib/ad-env";
 
 // Environment-gated wrapper around AdSlot.
 //
@@ -19,9 +19,17 @@ import { adDemoMode, nitroEnabled } from "@/lib/ad-env";
 // here would now request placeholder creatives on the live site, earning
 // nothing on every impression. See lib/ad-env.ts.
 //
-// demo is passed LAST, after the spread, so a call site cannot override the
-// environment gate by putting demo in its own props.
+// Both environment flags are passed LAST, after the spread, so a call site
+// cannot override either one from its own props. That is load-bearing for
+// collapseUnfilled: the floor page passes collapseWhenVisible, and the two
+// must not be able to argue.
 export function NitroAdSlot(props: AdSlotProps) {
   if (!nitroEnabled()) return null;
-  return <AdSlot {...props} demo={adDemoMode()} />;
+  return (
+    <AdSlot
+      {...props}
+      demo={adDemoMode()}
+      collapseUnfilled={adCollapseUnfilled()}
+    />
+  );
 }

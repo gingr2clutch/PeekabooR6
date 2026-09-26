@@ -40,6 +40,9 @@ import { useEffect, useRef, useState } from "react";
 // Shrinking is deferred until the slot is off screen, because collapsing a
 // visible box shifts everything below it. collapseWhenVisible overrides that
 // for call sites where the cost has been measured at zero.
+//
+// In production the "empty" state is currently unreachable — see
+// collapseUnfilled below and adCollapseUnfilled() in lib/ad-env.ts.
 
 type NitroAd = { onNavigate?: () => void };
 
@@ -71,6 +74,23 @@ export type AdSlotProps = {
    * view and so would otherwise leave a permanent gap.
    */
   collapseWhenVisible?: boolean;
+  /**
+   * Whether an unfilled slot may collapse to zero at all.
+   *
+   * Off in production since 2026-09-26. The grace timer starts when the slot
+   * comes near the viewport, which is when Nitro starts REQUESTING, not when
+   * the auction returns — so a slower-than-GRACE_MS auction was being scored
+   * as empty and collapsed, and the decision is made once, so a creative
+   * arriving afterwards had nowhere to render.
+   *
+   * When false the slot keeps its reserved box indefinitely instead. Passed in
+   * from the server gate for the same reason `demo` is: this is a client
+   * component and cannot read VERCEL_ENV.
+   *
+   * Outranks collapseWhenVisible — that prop only chooses WHEN a collapse
+   * happens, this one chooses WHETHER one can.
+   */
+  collapseUnfilled?: boolean;
   /**
    * Nitro placeholder creatives.
    *
@@ -106,6 +126,7 @@ export function AdSlot({
   className = "",
   config,
   collapseWhenVisible = false,
+  collapseUnfilled = true,
   demo = false,
 }: AdSlotProps) {
   const created = useRef(false);
@@ -212,7 +233,10 @@ export function AdSlot({
       if (timer !== undefined) return;
       timer = window.setTimeout(() => {
         settled = true;
-        decision = isFilled() ? "filled" : "empty";
+        // Staying "reserved" is what keeps the box. apply() returns early on
+        // "reserved", so the slot simply never leaves the state it painted in
+        // and a late creative still has its committed height to land in.
+        decision = isFilled() ? "filled" : collapseUnfilled ? "empty" : "reserved";
         apply();
       }, GRACE_MS);
     };
@@ -241,7 +265,7 @@ export function AdSlot({
       io?.disconnect();
       nearIo?.disconnect();
     };
-  }, [id, collapseWhenVisible]);
+  }, [id, collapseWhenVisible, collapseUnfilled]);
 
   const collapsed = state === "empty";
 
