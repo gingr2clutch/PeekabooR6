@@ -46,7 +46,7 @@ export function NitroScripts() {
       />
       <NitroAnchorSlot
         demo={adDemoMode()}
-        workaroundActive={nitroDomainWorkaround()}
+        refreshOnCreate={nitroDomainWorkaround()}
       />
     </>
   );

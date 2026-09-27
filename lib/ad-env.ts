@@ -86,19 +86,39 @@ export function adCollapseUnfilled(): boolean {
 // case-sensitively, so on first load every unit fails with
 // "domain mismatch: ad unit not created" and nothing renders.
 //
-// window.nitroAds.navigate() — their public SPA entry point — refreshes the
-// units that are already registered and does NOT repeat that check, so they
-// fill. Confirmed on production with ?nitroads_debug=1: after navigate(),
-// pkb-content-1 filled (msft 970x250).
+// onNavigate() does NOT repeat that check — it clears and re-renders, or for
+// anchor formats refreshes in place — so a unit that failed to create will
+// serve once told to navigate. Confirmed on production with ?nitroads_debug=1.
+//
+// So: every unit gets exactly one onNavigate() per page view, and each unit
+// triggers its own. Two mutually exclusive cases, which is what makes "exactly
+// one" hold without any coordination between units:
+//
+//   registered on this page view  -> called right after its createAd resolves
+//   persisted from a previous one -> called by its existing pathname effect
+//
+// A unit cannot be both: on mount the pathname effect records the path and
+// returns without calling, so a freshly registered unit is only ever called by
+// the first rule.
+//
+// This deliberately does NOT use nitroAds.navigate(). That is one global call
+// refreshing whatever happens to be registered at that instant, which made
+// correctness depend on every unit registering before it fired. It did not
+// hold: the anchor registers from <head>, the in-content slots hydrate with the
+// streamed page body, and on a warm script cache the anchor's registration
+// started — and finished — the debounce before the slots existed. Those slots
+// then got no auction at all. A per-unit trigger has no such window.
 //
 // TURN THIS OFF THE DAY NITRO LOWERCASES THE DOMAIN ON SITE 2632. Once
-// createAd succeeds on its own, this call stops being a rescue and becomes a
+// createAd renders on its own, this call stops being a rescue and becomes a
 // SECOND auction on every unit, on every page view — which is exactly the
 // invalid-traffic pattern that gets a publisher looked at.
 //
 // Production only. Preview and local are on the same broken config, but
 // leaving the workaround off there keeps an environment where the real
 // behaviour is observable, which is how we will know Nitro has shipped the fix.
+// Note local dev cannot reproduce the bug at all: Nitro skips the domain check
+// on localhost, so units render without any of this.
 // ─────────────────────────────────────────────────────────────────────────────
 export const NITRO_DOMAIN_WORKAROUND = true;
 

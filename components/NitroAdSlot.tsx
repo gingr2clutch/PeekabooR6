@@ -35,7 +35,7 @@ export function NitroAdSlot(props: AdSlotProps) {
       {...props}
       demo={adDemoMode()}
       collapseUnfilled={adCollapseUnfilled()}
-      skipOwnNavigate={nitroDomainWorkaround()}
+      refreshOnCreate={nitroDomainWorkaround()}
     />
   );
 }

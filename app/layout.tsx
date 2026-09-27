@@ -8,8 +8,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SubmitCta } from "@/components/SubmitCta";
 import { NitroScripts } from "@/components/NitroScripts";
 import { NitroConsentLinks } from "@/components/NitroConsentLinks";
-import { NitroDomainWorkaround } from "@/components/NitroDomainWorkaround";
-import { nitroDomainWorkaround, nitroEnabled } from "@/lib/ad-env";
+import { nitroEnabled } from "@/lib/ad-env";
 import { FavoritesProvider } from "@/components/FavoritesProvider";
 import "./globals.css";
 
@@ -176,17 +175,6 @@ setTimeout(function(){if(!h.classList.contains('is-live')){h.removeAttribute('da
             check reads "not production" IN production — backwards for the one
             flag that must never ship live. */}
         {nitroEnabled() && <NitroConsentLinks />}
-        {/* TEMPORARY — fires one nitroAds.navigate() per page view so Nitro's
-            units actually render while their site config has our domain as
-            "peekabooR6.com". See NITRO_DOMAIN_WORKAROUND in lib/ad-env.ts;
-            remove both the day they lowercase it.
-
-            Placed here, after {children}, deliberately: React runs effects
-            depth-first, so every AdSlot on the page has issued its createAd
-            before this arms the page view. */}
-        {nitroEnabled() && (
-          <NitroDomainWorkaround active={nitroDomainWorkaround()} />
-        )}
         <Script
           defer
           src="https://static.cloudflareinsights.com/beacon.min.js"

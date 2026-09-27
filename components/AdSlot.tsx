@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { noteUnitCreated } from "@/lib/nitro-refresh";
 
 // One Nitro ad placement.
 //
@@ -52,13 +51,6 @@ declare global {
     nitroAds?: {
       createAd: (id: string, config: Record<string, unknown>) => Promise<NitroAd>;
       addUserToken?: (...args: unknown[]) => void;
-      /**
-       * Nitro's public SPA entry point: refreshes every registered unit at
-       * once. Used only by the domain-casing workaround — see
-       * lib/nitro-refresh.ts. Optional because it only exists once
-       * ads-2632.js has loaded.
-       */
-      navigate?: () => void;
       queue: unknown[];
     };
   }
@@ -100,18 +92,20 @@ export type AdSlotProps = {
    */
   collapseUnfilled?: boolean;
   /**
-   * Suppress this slot's own onNavigate() on route change.
+   * WORKAROUND-ONLY (delete with NITRO_DOMAIN_WORKAROUND).
    *
-   * On while the domain-casing workaround is active. That workaround already
-   * calls nitroAds.navigate() once per page view, and navigate() refreshes
-   * every registered unit — so a slot that ALSO called onNavigate() for itself
-   * would run two auctions on one impression. See lib/nitro-refresh.ts.
+   * Call this unit's own onNavigate() once, immediately after its createAd
+   * resolves. Nitro's domain check fails inside createAd, so the unit is
+   * registered but never renders; onNavigate() does not repeat that check and
+   * makes it serve. See NITRO_DOMAIN_WORKAROUND in lib/ad-env.ts.
    *
-   * Only matters for slots that survive a route change: navigating between two
-   * map pages reuses the same component instance, so createAd is not re-issued
-   * and onNavigate is the refresh that would otherwise fire.
+   * This is the ONLY call for the page view that registered the unit — the
+   * route-change effect below records the path and returns on mount, so it
+   * cannot also fire. A unit that instead PERSISTS into a later page view
+   * (same page component reused, so createAd is not re-issued) is refreshed by
+   * that effect. One trigger or the other, never both, never neither.
    */
-  skipOwnNavigate?: boolean;
+  refreshOnCreate?: boolean;
   /**
    * Nitro placeholder creatives.
    *
@@ -148,7 +142,7 @@ export function AdSlot({
   config,
   collapseWhenVisible = false,
   collapseUnfilled = true,
-  skipOwnNavigate = false,
+  refreshOnCreate = false,
   demo = false,
 }: AdSlotProps) {
   const created = useRef(false);
@@ -178,10 +172,12 @@ export function AdSlot({
       })
       .then((ad) => {
         adRef.current = ad;
-        // Registered, not merely queued — this promise does not resolve until
-        // the real library has processed the call. That is the point at which
-        // navigate() can refresh this unit. No-op unless the workaround is on.
-        noteUnitCreated();
+        // WORKAROUND-ONLY. Registered, not merely queued — this promise does
+        // not resolve until the real library has processed the call, so the
+        // unit exists and onNavigate() has something to refresh. Triggering it
+        // here, per unit, is what makes the timing unconditional: a unit is
+        // refreshed when IT is ready, not when some other unit was.
+        if (refreshOnCreate) ad?.onNavigate?.();
       })
       .catch(() => {
         // A failed ad must never surface to a reader or break the page.
@@ -189,7 +185,7 @@ export function AdSlot({
 
     // No teardown: onNavigate is the chosen approach and needs this ad object
     // to survive route changes.
-  }, [id, height, config, demo]);
+  }, [id, height, config, demo, refreshOnCreate]);
 
   // Route change → tell the ad to refresh itself.
   useEffect(() => {
@@ -200,11 +196,12 @@ export function AdSlot({
     }
     if (seenPath.current === pathname) return;
     seenPath.current = pathname;
-    // seenPath is updated either way — the bookkeeping must stay correct so
-    // this slot resumes refreshing itself the moment the workaround comes off.
-    if (skipOwnNavigate) return;
+    // Refreshes a slot that SURVIVED the route change — same page component
+    // reused, so createAd was not re-issued and refreshOnCreate did not fire.
+    // A slot that remounted took the createAd path instead and skipped this
+    // branch on its first run, so the two never double up.
     adRef.current?.onNavigate?.();
-  }, [pathname, skipOwnNavigate]);
+  }, [pathname]);
 
   // Decide filled vs empty, then apply it when applying it is free.
   useEffect(() => {
