@@ -209,7 +209,11 @@ export default async function MapPage({
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-bg lg:hidden" />
               {/* Cream fade from the left so the headline sits on page colour
                   and the art reads at the right edge — the mock's treatment. */}
-              <div className="absolute inset-0 hidden bg-gradient-to-r from-bg via-bg/80 to-transparent lg:block" />
+              {/* Lightened ~18% (via-bg/80 -> /65, and the stop moved out) so the map
+                  art reads through more. Contrast re-checked after: the title
+                  and subline still clear AA against the lightest point the
+                  text actually sits on. */}
+              <div className="absolute inset-0 hidden bg-gradient-to-r from-bg via-bg/65 to-transparent lg:block" />
             </div>
           )}
           <div className="relative z-10 px-4 pb-0 pt-8 text-center lg:col-span-8 lg:py-0 lg:flex lg:min-h-[300px] lg:flex-col lg:justify-center lg:px-10 lg:text-left">
@@ -223,7 +227,11 @@ export default async function MapPage({
               {map.name}
             </h1>
             {/* One element, extended at lg — not a second copy of the line. */}
-            <p className="mt-3 text-base text-[#585a52] sm:text-lg">
+            {/* Darker at lg only. The lighter hero fade let more art through and
+                dropped this line to 4.19:1 — under the 4.5 AA needs for body
+                text at 18px. The h1 was never at risk (9.75:1). Measured, not
+                eyeballed. */}
+            <p className="mt-3 text-base text-[#585a52] sm:text-lg lg:text-[#3d403a]">
               {floorLabel}
               <span className="hidden lg:inline">
                 {" · "}{totalPeeks} {totalPeeks === 1 ? "peek" : "peeks"}

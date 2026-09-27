@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { GradeBadge } from "@/components/GradeBadge";
+import { PeekThumb } from "@/components/PeekThumb";
 import type { PeekWithContext } from "@/lib/db";
 import { rating, votesText } from "@/lib/rate";
 
@@ -47,27 +47,7 @@ export function BestPeek({
       }
     >
       <div className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-btn border border-border bg-black sm:w-32">
-        {peek.video_url ? (
-          <video
-            src={`${peek.video_url}#t=0.1`}
-            preload="metadata"
-            muted
-            playsInline
-            aria-hidden
-            {...{ "webkit-playsinline": "true" }}
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-          />
-        ) : map?.cover_image_url ? (
-          <Image
-            src={map.cover_image_url}
-            alt=""
-            fill
-            sizes="128px"
-            className="object-cover"
-          />
-        ) : (
-          <div className="placeholder-stripes h-full w-full" />
-        )}
+        <PeekThumb peek={peek} sizes="128px" />
       </div>
 
       <div className="min-w-0 flex-1">
