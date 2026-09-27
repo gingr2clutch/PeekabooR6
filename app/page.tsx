@@ -29,9 +29,10 @@ import { Fragment, type CSSProperties } from "react";
 // explicit grid-row would place it out of flow and leave the cards to fill
 // around it, which is exactly how holes appear. Cards take even order values so
 // the slot can sit in the gap between two of them without ever tying.
+// The order values themselves are literals at the call site (order-[15],
+// sm:order-[17]) because Tailwind cannot see a computed class name. They are
+// (8 * STEP - 1) and (9 * STEP - 1): odd, so they slot between two even cards.
 const CARD_ORDER_STEP = 2;
-const AD_ORDER_AFTER_8 = 8 * CARD_ORDER_STEP - 1; // 15 — between cards 8 and 9
-const AD_ORDER_AFTER_9 = 9 * CARD_ORDER_STEP - 1; // 17 — between cards 9 and 10
 
 // Below this many maps there is no row boundary to sit on at every width, so
 // the slot goes after the grid instead of inside it.
