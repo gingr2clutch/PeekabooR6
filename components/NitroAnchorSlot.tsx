@@ -3,7 +3,8 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { REPORT_CONFIG } from "./AdSlot";
-import { noteUnitCreated } from "@/lib/nitro-refresh";
+import { noteUnitCreated, registerAnchorRefresh } from "@/lib/nitro-refresh";
+import { isAdminPath } from "@/lib/ad-routes";
 
 // pkb-anchor — the site-wide bottom anchor.
 //
@@ -42,22 +43,27 @@ type NitroAd = { onNavigate?: () => void };
 
 export function NitroAnchorSlot({
   demo = false,
-  // On while the domain-casing workaround is active. navigate() already
-  // refreshes the anchor on every page view, so calling onNavigate() here too
-  // would run two auctions on one impression — see lib/nitro-refresh.ts. This
-  // is the slot that matters most for that: it lives in the layout and never
-  // unmounts, so onNavigate is its refresh on EVERY route change.
-  skipOwnNavigate = false,
+  // ── WORKAROUND-ONLY (delete with NITRO_DOMAIN_WORKAROUND) ──
+  // While the workaround is on, the anchor's refresh is driven by the
+  // coordinator instead of by this component's own route-change effect, so it
+  // happens exactly once per page view — see lib/nitro-refresh.ts for why
+  // navigate() cannot do it and why once-per-view is the rule.
+  workaroundActive = false,
 }: {
   demo?: boolean;
-  skipOwnNavigate?: boolean;
+  workaroundActive?: boolean;
 }) {
   const created = useRef(false);
   const adRef = useRef<NitroAd | null>(null);
   const pathname = usePathname();
   const seenPath = useRef<string | null>(null);
+  // Admin pages get no ad unit at all — the anchor is fixed to the bottom of
+  // the viewport and the quick-add screen puts its Save button there. See
+  // lib/ad-routes.ts. This is permanent, NOT part of the workaround.
+  const onAdmin = isAdminPath(pathname);
 
   useEffect(() => {
+    if (onAdmin) return;
     // Guarded against StrictMode's double-invoke in dev: two createAd calls on
     // one anchor id would request the slot twice.
     if (created.current) return;
@@ -77,7 +83,19 @@ export function NitroAnchorSlot({
       .catch(() => {
         // Never surface an ad failure to a reader.
       });
-  }, [demo]);
+    // onAdmin is a dep rather than a bail-once so that arriving on the public
+    // site from /admin still creates the anchor.
+  }, [demo, onAdmin]);
+
+  // ── WORKAROUND-ONLY (delete with NITRO_DOMAIN_WORKAROUND) ──
+  // Lend the coordinator this anchor's refresh. It calls it once per page view,
+  // immediately after navigate(), which is the only way the anchor serves while
+  // Nitro's domain casing is wrong.
+  useEffect(() => {
+    if (!workaroundActive || onAdmin) return;
+    registerAnchorRefresh(() => adRef.current?.onNavigate?.());
+    return () => registerAnchorRefresh(null);
+  }, [workaroundActive, onAdmin]);
 
   useEffect(() => {
     if (seenPath.current === null) {
@@ -87,10 +105,11 @@ export function NitroAnchorSlot({
     if (seenPath.current === pathname) return;
     seenPath.current = pathname;
     // Updated either way, so the anchor resumes refreshing itself as soon as
-    // the workaround comes off.
-    if (skipOwnNavigate) return;
+    // the workaround comes off. While it is on, the coordinator owns this —
+    // doing both would be two auctions on one impression.
+    if (workaroundActive) return;
     adRef.current?.onNavigate?.();
-  }, [pathname, skipOwnNavigate]);
+  }, [pathname, workaroundActive]);
 
   return null;
 }

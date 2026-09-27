@@ -33,6 +33,44 @@
 // ads-2632.js has downloaded and drained the stub's queue, which is unbounded,
 // so there is no honest deadline to set. It waits for a real registration.
 //
+// ─────────────────────── why the anchor is special-cased ────────────────────
+// navigate() cannot reach the anchor. Read out of ads-2632.js:
+//
+//   function X(){ Z(), we.forEach(e => { e.onNavigate() }) }
+//   function Z(){ let e = we.length; for(;e--;){ const t = we[e];
+//     document.getElementById(t.id) || (t?.clear(),
+//       debug(`[${we[e].id}] is no longer tracking since the element does not
+//              exist`), we.splice(e, 1)) } }
+//
+// Z() runs FIRST and drops every unit whose element is missing. NitroAnchorSlot
+// renders null — the anchor is script-only, Nitro injects its own fixed
+// container and there is no #pkb-anchor in the document — so the anchor is
+// spliced out before the forEach and never gets onNavigate() from navigate().
+// That is the "[pkb-anchor] is no longer tracking" line in the debug console.
+//
+// It never comes back, either: the only `we.push` in the bundle is inside
+// createAd. So this is not a first-page-view special case — the anchor needs
+// its own call on EVERY page view, which is what registerAnchorRefresh is for.
+//
+// Doing it here rather than in NitroAnchorSlot's own pathname effect is what
+// keeps it to exactly one auction per page view: run() fires once per view, so
+// the anchor is refreshed once per view, on the first view included. The
+// anchor's own route-change call stays suppressed.
+//
+// Ordering is deliberate — navigate() first, then the anchor. navigate()'s Z()
+// pass clears the anchor unit, so asking it to refresh beforehand would be
+// torn down immediately afterwards.
+//
+// Safe to call on a unit Z() has dropped: for anchor formats onNavigate()
+// takes the refresh path rather than the teardown path —
+//   (0,c.zI)(format) → u = e => e === Anchor || e === AnchorV2
+//   → `issuing refresh for format=...`; this.refreshCounter = -1; this.refresh()
+// — so it re-runs the auction in place on the object we still hold.
+//
+// Nitro's own SPA watcher is not a second caller: the 100ms href poll that
+// calls X() is gated on `document.currentScript.dataset.spa == "auto"`, and our
+// tag deliberately does not set data-spa.
+//
 // DELETE THIS FILE with the workaround.
 
 /** Quiet period after the last registration before the refresh goes out. */
@@ -49,6 +87,8 @@ let enabled = false;
 let timer: number | undefined;
 // Starts "already fired" so nothing can run before a page view is armed.
 let fired = true;
+// The anchor's own refresh, which navigate() cannot perform — see above.
+let anchorRefresh: (() => void) | null = null;
 
 function clear() {
   if (timer !== undefined) {
@@ -65,6 +105,13 @@ function run() {
     window.nitroAds?.navigate?.();
   } catch {
     // An ad refresh must never surface to a reader or break a navigation.
+  }
+  // Second, and only after navigate() has run its prune pass. Separately
+  // guarded: if navigate() throws, the anchor should still get its one refresh.
+  try {
+    anchorRefresh?.();
+  } catch {
+    // Same rule.
   }
 }
 
@@ -102,4 +149,16 @@ export function armPageView(on: boolean, isFirstView: boolean): void {
  */
 export function noteUnitCreated(): void {
   schedule(SETTLE_MS);
+}
+
+/**
+ * Hand the anchor's refresh to the coordinator, so it happens exactly once per
+ * page view instead of once per route change.
+ *
+ * Pass null on unmount. Only one anchor exists, so this is a single slot rather
+ * than a list — a second registration would mean a second anchor, which is
+ * itself the bug.
+ */
+export function registerAnchorRefresh(fn: (() => void) | null): void {
+  anchorRefresh = fn;
 }

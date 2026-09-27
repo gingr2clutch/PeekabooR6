@@ -46,7 +46,7 @@ export function NitroScripts() {
       />
       <NitroAnchorSlot
         demo={adDemoMode()}
-        skipOwnNavigate={nitroDomainWorkaround()}
+        workaroundActive={nitroDomainWorkaround()}
       />
     </>
   );

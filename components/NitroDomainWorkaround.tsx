@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { armPageView } from "@/lib/nitro-refresh";
+import { isAdminPath } from "@/lib/ad-routes";
 
 // Drives one nitroAds.navigate() per page view while Nitro's domain casing is
 // wrong. See NITRO_DOMAIN_WORKAROUND in lib/ad-env.ts and lib/nitro-refresh.ts.
@@ -26,7 +27,10 @@ export function NitroDomainWorkaround({ active }: { active: boolean }) {
   useEffect(() => {
     const first = isFirst.current;
     isFirst.current = false;
-    armPageView(active, first);
+    // Never on admin: no units are created there, so there is nothing to
+    // refresh, and arming the view would fire the anchor's refresh at a page
+    // that deliberately has no anchor. See lib/ad-routes.ts.
+    armPageView(active && !isAdminPath(pathname), first);
   }, [active, pathname]);
 
   return null;
