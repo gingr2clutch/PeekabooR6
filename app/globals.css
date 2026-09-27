@@ -2784,28 +2784,49 @@ html.is-live .reveal {
 /* --- Peek Roulette, vertical card (map page, desktop) --------------------
    Opt-in via the `stacked` prop AND gated to lg, so the compact felt bar the
    map page shows below 1024px — and the homepage lure, which never passes the
-   prop — are both untouched. Only the flow direction and alignment change; the
-   canvas keeps its fixed 112px box, so nothing here can shift layout. */
+   prop — are both untouched.
+
+   The canvas is CONSTRUCTED at 170px (see PeekRouletteBar) so its backing
+   store is dense enough for the desktop wheel. RouletteWheel writes
+   canvas.style.width inline, so both rules below need !important to reach it;
+   that is the only way to override an inline style set by a library, and it is
+   scoped to this one element. Below lg the 170px face is scaled DOWN to the
+   112px it has always been — a downscale, so mobile is if anything sharper,
+   and its box is byte-identical. */
+.pr-felt--stacked .pr-canvas {
+  width: 112px !important;
+  height: 112px !important;
+}
+
 @media (min-width: 1024px) {
   .pr-felt--stacked {
     flex-direction: column;
-    justify-content: center;
-    gap: 10px;
+    justify-content: space-evenly;
+    gap: 0;
     height: 100%;
-    padding: 20px 18px;
+    padding: 26px 20px;
     text-align: center;
+  }
+  .pr-felt--stacked .pr-canvas {
+    width: 170px !important;
+    height: 170px !important;
   }
   .pr-felt--stacked .pr-body {
     flex: none;
     width: 100%;
   }
   .pr-felt--stacked .pr-title {
-    font-size: 19px;
+    font-size: 31px;
+    line-height: 1.1;
   }
   .pr-felt--stacked .pr-sub {
-    font-size: 12.5px;
+    margin-top: 6px;
+    font-size: 17px;
   }
   .pr-felt--stacked .pr-cta {
-    margin-top: 12px;
+    margin-top: 16px;
+    padding: 12px 22px;
+    font-size: 16px;
+    border-radius: 11px;
   }
 }

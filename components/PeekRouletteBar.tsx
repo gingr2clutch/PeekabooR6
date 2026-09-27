@@ -57,6 +57,8 @@ export function PeekRouletteBar({
         peeks={peeks}
         variant="compact"
         stacked={stacked}
+        // Built at the lg size; CSS scales it back to 112 below lg.
+        sizePx={stacked ? 170 : undefined}
         placement="map_page"
         onLand={setLanded}
         autoSpin={spinToken > 0}

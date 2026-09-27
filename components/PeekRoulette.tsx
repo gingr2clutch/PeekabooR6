@@ -25,6 +25,16 @@ type Props = {
    * what keeps the map page's mobile bar exactly as it is.
    */
   stacked?: boolean;
+  /**
+   * Canvas construction size in CSS px. Defaults to the variant's size.
+   *
+   * The stacked card wants a 170px wheel at lg but must still show 112px
+   * below it, and RouletteWheel writes canvas.style.width inline — so CSS has
+   * to override it either way. Building at the LARGER size and letting CSS
+   * scale down on mobile means the backing store is always at least as dense
+   * as the display, rather than upscaling a 112px face to 170.
+   */
+  sizePx?: number;
 };
 
 // Canvas pixel size per variant. Fixed, not responsive: the felt bar's height
@@ -45,7 +55,10 @@ export function PeekRoulette({
   onLand,
   autoSpin = false,
   stacked = false,
+  sizePx,
 }: Props) {
+  // Declared before the effect that rebuilds on it.
+  const px = sizePx ?? SIZE[variant];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wheelRef = useRef<RouletteWheel | null>(null);
   const [spinning, setSpinning] = useState(false);
@@ -62,7 +75,7 @@ export function PeekRoulette({
     };
     // Rebuilt only if the pool identity or variant changes — never per render,
     // since construction re-scales the canvas backing store.
-  }, [peeks, variant]);
+  }, [peeks, variant, px]);
 
   const spin = useCallback(() => {
     const wheel = wheelRef.current;
@@ -93,8 +106,6 @@ export function PeekRoulette({
   // A map with no published peeks has nothing to land on. Render nothing
   // rather than an inert wheel.
   if (peeks.length === 0) return null;
-
-  const px = SIZE[variant];
 
   const wheelCanvas = (
     <canvas

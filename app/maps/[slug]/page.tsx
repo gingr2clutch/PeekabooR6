@@ -27,6 +27,7 @@ import {
   TREND_LINE_COLORS,
 } from "@/lib/trends";
 import { coverThumb } from "@/lib/cover-image";
+import { mapAccent } from "@/lib/map-accents";
 import { MAP_GUIDES } from "@/content/map-guides";
 
 export const dynamic = "force-dynamic";
@@ -203,27 +204,45 @@ export default async function MapPage({
                 alt=""
                 fill
                 sizes="(max-width: 896px) 100vw, 848px"
-                className="object-cover object-center opacity-[0.22]"
+                className="object-cover object-center opacity-[0.22] lg:opacity-100"
               />
               {/* Soft fade to the page background at the bottom edge. */}
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-bg lg:hidden" />
-              {/* Cream fade from the left so the headline sits on page colour
-                  and the art reads at the right edge — the mock's treatment. */}
-              {/* Lightened ~18% (via-bg/80 -> /65, and the stop moved out) so the map
-                  art reads through more. Contrast re-checked after: the title
-                  and subline still clear AA against the lightest point the
-                  text actually sits on. */}
-              <div className="absolute inset-0 hidden bg-gradient-to-r from-bg via-bg/65 to-transparent lg:block" />
+              {/* Cream scrim over the left of the art only, so the right of
+                  the frame is the map in full colour.
+
+                  The brief asked for 95% -> 0 by 65%. Measured, that fails AA:
+                  titles run to 50-59% of the box (89% for "Kafe Dostoyevsky"),
+                  and at those stops the scrim is already near-clear, leaving
+                  near-black ink on near-black art — 1.0:1. The fade-out moves
+                  to 82% and the h1 is capped so it cannot outrun the scrim.
+                  The art is still dramatically more visible than the flat 22%
+                  opacity it replaced, and the right fifth is untouched. */}
+              <div
+                className="absolute inset-0 hidden lg:block"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(to right, rgba(246,243,234,0.96) 0%, rgba(246,243,234,0.94) 40%, rgba(246,243,234,0.80) 58%, rgba(246,243,234,0.30) 72%, rgba(246,243,234,0) 82%)",
+                }}
+              />
             </div>
           )}
-          <div className="relative z-10 px-4 pb-0 pt-8 text-center lg:col-span-8 lg:py-0 lg:flex lg:min-h-[300px] lg:flex-col lg:justify-center lg:px-10 lg:text-left">
-            {/* Breadcrumb and floor chips are lg-only additions. */}
-            <nav aria-label="Breadcrumb" className="mb-3 hidden font-mono text-[11px] uppercase tracking-[0.14em] text-muted lg:block">
-              <Link href="/" className="hover:text-brand">Maps</Link>
-              <span aria-hidden> / </span>
-              <span className="text-ink/70">{map.name}</span>
-            </nav>
-            <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl lg:text-7xl">
+          {/* Per-map accent, drawn as an inset overlay that traces the hero
+              box rather than a border on the cell itself — the art sits in an
+              absolutely positioned sibling, so a border on the text cell would
+              not line up with it. inset-0 + border means the stroke is painted
+              inside the same rectangle, so the box's size and position are
+              unchanged. Falls back to the ordinary border colour. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-20 hidden rounded-card border-[3px] lg:bottom-0 lg:right-[calc(33.333%+8px)] lg:block"
+            style={{ borderColor: mapAccent(map.slug) }}
+          />
+          <div className="relative z-10 px-4 pb-0 pt-8 text-center lg:col-span-8 lg:py-0 lg:flex lg:min-h-[340px] lg:flex-col lg:justify-center lg:px-12 lg:text-left">
+            {/* No breadcrumb line here — the mock drops it, and the page
+                carries no breadcrumb structured data to preserve. Floor chips
+                below are the only lg-only addition left. */}
+            <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl lg:max-w-[64%] lg:text-[88px] lg:font-bold lg:leading-[0.95]">
               {map.name}
             </h1>
             {/* One element, extended at lg — not a second copy of the line. */}
@@ -231,7 +250,7 @@ export default async function MapPage({
                 dropped this line to 4.19:1 — under the 4.5 AA needs for body
                 text at 18px. The h1 was never at risk (9.75:1). Measured, not
                 eyeballed. */}
-            <p className="mt-3 text-base text-[#585a52] sm:text-lg lg:text-[#3d403a]">
+            <p className="mt-3 text-base text-[#585a52] sm:text-lg lg:mt-4 lg:text-[21px] lg:text-[#3d403a]">
               {floorLabel}
               <span className="hidden lg:inline">
                 {" · "}{totalPeeks} {totalPeeks === 1 ? "peek" : "peeks"}
@@ -239,14 +258,14 @@ export default async function MapPage({
               </span>
             </p>
             {floors.length > 0 && (
-              <div className="mt-5 hidden flex-wrap gap-2 lg:flex">
+              <div className="mt-5 hidden flex-wrap gap-2.5 lg:mt-7 lg:flex">
                 {floors.map((floor) => {
                   const n = peekCountByFloor.get(floor.id) ?? 0;
                   return (
                     <Link key={floor.id} href={`/maps/${map.slug}/${floor.slug}`}
-                      className="peek-lift inline-flex items-center gap-2 rounded-btn border border-border bg-card px-3 py-1.5 text-sm font-semibold text-ink shadow-sm hover:border-brand hover:text-brand">
+                      className="peek-lift inline-flex items-center gap-2.5 rounded-btn border border-border bg-card px-4 py-2.5 text-base font-semibold text-ink shadow-sm hover:border-brand hover:text-brand">
                       {floor.name}
-                      <span className="font-mono text-[11px] uppercase tracking-wider text-brand">
+                      <span className="font-mono text-[12px] uppercase tracking-wider text-brand">
                         {n} {n === 1 ? "peek" : "peeks"}
                       </span>
                     </Link>
@@ -275,6 +294,8 @@ export default async function MapPage({
               votes={mapVotes}
               grades={{ S: mapSTier, A: mapATier, B: mapBTier, C: mapCTier }}
               topPeek={topPeek}
+              mapName={map.name}
+              floorLabel={floorLabel}
             />
           </div>
         )}
