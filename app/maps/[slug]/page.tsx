@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BestPeek } from "@/components/BestPeek";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { GradeBadge } from "@/components/GradeBadge";
 import { MapStats } from "@/components/MapStats";
@@ -16,7 +15,6 @@ import {
   getMapBySlug,
   getRankedPeeksForMap,
   getTopPeekForMap,
-  getUnderratedTopIds,
 } from "@/lib/db";
 import { rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
@@ -60,12 +58,7 @@ export default async function MapPage({
   const map = await getMapBySlug(params.slug);
   if (!map || !map.published) notFound();
 
-  // gemIds is a sitewide list and does not depend on this map, so it rides
-  // along with the floors lookup instead of waiting for it.
-  const [floors, gemIds] = await Promise.all([
-    getFloorsForMap(map.id),
-    getUnderratedTopIds(),
-  ]);
+  const floors = await getFloorsForMap(map.id);
 
   const floorIds = floors.map((f) => f.id);
   const peekCountByFloor = new Map<string, number>();
@@ -131,12 +124,6 @@ export default async function MapPage({
     rankedPeeks.map((p) => p.id),
     14
   );
-
-  // "Underrated on this map" now shows ONLY this map's peeks that made the
-  // sitewide top 10 — so a map surfaces 0–3 real gems (or the row hides). Keeps
-  // the rarity story consistent with /underrated. rankedPeeks is already sorted
-  // best-first, so this preserves grade order.
-  const underratedPeeks = rankedPeeks.filter((p) => gemIds.has(p.id));
 
   // Peek Roulette draws from this map's full published pool. rankedPeeks is
   // already loaded above, so this adds no query — it is a reshape, not a read.
@@ -229,7 +216,7 @@ export default async function MapPage({
         {/* content-1 — between the Map Stats card and the Floors panel. Below
             the fold on a phone: the hero, the roulette bar and the stats card
             all sit above it. */}
-        <NitroAdSlot id="pkb-content-1" className="mb-8" />
+        <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
 
         {floors.length > 0 && (
           <MapViewToggle
@@ -352,30 +339,12 @@ export default async function MapPage({
           <p className="text-center text-muted">No floors yet for this map.</p>
         )}
 
-        {/* Hidden gems on this map — high grade, few votes. Only shown when the
-            map actually has some. */}
-        {underratedPeeks.length > 0 && (
-          <div className="mt-8">
-            <h2 className="mb-4 text-center text-lg font-bold tracking-tight text-ink">
-              💎 Underrated on this map
-            </h2>
-            {/* Revealed as one block rather than per card: BestPeek's root has
-                no h-full, so wrapping each card in a reveal div would make it
-                the grid item and break the row-height stretch. */}
-            <div data-reveal="quick" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {underratedPeeks.map((peek) => (
-                <BestPeek key={peek.id} peek={peek} isGem from="map" />
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Effectiveness trend — always visible, below the floor picker. The
             7-day chart lives here; the full 30-day chart + Movers are one tap
             away. Card matches the stats box width/styling. */}
         {totalPeeks >= 2 && (
-          <div className="mt-8">
-            <div className="rounded-card border border-border bg-card px-4 py-5 shadow-sm sm:px-6">
+          <div className="mt-8 md:mt-7">
+            <div className="rounded-card border border-border bg-card px-4 py-4 shadow-sm sm:px-6 md:py-5">
               <h2 className="mb-4 text-center text-lg font-bold tracking-tight text-ink">
                 Last 7 days — Top 5 peeks
               </h2>
@@ -387,7 +356,7 @@ export default async function MapPage({
               ) : (
                 <MultiTrendChart series={mapSeries7} />
               )}
-              <div className="mt-4 text-center">
+              <div className="mt-3 text-center">
                 <Link
                   href={`/maps/${map.slug}/trends`}
                   className="text-sm font-semibold text-brand hover:underline"
@@ -400,46 +369,81 @@ export default async function MapPage({
         )}
 
         {/* content-2 — below the trend chart, above the guide text. */}
-        <NitroAdSlot id="pkb-content-2" className="mt-12" />
+        <NitroAdSlot id="pkb-content-2" className="my-8 md:my-7" />
 
         {/* Per-map guide text (SEO + in-content ad anchors). Renders ONLY for
             maps with an entry in content/map-guides.ts — other maps unchanged.
             Sits below the trends card so nothing above it moves. */}
         {MAP_GUIDES[map.slug] && (
-          <section className="mx-auto mt-12 max-w-2xl">
+          <section className="mx-auto mt-10 max-w-2xl md:mt-8">
             <h2 className="mb-3 text-xl font-bold tracking-tight text-ink">
               {MAP_GUIDES[map.slug].heading}
             </h2>
             <p className="text-[15px] leading-relaxed text-ink/80">
               {MAP_GUIDES[map.slug].intro}
             </p>
-            {MAP_GUIDES[map.slug].sections.map((s) => (
-              <div key={s.heading} className="mt-6">
-                <h3 className="mb-2 text-base font-bold tracking-tight text-ink">
-                  {s.heading}
-                </h3>
-                <p className="text-[15px] leading-relaxed text-ink/80">
-                  {s.body}
-                </p>
-              </div>
-            ))}
+            {/* The rest folds away, but it is NOT conditionally rendered: a
+                <details> ships its whole subtree in the server HTML, headings
+                and all, and is readable to crawlers whether or not it is open.
+                Rendering the sections client-side on demand is what would cost
+                the SEO this text exists for.
+
+                No ad lives inside the fold — content-2 sits above this section,
+                so nothing is ever requested for a box a reader cannot see. */}
+            {MAP_GUIDES[map.slug].sections.length > 0 && (
+              <details className="group mt-5 map-guide-more">
+                <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-btn text-sm font-semibold text-brand hover:underline [&::-webkit-details-marker]:hidden">
+                  <span className="group-open:hidden">Read more</span>
+                  <span className="hidden group-open:inline">Show less</span>
+                  <ChevronIcon />
+                </summary>
+                <div className="map-guide-more-body">
+                  {MAP_GUIDES[map.slug].sections.map((s) => (
+                    <div key={s.heading} className="mt-6">
+                      <h3 className="mb-2 text-base font-bold tracking-tight text-ink">
+                        {s.heading}
+                      </h3>
+                      <p className="text-[15px] leading-relaxed text-ink/80">
+                        {s.body}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
           </section>
         )}
 
         {/* Descriptive blurb — moved to the very bottom as small, secondary
             text (max 2 sentences: the intro + optional "Updated" line). */}
         {totalPeeks > 0 && (
-          <p className="mx-auto mt-12 max-w-2xl text-center text-sm leading-relaxed text-muted">
+          <p className="mx-auto mt-10 max-w-2xl text-center text-sm leading-relaxed text-muted md:mt-8">
             Community-graded spawn peeks for {map.name} — pick a floor to see
             exact spots, watch clips, and learn the setups.
             {lastUpdatedLabel ? ` Updated ${lastUpdatedLabel}.` : ""}
           </p>
         )}
-        {/* content-3 — bottom of the page. SubmitCta renders from the root
-            layout right after </main>, so this is above the submit line. */}
-        <NitroAdSlot id="pkb-content-3" className="mt-12" />
         </MapEntryScope>
       </main>
     </>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      aria-hidden
+      className="shrink-0 transition-transform duration-150 ease-out group-open:rotate-180 motion-reduce:transition-none"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
   );
 }

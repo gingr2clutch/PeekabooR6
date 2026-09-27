@@ -117,7 +117,7 @@ export default async function UnderratedPage() {
 
               {/* content-1 — below the podium, above MORE GEMS. */}
               <li>
-                <NitroAdSlot id="pkb-content-1" className="my-6" />
+                <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
               </li>
 
               {gems.length > 0 && (
@@ -141,9 +141,6 @@ export default async function UnderratedPage() {
             </ol>
           )}
         </div>
-
-        {/* content-2 — bottom, above the submit line. */}
-        <NitroAdSlot id="pkb-content-2" className="mt-12" />
 
         <ExploreNext
           line="Great peeks almost nobody's found yet. Vote one up and help it get discovered."

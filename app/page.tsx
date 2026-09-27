@@ -16,15 +16,26 @@ import { PEEK_SUBMIT } from "@/lib/submit-config";
 import { nitroEnabled } from "@/lib/ad-env";
 import { Fragment, type CSSProperties } from "react";
 
-// In-grid ad slot goes after this many cards.
+// In-grid ad slot placement.
 //
-// 12 is the only count that ends a row at every column count the grid uses —
-// 2 (phone), 3 (sm) and 4 (md and up) all divide it — so the slot always starts
-// on a fresh row and never leaves a hole in the grid above it.
+// The slot goes after the 8th map, which is a clean row boundary at 2 columns
+// (4 rows) and at 4 columns (2 rows) but NOT at 3 columns, where 8 leaves a row
+// two-thirds full. At 3 columns it therefore moves to the nearest complete row
+// instead — after the 9th card, one card away rather than two.
 //
-// Below this many maps there is no row boundary to sit on and the slot would
-// land mid-grid or immediately under the heading, so it is skipped entirely.
-const ADS_AFTER_CARD = 12;
+// Position is driven by CSS `order`, not by source position or an explicit
+// grid-row. Order participates in auto-placement, so the slot stays an ordinary
+// grid item that simply starts a new row because it spans every column. An
+// explicit grid-row would place it out of flow and leave the cards to fill
+// around it, which is exactly how holes appear. Cards take even order values so
+// the slot can sit in the gap between two of them without ever tying.
+const CARD_ORDER_STEP = 2;
+const AD_ORDER_AFTER_8 = 8 * CARD_ORDER_STEP - 1; // 15 — between cards 8 and 9
+const AD_ORDER_AFTER_9 = 9 * CARD_ORDER_STEP - 1; // 17 — between cards 9 and 10
+
+// Below this many maps there is no row boundary to sit on at every width, so
+// the slot goes after the grid instead of inside it.
+const MIN_MAPS_FOR_GRID_AD = 8;
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +66,10 @@ export default async function Home() {
       return bv.allTimeVotes - av.allTimeVotes;
     return a.name.localeCompare(b.name);
   });
+
+  // Enough maps for the slot to sit on a row boundary inside the grid? If not
+  // it goes after the grid, where any card count is fine.
+  const gridAd = maps.length > MIN_MAPS_FOR_GRID_AD;
 
   return (
     <>
@@ -116,7 +131,11 @@ export default async function Home() {
             // Stagger resets every 4 cards so rows sweep in together — a
             // running index would put the last card ~2s behind for no one to
             // see (it is below the fold when the intro hands off).
-            const revealStyle = { "--i": 5 + (i % 4) } as CSSProperties;
+            const revealStyle = {
+              "--i": 5 + (i % 4),
+              // Even slots, so the ad can take an odd one between any two.
+              order: i * CARD_ORDER_STEP,
+            } as CSSProperties;
             const hasCover = !!map.cover_image_url;
             // Live per-map counts → one short status line under the name.
             const counts = mapPeekCounts.get(map.id);
@@ -187,30 +206,35 @@ export default async function Home() {
             );
 
             // Both branches above produce the same shape, so the slot is
-            // injected in one place rather than in each return.
-            if (i !== ADS_AFTER_CARD - 1 || maps.length <= ADS_AFTER_CARD) {
+            // injected in one place rather than in each return. Source position
+            // is after card 8; `order` is what actually decides where it lands
+            // at each width.
+            if (i !== MIN_MAPS_FOR_GRID_AD - 1 || !gridAd) {
               return <Fragment key={map.id}>{cardLi}</Fragment>;
             }
 
             return (
               <Fragment key={map.id}>
                 {cardLi}
-                {/* content-1 — full row inside the grid, on the boundary after
-                    card 12. An <li> because it is a child of <ul id="maps">;
-                    col-span-full so it is its own row at every column count.
+                {/* content-1 — a full-width row inside the grid. An <li>
+                    because it is a child of <ul id="maps">; col-span-full so it
+                    is its own row at every column count.
 
-                    my-6 on top of the grid's gap-5 is deliberate breathing
-                    room: a 300x250 sitting flush against tappable map cards is
-                    how accidental clicks happen. No `reveal` class — the ad
-                    must not animate in, and its reserved height has to be
-                    committed at first paint for CLS. */}
-                <li className="col-span-full">
-                  <NitroAdSlot id="pkb-content-1" className="my-6" />
+                    order puts it after card 8 at 2 and 4 columns, and after
+                    card 9 at 3 columns, which are the complete-row boundaries
+                    at those widths. No `reveal` class — an ad must not animate
+                    in, and its height has to be committed at first paint. */}
+                <li className="col-span-full order-[15] sm:order-[17] md:order-[15]">
+                  <NitroAdSlot id="pkb-content-1" className="my-2" />
                 </li>
               </Fragment>
             );
           })}
         </ul>
+
+        {/* Fallback placement: too few maps for a row boundary inside the
+            grid, so the slot sits directly under it. */}
+        {!gridAd && <NitroAdSlot id="pkb-content-1" className="mt-8 md:mt-7" />}
 
         {/* Scroll-completion note after the last row. Static and not part of
             the pin drop — it sits below the fold on every viewport. */}
@@ -238,7 +262,7 @@ export default async function Home() {
             turn" divider. mt-12 matches the gap the map and peek pages give
             their slots, and the divider's own mt-16 keeps the submission form
             well clear below. */}
-        <NitroAdSlot id="pkb-content-2" className="mt-12" />
+        <NitroAdSlot id="pkb-content-2" className="my-8 md:my-7" />
 
         <div className="mx-auto mt-16 max-w-[620px] text-center">
           <div className="flex items-center gap-3">

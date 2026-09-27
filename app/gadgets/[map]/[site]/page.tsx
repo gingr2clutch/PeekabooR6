@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { NitroAdSlot } from "@/components/NitroAdSlot";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
@@ -113,6 +114,9 @@ export default async function SiteOperatorsPage({ params }: Params) {
           ))}
         </ul>
         )}
+
+        {/* Below every operator, so the picker is never split by an ad. */}
+        <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
       </main>
     </>
   );

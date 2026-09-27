@@ -45,13 +45,15 @@ export function SubmitCta() {
 
   return (
     // Matches the footer's own width and gutters so the two read as one block.
-    <div className="mt-16 px-4 sm:px-6">
+    // Deliberately compact: this is a standing prompt on every page, not a
+    // call to action anyone arrived for, so it earns a line rather than a band.
+    <div className="mt-8 px-4 sm:px-6 md:mt-7">
       <a
         href={href}
-        className="mx-auto flex max-w-6xl items-center justify-center gap-2.5 rounded-card border border-border bg-card px-4 py-3 text-center transition-colors duration-150 ease-out hover:border-brand"
+        className="mx-auto flex max-w-3xl items-center justify-center gap-2 rounded-btn border border-border bg-card px-3 py-2 text-center transition-colors duration-150 ease-out hover:border-brand"
       >
         <CameraIcon />
-        <span className="text-[14px] leading-snug text-ink">
+        <span className="text-[13px] leading-snug text-ink">
           Got a clip of a peek we&rsquo;re missing?{" "}
           <span className="font-semibold text-brand">Submit it →</span>
         </span>
@@ -64,8 +66,8 @@ function CameraIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      width="18"
-      height="18"
+      width="15"
+      height="15"
       fill="none"
       stroke="currentColor"
       strokeWidth={1.8}

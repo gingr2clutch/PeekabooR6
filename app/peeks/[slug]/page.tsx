@@ -361,7 +361,7 @@ export default async function PeekDetailPage({
         {/* content-1 — between the vote bar and How to do it. First slot on the
             page and deliberately below the fold: the hero, title and stats bar
             all sit above it. */}
-        <NitroAdSlot id="pkb-content-1" className="mt-12" />
+        <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
 
         {/* Content — media ("Watch the peek") + how-to. Moved directly under
             the stats so the clip and steps come before rating. Styling
@@ -393,7 +393,7 @@ export default async function PeekDetailPage({
 
         {/* content-2 — at the Trend Chart block. Two sections after content-1
             (How to do it, then Rate this peek) separate them. */}
-        <NitroAdSlot id="pkb-content-2" className="mt-12" />
+        <NitroAdSlot id="pkb-content-2" className="my-8 md:my-7" />
 
         {/* Trend Chart — daily snapshots. Cold-start grace: < 2 points shows a
             "coming soon" note instead of an empty chart. */}
@@ -436,10 +436,6 @@ export default async function PeekDetailPage({
           </section>
         )}
 
-        {/* content-3 — below Peeks close by. SubmitCta renders from the root
-            layout immediately after </main>, so this is the "above the submit
-            line" position. */}
-        <NitroAdSlot id="pkb-content-3" className="mt-16" />
       </main>
 
       {videoJsonLd && (

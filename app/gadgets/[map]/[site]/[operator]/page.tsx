@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { NitroAdSlot } from "@/components/NitroAdSlot";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
@@ -212,6 +213,11 @@ export default async function OperatorPlacementsPage({
             ))}
           </div>
         </div>
+
+        {/* Between the bird's-eye map and the clip — the natural break on this
+            page, and the one place an ad does not separate a pin from the
+            moment it indexes. */}
+        <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
 
         {!active ? (
           <p className="mt-5 rounded-card border border-border bg-card p-4 text-center text-sm text-muted">

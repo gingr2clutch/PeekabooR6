@@ -184,7 +184,7 @@ export default async function FloorPage({
             rather than adding a band of its own. */}
         <NitroAdSlot
           id="pkb-content-1"
-          className="mt-12"
+          className="my-8 md:my-7"
           // Measured, not assumed: collapsing this slot while visible costs
           // 0.0000 CLS across three runs, because nothing visible sits below
           // it. It is also the only slot on the site that can NEVER scroll out

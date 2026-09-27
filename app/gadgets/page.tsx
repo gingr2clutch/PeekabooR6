@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { MapCardImage } from "@/components/MapCardImage";
+import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { LiveStats } from "@/components/LiveStats";
 import {
   getGadgetOperatorNames,
@@ -12,6 +13,12 @@ import {
 } from "@/lib/db";
 import { SubmitSpot } from "@/components/SubmitSpot";
 import { GADGET_SUBMIT } from "@/lib/submit-config";
+import { Fragment } from "react";
+
+// Same placement rule as the homepage grid — see app/page.tsx for why 8 (and 9
+// at three columns) are the counts that land on a complete row.
+const CARD_ORDER_STEP = 2;
+const MIN_MAPS_FOR_GRID_AD = 8;
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +53,8 @@ export default async function GadgetsIndexPage() {
       getGadgetOperatorNames(),
     ]);
   const maps = allMaps.filter((m) => m.published);
+
+  const gridAd = maps.length > MIN_MAPS_FOR_GRID_AD;
 
   return (
     <>
@@ -102,7 +111,7 @@ export default async function GadgetsIndexPage() {
           <p className="text-center text-sm text-muted">No maps yet.</p>
         ) : (
           <ul className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-4">
-            {maps.map((map) => {
+            {maps.map((map, i) => {
               // Enabled purely on data: a map becomes clickable once it has a
               // publicly visible placement, and greys itself out when it has
               // none. Publishing content is the only step — no code change.
@@ -139,9 +148,8 @@ export default async function GadgetsIndexPage() {
                 </>
               );
 
-              if (!hasContent) {
-                return (
-                  <li key={map.id}>
+              const cardLi = !hasContent ? (
+                  <li style={{ order: i * CARD_ORDER_STEP }}>
                     {/* A div rather than a link: there is nothing to navigate
                         to, so it is unreachable by keyboard and announced as
                         disabled instead of being a focusable dead end. */}
@@ -157,11 +165,8 @@ export default async function GadgetsIndexPage() {
                       </span>
                     </div>
                   </li>
-                );
-              }
-
-              return (
-                <li key={map.id}>
+              ) : (
+                <li style={{ order: i * CARD_ORDER_STEP }}>
                   <Link
                     href={`/gadgets/${map.slug}`}
                     className={`${cardBase} map-card cursor-pointer outline-none transition-all duration-[180ms] ease-out focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.99]`}
@@ -175,8 +180,28 @@ export default async function GadgetsIndexPage() {
                   </Link>
                 </li>
               );
+
+              if (i !== MIN_MAPS_FOR_GRID_AD - 1 || !gridAd) {
+                return <Fragment key={map.id}>{cardLi}</Fragment>;
+              }
+
+              return (
+                <Fragment key={map.id}>
+                  {cardLi}
+                  {/* Full-width row inside the grid, ordered onto a complete
+                      row boundary at every column count. */}
+                  <li className="col-span-full order-[15] sm:order-[17] md:order-[15]">
+                    <NitroAdSlot id="pkb-content-1" className="my-2" />
+                  </li>
+                </Fragment>
+              );
             })}
           </ul>
+        )}
+
+        {/* Too few maps for a row boundary inside the grid — sits under it. */}
+        {maps.length > 0 && !gridAd && (
+          <NitroAdSlot id="pkb-content-1" className="mt-8 md:mt-7" />
         )}
 
         {/* Community submissions, gadget variant — same component as the

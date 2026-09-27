@@ -147,7 +147,7 @@ export default async function TopPeeksPage() {
               {/* content-1 — below the podium, above CLIMBING. Inside the
                   <ol>, so it is wrapped in an <li> to stay valid. */}
               <li>
-                <NitroAdSlot id="pkb-content-1" className="my-6" />
+                <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
               </li>
 
               {climbing.length > 0 && (
@@ -171,9 +171,6 @@ export default async function TopPeeksPage() {
             </ol>
           )}
         </div>
-
-        {/* content-2 — bottom, above the submit line. */}
-        <NitroAdSlot id="pkb-content-2" className="mt-12" />
 
         <ExploreNext
           line="The community's highest-rated peeks. Think one's ranked wrong? Cast your vote."

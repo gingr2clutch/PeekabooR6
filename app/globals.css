@@ -2707,3 +2707,38 @@ html.is-live .reveal {
 .mv-disclosure a:hover {
   text-decoration-thickness: 2px;
 }
+
+/* --- "What to Know" read-more fold (map pages) ----------------------------
+   A plain <details>, so the full guide text — headings included — is in the
+   server HTML whether or not it is open. That is the whole point: this text
+   exists for search, and hiding it behind client-side state would have quietly
+   cost the thing it was written for.
+
+   The open animation is opt-IN, gated behind no-preference. Under
+   prefers-reduced-motion the section simply appears, which is also what
+   happens if the browser does not support the animation at all. */
+.map-guide-more-body {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .map-guide-more[open] .map-guide-more-body {
+    animation: map-guide-unfold 180ms ease-out;
+  }
+}
+
+@keyframes map-guide-unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.map-guide-more > summary:focus-visible {
+  outline: 2px solid var(--brand, #d97706);
+  outline-offset: 3px;
+}

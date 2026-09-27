@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { NitroAdSlot } from "@/components/NitroAdSlot";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
@@ -126,7 +127,10 @@ export default async function MapSitesPage({ params }: Params) {
         </ul>
         )}
 
-        <p className="mt-12 text-center text-sm text-muted">
+        {/* Below the four bomb sites, above the cross-link out. */}
+        <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
+
+        <p className="mt-8 text-center text-sm text-muted md:mt-7">
           Looking for spawn peeks instead?{" "}
           <Link
             href={`/maps/${map.slug}`}

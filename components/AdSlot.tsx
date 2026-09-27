@@ -117,6 +117,40 @@ export type AdSlotProps = {
   demo?: boolean;
 };
 
+// Requested creative sizes, by viewport.
+//
+// Deliberately excludes the small units Nitro would otherwise fill with — the
+// reserved box is 250px tall and a 320x50 sitting in it reads as a mistake.
+// Every size here is <= 250 tall, so the committed height is never exceeded and
+// the box never has to grow.
+//
+// Chosen on the client at createAd time rather than as two media-queried units:
+// two units would mean two boxes and two auctions for one placement.
+const DESKTOP_SIZES: [number, number][] = [
+  [970, 250],
+  [970, 90],
+  [750, 200],
+  [728, 90],
+  [300, 250],
+];
+const MOBILE_SIZES: [number, number][] = [
+  [300, 250],
+  [320, 100],
+  [320, 50],
+];
+
+// Matches the site's own md breakpoint, where the layout goes wide.
+const DESKTOP_MQ = "(min-width: 768px)";
+
+/**
+ * Height of the "Advertisement" strip above the creative.
+ *
+ * The reserved box is this TALLER than the creative area, rather than the label
+ * eating into it — a 300x250 has to keep its full 250px or Nitro's tallest
+ * requested size would not fit the box it was promised.
+ */
+const LABEL_H = 18;
+
 /** Shared across every in-content slot, per the placement spec. */
 export const REPORT_CONFIG = {
   enabled: true,
@@ -162,6 +196,13 @@ export function AdSlot({
     window.nitroAds
       ?.createAd(id, {
         height,
+        // Read at call time, not at render: this runs in an effect, so the
+        // viewport is real. A server-side guess would be wrong half the time.
+        sizes:
+          typeof window !== "undefined" &&
+          window.matchMedia(DESKTOP_MQ).matches
+            ? DESKTOP_SIZES
+            : MOBILE_SIZES,
         // Defers the request until the slot approaches the viewport, at Nitro's
         // default visibleMargin. Their stated single biggest blocking-time
         // lever, so it is on everywhere rather than tuned per slot.
@@ -294,6 +335,9 @@ export function AdSlot({
   }, [id, collapseWhenVisible, collapseUnfilled]);
 
   const collapsed = state === "empty";
+  // Outer box height: the creative area plus the label strip. Fixed in both the
+  // reserved and filled states, so a creative arriving (or not) moves nothing.
+  const boxHeight = height + LABEL_H;
 
   return (
     <div
@@ -305,18 +349,43 @@ export function AdSlot({
       style={
         collapsed
           ? { height: 0, overflow: "hidden" }
-          : {
-              // reserved: the committed height. filled: exactly the creative.
-              height: state === "filled" ? "auto" : height,
-              maxWidth: "100%",
-              overflow: "hidden",
-            }
+          : { height: boxHeight, maxWidth: "100%", overflow: "hidden" }
       }
-      // aria-hidden: an empty or ad-filled box is not content a screen reader
-      // should announce as part of the page.
-      aria-hidden="true"
     >
-      <div id={id} style={state === "filled" ? undefined : { height }} />
+      {/* The tinted frame, sized to the creative rather than to the column.
+          width:fit-content keeps a 300x250 from sitting on a 1100px band of
+          grey on desktop; min-width holds the smallest unit we request so an
+          unfilled box still reads as a deliberate space. Height is the full box
+          either way, which is what makes this shift-free. */}
+      <div
+        className="mx-auto flex flex-col items-center rounded-card bg-ink/[0.04]"
+        style={{
+          height: "100%",
+          width: "fit-content",
+          minWidth: 300,
+          maxWidth: "100%",
+          overflow: "hidden",
+        }}
+        // aria-hidden: an empty or ad-filled box is not content a screen reader
+        // should announce as part of the page. The label is for sighted readers
+        // and for policy, not for the accessibility tree.
+        aria-hidden="true"
+      >
+        <span
+          className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted/70"
+          style={{ height: LABEL_H, lineHeight: `${LABEL_H}px` }}
+        >
+          Advertisement
+        </span>
+        {/* Centres the creative in what is left, both axes. Nitro renders into
+            the inner div, so the centring has to live on this wrapper. */}
+        <div
+          className="flex w-full items-center justify-center"
+          style={{ height: height, overflow: "hidden" }}
+        >
+          <div id={id} />
+        </div>
+      </div>
     </div>
   );
 }
