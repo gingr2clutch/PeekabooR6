@@ -16,6 +16,15 @@ type Props = {
   // Set by "Spin again": the component remounts and spins straight away
   // rather than waiting for another tap.
   autoSpin?: boolean;
+  /**
+   * Vertical card layout — wheel on top, then title, line, button.
+   *
+   * Additive and purely a class: the wheel, its canvas size and every
+   * behaviour are untouched, so the homepage lure that also renders this
+   * component is unaffected. The stacking itself is lg-only in CSS, which is
+   * what keeps the map page's mobile bar exactly as it is.
+   */
+  stacked?: boolean;
 };
 
 // Canvas pixel size per variant. Fixed, not responsive: the felt bar's height
@@ -35,6 +44,7 @@ export function PeekRoulette({
   placement,
   onLand,
   autoSpin = false,
+  stacked = false,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wheelRef = useRef<RouletteWheel | null>(null);
@@ -118,7 +128,7 @@ export function PeekRoulette({
   }
 
   return (
-    <div className="pr-felt pr-felt--compact">
+    <div className={`pr-felt pr-felt--compact${stacked ? " pr-felt--stacked" : ""}`}>
       <div className="pr-wheelhold">{wheelCanvas}</div>
 
       <div className="pr-body">

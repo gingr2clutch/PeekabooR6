@@ -2780,3 +2780,32 @@ html.is-live .reveal {
 .prose-measure {
   max-width: 70ch;
 }
+
+/* --- Peek Roulette, vertical card (map page, desktop) --------------------
+   Opt-in via the `stacked` prop AND gated to lg, so the compact felt bar the
+   map page shows below 1024px — and the homepage lure, which never passes the
+   prop — are both untouched. Only the flow direction and alignment change; the
+   canvas keeps its fixed 112px box, so nothing here can shift layout. */
+@media (min-width: 1024px) {
+  .pr-felt--stacked {
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    height: 100%;
+    padding: 20px 18px;
+    text-align: center;
+  }
+  .pr-felt--stacked .pr-body {
+    flex: none;
+    width: 100%;
+  }
+  .pr-felt--stacked .pr-title {
+    font-size: 19px;
+  }
+  .pr-felt--stacked .pr-sub {
+    font-size: 12.5px;
+  }
+  .pr-felt--stacked .pr-cta {
+    margin-top: 12px;
+  }
+}
