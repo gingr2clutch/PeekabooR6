@@ -164,7 +164,7 @@ export default async function MapPage({
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-5xl px-6 pb-20 pt-6">
+      <main className="mx-auto max-w-5xl px-6 pb-8 pt-6">
         <MapEntryScope>
         {/* Header with a subtle backdrop of the map's own cover image — faint,
             cover-cropped, fading into the page background at the bottom so it
@@ -374,12 +374,17 @@ export default async function MapPage({
         {/* Per-map guide text (SEO + in-content ad anchors). Renders ONLY for
             maps with an entry in content/map-guides.ts — other maps unchanged.
             Sits below the trends card so nothing above it moves. */}
+        {/* Centred down to the toggle; the folded prose below goes back to
+            left-aligned. Centring a heading and a lead paragraph reads as
+            deliberate, but centring several paragraphs of body copy makes every
+            line start in a different place and is genuinely harder to read — so
+            the column stays centred and the text inside it does not. */}
         {MAP_GUIDES[map.slug] && (
-          <section className="mx-auto mt-10 max-w-2xl md:mt-8">
+          <section className="mx-auto mt-10 max-w-2xl text-center md:mt-8">
             <h2 className="mb-3 text-xl font-bold tracking-tight text-ink">
               {MAP_GUIDES[map.slug].heading}
             </h2>
-            <p className="text-[15px] leading-relaxed text-ink/80">
+            <p className="mx-auto max-w-[65ch] text-[15px] leading-relaxed text-ink/80">
               {MAP_GUIDES[map.slug].intro}
             </p>
             {/* The rest folds away, but it is NOT conditionally rendered: a
@@ -392,12 +397,12 @@ export default async function MapPage({
                 so nothing is ever requested for a box a reader cannot see. */}
             {MAP_GUIDES[map.slug].sections.length > 0 && (
               <details className="group mt-5 map-guide-more">
-                <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-btn text-sm font-semibold text-brand hover:underline [&::-webkit-details-marker]:hidden">
+                <summary className="mx-auto inline-flex cursor-pointer list-none items-center gap-1.5 rounded-btn text-sm font-semibold text-brand hover:underline [&::-webkit-details-marker]:hidden">
                   <span className="group-open:hidden">Read more</span>
                   <span className="hidden group-open:inline">Show less</span>
                   <ChevronIcon />
                 </summary>
-                <div className="map-guide-more-body">
+                <div className="map-guide-more-body mx-auto max-w-[65ch] text-left">
                   {MAP_GUIDES[map.slug].sections.map((s) => (
                     <div key={s.heading} className="mt-6">
                       <h3 className="mb-2 text-base font-bold tracking-tight text-ink">
@@ -414,14 +419,36 @@ export default async function MapPage({
           </section>
         )}
 
-        {/* Descriptive blurb — moved to the very bottom as small, secondary
-            text (max 2 sentences: the intro + optional "Updated" line). */}
+        {/* Descriptive blurb, now in a card of its own so it reads as a
+            deliberate footer note rather than text that ran out of page.
+
+            The sentence is UNCHANGED, including the trailing "Updated <date>."
+            — it is indexed copy, so the date is repeated inside the badge
+            rather than moved into it. Visually the badge carries it; in the
+            markup the sentence is still whole. */}
         {totalPeeks > 0 && (
-          <p className="mx-auto mt-10 max-w-2xl text-center text-sm leading-relaxed text-muted md:mt-8">
-            Community-graded spawn peeks for {map.name} — pick a floor to see
-            exact spots, watch clips, and learn the setups.
-            {lastUpdatedLabel ? ` Updated ${lastUpdatedLabel}.` : ""}
-          </p>
+          <div className="mx-auto mt-10 max-w-2xl md:mt-8">
+            <div className="flex flex-col items-center gap-2.5 rounded-card border border-border bg-card px-5 py-4 text-center shadow-sm">
+              <p className="max-w-[65ch] text-sm leading-relaxed text-muted">
+                Community-graded spawn peeks for {map.name} — pick a floor to
+                see exact spots, watch clips, and learn the setups.
+                {lastUpdatedLabel ? (
+                  <span className="sr-only">{` Updated ${lastUpdatedLabel}.`}</span>
+                ) : (
+                  ""
+                )}
+              </p>
+              {lastUpdatedLabel && (
+                <span
+                  aria-hidden="true"
+                  className="inline-flex items-center gap-1.5 rounded-btn border border-border bg-bg px-2.5 py-1 text-[11px] font-medium text-muted"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand" />
+                  Updated {lastUpdatedLabel}
+                </span>
+              )}
+            </div>
+          </div>
         )}
         </MapEntryScope>
       </main>

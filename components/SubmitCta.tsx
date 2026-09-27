@@ -44,21 +44,62 @@ export function SubmitCta() {
     : "/#submit";
 
   return (
-    // Matches the footer's own width and gutters so the two read as one block.
-    // Deliberately compact: this is a standing prompt on every page, not a
-    // call to action anyone arrived for, so it earns a line rather than a band.
-    <div className="mt-8 px-4 sm:px-6 md:mt-7">
-      <a
-        href={href}
-        className="mx-auto flex max-w-3xl items-center justify-center gap-2 rounded-btn border border-border bg-card px-3 py-2 text-center transition-colors duration-150 ease-out hover:border-brand"
-      >
-        <CameraIcon />
-        <span className="text-[13px] leading-snug text-ink">
-          Got a clip of a peek we&rsquo;re missing?{" "}
-          <span className="font-semibold text-brand">Submit it →</span>
-        </span>
-      </a>
+    // Almost no margin of its own — it used to add mt-8 on top of whatever
+    // bottom padding the page already had, which stacked into a band of dead
+    // space. The remaining 8px only stops it touching the content above.
+    //
+    // NOTE the page still contributes its own <main> padding-bottom, so the
+    // visible gap is that plus this. Reducing it is a per-page change; the map
+    // page does so, other pages still carry their original padding.
+    <div className="mt-2 px-4 sm:px-6">
+      <div className="mx-auto max-w-3xl rounded-card border border-border bg-card p-4 shadow-sm">
+        <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-between sm:gap-4 sm:text-left">
+          <div className="flex items-center gap-3">
+            {/* Orange chip behind the icon — the site accent, flat fill. No
+                glow, and nothing that changes size on hover. */}
+            <span
+              aria-hidden
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-btn bg-brand/10 text-brand"
+            >
+              <CameraIcon />
+            </span>
+            <p className="text-[13px] leading-snug text-ink">
+              Got a clip of a peek we&rsquo;re missing?
+            </p>
+          </div>
+          {/* A real button, not a whole-card link: the target is the button, so
+              the card is no longer one big tap area sitting under an ad.
+              Hover is transform + opacity only, and motion-reduce drops the
+              transform so the colour change is all that is left. */}
+          <a
+            href={href}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-btn bg-brand px-4 py-2 text-[13px] font-semibold text-white transition duration-150 ease-out hover:-translate-y-0.5 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+          >
+            Submit a clip
+            <ArrowIcon />
+          </a>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="shrink-0"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
   );
 }
 
@@ -66,15 +107,15 @@ function CameraIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      width="15"
-      height="15"
+      width="17"
+      height="17"
       fill="none"
       stroke="currentColor"
       strokeWidth={1.8}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
-      className="shrink-0 text-brand"
+      className="shrink-0"
     >
       <path d="M23 7l-7 5 7 5V7z" />
       <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
