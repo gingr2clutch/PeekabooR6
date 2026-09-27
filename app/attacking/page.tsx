@@ -22,7 +22,7 @@ export default async function AttackingIndexPage() {
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-6xl px-6 pb-20 pt-10">
+      <main className="mx-auto max-w-6xl px-6 pb-8 pt-10">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">
             ⚔️ Attacker Guides

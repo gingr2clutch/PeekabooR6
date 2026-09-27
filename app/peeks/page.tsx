@@ -70,7 +70,7 @@ export default async function PeeksPage({
   return (
     <>
       <PageHeader />
-      <main className="fade-in-up mx-auto max-w-2xl px-4 pb-20 pt-10 sm:px-6">
+      <main className="fade-in-up mx-auto max-w-2xl px-4 pb-8 pt-10 sm:px-6">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">{meta.title}</h1>
           <p className="mx-auto mt-2 max-w-md text-[15px] text-muted">

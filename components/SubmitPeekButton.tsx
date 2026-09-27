@@ -55,7 +55,7 @@ export function SubmitPeekButton({
     <a
       href={SUBMIT_HREF}
       onClick={handleClick}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-btn ${tone} px-3 py-1.5 text-xs font-semibold transition-[background-color,box-shadow,transform] duration-150 ease-out motion-safe:hover:scale-[1.04] motion-safe:hover:shadow-md motion-safe:active:scale-[0.98] ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-btn ${tone} px-3 py-1.5 text-xs font-semibold lg:gap-2 lg:px-4 lg:py-2.5 lg:text-sm lg:[&>svg]:h-[18px] lg:[&>svg]:w-[18px] transition-[background-color,box-shadow,transform] duration-150 ease-out motion-safe:hover:scale-[1.04] motion-safe:hover:shadow-md motion-safe:active:scale-[0.98] ${className}`}
     >
       <UploadIcon />
       <span>Submit a peek</span>

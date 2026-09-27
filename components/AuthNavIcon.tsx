@@ -37,7 +37,7 @@ export function AuthNavIcon({ iconSize = 22 }: { iconSize?: number }) {
       href={href}
       aria-label={label}
       title={label}
-      className={`inline-flex h-11 w-11 items-center justify-center rounded-btn transition-colors duration-150 ease-out ${
+      className={`inline-flex h-11 w-11 lg:h-[54px] lg:w-[54px] lg:[&>svg]:h-[26px] lg:[&>svg]:w-[26px] items-center justify-center rounded-btn transition-colors duration-150 ease-out ${
         isIn
           ? "text-teal hover:bg-teal/[0.08]"
           : "text-ink hover:bg-ink/[0.06] hover:text-brand"

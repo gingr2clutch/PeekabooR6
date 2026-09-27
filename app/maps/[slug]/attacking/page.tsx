@@ -119,7 +119,7 @@ export default async function AttackerGuidePage({
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-5xl px-4 pb-20 pt-6 sm:px-6">
+      <main className="mx-auto max-w-5xl px-4 pb-8 pt-6 sm:px-6">
         {/* Header with the map's faint cover backdrop (same treatment as the
             map page), fading to the page background at the bottom. */}
         <div className="relative mb-8 overflow-hidden rounded-card">

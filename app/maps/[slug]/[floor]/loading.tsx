@@ -31,7 +31,7 @@ export default function Loading() {
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-5xl px-6 pb-20 pt-10">
+      <main className="site-shell mx-auto max-w-5xl px-6 pb-8 pt-10">
         {/* Back link, title and the floor chips — mirrors the real header
             block, which is ~170px tall, not the 32px this used to reserve. */}
         <div className="mb-8 text-center">

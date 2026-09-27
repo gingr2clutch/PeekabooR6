@@ -21,7 +21,7 @@ export default async function AccountPage() {
   return (
     <>
       <PageHeader />
-      <main className="fade-in-up mx-auto max-w-2xl px-6 pb-20 pt-10">
+      <main className="fade-in-up mx-auto max-w-2xl px-6 pb-8 pt-10">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
           Your account
         </h1>

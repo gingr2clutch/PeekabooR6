@@ -76,7 +76,7 @@ export default async function TopPeeksPage() {
   return (
     <>
       <PageHeader />
-      <main className="arena fade-in-up pb-20">
+      <main className="arena fade-in-up pb-8">
         {/* Rafter header — dark, full-bleed, with the beam at its bottom edge.
             Rendered server-side so there's no flash against the cream page. */}
         <section className="arena-rafter">
@@ -120,7 +120,7 @@ export default async function TopPeeksPage() {
               />
             ))}
           </div>
-          <div className="mx-auto max-w-3xl px-4 pb-14 pt-8 text-center sm:pt-10">
+          <div className="site-shell mx-auto max-w-3xl px-4 pb-14 pt-8 text-center sm:pt-10">
             <div className="arena-eyebrow">
               <span className="arena-eyebrow-rule" aria-hidden />
               <span>Hall of Peeks</span>
@@ -133,7 +133,7 @@ export default async function TopPeeksPage() {
           </div>
         </section>
 
-        <div className="mx-auto max-w-3xl px-4">
+        <div className="site-shell mx-auto max-w-3xl px-4">
           {peeks.length === 0 ? (
             <p className="mt-10 text-center text-sm text-muted">
               Once peeks start collecting votes they&rsquo;ll show up here.
@@ -146,7 +146,12 @@ export default async function TopPeeksPage() {
 
               {/* content-1 — below the podium, above CLIMBING. Inside the
                   <ol>, so it is wrapped in an <li> to stay valid. */}
-              <li>
+              {/* lg:w-full — .arena-list is flex-wrap, so a bare <li>
+                  shrink-wrapped to the ad frame's 300px min-width and sat in a
+                  1235px column on desktop. Gated to lg because widening it at
+                  every size would move the ad on mobile, which this pass is
+                  not allowed to touch. */}
+              <li className="lg:w-full">
                 <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
               </li>
 

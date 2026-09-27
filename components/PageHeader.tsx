@@ -14,7 +14,7 @@ type Props = {
 // menu footer never hardcodes it.
 export function PageHeader({ home = false }: Props) {
   return (
-    <header className="flex items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-6">
+    <header className="site-shell flex items-center justify-between gap-3 px-4 pt-4 sm:px-6 sm:pt-6 lg:pb-2 lg:pt-8">
       {/* LEFT — brand, then the mode toggle. It is navigation, so from lg it
           sits with the wordmark rather than competing with the buttons on the
           right. */}

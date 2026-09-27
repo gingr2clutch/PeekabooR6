@@ -2742,3 +2742,41 @@ html.is-live .reveal {
   outline: 2px solid var(--brand, #d97706);
   outline-offset: 3px;
 }
+
+/* --- Shared desktop page width -------------------------------------------
+   ONE width for the whole site at lg and up, so every box on a page — cards,
+   ad slots, the summary note, the submit bar — shares an edge instead of each
+   carrying its own max-w-3xl / 5xl / 6xl.
+
+   Deliberately lg-only, and deliberately ADDITIVE: pages keep their existing
+   max-w-* classes, which still govern below 1024px. That is what makes this a
+   desktop change and nothing else — at 390px the old max-widths are wider than
+   the viewport anyway, so they never bound, and nothing about mobile moves.
+
+   The numbers: content caps at 1280px and the gutter is clamp(32px, 8vw,
+   120px), so 1520 = 1280 + two 120px gutters. On a 1470px MacBook the gutter
+   resolves to ~118px a side with no outer margin; past 1520 the shell stops
+   growing and the extra width becomes margin, so the reading column never
+   exceeds 1280.
+
+   Defined after @tailwind utilities, so it wins on source order against the
+   max-w-* it overrides without needing !important. */
+@media (min-width: 1024px) {
+  /* Doubled class on purpose. Pages carry their own px-4 sm:px-6, and a single
+     .site-shell ties with those on specificity, so which one wins comes down to
+     source order in the built stylesheet — which is a PostCSS implementation
+     detail, not something to rely on. Measured: the peek page (sm:px-6) kept
+     24px gutters at 1470 while pages with a plain px-6 took the shell's. 0,2,0
+     beats 0,1,0 regardless of order, so every page lands on the same edge. */
+  .site-shell.site-shell {
+    max-width: 1520px;
+    padding-inline: clamp(32px, 8vw, 120px);
+  }
+}
+
+/* Readable measure inside the now-much-wider boxes. Body copy stops at ~70ch
+   even when its container is 1280px, because a 1280px line of 15px text is
+   roughly 170 characters and unreadable. */
+.prose-measure {
+  max-width: 70ch;
+}

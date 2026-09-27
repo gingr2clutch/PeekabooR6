@@ -88,7 +88,7 @@ export default async function Home() {
         }}
       />
       <PageHeader home />
-      <main className="mx-auto max-w-6xl px-6 pb-20 pt-10">
+      <main className="site-shell mx-auto max-w-6xl px-6 pb-20 pt-10">
         {/* Homepage hero. The drifting map filmstrip is anchored to the Maps
             heading below (not here) so it stays clear of the stats card. */}
         <div>

@@ -79,9 +79,9 @@ export default async function UnderratedPage() {
   return (
     <>
       <PageHeader />
-      <main className="arena fade-in-up pb-20">
+      <main className="arena fade-in-up pb-8">
         <section className="arena-rafter">
-          <div className="mx-auto max-w-3xl px-4 pb-14 pt-8 text-center sm:pt-10">
+          <div className="site-shell mx-auto max-w-3xl px-4 pb-14 pt-8 text-center sm:pt-10">
             {/* Rotating diamond — the header's signature animation. */}
             <div className="arena-gem-stage" aria-hidden>
               <div className="arena-gem">
@@ -103,7 +103,7 @@ export default async function UnderratedPage() {
           </div>
         </section>
 
-        <div className="mx-auto max-w-3xl px-4">
+        <div className="site-shell mx-auto max-w-3xl px-4">
           {peeks.length === 0 ? (
             <p className="mt-10 text-center text-sm text-muted">
               No underrated peeks right now — they surface here once a high-grade
@@ -116,7 +116,12 @@ export default async function UnderratedPage() {
               ))}
 
               {/* content-1 — below the podium, above MORE GEMS. */}
-              <li>
+              {/* lg:w-full — .arena-list is flex-wrap, so a bare <li>
+                  shrink-wrapped to the ad frame's 300px min-width and sat in a
+                  1235px column on desktop. Gated to lg because widening it at
+                  every size would move the ad on mobile, which this pass is
+                  not allowed to touch. */}
+              <li className="lg:w-full">
                 <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
               </li>
 

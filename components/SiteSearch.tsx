@@ -247,7 +247,7 @@ export function SiteSearch() {
         aria-label="Search"
         aria-expanded={expanded}
         onClick={expand}
-        className="inline-flex h-11 w-11 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
+        className="inline-flex h-11 w-11 lg:h-[54px] lg:w-[54px] lg:[&>svg]:h-[26px] lg:[&>svg]:w-[26px] items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
       >
         <Search size={20} strokeWidth={2} aria-hidden />
       </button>
@@ -268,7 +268,7 @@ export function SiteSearch() {
                 type="button"
                 aria-label="Close search"
                 onClick={collapse}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
+                className="inline-flex h-11 w-11 lg:h-[54px] lg:w-[54px] lg:[&>svg]:h-[26px] lg:[&>svg]:w-[26px] shrink-0 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
               >
                 <ArrowLeft size={22} strokeWidth={2} aria-hidden />
               </button>

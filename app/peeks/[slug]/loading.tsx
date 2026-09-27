@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-5xl px-6 pb-20 pt-10">
+      <main className="site-shell mx-auto max-w-5xl px-6 pb-8 pt-8">
         <div className="mx-auto mb-3 h-8 w-48 animate-pulse rounded-btn bg-border" />
         <div className="mx-auto mb-8 h-3 w-72 animate-pulse rounded-btn bg-border/70" />
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

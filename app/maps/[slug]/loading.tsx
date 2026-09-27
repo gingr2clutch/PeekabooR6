@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-4xl px-6 pb-20 pt-10">
+      <main className="site-shell mx-auto max-w-5xl px-6 pb-8 pt-6">
         <div className="mx-auto mb-10 h-8 w-40 animate-pulse rounded-btn bg-border" />
         <ul className="space-y-6">
           {Array.from({ length: 3 }).map((_, i) => (

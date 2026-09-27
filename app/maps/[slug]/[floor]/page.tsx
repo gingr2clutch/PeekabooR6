@@ -105,7 +105,7 @@ export default async function FloorPage({
   return (
     <>
       <PageHeader />
-      <main className="fade-in-up mx-auto max-w-5xl px-6 pb-20 pt-10">
+      <main className="site-shell fade-in-up mx-auto max-w-5xl px-6 pb-8 pt-10">
         <div className="mb-8 text-center">
           <div className="mb-3">
             <Link
@@ -203,7 +203,7 @@ export default async function FloorPage({
           <h2 className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
             Floor stats
           </h2>
-          <div className="mt-3 grid grid-cols-2 gap-y-6 rounded-card border border-border bg-card px-2 py-6 shadow-[0_2px_10px_rgba(0,0,0,0.05)] sm:grid-cols-4 sm:gap-y-0">
+          <div className="mt-3 grid grid-cols-2 gap-y-6 rounded-card border border-border bg-card px-2 py-6 shadow-[0_2px_10px_rgba(0,0,0,0.05)] sm:grid-cols-4 sm:gap-y-0 lg:py-9">
             <FloorStatCell label="Peeks" value={String(floorStats.total)} />
             <FloorStatCell
               label="Best"

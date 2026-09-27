@@ -43,7 +43,7 @@ export default async function BlogIndexPage() {
   return (
     <>
       <PageHeader />
-      <main className="fade-in-up mx-auto max-w-4xl px-6 pb-20 pt-10">
+      <main className="fade-in-up mx-auto max-w-4xl px-6 pb-8 pt-10">
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-semibold tracking-tight">
             Spawn peek guides

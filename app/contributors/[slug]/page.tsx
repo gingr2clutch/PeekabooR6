@@ -40,7 +40,7 @@ export default async function ContributorPage({ params }: Params) {
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-2xl px-4 pb-20 pt-8 sm:px-6 sm:pt-10">
+      <main className="mx-auto max-w-2xl px-4 pb-8 pt-8 sm:px-6 sm:pt-10">
         <Link
           href="/contributors"
           className="inline-flex items-center gap-1 text-sm font-medium text-muted transition-colors hover:text-brand"

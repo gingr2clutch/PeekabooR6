@@ -164,7 +164,7 @@ export default async function MapPage({
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-5xl px-6 pb-8 pt-6">
+      <main className="site-shell mx-auto max-w-5xl px-6 pb-8 pt-6">
         <MapEntryScope>
         {/* Header with a subtle backdrop of the map's own cover image — faint,
             cover-cropped, fading into the page background at the bottom so it
@@ -344,8 +344,8 @@ export default async function MapPage({
             away. Card matches the stats box width/styling. */}
         {totalPeeks >= 2 && (
           <div className="mt-8 md:mt-7">
-            <div className="rounded-card border border-border bg-card px-4 py-4 shadow-sm sm:px-6 md:py-5">
-              <h2 className="mb-4 text-center text-lg font-bold tracking-tight text-ink">
+            <div className="rounded-card border border-border bg-card px-4 py-4 shadow-sm sm:px-6 md:py-5 lg:px-8 lg:py-7">
+              <h2 className="mb-4 text-center text-lg font-bold tracking-tight text-ink lg:mb-5 lg:text-xl">
                 Last 7 days — Top 5 peeks
               </h2>
               {mapSeries7.length === 0 ? (
@@ -380,8 +380,8 @@ export default async function MapPage({
             line start in a different place and is genuinely harder to read — so
             the column stays centred and the text inside it does not. */}
         {MAP_GUIDES[map.slug] && (
-          <section className="mx-auto mt-10 max-w-2xl text-center md:mt-8">
-            <h2 className="mb-3 text-xl font-bold tracking-tight text-ink">
+          <section className="mx-auto mt-10 max-w-2xl text-center md:mt-8 lg:mt-14 lg:max-w-none">
+            <h2 className="mb-3 text-xl font-bold tracking-tight text-ink lg:mb-4 lg:text-2xl">
               {MAP_GUIDES[map.slug].heading}
             </h2>
             <p className="mx-auto max-w-[65ch] text-[15px] leading-relaxed text-ink/80">
@@ -427,8 +427,8 @@ export default async function MapPage({
             rather than moved into it. Visually the badge carries it; in the
             markup the sentence is still whole. */}
         {totalPeeks > 0 && (
-          <div className="mx-auto mt-10 max-w-2xl md:mt-8">
-            <div className="flex flex-col items-center gap-2.5 rounded-card border border-border bg-card px-5 py-4 text-center shadow-sm">
+          <div className="mx-auto mt-10 max-w-2xl md:mt-8 lg:mt-14 lg:max-w-none">
+            <div className="flex flex-col items-center gap-2.5 rounded-card border border-border bg-card px-5 py-4 text-center shadow-sm lg:gap-3 lg:px-8 lg:py-6">
               <p className="max-w-[65ch] text-sm leading-relaxed text-muted">
                 Community-graded spawn peeks for {map.name} — pick a floor to
                 see exact spots, watch clips, and learn the setups.

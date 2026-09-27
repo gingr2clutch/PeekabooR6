@@ -71,7 +71,7 @@ export default async function ContributorsPage({ searchParams }: Params) {
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-2xl px-4 pb-20 pt-8 sm:px-6 sm:pt-10">
+      <main className="mx-auto max-w-2xl px-4 pb-8 pt-8 sm:px-6 sm:pt-10">
         <header className="text-center">
           <h1 className="text-3xl font-semibold tracking-tight lg:text-4xl">
             Top{" "}

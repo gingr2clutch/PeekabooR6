@@ -191,7 +191,7 @@ export default async function ComparePage({
   return (
     <>
       <PageHeader />
-      <main className="fade-in-up mx-auto max-w-4xl px-4 pb-20 pt-6 sm:px-6">
+      <main className="fade-in-up mx-auto max-w-4xl px-4 pb-8 pt-6 sm:px-6">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}

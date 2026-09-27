@@ -257,7 +257,7 @@ export default async function PeekDetailPage({
   return (
     <>
       <PageHeader />
-      <main className="fade-in-up mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">
+      <main className="site-shell fade-in-up mx-auto max-w-5xl px-4 pb-8 pt-8 sm:px-6">
         {/* Page header */}
         <div className="relative text-center">
           {/* Favorite heart — absolutely pinned to the top-right so it never
@@ -415,7 +415,9 @@ export default async function PeekDetailPage({
             <h2 className="rounded-btn bg-brand/[0.08] px-3 py-2 text-lg font-semibold uppercase tracking-[0.12em] text-center text-ink">
               Peeks close by
             </h2>
-            <ul className="mt-4 space-y-3">
+            {/* 2x2 from lg: four full-width rows on a 1280px column were mostly empty
+                    space with a grade pinned to the far right. */}
+                <ul className="mt-4 space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
               {nearby.map((p) => (
                 <li key={p.id}>
                   <Link

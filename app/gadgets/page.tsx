@@ -59,7 +59,7 @@ export default async function GadgetsIndexPage() {
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-6xl px-6 pb-20 pt-6 sm:pt-8">
+      <main className="site-shell mx-auto max-w-6xl px-6 pb-20 pt-6 sm:pt-8">
         {/* Two lines, with the whole of "Gadget Database" carrying the blue —
             the accent reads as the mode signal (matching the logo and
             wordmark) rather than picking out one word mid-sentence. */}

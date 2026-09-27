@@ -57,7 +57,7 @@ export default async function CompareIndexPage() {
   return (
     <>
       <PageHeader />
-      <main className="fade-in-up mx-auto max-w-4xl px-4 pb-20 pt-6 sm:px-6">
+      <main className="fade-in-up mx-auto max-w-4xl px-4 pb-8 pt-6 sm:px-6">
         <div className="mb-10 text-center">
           <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-teal">
             Map comparisons

@@ -11,7 +11,7 @@ export default function AboutPage() {
   return (
     <>
       <PageHeader />
-      <main className="fade-in-up mx-auto max-w-[700px] px-6 pb-20 pt-10">
+      <main className="fade-in-up mx-auto max-w-[700px] px-6 pb-8 pt-10">
         <h1 className="text-3xl font-semibold tracking-tight">
           About peekabooR6
         </h1>

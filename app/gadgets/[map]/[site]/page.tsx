@@ -52,7 +52,7 @@ export default async function SiteOperatorsPage({ params }: Params) {
   return (
     <>
       <PageHeader />
-      <main className="mx-auto max-w-3xl px-4 pb-20 pt-8 sm:px-6 sm:pt-10">
+      <main className="site-shell mx-auto max-w-3xl px-4 pb-8 pt-8 sm:px-6 sm:pt-10">
         <Link
           href={`/gadgets/${map.slug}`}
           className="text-sm font-medium text-muted transition-colors hover:text-blue"

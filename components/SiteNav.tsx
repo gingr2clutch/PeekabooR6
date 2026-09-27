@@ -230,7 +230,7 @@ export function SiteNav({
           aria-label="Open navigation menu"
           aria-expanded={open}
           aria-controls="mobile-nav"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand lg:h-[54px] lg:w-[54px] lg:[&>svg]:h-[27px] lg:[&>svg]:w-[27px]"
         >
           <Menu size={22} strokeWidth={2} aria-hidden />
         </button>

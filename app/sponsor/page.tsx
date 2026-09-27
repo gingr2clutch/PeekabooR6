@@ -89,7 +89,7 @@ export default function SponsorPage() {
   return (
     <>
       <PageHeader />
-      <main className="fade-in-up mx-auto max-w-3xl px-6 pb-24 pt-12">
+      <main className="fade-in-up mx-auto max-w-3xl px-6 pb-8 pt-12">
         {/* Hero */}
         <section className="text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">

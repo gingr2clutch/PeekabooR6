@@ -51,8 +51,8 @@ export function SubmitCta() {
     // NOTE the page still contributes its own <main> padding-bottom, so the
     // visible gap is that plus this. Reducing it is a per-page change; the map
     // page does so, other pages still carry their original padding.
-    <div className="mt-2 px-4 sm:px-6">
-      <div className="mx-auto max-w-3xl rounded-card border border-border bg-card p-4 shadow-sm">
+    <div className="site-shell mt-2 px-4 sm:px-6">
+      <div className="mx-auto max-w-3xl rounded-card border border-border bg-card p-4 shadow-sm lg:max-w-none lg:p-5">
         <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-between sm:gap-4 sm:text-left">
           <div className="flex items-center gap-3">
             {/* Orange chip behind the icon — the site accent, flat fill. No
