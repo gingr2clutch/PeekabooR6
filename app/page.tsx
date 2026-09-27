@@ -11,9 +11,20 @@ import {
 import { BackToTop } from "@/components/BackToTop";
 import PeekabooIntro from "@/components/PeekabooIntro";
 import { SubmitSpot } from "@/components/SubmitSpot";
+import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { PEEK_SUBMIT } from "@/lib/submit-config";
 import { nitroEnabled } from "@/lib/ad-env";
-import type { CSSProperties } from "react";
+import { Fragment, type CSSProperties } from "react";
+
+// In-grid ad slot goes after this many cards.
+//
+// 12 is the only count that ends a row at every column count the grid uses —
+// 2 (phone), 3 (sm) and 4 (md and up) all divide it — so the slot always starts
+// on a fresh row and never leaves a hole in the grid above it.
+//
+// Below this many maps there is no row boundary to sit on and the slot would
+// land mid-grid or immediately under the heading, so it is skipped entirely.
+const ADS_AFTER_CARD = 12;
 
 export const dynamic = "force-dynamic";
 
@@ -146,24 +157,20 @@ export default async function Home() {
               <span className="px-3">{map.name}</span>
             );
 
-            if (map.published) {
-              return (
-                <li key={map.id} className="reveal" style={revealStyle}>
-                  <MapCardLink
-                    href={`/maps/${map.slug}`}
-                    className={`${cardBase} map-card border-2 border-white ${
-                      hasCover ? "" : "bg-card text-ink"
-                    } motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.97]`}
-                  >
-                    {cover}
-                    {label}
-                  </MapCardLink>
-                </li>
-              );
-            }
-
-            return (
-              <li key={map.id} className="reveal" style={revealStyle}>
+            const cardLi = map.published ? (
+              <li className="reveal" style={revealStyle}>
+                <MapCardLink
+                  href={`/maps/${map.slug}`}
+                  className={`${cardBase} map-card border-2 border-white ${
+                    hasCover ? "" : "bg-card text-ink"
+                  } motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.97]`}
+                >
+                  {cover}
+                  {label}
+                </MapCardLink>
+              </li>
+            ) : (
+              <li className="reveal" style={revealStyle}>
                 <div
                   aria-disabled="true"
                   className={`${cardBase} !cursor-not-allowed border-2 border-white ${
@@ -177,6 +184,30 @@ export default async function Home() {
                   </span>
                 </div>
               </li>
+            );
+
+            // Both branches above produce the same shape, so the slot is
+            // injected in one place rather than in each return.
+            if (i !== ADS_AFTER_CARD - 1 || maps.length <= ADS_AFTER_CARD) {
+              return <Fragment key={map.id}>{cardLi}</Fragment>;
+            }
+
+            return (
+              <Fragment key={map.id}>
+                {cardLi}
+                {/* content-1 — full row inside the grid, on the boundary after
+                    card 12. An <li> because it is a child of <ul id="maps">;
+                    col-span-full so it is its own row at every column count.
+
+                    my-6 on top of the grid's gap-5 is deliberate breathing
+                    room: a 300x250 sitting flush against tappable map cards is
+                    how accidental clicks happen. No `reveal` class — the ad
+                    must not animate in, and its reserved height has to be
+                    committed at first paint for CLS. */}
+                <li className="col-span-full">
+                  <NitroAdSlot id="pkb-content-1" className="my-6" />
+                </li>
+              </Fragment>
             );
           })}
         </ul>
@@ -203,6 +234,12 @@ export default async function Home() {
             trailing off the end of the page. Static markup above a section
             that was already there — it reserves its own space and shifts
             nothing. */}
+        {/* content-2 — closes out the maps section, directly above the "Your
+            turn" divider. mt-12 matches the gap the map and peek pages give
+            their slots, and the divider's own mt-16 keeps the submission form
+            well clear below. */}
+        <NitroAdSlot id="pkb-content-2" className="mt-12" />
+
         <div className="mx-auto mt-16 max-w-[620px] text-center">
           <div className="flex items-center gap-3">
             <span className="h-px flex-1 bg-border" />
