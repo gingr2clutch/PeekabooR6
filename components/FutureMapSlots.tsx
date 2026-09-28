@@ -98,14 +98,15 @@ export function FutureMapSlots({
                 >
                   ?
                 </span>
-                {/* Same corner, padding and type sizes as a map card's name and
-                    peek line, so the tiles sit on the grid's baseline. */}
-                <span className="relative z-10 mt-auto w-full px-3 pb-2.5 text-left">
+                {/* Name only — the card's second line is a peek count and a
+                    tile has nothing to count. The deeper bottom padding is
+                    what keeps "New map" on the map names' baseline rather than
+                    dropping it onto the line where peek counts sit: a card's
+                    name clears its bottom edge by 38px, and 36px plus this
+                    box's 2px border is the same 38. */}
+                <span className="relative z-10 mt-auto w-full px-3 pb-9 text-left">
                   <span className="block truncate text-ink/[0.42]">
                     New map
-                  </span>
-                  <span className="mt-0.5 block truncate whitespace-nowrap text-[11px] font-medium text-ink/[0.34]">
-                    Coming soon
                   </span>
                 </span>
               </div>
