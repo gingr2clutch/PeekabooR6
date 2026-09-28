@@ -296,6 +296,7 @@ export default async function MapPage({
               topPeek={topPeek}
               mapName={map.name}
               floorLabel={floorLabel}
+              mapSlug={map.slug}
             />
           </div>
         )}
