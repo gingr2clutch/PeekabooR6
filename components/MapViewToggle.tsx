@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
+import { LayoutGrid, ListOrdered } from "lucide-react";
 
 // useLayoutEffect on the client (applies the resolved choice before paint, so a
 // remembered/URL "Ranked list" doesn't flash the Floors view); useEffect on the
@@ -95,9 +96,13 @@ export function MapViewToggle({
     }
   }
 
-  const options: { value: View; label: string }[] = [
-    { value: "floors", label: "Floors" },
-    { value: "ranked", label: "Ranked list" },
+  const options: {
+    value: View;
+    label: string;
+    Icon: typeof LayoutGrid;
+  }[] = [
+    { value: "floors", label: "Floors", Icon: LayoutGrid },
+    { value: "ranked", label: "Ranked list", Icon: ListOrdered },
   ];
 
   return (
@@ -112,16 +117,16 @@ export function MapViewToggle({
     // frames around the same content. Desktop gets a plain heading row
     // instead: label left, toggle right. Below lg the bubble is untouched.
     <div className="rounded-card border border-brand/20 bg-brand/[0.11] px-3 py-4 sm:p-6 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
-      <div className="mb-8 flex justify-center lg:mb-5 lg:items-center lg:justify-between">
+      <div className="mb-8 flex justify-center lg:mb-6 lg:flex-col lg:items-center lg:justify-center lg:gap-4">
         {/* Desktop-only section heading. Tracks the toggle, because on the
             ranked view "Pick a floor" would be describing the wrong thing. */}
-        <h2 className="hidden text-2xl font-bold tracking-tight text-ink lg:block">
+        <h2 className="hidden text-2xl font-bold tracking-tight text-ink lg:block lg:text-center">
           {view === "ranked" ? "Every peek, ranked" : "Pick a floor"}
         </h2>
         <div
           role="tablist"
           aria-label="Map view"
-          className="inline-flex rounded-btn border border-border bg-card p-1 shadow-sm"
+          className="inline-flex rounded-btn border border-border bg-card p-1 shadow-sm lg:rounded-[16px] lg:bg-white lg:p-[5px]"
         >
           {options.map((o) => {
             const active = view === o.value;
@@ -132,12 +137,14 @@ export function MapViewToggle({
                 role="tab"
                 aria-selected={active}
                 onClick={() => choose(o.value)}
-                className={`rounded-btn px-4 py-1.5 text-sm font-semibold transition-colors duration-150 ease-out ${
+                className={`rounded-btn px-4 py-1.5 text-sm font-semibold transition-colors duration-150 ease-out lg:inline-flex lg:items-center lg:gap-2.5 lg:rounded-[12px] lg:px-[30px] lg:py-[14px] lg:text-[18px] lg:leading-[30px] ${
                   active
                     ? "bg-brand text-white shadow-sm"
                     : "text-muted hover:text-ink"
                 }`}
               >
+                {/* Icons are desktop-only; the phone pill has no room. */}
+                <o.Icon size={20} aria-hidden className="hidden lg:block" />
                 {o.label}
               </button>
             );

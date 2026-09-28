@@ -15,6 +15,7 @@ import {
   getMapBySlug,
   getRankedPeeksForMap,
   getTopPeekForMap,
+  type PeekWithContext,
 } from "@/lib/db";
 import { gradeTierColor, rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
@@ -447,7 +448,10 @@ export default async function MapPage({
                   No spawn peeks on this map yet.
                 </p>
               ) : (
-                <ol className="space-y-2">
+                <>
+                  {/* Below lg: the stacked cards, exactly as before. */}
+                  <ol className="space-y-2 lg:hidden">
+
                   {rankedPeeks.map((peek, i) => {
                     const r = rating(
                       peek.base_success_rate,
@@ -505,6 +509,15 @@ export default async function MapPage({
                     );
                   })}
                 </ol>
+
+                  {/* lg+: the leaderboard table. Same peeks, same order, same
+                      components — only the presentation differs. */}
+                  <RankedTable
+                    peeks={rankedPeeks}
+                    trends={rankedTrends}
+                    className="hidden lg:block"
+                  />
+                </>
               )
             }
           />
@@ -842,5 +855,95 @@ function ChevronIcon() {
     >
       <path d="M6 9l6 6 6-6" />
     </svg>
+  );
+}
+
+
+// Ranked leaderboard table — lg only. Below lg the ranked view renders the
+// stacked cards instead; this component is never visible there.
+//
+// role="table" on a grid rather than a real <table>: the row link has to cover
+// the entire row, and `position: relative` on a <tr> is not reliably honoured.
+// A grid row is an ordinary positioned box, so inset:0 on the link just works,
+// and the roles carry the semantics the table markup would have.
+function RankedTable({
+  peeks,
+  trends,
+  className = "",
+}: {
+  peeks: PeekWithContext[];
+  trends: Map<string, unknown[]>;
+  className?: string;
+}) {
+  const cols = ["Rank", "Peek", "Floor", "Grade", "Trend", "Votes"];
+  return (
+    <div className={className}>
+      <div role="table" aria-label="Every peek, ranked" className="mrt">
+        <div role="rowgroup">
+          <div role="row" className="mrt-row mrt-head">
+            {cols.map((c) => (
+              <span key={c} role="columnheader">
+                {c}
+              </span>
+            ))}
+            <span role="columnheader">
+              <span className="sr-only">Favourite</span>
+            </span>
+          </div>
+        </div>
+        <div role="rowgroup" className="mrt-body">
+          {peeks.map((peek, i) => {
+            const r = rating(
+              peek.base_success_rate,
+              peek.worked_votes,
+              peek.vote_count
+            );
+            const rank = i + 1;
+            return (
+              <div role="row" className="mrt-row" key={peek.id}>
+                <span role="cell">
+                  <span
+                    className={`mrt-coin ${
+                      rank <= 3 ? `mrt-coin--${rank}` : "mrt-coin--n"
+                    }`}
+                    aria-hidden
+                  >
+                    {rank}
+                  </span>
+                </span>
+                <span role="cell" className="min-w-0 pr-4">
+                  {/* Covers the whole row; the heart sits above it. */}
+                  <Link
+                    href={`/peeks/${peek.slug}?from=ranked`}
+                    aria-label={peek.name}
+                    className="mrt-rowlink"
+                  />
+                  <span className="mrt-name block">{peek.name}</span>
+                </span>
+                <span role="cell" className="min-w-0 pr-4">
+                  <span className="mrt-floor">{peek.floors?.name}</span>
+                </span>
+                <span role="cell">
+                  <GradeBadge label={r.label} score={r.score} />
+                </span>
+                <span role="cell">
+                  <TrendArrow
+                    direction={computeDirection(
+                      (trends.get(peek.id) ?? []) as never
+                    )}
+                  />
+                </span>
+                <span role="cell" className="mrt-votes">
+                  {peek.vote_count}
+                </span>
+                <span role="cell" className="mrt-fav">
+                  <FavoriteButton peekId={peek.id} />
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
