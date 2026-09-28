@@ -97,7 +97,7 @@ export function ModeToggle({
           href={o.href}
           aria-current={o.active ? "page" : undefined}
           onClick={onNavigate}
-          className={`inline-flex items-center gap-1 rounded-btn px-1.5 py-0.5 text-[10px] font-semibold transition-colors duration-150 ease-out sm:px-2 sm:text-[11px] lg:px-2.5 lg:py-1.5 lg:text-[12px] ${
+          className={`inline-flex items-center gap-1 rounded-btn px-1.5 py-0.5 text-[10px] font-semibold transition-colors duration-150 ease-out sm:px-2 sm:text-[11px] lg:px-2.5 lg:py-1.5 lg:text-[11.5px] ${
             home ? "lg:px-3.5" : ""
           } ${o.active ? "text-ink" : "text-muted hover:text-ink"}`}
         >

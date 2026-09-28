@@ -25,7 +25,7 @@ export function Wordmark({ href = "/", showText = false, large = false }: Props)
       // AuthShell and the drawer also pass showText, so reusing it would have
       // grown the logo on the login pages too. Only PageHeader sets it, and
       // only from its `home` prop, so the bump is the homepage header alone.
-      className={`flex items-center gap-2.5 rounded-btn text-xl font-semibold tracking-tight outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 lg:gap-2.5 lg:text-[24px] lg:font-bold lg:tracking-[-0.02em] ${
+      className={`flex items-center gap-2.5 rounded-btn text-xl font-semibold tracking-tight outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 lg:gap-2.5 lg:text-[22px] lg:font-bold lg:tracking-[-0.02em] ${
         large ? "lg:gap-3 lg:text-2xl" : ""
       }`}
     >
