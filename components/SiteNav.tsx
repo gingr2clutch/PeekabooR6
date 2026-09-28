@@ -237,7 +237,7 @@ export function SiteNav({
             (search, account, submit) is done with CSS `order` on each item.
             Reordering the DOM instead swapped the search and account icons on
             MOBILE too, which the 390px geometry check caught. */}
-        <SubmitPeekButton className="hidden lg:order-3 lg:inline-flex" />
+        <SubmitPeekButton className="hidden lg:order-3 lg:inline-flex" compactLabel />
         <AuthNavIcon />
         <SiteSearch />
         <button

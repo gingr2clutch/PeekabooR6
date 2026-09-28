@@ -11,6 +11,13 @@ type Props = {
   // Colour tone. "orange" is the filled default; "outline" is the quieter
   // treatment for surfaces that already carry a filled button.
   variant?: "orange" | "outline";
+  /**
+   * Shorten the label to "Submit" when the bar is tight.
+   *
+   * Opt-in so the homepage and drawer buttons keep the full label — only the
+   * top bar has a width problem.
+   */
+  compactLabel?: boolean;
 };
 
 export const SUBMIT_HREF = "/#submit";
@@ -26,6 +33,7 @@ export function SubmitPeekButton({
   className = "",
   onClick,
   variant = "orange",
+  compactLabel = false,
 }: Props) {
   const pathname = usePathname();
 
@@ -69,7 +77,16 @@ export function SubmitPeekButton({
       className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-btn ${tone} px-3 py-1.5 text-xs font-semibold lg:gap-1.5 lg:px-3.5 lg:py-2 lg:text-[13px] lg:[&>svg]:h-[16px] lg:[&>svg]:w-[16px] outline-none transition-[background-color,box-shadow,transform] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 motion-safe:hover:scale-[1.04] motion-safe:hover:shadow-md motion-safe:active:scale-[0.98] ${className}`}
     >
       <UploadIcon />
-      <span>Submit a peek</span>
+      <span>
+        {compactLabel ? (
+          <>
+            <span className="min-[1152px]:hidden">Submit</span>
+            <span className="hidden min-[1152px]:inline">Submit a peek</span>
+          </>
+        ) : (
+          "Submit a peek"
+        )}
+      </span>
     </a>
   );
 }

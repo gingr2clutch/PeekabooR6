@@ -263,7 +263,7 @@ export function SiteSearch() {
         aria-label="Search"
         aria-expanded={expanded}
         onClick={expand}
-        className="inline-flex h-11 w-11 lg:hidden  items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
+        className="inline-flex h-11 w-11 min-[1536px]:hidden  items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
       >
         <Search size={20} strokeWidth={2} aria-hidden />
       </button>
@@ -276,7 +276,7 @@ export function SiteSearch() {
         aria-label="Search peeks"
         aria-keyshortcuts="Meta+K Control+K"
         onClick={expand}
-        className="hidden h-[42px] w-[210px] items-center gap-2 rounded-btn lg:order-1 border border-border bg-card px-3 text-left text-[14px] text-muted outline-none transition-colors duration-150 ease-out hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 lg:inline-flex"
+        className="hidden h-[42px] w-[210px] items-center gap-2 rounded-btn lg:order-1 min-[1536px]:inline-flex border border-border bg-card px-3 text-left text-[14px] text-muted outline-none transition-colors duration-150 ease-out hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       >
         <Search size={17} strokeWidth={2} aria-hidden className="shrink-0" />
         <span className="flex-1 truncate">Search peeks</span>

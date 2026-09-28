@@ -10,11 +10,13 @@ export const OPEN_NAV_EVENT = "pbr6:open-nav";
 // The four links that earn a place on the bar. Everything else lives behind
 // "More", which opens the drawer that already holds the full set — so this is
 // a shortcut to the common destinations, not a second navigation to maintain.
-const LINKS: { href: string; label: string }[] = [
+// `foldAt` marks a link that drops into the More menu when the bar runs out of
+// room. The drawer already lists Guides, so hiding it here loses nothing.
+const LINKS: { href: string; label: string; foldable?: boolean }[] = [
   { href: "/", label: "Maps" },
   { href: "/top", label: "Top peeks" },
   { href: "/underrated", label: "Underrated" },
-  { href: "/blog", label: "Guides" },
+  { href: "/blog", label: "Guides", foldable: true },
 ];
 
 function isCurrent(pathname: string, href: string): boolean {
@@ -40,7 +42,7 @@ export function DesktopNav() {
   return (
     <nav
       aria-label="Primary"
-      className="hidden lg:flex lg:h-full lg:items-stretch lg:gap-1"
+      className="hidden lg:flex lg:h-full lg:items-stretch lg:gap-0 min-[1536px]:lg:gap-1"
     >
       {LINKS.map((l) => {
         const current = isCurrent(pathname, l.href);
@@ -49,7 +51,9 @@ export function DesktopNav() {
             key={l.href}
             href={l.href}
             aria-current={current ? "page" : undefined}
-            className={`relative inline-flex h-full items-center whitespace-nowrap rounded-btn px-3 text-[15px] font-semibold outline-none transition-colors duration-150 ease-out focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
+            className={`relative inline-flex h-full items-center whitespace-nowrap rounded-btn px-2 text-[15px] min-[1536px]:px-3 ${
+              l.foldable ? "hidden min-[1240px]:inline-flex" : ""
+            } font-semibold outline-none transition-colors duration-150 ease-out focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
               current ? "text-ink" : "text-muted hover:text-ink"
             }`}
           >
@@ -70,7 +74,7 @@ export function DesktopNav() {
         type="button"
         onClick={() => window.dispatchEvent(new CustomEvent(OPEN_NAV_EVENT))}
         aria-haspopup="dialog"
-        className="inline-flex h-full items-center gap-1.5 whitespace-nowrap rounded-btn px-3 text-[15px] font-semibold text-muted outline-none transition-colors duration-150 ease-out hover:text-ink focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+        className="inline-flex h-full items-center gap-1.5 whitespace-nowrap rounded-btn px-2 text-[15px] min-[1536px]:px-3 font-semibold text-muted outline-none transition-colors duration-150 ease-out hover:text-ink focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       >
         More
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0">

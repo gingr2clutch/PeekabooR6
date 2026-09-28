@@ -67,7 +67,13 @@ export function Wordmark({ href = "/", showText = false, large = false }: Props)
           wordmark the way the mock does. */}
       <span
         data-intro-target="word"
-        className={showText || gadgets ? undefined : "hidden lg:inline"}
+        className={
+          showText || gadgets
+            ? // Visible below lg exactly as before; hidden only in the narrow
+              // desktop band where the bar would otherwise overflow.
+              "lg:hidden min-[1080px]:lg:inline"
+            : "hidden min-[1080px]:inline"
+        }
       >
         <span className="text-ink">peekaboo</span>
         <span className={gadgets ? "text-blue" : "text-brand"}>R6</span>
