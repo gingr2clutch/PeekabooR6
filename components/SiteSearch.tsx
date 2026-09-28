@@ -276,7 +276,7 @@ export function SiteSearch() {
         aria-label="Search peeks"
         aria-keyshortcuts="Meta+K Control+K"
         onClick={expand}
-        className="hidden h-[40px] w-[196px] items-center gap-2 rounded-btn lg:order-1 min-[1440px]:inline-flex border border-border bg-card px-2.5 text-left text-[13px] text-muted outline-none transition-colors duration-150 ease-out hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+        className="hidden h-[40px] w-[196px] min-w-[128px] shrink items-center gap-2 rounded-btn lg:order-1 min-[1440px]:inline-flex border border-border bg-card px-2.5 text-left text-[13px] text-muted outline-none transition-colors duration-150 ease-out hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       >
         <Search size={17} strokeWidth={2} aria-hidden className="shrink-0" />
         <span className="flex-1 truncate">Search peeks</span>

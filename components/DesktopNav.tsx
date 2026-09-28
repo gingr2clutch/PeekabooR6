@@ -42,8 +42,13 @@ export function DesktopNav() {
   return (
     <nav
       aria-label="Primary"
-      className="hidden lg:flex lg:h-full lg:items-stretch lg:gap-0 min-[1440px]:lg:gap-1"
+      className="hidden lg:flex lg:h-full lg:min-w-0 lg:items-stretch lg:gap-0 min-[1440px]:lg:gap-1"
     >
+      {/* The links clip HERE, inside their own box. "More" sits outside it and
+          is shrink-0, so under any pressure a link is what disappears — never
+          the menu that holds everything else. Clipping "More" would hide the
+          only route to the rest of the nav. */}
+      <div className="flex min-w-0 items-stretch overflow-hidden lg:gap-0 min-[1440px]:lg:gap-1">
       {LINKS.map((l) => {
         const current = isCurrent(pathname, l.href);
         return (
@@ -51,8 +56,8 @@ export function DesktopNav() {
             key={l.href}
             href={l.href}
             aria-current={current ? "page" : undefined}
-            className={`relative inline-flex h-full items-center whitespace-nowrap rounded-btn px-1.5 text-[14px] min-[1440px]:px-2.5 ${
-              l.foldable ? "hidden min-[1180px]:inline-flex" : ""
+            className={`relative inline-flex h-full shrink-0 items-center whitespace-nowrap rounded-btn px-1.5 text-[14px] min-[1440px]:px-2.5 ${
+              l.foldable ? "hidden min-[1500px]:inline-flex" : ""
             } font-semibold outline-none transition-colors duration-150 ease-out focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
               current ? "text-ink" : "text-muted hover:text-ink"
             }`}
@@ -69,12 +74,13 @@ export function DesktopNav() {
           </Link>
         );
       })}
+      </div>
 
       <button
         type="button"
         onClick={() => window.dispatchEvent(new CustomEvent(OPEN_NAV_EVENT))}
         aria-haspopup="dialog"
-        className="inline-flex h-full items-center gap-1.5 whitespace-nowrap rounded-btn px-1.5 text-[14px] min-[1440px]:px-2.5 font-semibold text-muted outline-none transition-colors duration-150 ease-out hover:text-ink focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+        className="inline-flex h-full shrink-0 items-center gap-1.5 whitespace-nowrap rounded-btn px-1.5 text-[14px] min-[1440px]:px-2.5 font-semibold text-muted outline-none transition-colors duration-150 ease-out hover:text-ink focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       >
         More
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0">
