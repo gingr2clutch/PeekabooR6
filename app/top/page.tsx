@@ -7,6 +7,8 @@ import { ExploreNext } from "@/components/ExploreNext";
 import { getTopPeeks, type PeekWithContext } from "@/lib/db";
 import { rating, gradeTierColor, GRADED_THRESHOLDS } from "@/lib/rate";
 import { computeDirection, getSnapshotsForPeeks } from "@/lib/trends";
+import { FlameCrestMotion } from "@/components/FlameCrestMotion";
+import { DESKTOP_CREST, MOBILE_CREST, type Crest } from "@/lib/flame-crest";
 
 export const dynamic = "force-dynamic";
 
@@ -21,44 +23,93 @@ function voteLabel(votes: number) {
   return `${votes} ${votes === 1 ? "vote" : "votes"}`;
 }
 
-// --- Rafter fire: decorative flame tongues + embers rising from the beam.
-// Deterministic configs (no random, SSR-safe); negative delays start each one
-// mid-cycle so the fire is already alive on first paint. Purely CSS-animated.
-type Flame = { cls: string; left: string; w: number; h: number; dur: string; delay: string };
-const FIRE_FLAMES: Flame[] = [
-  // big soft background tongues — taller toward the center so the fire peaks
-  // in the middle (around the title) and tapers to the edges.
-  { cls: "arena-flame arena-flame--back", left: "16%", w: 78, h: 120, dur: "2.6s", delay: "-0.3s" },
-  { cls: "arena-flame arena-flame--back", left: "38%", w: 98, h: 210, dur: "3.1s", delay: "-1.4s" },
-  { cls: "arena-flame arena-flame--back", left: "58%", w: 90, h: 200, dur: "2.8s", delay: "-0.8s" },
-  { cls: "arena-flame arena-flame--back", left: "78%", w: 80, h: 126, dur: "3.3s", delay: "-1.9s" },
-  // tallest tongue dead-center, reaching up past the title
-  { cls: "arena-flame arena-flame--back", left: "48%", w: 116, h: 270, dur: "3.5s", delay: "-2.2s" },
-  { cls: "arena-flame arena-flame--front", left: "41%", w: 40, h: 208, dur: "1.95s", delay: "-0.6s" },
-  { cls: "arena-flame arena-flame--front", left: "52%", w: 38, h: 196, dur: "1.7s", delay: "-1.45s" },
-  // sharper bright front tongues (detail) — shorter at the edges
-  { cls: "arena-flame arena-flame--front", left: "8%", w: 34, h: 78, dur: "1.5s", delay: "-0.2s" },
-  { cls: "arena-flame arena-flame--front", left: "20%", w: 40, h: 104, dur: "1.75s", delay: "-0.95s" },
-  { cls: "arena-flame arena-flame--front", left: "31%", w: 38, h: 138, dur: "1.4s", delay: "-0.5s" },
-  { cls: "arena-flame arena-flame--front", left: "45%", w: 48, h: 176, dur: "1.85s", delay: "-1.25s" },
-  { cls: "arena-flame arena-flame--front", left: "56%", w: 40, h: 150, dur: "1.6s", delay: "-0.4s" },
-  { cls: "arena-flame arena-flame--front", left: "67%", w: 44, h: 112, dur: "1.8s", delay: "-1.05s" },
-  { cls: "arena-flame arena-flame--front", left: "80%", w: 36, h: 84, dur: "1.5s", delay: "-0.7s" },
-  { cls: "arena-flame arena-flame--front", left: "91%", w: 32, h: 74, dur: "1.65s", delay: "-0.25s" },
-];
-type Ember = { left: string; size: number; dur: string; delay: string; drift: string };
-const FIRE_EMBERS: Ember[] = [
-  { left: "12%", size: 3, dur: "3.2s", delay: "-0.4s", drift: "14px" },
-  { left: "24%", size: 2, dur: "3.8s", delay: "-1.7s", drift: "-10px" },
-  { left: "35%", size: 4, dur: "3.0s", delay: "-0.9s", drift: "8px" },
-  { left: "46%", size: 2, dur: "4.1s", delay: "-2.3s", drift: "-16px" },
-  { left: "54%", size: 3, dur: "3.5s", delay: "-0.2s", drift: "12px" },
-  { left: "63%", size: 2, dur: "3.9s", delay: "-1.3s", drift: "-8px" },
-  { left: "72%", size: 4, dur: "3.1s", delay: "-2.0s", drift: "16px" },
-  { left: "84%", size: 3, dur: "3.6s", delay: "-0.7s", drift: "-12px" },
-  { left: "93%", size: 2, dur: "4.0s", delay: "-1.9s", drift: "9px" },
-];
+// --- Rafter flame crest -------------------------------------------------
+// Sharp, flat vector flames. The geometry is static, seeded data built once in
+// lib/flame-crest.ts (SSR-safe, no runtime randomness); this component only
+// renders it. Animation is transform/opacity on each tongue, so the compositor
+// does the work and nothing repaints.
+function FlameCrest({ crest, variant }: { crest: Crest; variant: "d" | "m" }) {
+  return (
+    <svg
+      className={`crest-svg crest-svg--${variant}`}
+      viewBox={`0 0 ${crest.width} ${crest.height}`}
+      preserveAspectRatio="none"
+      aria-hidden
+      focusable="false"
+    >
+      <defs>
+        {crest.layers.map((l) => (
+          // bottom -> top, so the deeper colour sits at the base of each tongue
+          <linearGradient key={l.id} id={`fc-${l.id}`} x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stopColor={l.from} />
+            <stop offset="100%" stopColor={l.to} />
+          </linearGradient>
+        ))}
+      </defs>
+      {crest.layers.map((l) => (
+        <g
+          key={l.id}
+          className="crest-layer"
+          style={
+            {
+              "--drift-dur": `${l.driftDur}s`,
+              "--drift-delay": `${l.driftDelay}s`,
+            } as CSSProperties
+          }
+        >
+          {/* solid band along the bottom edge — the banner cords hang off this */}
+          <rect
+            x="0"
+            y={crest.height - l.baseH}
+            width={crest.width}
+            height={l.baseH}
+            fill={`url(#fc-${l.id})`}
+          />
+          {l.tongues.map((t, i) => (
+            <path
+              key={i}
+              className={t.anim ? "crest-tongue" : undefined}
+              d={t.d}
+              fill={`url(#fc-${l.id})`}
+              style={
+                t.anim
+                  ? ({
+                      "--dur": `${t.dur}s`,
+                      "--delay": `${t.delay}s`,
+                    } as CSSProperties)
+                  : undefined
+              }
+            />
+          ))}
+        </g>
+      ))}
+    </svg>
+  );
+}
 
+function CrestEmbers({ crest, variant }: { crest: Crest; variant: "d" | "m" }) {
+  return (
+    <div className={`crest-embers crest-embers--${variant}`} aria-hidden>
+      {crest.embers.map((e, i) => (
+        <span
+          key={i}
+          className="crest-ember"
+          style={
+            {
+              left: e.left,
+              width: e.size,
+              height: e.size,
+              "--from": `${e.from}px`,
+              "--drift": e.drift,
+              "--dur": `${e.dur}s`,
+              "--delay": `${e.delay}s`,
+            } as CSSProperties
+          }
+        />
+      ))}
+    </div>
+  );
+}
 export default async function TopPeeksPage() {
   const peeks = await getTopPeeks(10);
 
@@ -96,46 +147,15 @@ export default async function TopPeeksPage() {
         {/* Rafter header — dark, full-bleed, with the beam at its bottom edge.
             Rendered server-side so there's no flash against the cream page. */}
         <section className="arena-rafter">
-          {/* Decorative fire rising from the beam up around the title. */}
-          <div className="arena-fire" aria-hidden>
-            <span className="arena-fire-glow" />
-            {/* All tongues live in one group so a group-level blur + blend
-                fuses them into a single continuous flame. */}
-            <div className="arena-flames">
-              {FIRE_FLAMES.map((f, i) => (
-                <span
-                  key={`f${i}`}
-                  className={f.cls}
-                  style={
-                    {
-                      left: f.left,
-                      width: f.w,
-                      height: f.h,
-                      marginLeft: -f.w / 2,
-                      "--dur": f.dur,
-                      "--delay": f.delay,
-                    } as CSSProperties
-                  }
-                />
-              ))}
-            </div>
-            {FIRE_EMBERS.map((e, i) => (
-              <span
-                key={`e${i}`}
-                className="arena-ember"
-                style={
-                  {
-                    left: e.left,
-                    width: e.size,
-                    height: e.size,
-                    "--dur": e.dur,
-                    "--delay": e.delay,
-                    "--drift": e.drift,
-                  } as CSSProperties
-                }
-              />
-            ))}
-          </div>
+          {/* Decorative flame crest rising from the beam around the title.
+              The SVGs are server-rendered; FlameCrestMotion is a client shell
+              that only pauses the animation while the header is off screen. */}
+          <FlameCrestMotion>
+            <FlameCrest crest={DESKTOP_CREST} variant="d" />
+            <FlameCrest crest={MOBILE_CREST} variant="m" />
+            <CrestEmbers crest={DESKTOP_CREST} variant="d" />
+            <CrestEmbers crest={MOBILE_CREST} variant="m" />
+          </FlameCrestMotion>
           <div className="site-shell mx-auto max-w-3xl px-4 pb-14 pt-8 text-center sm:pt-10">
             <div className="arena-eyebrow">
               <span className="arena-eyebrow-rule" aria-hidden />
