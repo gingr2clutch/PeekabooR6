@@ -352,17 +352,23 @@ export function AdSlot({
           : { height: boxHeight, maxWidth: "100%", overflow: "hidden" }
       }
     >
-      {/* The tinted frame, sized to the creative rather than to the column.
-          width:fit-content keeps a 300x250 from sitting on a 1100px band of
-          grey on desktop; min-width holds the smallest unit we request so an
-          unfilled box still reads as a deliberate space. Height is the full box
-          either way, which is what makes this shift-free. */}
+      {/* The tinted frame.
+          Below lg it is sized to the creative: width:fit-content keeps a
+          300x250 from sitting on a band of grey, and min-width holds the
+          smallest unit we request so an unfilled box still reads as a
+          deliberate space.
+          At lg it is a fixed 970px — the widest desktop creative we ask for —
+          capped at the column. Fit-content was leaving a 300x250 (or an
+          unfilled box) as a small grey square adrift in a wide empty band once
+          the desktop layout went wide.
+          Width lives in classes, not in the style object: an inline style has
+          no media query, and this has to differ by breakpoint. Height is the
+          full box at every width, and the width is fixed from first paint by
+          CSS alone, so nothing moves when a creative arrives or fails to. */}
       <div
-        className="mx-auto flex flex-col items-center rounded-card bg-ink/[0.04]"
+        className="mx-auto flex w-fit min-w-[300px] flex-col items-center rounded-card bg-ink/[0.04] lg:w-[970px]"
         style={{
           height: "100%",
-          width: "fit-content",
-          minWidth: 300,
           maxWidth: "100%",
           overflow: "hidden",
         }}
