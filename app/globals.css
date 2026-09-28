@@ -3461,3 +3461,144 @@ html:not(.reveal-ready) .csa-anim {
     font-size: 15px;
   }
 }
+
+/* --- Map page: ranked leaderboard table (lg+) -----------------------------
+   Desktop only. Below lg the ranked view keeps its stacked cards, which are a
+   separate element in the markup — these rules never apply there.
+
+   role="table" on a grid rather than a real <table>: the row link has to cover
+   the whole row, and `position: relative` on a <tr> is not reliably honoured
+   across engines. A grid row is an ordinary positioned box, so `inset: 0` on
+   the link just works, and the ARIA roles keep the semantics a table would
+   have given. */
+.mrt {
+  border: 1px solid var(--border, #e6dfcf);
+  border-radius: 18px;
+  background: #fff;
+  overflow: hidden;
+}
+.mrt-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 84px 1fr 210px 120px 100px 130px 70px;
+  align-items: center;
+  padding: 0 22px;
+}
+.mrt-head {
+  height: 46px;
+  background: #faf8f4;
+  border-bottom: 1px solid var(--border, #e6dfcf);
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8a8274;
+}
+.mrt-body .mrt-row {
+  height: 58px;
+  border-top: 1px solid rgba(230, 223, 207, 0.7);
+}
+.mrt-body .mrt-row:first-child {
+  border-top: 0;
+}
+/* Zebra first, hover after, so hover always wins on an even row. */
+.mrt-body .mrt-row:nth-child(even) {
+  background: #fcfbf8;
+}
+.mrt-body .mrt-row:hover {
+  background: #fdf4ec;
+}
+.mrt-body .mrt-row:hover .mrt-name {
+  color: #f2640e;
+}
+/* Covers the whole row. z-index 1 keeps it under the favourite button. */
+.mrt-rowlink {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.mrt-rowlink:focus-visible {
+  outline: 2px solid #0e8f8b;
+  outline-offset: -3px;
+  border-radius: 10px;
+}
+.mrt-name {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: #1b1813;
+  transition: color 150ms ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Floor pill */
+.mrt-floor {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #f1eee7;
+  font-size: 13px;
+  color: #6b6558;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mrt-votes {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 13.5px;
+  color: #6b6558;
+  font-variant-numeric: tabular-nums;
+}
+/* The favourite button sits above the row link so it does not navigate. */
+.mrt-fav {
+  position: relative;
+  z-index: 2;
+  justify-self: end;
+}
+/* Rank medal. Same metal treatment as the Top Peeks coins, at 34px — its own
+   class rather than .arena-coin, which is 44/54px and belongs to the pennants. */
+.mrt-coin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #1b1813;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.8),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.26),
+    0 0 0 1px rgba(0, 0, 0, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.22);
+}
+.mrt-coin--1 {
+  background-image:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 40%),
+    radial-gradient(circle at 68% 80%, rgba(120, 80, 0, 0.28), transparent 46%),
+    radial-gradient(circle at 35% 30%, #ffe79c, #e0a915);
+}
+.mrt-coin--2 {
+  background-image:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0) 42%),
+    radial-gradient(circle at 68% 80%, rgba(60, 60, 60, 0.3), transparent 46%),
+    radial-gradient(circle at 35% 30%, #fbfbfb, #b6b6b6);
+}
+.mrt-coin--3 {
+  color: #2a1c0e;
+  background-image:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 40%),
+    radial-gradient(circle at 68% 80%, rgba(80, 40, 0, 0.32), transparent 46%),
+    radial-gradient(circle at 35% 30%, #f0c08a, #c07b3a);
+}
+/* Ranks 4+ — flat, no metal. */
+.mrt-coin--n {
+  color: #6b6558;
+  background: #f1eee7;
+  box-shadow: none;
+}
