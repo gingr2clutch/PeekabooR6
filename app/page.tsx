@@ -11,6 +11,7 @@ import {
 import { BackToTop } from "@/components/BackToTop";
 import PeekabooIntro from "@/components/PeekabooIntro";
 import { SubmitSpot } from "@/components/SubmitSpot";
+import { FutureMapSlots } from "@/components/FutureMapSlots";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { PEEK_SUBMIT } from "@/lib/submit-config";
 import { nitroEnabled } from "@/lib/ad-env";
@@ -231,6 +232,13 @@ export default async function Home() {
               </Fragment>
             );
           })}
+          {/* Fills the ragged end of the last row. Ordered after the last
+              card, so the in-grid ad's row boundary is untouched. */}
+          <FutureMapSlots
+            mapCount={maps.length}
+            orderStep={CARD_ORDER_STEP}
+            reveal
+          />
         </ul>
 
         {/* Fallback placement: too few maps for a row boundary inside the
