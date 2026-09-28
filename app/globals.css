@@ -3448,3 +3448,16 @@ html:not(.reveal-ready) .csa-anim {
   -webkit-line-clamp: none;
   overflow: visible;
 }
+
+/* --- Floor page, desktop only ---------------------------------------------
+   "Ranked by grade" lives inside components/FloorView.tsx, which this change
+   is not allowed to edit, so it is reached from the wrapper instead. It is the
+   only direct-child <p> of FloorView's fragment — the map is a div, and the
+   mobile card's <p> is nested inside its own div — so the child combinator
+   cannot pick up anything else. 0,1,1 beats the element's own text-[13px]
+   utility (0,1,0), so no !important is needed. */
+@media (min-width: 1024px) {
+  .floor-stage > p {
+    font-size: 15px;
+  }
+}

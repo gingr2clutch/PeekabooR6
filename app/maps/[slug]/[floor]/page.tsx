@@ -110,27 +110,27 @@ export default async function FloorPage({
           <div className="mb-3">
             <Link
               href={`/maps/${map.slug}`}
-              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-btn px-2.5 py-1 text-sm font-medium text-muted transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-btn px-2.5 py-1 text-sm font-medium text-muted transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand lg:text-base"
             >
               <BackArrowIcon />
               <span>{map.name}</span>
             </Link>
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight">
+          <h1 className="text-3xl font-semibold tracking-tight lg:text-[52px] lg:font-bold lg:leading-[1.05] lg:tracking-[-0.02em]">
             {map.name} · {floor.name}
           </h1>
-          <p className="mt-2 text-muted">
+          <p className="mt-2 text-muted lg:mt-3 lg:text-xl">
             Spawn peeks · click any pin for details
           </p>
           {allFloors.length > 1 && (
             <nav
               aria-label="Floors"
-              className="mt-5 flex flex-wrap justify-center gap-2"
+              className="mt-5 flex flex-wrap justify-center gap-2 lg:mt-7 lg:gap-3"
             >
               {allFloors.map((f) => {
                 const isCurrent = f.id === floor.id;
                 const base =
-                  "inline-flex items-center rounded-btn px-3 py-1.5 text-sm font-medium transition-all duration-150 ease-out";
+                  "inline-flex items-center rounded-btn px-3 py-1.5 text-sm font-medium transition-all duration-150 ease-out lg:px-6 lg:py-3 lg:text-lg";
                 const state = isCurrent
                   ? "bg-brand text-white shadow-sm"
                   : "border border-border bg-card text-ink hover:border-brand hover:text-brand";
@@ -156,7 +156,14 @@ export default async function FloorPage({
           )}
         </div>
 
-        <FloorView map={map} floor={floor} peeks={positioned} />
+        {/* Caps the map at 960px on desktop (it filled ~1235px at 1470). Only
+            a wrapper — FloorView is untouched. The map keeps aspect-[16/10]
+            w-full, so it stays 16:10 and the pins, which are positioned in
+            percentages, scale with it. `floor-stage` also carries the one rule
+            that reaches "Ranked by grade" inside FloorView (globals.css). */}
+        <div className="floor-stage lg:mx-auto lg:max-w-[960px]">
+          <FloorView map={map} floor={floor} peeks={positioned} />
+        </div>
 
         {peeks.length === 0 && (
           <p className="mt-6 text-center text-sm text-muted">
@@ -165,7 +172,7 @@ export default async function FloorPage({
         )}
 
         {saRank && (
-          <p className="mt-6 text-center text-[13px] text-muted">
+          <p className="mt-6 text-center text-[13px] text-muted lg:text-[15px]">
             {floor.name} ranks {ordinal(saRank.rank)}{" "}
             <Link href={`/maps/${map.slug}`} className="hover:text-brand">
               of {saRank.total}
