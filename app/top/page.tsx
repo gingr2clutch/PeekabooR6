@@ -5,9 +5,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { ExploreNext } from "@/components/ExploreNext";
 import { getTopPeeks, type PeekWithContext } from "@/lib/db";
-import { rating, gradeTierColor } from "@/lib/rate";
+import { rating, gradeTierColor, GRADED_THRESHOLDS } from "@/lib/rate";
 import { computeDirection, getSnapshotsForPeeks } from "@/lib/trends";
-import { isPeekNew } from "@/lib/peek-recency";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +72,23 @@ export default async function TopPeeksPage() {
   const banners = peeks.slice(0, 3); // ranks 1–3
   const climbing = peeks.slice(3); // ranks 4+
 
+  // Climbing, grouped into grade tiers. Same peeks and the same order as the
+  // flat list this replaces — rank is still position in `peeks`, so the
+  // numbers shown are the real overall ranks, not a per-tier count.
+  const climbEntries = climbing.map((peek, i) => ({
+    peek,
+    rank: i + 4,
+    falling: computeDirection(trends.get(peek.id) ?? []) === "down",
+    r: rating(peek.base_success_rate, peek.worked_votes, peek.vote_count),
+  }));
+  // GRADED_THRESHOLDS is already ordered best-first and covers every label
+  // rating() can return, so walking it both orders the tiers and drops the
+  // empty ones without a second list of grades to keep in sync.
+  const tiers = GRADED_THRESHOLDS.map((t) => ({
+    label: t.label,
+    items: climbEntries.filter((e) => e.r.label === t.label),
+  })).filter((t) => t.items.length > 0);
+
   return (
     <>
       <PageHeader />
@@ -133,47 +149,111 @@ export default async function TopPeeksPage() {
           </div>
         </section>
 
+        {/* The podium is its own block, OUTSIDE the list below, for two
+            reasons. It needs to be wider than the max-w-3xl the rest of the
+            page uses — the rod is up to 1220px — and being in the same flex
+            list as the ad is what put the ad above it: .arena-list is a flex
+            container, the banners carried order 1/2/3, and the ad <li> had no
+            order at all, so its default 0 sorted it ahead of all three. Out
+            here the ad simply follows in document order. */}
+        {peeks.length > 0 && (
+          <div className="site-shell mx-auto max-w-[1260px] px-4">
+            <div className="pnt">
+              <div className="pnt-group pnt-group--champ">
+                <span className="pnt-rod" aria-hidden />
+                <div className="pnt-hang">
+                  <Pennant peek={banners[0]} rank={1} />
+                </div>
+              </div>
+              {banners.length > 1 && (
+                <div className="pnt-group pnt-group--pair">
+                  <span className="pnt-rod" aria-hidden />
+                  <div className="pnt-hang">
+                    {banners[1] && <Pennant peek={banners[1]} rank={2} />}
+                    {banners[2] && <Pennant peek={banners[2]} rank={3} />}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* The ad sits between the podium above and Climbing below, at every
+            width. Same container, same id, same className — only its place in
+            the document moved. It is no longer wrapped in an <li>, because the
+            list it used to be a child of is gone; that <li> was list
+            scaffolding, not part of the ad. */}
+        <div className="site-shell mx-auto max-w-3xl px-4">
+          <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
+        </div>
+
         <div className="site-shell mx-auto max-w-3xl px-4">
           {peeks.length === 0 ? (
             <p className="mt-10 text-center text-sm text-muted">
               Once peeks start collecting votes they&rsquo;ll show up here.
             </p>
           ) : (
-            <ol className="arena-list">
-              {banners.map((peek, i) => (
-                <Banner key={peek.id} peek={peek} rank={i + 1} />
-              ))}
-
-              {/* content-1 — below the podium, above CLIMBING. Inside the
-                  <ol>, so it is wrapped in an <li> to stay valid. */}
-              {/* lg:w-full — .arena-list is flex-wrap, so a bare <li>
-                  shrink-wrapped to the ad frame's 300px min-width and sat in a
-                  1235px column on desktop. Gated to lg because widening it at
-                  every size would move the ad on mobile, which this pass is
-                  not allowed to touch. */}
-              <li className="lg:w-full">
-                <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
-              </li>
-
-              {climbing.length > 0 && (
-                <li className="arena-climb-head" aria-hidden="true">
+            tiers.length > 0 && (
+              <>
+                <div className="arena-climb-head" aria-hidden="true">
                   <span className="arena-climb-dot" />
                   <span className="arena-climb-label">Climbing</span>
                   <span className="arena-climb-rule" />
-                </li>
-              )}
+                </div>
 
-              {climbing.map((peek, i) => (
-                <ClimbRow
-                  key={peek.id}
-                  peek={peek}
-                  rank={i + 4}
-                  falling={
-                    computeDirection(trends.get(peek.id) ?? []) === "down"
-                  }
-                />
-              ))}
-            </ol>
+                <ol className="tier-list">
+                  {tiers.map((tier) => {
+                    const color = gradeTierColor(tier.label);
+                    return (
+                      <li className="tier" key={tier.label}>
+                        <div
+                          className="tier-badge"
+                          style={{ backgroundColor: color }}
+                          aria-hidden="true"
+                        >
+                          <span className="tier-grade">{tier.label}</span>
+                          <span className="tier-word">Tier</span>
+                        </div>
+                        <ol className="tier-items">
+                          {tier.items.map(({ peek, rank, falling }) => {
+                            const floor = peek.floors!;
+                            const map = floor.maps;
+                            const votes = peek.vote_count ?? 0;
+                            return (
+                              <li key={peek.id}>
+                                <Link
+                                  href={`/peeks/${peek.slug}?from=top`}
+                                  aria-label={`Open peek: ${peek.name}, ${map.name}`}
+                                  className="tier-chip"
+                                >
+                                  <span className="tier-chip-top">
+                                    <span className="tier-chip-rank">
+                                      #{rank}
+                                    </span>
+                                    {falling && (
+                                      <span className="tier-chip-down">▼</span>
+                                    )}
+                                    <span className="tier-chip-votes">
+                                      {voteLabel(votes)}
+                                    </span>
+                                  </span>
+                                  <span className="tier-chip-name">
+                                    {peek.name}
+                                  </span>
+                                  <span className="tier-chip-loc">
+                                    {map.name} · {floor.name}
+                                  </span>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ol>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </>
+            )
           )}
         </div>
 
@@ -189,100 +269,59 @@ export default async function TopPeeksPage() {
   );
 }
 
-function Banner({ peek, rank }: { peek: PeekWithContext; rank: number }) {
+// One hanging pennant. The whole banner is the link — a real <a>, so it is
+// reachable by keyboard, opens in a new tab on middle-click, and carries the
+// same ?from=top the rest of the page uses.
+function Pennant({ peek, rank }: { peek: PeekWithContext; rank: number }) {
   const floor = peek.floors!;
   const map = floor.maps;
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   const votes = peek.vote_count ?? 0;
 
   return (
-    <li className={`arena-banner arena-banner--${rank}`}>
-      <Link href={`/peeks/${peek.slug}?from=top`} className="arena-banner-card">
+    // Wrapper carries the shadow: clip-path cuts a box-shadow off with the
+    // rest of the box, so the depth has to come from a filter on the parent.
+    <div className={`pnt-item pnt-item--${rank}`}>
+      <Link
+        href={`/peeks/${peek.slug}?from=top`}
+        aria-label={`Open peek: ${peek.name}, ${map.name}`}
+        className={`pnt-card pnt-card--${rank}`}
+      >
         {rank === 1 && (
-          <span className="arena-crown" aria-hidden>
+          <span className="pnt-crown" aria-hidden>
             👑
           </span>
         )}
-        <span className={`arena-coin arena-coin--${rank}`} aria-hidden>
+        <span className={`arena-coin arena-coin--${rank} pnt-coin`} aria-hidden>
           {rank}
         </span>
-        <span className="arena-name">{peek.name}</span>
-        <span className="arena-loc">
+        <span className="pnt-name">{peek.name}</span>
+        <span className="pnt-loc">
           {map.name} · {floor.name}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span
-            className="arena-grade"
-            style={{ backgroundColor: gradeTierColor(r.label) }}
-            aria-label={`Grade ${r.label}`}
-          >
-            {r.label}
-          </span>
-        </span>
-        <span className="arena-votes">{voteLabel(votes)}</span>
-      </Link>
-    </li>
-  );
-}
-
-function ClimbRow({
-  peek,
-  rank,
-  falling,
-}: {
-  peek: PeekWithContext;
-  rank: number;
-  falling: boolean;
-}) {
-  const floor = peek.floors!;
-  const map = floor.maps;
-  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
-  const votes = peek.vote_count ?? 0;
-
-  return (
-    // Only the climbing rows reveal. The banners above keep the arena's own
-    // entrance — ranks 1-3 are the showcase, and a generic slide-up would
-    // fight the pennant treatment.
-    <li
-      className="arena-climb"
-      data-reveal="quick"
-      style={
-        {
-          "--reveal-delay": `${Math.min(Math.max(rank - 4, 0), 5) * 50}ms`,
-        } as CSSProperties
-      }
-    >
-      <Link
-        href={`/peeks/${peek.slug}?from=top`}
-        className="arena-climb-link"
-        style={{ ["--tier"]: gradeTierColor(r.label) } as CSSProperties}
-      >
-        <span className="arena-climb-rank">{rank}</span>
-        <span className="arena-climb-main">
-          <span className="arena-climb-name">
-            <span className="arena-climb-nametext">{peek.name}</span>
-            {isPeekNew(peek.created_at) && (
-              <span className="arena-newpill">New</span>
-            )}
-            {falling && (
-              <span className="arena-trend-down" aria-label="Trend falling">
-                ▼
-              </span>
-            )}
-          </span>
-          <span className="arena-climb-loc">
-            {map.name} · {floor.name}
-          </span>
-        </span>
+        {/* Colour still comes from gradeTierColor, never a fixed green — the
+            grade tiers are not allowed to collapse into one colour. */}
         <span
-          className="arena-chip"
+          className="arena-grade pnt-grade"
           style={{ backgroundColor: gradeTierColor(r.label) }}
           aria-label={`Grade ${r.label}`}
         >
           {r.label}
         </span>
-        <span className="arena-climb-votes">{voteLabel(votes)}</span>
+        <span className="pnt-spacer" aria-hidden />
+        <span className="pnt-watch" aria-hidden>
+          <span className="pnt-watch-glyph">▶</span>
+          {/* The desktop wording is fixed; the mobile wording depends only on
+              rank, which is known here, so only one of the two needs a
+              breakpoint to choose between them. */}
+          <span className="pnt-watch-desk">Watch peek</span>
+          <span className="pnt-watch-mob">
+            {rank === 1 ? "Tap to watch" : "Watch"}
+          </span>
+        </span>
+        <span className="pnt-votes">{voteLabel(votes)}</span>
       </Link>
-    </li>
+    </div>
   );
 }
+
