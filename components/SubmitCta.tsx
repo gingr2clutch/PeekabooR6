@@ -26,6 +26,10 @@ const AUTH_PATHS = new Set([
   "/reset-password",
 ]);
 
+// Map pages only — /maps/coastline, not /maps/coastline/first-floor, its
+// /trends or /attacking. Those keep the bar.
+const MAP_ROOT = /^\/maps\/[^/]+$/;
+
 function isExcluded(pathname: string): boolean {
   if (EXCLUDED_EXACT.has(pathname)) return true;
   if (AUTH_PATHS.has(pathname)) return true;
@@ -43,6 +47,12 @@ export function SubmitCta() {
     ? "/gadgets#submit-gadget"
     : "/#submit";
 
+  // A map page carries its own "Submit a clip" picture card at lg, so the thin
+  // sitewide bar would repeat the same ask twice on one screen. Hidden with a
+  // class rather than returned as null: below lg there is no picture card, and
+  // the bar has to stay exactly as it is on phones.
+  const hideAtLg = MAP_ROOT.test(pathname);
+
   return (
     // Almost no margin of its own — it used to add mt-8 on top of whatever
     // bottom padding the page already had, which stacked into a band of dead
@@ -51,7 +61,9 @@ export function SubmitCta() {
     // NOTE the page still contributes its own <main> padding-bottom, so the
     // visible gap is that plus this. Reducing it is a per-page change; the map
     // page does so, other pages still carry their original padding.
-    <div className="site-shell mt-2 px-4 sm:px-6">
+    <div
+      className={`site-shell mt-2 px-4 sm:px-6${hideAtLg ? " lg:hidden" : ""}`}
+    >
       <div className="mx-auto max-w-3xl rounded-card border border-border bg-card p-4 shadow-sm lg:max-w-none lg:p-5">
         <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-between sm:gap-4 sm:text-left">
           <div className="flex items-center gap-3">

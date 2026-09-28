@@ -626,12 +626,22 @@ export default async function MapPage({
         {/* ROW 7 — guide card + summary. Wrapped in a grid at lg; below lg the
             two children stack exactly as they do today. */}
         <div className="lg:grid lg:grid-cols-12 lg:gap-6">
+        {/* Left column. display:contents below lg, so this wrapper creates no
+            box and the guide and the summary keep their exact position in the
+            mobile flow. At lg it BECOMES the card — one bordered box with the
+            guide on top and the summary as its bottom row — which is how the
+            summary lands inside the card without the sentence being duplicated
+            or moved out of the document order crawlers see. */}
+        <div className="contents lg:col-span-8 lg:mt-14 lg:flex lg:flex-col lg:rounded-card lg:border lg:border-border lg:bg-card lg:p-10 lg:shadow-sm">
         {MAP_GUIDES[map.slug] && (
-          <section className="mx-auto mt-10 max-w-2xl text-center md:mt-8 lg:col-span-8 lg:mt-14 lg:max-w-none lg:rounded-card lg:border lg:border-border lg:bg-card lg:px-8 lg:py-7 lg:text-left lg:shadow-sm">
-            <h2 className="mb-3 text-xl font-bold tracking-tight text-ink lg:mb-4 lg:text-2xl">
+          <section className="mx-auto mt-10 max-w-2xl text-center md:mt-8 lg:mx-0 lg:mt-0 lg:max-w-none lg:text-left">
+            <span className="hidden font-mono text-[12px] uppercase tracking-[0.18em] text-brand lg:block">
+              {map.name} Guide
+            </span>
+            <h2 className="mb-3 text-xl font-bold tracking-tight text-ink lg:mb-4 lg:mt-2.5 lg:text-[24px] lg:font-extrabold lg:[text-wrap:balance] xl:text-[30px]">
               {MAP_GUIDES[map.slug].heading}
             </h2>
-            <p className="mx-auto max-w-[65ch] text-[15px] leading-relaxed text-ink/80 lg:mx-0">
+            <p className="mx-auto max-w-[65ch] text-[15px] leading-relaxed text-ink/80 lg:mx-0 lg:max-w-[70ch] lg:text-[17px] lg:leading-[1.7]">
               {MAP_GUIDES[map.slug].intro}
             </p>
             {/* The rest folds away, but it is NOT conditionally rendered: a
@@ -645,7 +655,11 @@ export default async function MapPage({
             {MAP_GUIDES[map.slug].sections.length > 0 && (
               <details className="group mt-5 map-guide-more">
                 <summary className="mx-auto inline-flex lg:mx-0 cursor-pointer list-none items-center gap-1.5 rounded-btn text-sm font-semibold text-brand hover:underline [&::-webkit-details-marker]:hidden">
-                  <span className="group-open:hidden">Read more</span>
+                  {/* Same control, longer label where there is room for it. */}
+                  <span className="group-open:hidden lg:hidden">Read more</span>
+                  <span className="hidden group-open:hidden lg:group-open:hidden lg:inline">
+                    Read the full guide
+                  </span>
                   <span className="hidden group-open:inline">Show less</span>
                   <ChevronIcon />
                 </summary>
@@ -674,8 +688,8 @@ export default async function MapPage({
             rather than moved into it. Visually the badge carries it; in the
             markup the sentence is still whole. */}
         {totalPeeks > 0 && (
-          <div className="mx-auto mt-10 max-w-2xl md:mt-8 lg:col-span-4 lg:mt-14 lg:max-w-none">
-            <div className="flex flex-col items-center gap-2.5 rounded-card border border-border bg-card px-5 py-4 text-center shadow-sm lg:gap-3 lg:px-8 lg:py-6">
+          <div className="mx-auto mt-10 max-w-2xl md:mt-8 lg:mx-0 lg:mt-auto lg:max-w-none lg:pt-6">
+            <div className="flex flex-col items-center gap-2.5 rounded-card border border-border bg-card px-5 py-4 text-center shadow-sm lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:rounded-none lg:border-x-0 lg:border-b-0 lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-5 lg:text-left lg:shadow-none">
               <p className="max-w-[65ch] text-sm leading-relaxed text-muted">
                 Community-graded spawn peeks for {map.name} — pick a floor to
                 see exact spots, watch clips, and learn the setups.
@@ -688,7 +702,7 @@ export default async function MapPage({
               {lastUpdatedLabel && (
                 <span
                   aria-hidden="true"
-                  className="inline-flex items-center gap-1.5 rounded-btn border border-border bg-bg px-2.5 py-1 text-[11px] font-medium text-muted"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-btn border border-border bg-bg px-2.5 py-1 text-[11px] font-medium text-muted"
                 >
                   <span className="h-1.5 w-1.5 rounded-full bg-brand" />
                   Updated {lastUpdatedLabel}
@@ -698,9 +712,117 @@ export default async function MapPage({
           </div>
         )}
         </div>
+
+        {/* Right column, lg only — the ask that the sitewide bar makes on
+            every other page, given a picture and this map's accent. The
+            wrapper is the grid item and stretches to the row height; the card
+            inside is what sticks, which is why they are two elements. */}
+        <div className="hidden lg:col-span-4 lg:mt-14 lg:block">
+          <aside
+            style={{ borderColor: mapAccent(map.slug) }}
+            className="relative flex h-full max-h-[640px] flex-col overflow-hidden rounded-card border-[3px] bg-[#14150f] p-10 shadow-sm lg:sticky lg:top-6"
+          >
+            {/* Lazy, and inside a display:none subtree below lg — a lazy
+                image with no box is never near the viewport, so phones never
+                download it. Maps without a cover keep the flat dark card. */}
+            {map.cover_image_url && (
+              <Image
+                src={coverThumb(map.cover_image_url, 700)}
+                alt=""
+                aria-hidden
+                fill
+                sizes="420px"
+                loading="lazy"
+                className="pointer-events-none object-cover object-center"
+              />
+            )}
+            {/* Same bottom-weighted scrim as the top-peek card, carried
+                further up: the text block here is taller, so it reaches into
+                stops that card never used. */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 block"
+              style={{
+                backgroundImage:
+                  "linear-gradient(to top, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.90) 34%, rgba(0,0,0,0.82) 58%, rgba(0,0,0,0.60) 78%, rgba(0,0,0,0.30) 100%)",
+              }}
+            />
+
+            {/* In flow, not absolute, so it starts at the same 40px from the
+                top as the guide's eyebrow opposite. */}
+            <span
+              aria-hidden
+              className="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-btn border border-white/20 bg-black/45 text-white backdrop-blur-sm"
+            >
+              <CameraIcon />
+            </span>
+
+            <div className="relative z-10 mt-auto">
+              <span className="block font-mono text-[12px] uppercase tracking-[0.18em] text-[#ffb07a]">
+                Help grade {map.name}
+              </span>
+              <h2 className="mt-2.5 text-[24px] font-extrabold leading-[1.1] tracking-tight text-white [text-wrap:balance] xl:text-[30px]">
+                Got a clip of a peek we&rsquo;re missing?
+              </h2>
+              <p className="mt-2 text-[15px] leading-relaxed text-white/85">
+                Send it in and the community grades it.
+              </p>
+              {/* The button is the link, not the card: this sits beside an ad
+                  slot, and a card-sized tap target next to one is exactly the
+                  accident we do not want. */}
+              <a
+                href="/#submit"
+                className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-btn bg-brand px-4 py-3 text-[15px] font-semibold text-white transition duration-150 ease-out hover:-translate-y-0.5 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              >
+                Submit a clip
+                <ArrowIcon />
+              </a>
+            </div>
+          </aside>
+        </div>
+        </div>
         </MapEntryScope>
       </main>
     </>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="15"
+      height="15"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="shrink-0"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+function CameraIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className="shrink-0"
+    >
+      <path d="M23 7l-7 5 7 5V7z" />
+      <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+    </svg>
   );
 }
 
