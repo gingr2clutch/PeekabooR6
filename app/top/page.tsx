@@ -24,66 +24,57 @@ function voteLabel(votes: number) {
 }
 
 // --- Rafter flame crest -------------------------------------------------
-// Sharp, flat vector flames. The geometry is static, seeded data built once in
-// lib/flame-crest.ts (SSR-safe, no runtime randomness); this component only
-// renders it. Animation is transform/opacity on each tongue, so the compositor
-// does the work and nothing repaints.
+// Sharp, flat flames. Geometry is static seeded data from lib/flame-crest.ts
+// (SSR-safe, no runtime randomness); this only renders it.
+//
+// Each cluster is a plain div: the layer's gradient as a background, the merged
+// outline of 2-3 tongues as clip-path. Divs rather than SVG paths because a
+// transform animation on a div is composited, while the same animation on an
+// SVG child is not — that is what lets every flame move instead of a quarter of
+// them. See the note at the top of lib/flame-crest.ts.
 function FlameCrest({ crest, variant }: { crest: Crest; variant: "d" | "m" }) {
   return (
-    <svg
-      className={`crest-svg crest-svg--${variant}`}
-      viewBox={`0 0 ${crest.width} ${crest.height}`}
-      preserveAspectRatio="none"
-      aria-hidden
-      focusable="false"
-    >
-      <defs>
-        {crest.layers.map((l) => (
-          // bottom -> top, so the deeper colour sits at the base of each tongue
-          <linearGradient key={l.id} id={`fc-${l.id}`} x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stopColor={l.from} />
-            <stop offset="100%" stopColor={l.to} />
-          </linearGradient>
-        ))}
-      </defs>
-      {crest.layers.map((l) => (
-        <g
-          key={l.id}
-          className="crest-layer"
-          style={
-            {
-              "--drift-dur": `${l.driftDur}s`,
-              "--drift-delay": `${l.driftDelay}s`,
-            } as CSSProperties
-          }
-        >
-          {/* solid band along the bottom edge — the banner cords hang off this */}
-          <rect
-            x="0"
-            y={crest.height - l.baseH}
-            width={crest.width}
-            height={l.baseH}
-            fill={`url(#fc-${l.id})`}
-          />
-          {l.tongues.map((t, i) => (
-            <path
-              key={i}
-              className={t.anim ? "crest-tongue" : undefined}
-              d={t.d}
-              fill={`url(#fc-${l.id})`}
-              style={
-                t.anim
-                  ? ({
-                      "--dur": `${t.dur}s`,
-                      "--delay": `${t.delay}s`,
-                    } as CSSProperties)
-                  : undefined
-              }
+    <div className={`crest crest--${variant}`} aria-hidden>
+      {crest.layers.map((l) => {
+        const fill = `linear-gradient(0deg, ${l.from} 0%, ${l.to} 100%)`;
+        return (
+          <div
+            key={l.id}
+            className="crest-layer"
+            style={
+              {
+                "--sway-dur": `${l.swayDur}s`,
+                "--sway-delay": `${l.swayDelay}s`,
+              } as CSSProperties
+            }
+          >
+            {/* solid band along the bottom edge — the banner cords hang off
+                this, and it hides the seams between neighbouring clusters */}
+            <div
+              className="crest-base"
+              style={{ height: l.baseH, background: fill }}
             />
-          ))}
-        </g>
-      ))}
-    </svg>
+            {l.clusters.map((c, i) => (
+              <div
+                key={i}
+                className="crest-cl"
+                style={
+                  {
+                    left: c.left,
+                    width: c.width,
+                    height: c.height,
+                    background: fill,
+                    clipPath: `path("${c.path}")`,
+                    "--dur": `${c.dur}s`,
+                    "--delay": `${c.delay}s`,
+                  } as CSSProperties
+                }
+              />
+            ))}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -156,13 +147,13 @@ export default async function TopPeeksPage() {
             <CrestEmbers crest={DESKTOP_CREST} variant="d" />
             <CrestEmbers crest={MOBILE_CREST} variant="m" />
           </FlameCrestMotion>
-          <div className="site-shell mx-auto max-w-3xl px-4 pb-14 pt-8 text-center sm:pt-10">
-            <div className="arena-eyebrow">
-              <span className="arena-eyebrow-rule" aria-hidden />
-              <span>Hall of Peeks</span>
-              <span className="arena-eyebrow-rule" aria-hidden />
-            </div>
-            <h1 className="arena-title mt-5 text-5xl sm:text-6xl">Top Peeks</h1>
+          {/* No eyebrow here (Underrated keeps its own). arena-head--noeyebrow
+              gives back exactly the height the eyebrow occupied as EXTRA bottom
+              padding, so the rafter is the same height as before and nothing
+              below it moves — the text simply sits higher and the freed room
+              goes to the flames. */}
+          <div className="site-shell arena-head--noeyebrow mx-auto max-w-3xl px-4 pb-14 pt-8 text-center sm:pt-10">
+            <h1 className="arena-title text-5xl sm:text-6xl">Top Peeks</h1>
             <p className="arena-subline mt-4 text-base sm:text-lg">
               Banners hang for the community&rsquo;s best.
             </p>

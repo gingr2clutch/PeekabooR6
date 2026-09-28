@@ -1396,89 +1396,83 @@ h4 {
 }
 
 /* --- Rafter flame crest --------------------------------------------------
-   Replaces the old blurred-blob fire. That version animated a `filter: blur()`
-   group, which is the most expensive thing on the page to animate: blur forces
-   a full-surface repaint every frame, and stretched across a wide Mac it read
-   as an orange smudge rather than as fire. This one is flat vector shapes with
-   zero filters, so every frame is a compositor transform.
+   Flat vector flames, no filters. Each cluster is an absolutely positioned div
+   carrying its layer's gradient with the merged outline of 2-3 tongues as
+   clip-path, and the transform animation runs on that div.
 
-   The two SVGs render at a FIXED pixel height with preserveAspectRatio="none",
-   so only the horizontal axis stretches and the tongue heights baked into
-   lib/flame-crest.ts stay exact at every viewport width. That is what holds
-   the flames off the eyebrow, title and subline. */
+   Divs, not SVG paths, for one measured reason: Blink does not composite
+   transforms on SVG children, so every animated <path> costs main-thread style
+   and layout each frame (v1: ~305ms/3s with all of them moving, which is why it
+   shipped animating only 25%). A transform on a promoted div is handed to the
+   compositor, so all ~40 clusters can move for less than a quarter of them did
+   before. See lib/flame-crest.ts. */
 .arena-crest {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
 }
-.crest-svg {
+.crest {
   position: absolute;
-  left: 0;
-  bottom: 0;
-  display: block;
-  width: 100%;
-  pointer-events: none;
-}
-.crest-svg--d {
-  height: 200px;
-}
-.crest-svg--m {
-  height: 100px;
+  inset: 0;
 }
 @media (max-width: 767.98px) {
-  .crest-svg--d,
+  .crest--d,
   .crest-embers--d {
     display: none;
   }
 }
 @media (min-width: 768px) {
-  .crest-svg--m,
+  .crest--m,
   .crest-embers--m {
     display: none;
   }
 }
 
-/* Each tongue flickers from its own base.
-   NOT transform-box: fill-box. That resolves a percentage transform-origin
-   against each path's own bbox, which the browser then has to recompute every
-   frame — measured at ~190 forced layouts per 3s, and it made this crest more
-   expensive than the blurred fire it replaces. Every tongue sits on the SAME
-   baseline (y = the viewBox height), so the default view-box transform-box with
-   an absolute origin at that baseline anchors all of them identically for free:
-   scaleY is origin-x independent, and skewX shears by tan(angle) x distance
-   from the origin's y, which is the same for every tongue. */
-.crest-tongue {
-  animation: crest-flicker var(--dur, 2s) ease-in-out var(--delay, 0s) infinite
-    alternate;
+/* Whole layers sway against each other, out of phase, so the fire never reads
+   as one rigid row. Separate element from the clusters because the sway and the
+   flicker run at different durations and both animate `transform`. */
+.crest-layer {
+  position: absolute;
+  inset: 0;
+  animation: crest-sway var(--sway-dur, 6s) ease-in-out var(--sway-delay, 0s)
+    infinite alternate;
+  will-change: transform;
 }
-.crest-svg--d .crest-tongue {
-  transform-origin: 0 200px;
+@keyframes crest-sway {
+  0% {
+    transform: translate3d(-8px, 0, 0);
+  }
+  100% {
+    transform: translate3d(8px, 0, 0);
+  }
 }
-.crest-svg--m .crest-tongue {
-  transform-origin: 0 100px;
+
+/* Overhangs both edges so the sway never pulls the band off the corner. */
+.crest-base {
+  position: absolute;
+  left: -14px;
+  right: -14px;
+  bottom: 0;
 }
+
+.crest-cl {
+  position: absolute;
+  bottom: 0;
+  transform-origin: 50% 100%;
+  animation: crest-flicker var(--dur, 1.4s) ease-in-out var(--delay, 0s)
+    infinite alternate;
+  will-change: transform;
+}
+/* Bigger and quicker than v1: scaleY 0.85-1.18, skewX +-5deg, plus a small bob.
+   The bob stays smaller than .crest-base's height, so lifting a cluster never
+   opens a gap at its foot. */
 @keyframes crest-flicker {
   0% {
-    transform: scaleY(0.93) skewX(-2.5deg);
+    transform: translate3d(0, 0, 0) scaleY(0.85) skewX(-5deg);
   }
   100% {
-    transform: scaleY(1.1) skewX(2.5deg);
-  }
-}
-/* Whole layers slide against each other, out of phase, so the fire never reads
-   as one rigid row. */
-.crest-layer {
-  /* pure translate, so it needs no origin and no bbox either */
-  animation: crest-drift var(--drift-dur, 6s) ease-in-out var(--drift-delay, 0s)
-    infinite alternate;
-}
-@keyframes crest-drift {
-  0% {
-    transform: translateX(-5px);
-  }
-  100% {
-    transform: translateX(5px);
+    transform: translate3d(0, -3px, 0) scaleY(1.18) skewX(5deg);
   }
 }
 
@@ -1495,6 +1489,7 @@ h4 {
   opacity: 0;
   animation: crest-ember-rise var(--dur, 3.5s) ease-out var(--delay, 0s)
     infinite;
+  will-change: transform, opacity;
 }
 @keyframes crest-ember-rise {
   0% {
@@ -1508,17 +1503,25 @@ h4 {
     opacity: 0.8;
   }
   100% {
-    transform: translate3d(var(--drift, 0), -120px, 0) scale(0.35);
+    transform: translate3d(var(--drift, 0), -180px, 0) scale(0.35);
     opacity: 0;
   }
 }
 
 /* Off-screen header: stop every animation rather than let it burn CPU behind
    the fold. Toggled by components/FlameCrestMotion.tsx. */
-.arena-crest[data-paused="true"] .crest-tongue,
+.arena-crest[data-paused="true"] .crest-cl,
 .arena-crest[data-paused="true"] .crest-layer,
 .arena-crest[data-paused="true"] .crest-ember {
   animation-play-state: paused;
+}
+
+/* Top Peeks drops the eyebrow, so give its height back as bottom padding. The
+   rafter keeps the exact height it had, the title and subline move up, and the
+   room they vacate belongs to the flames. Value is measured, not guessed: see
+   the header-height check. */
+.arena-head--noeyebrow {
+  padding-bottom: calc(3.5rem + 46.9px);
 }
 
 
@@ -2411,7 +2414,7 @@ h4 {
   }
   /* Flames hold still and the embers go away; the crest itself stays, so the
      header keeps its shape and the banner cords still hang off the fire. */
-  .crest-tongue,
+  .crest-cl,
   .crest-layer {
     animation: none !important;
     transform: none !important;
