@@ -42,21 +42,8 @@ type NitroAd = { onNavigate?: () => void };
 
 export function NitroAnchorSlot({
   demo = false,
-  // ── WORKAROUND-ONLY (delete with NITRO_DOMAIN_WORKAROUND) ──
-  // Call this unit's own onNavigate() once, right after createAd resolves.
-  // Nitro's domain check fails inside createAd so the anchor never renders on
-  // its own; onNavigate() does not repeat that check and, for anchor formats,
-  // refreshes in place. See NITRO_DOMAIN_WORKAROUND in lib/ad-env.ts.
-  //
-  // This covers the page view that created the anchor — the FIRST one, which
-  // the route-change effect below cannot cover because it returns on mount.
-  // The anchor is created once and then lives in the layout, so every later
-  // page view is covered by that effect instead. Exactly one per view either
-  // way.
-  refreshOnCreate = false,
 }: {
   demo?: boolean;
-  refreshOnCreate?: boolean;
 }) {
   const created = useRef(false);
   const adRef = useRef<NitroAd | null>(null);
@@ -80,16 +67,15 @@ export function NitroAnchorSlot({
         ...(demo ? { demo: true } : {}),
       })
       .then((ad) => {
+        // Held so the route-change effect below can refresh it.
         adRef.current = ad;
-        // WORKAROUND-ONLY — see refreshOnCreate above.
-        if (refreshOnCreate) ad?.onNavigate?.();
       })
       .catch(() => {
         // Never surface an ad failure to a reader.
       });
     // onAdmin is a dep rather than a bail-once so that arriving on the public
     // site from /admin still creates the anchor.
-  }, [demo, onAdmin, refreshOnCreate]);
+  }, [demo, onAdmin]);
 
   useEffect(() => {
     if (seenPath.current === null) {
@@ -99,8 +85,9 @@ export function NitroAnchorSlot({
     if (seenPath.current === pathname) return;
     seenPath.current = pathname;
     // The anchor never unmounts, so this is its refresh on every page view
-    // after the one that created it. Cannot double up with refreshOnCreate:
-    // this branch is unreachable on the run that records the first path.
+    // after the one that created it. The run that records the first path
+    // returns above, so the page view that created the anchor is never also
+    // refreshed here.
     adRef.current?.onNavigate?.();
   }, [pathname]);
 
