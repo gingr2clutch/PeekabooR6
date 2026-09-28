@@ -11,13 +11,13 @@ import {
   ChevronRight,
   Flame,
   Gem,
-  Handshake,
   Map,
   Menu,
   Plus,
   Scale,
   Swords,
   Target,
+  Trophy,
   X,
 } from "lucide-react";
 import { Wordmark } from "./Wordmark";
@@ -67,7 +67,7 @@ const SECTIONS: { label: string; items: MenuItem[] }[] = [
       // cleanup.
       { href: "/#submit", label: "Submit a clip", subtitle: "Add your own angle", Icon: Plus },
       { href: DISCORD_INVITE, label: "Discord", subtitle: "Join the community", Icon: DiscordGlyph, external: true },
-      { href: "/sponsor", label: "Partner", subtitle: "Work with us", Icon: Handshake },
+      { href: "/contributors", label: "Leaderboard", subtitle: "Top contributors", Icon: Trophy },
     ],
   },
   {
