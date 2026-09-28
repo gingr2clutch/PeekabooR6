@@ -28,9 +28,15 @@ const AUTH_PATHS = new Set([
   "/reset-password",
 ]);
 
-// Map pages only — /maps/coastline, not /maps/coastline/first-floor, its
-// /trends or /attacking. Those keep the bar.
+// Map pages — /maps/coastline — and floor pages — /maps/coastline/first-floor.
+// Both carry their own "Submit a clip" surface at lg, so the thin sitewide bar
+// would repeat the same ask twice on one screen.
+//
+// NOT /trends or /attacking: those are the map's other tabs, they have no such
+// surface, and they keep the bar at every width. The negative lookahead is what
+// separates them from a floor slug, since both are one segment deep.
 const MAP_ROOT = /^\/maps\/[^/]+$/;
+const MAP_FLOOR = /^\/maps\/[^/]+\/(?!trends$|attacking$)[^/]+$/;
 
 function isExcluded(pathname: string): boolean {
   if (EXCLUDED_EXACT.has(pathname)) return true;
@@ -49,11 +55,9 @@ export function SubmitCta() {
     ? "/gadgets#submit-gadget"
     : "/#submit";
 
-  // A map page carries its own "Submit a clip" picture card at lg, so the thin
-  // sitewide bar would repeat the same ask twice on one screen. Hidden with a
-  // class rather than returned as null: below lg there is no picture card, and
-  // the bar has to stay exactly as it is on phones.
-  const hideAtLg = MAP_ROOT.test(pathname);
+  // Hidden with a class rather than returned as null: below lg these pages have
+  // no competing surface, and the bar has to stay exactly as it is on phones.
+  const hideAtLg = MAP_ROOT.test(pathname) || MAP_FLOOR.test(pathname);
 
   return (
     // Almost no margin of its own — it used to add mt-8 on top of whatever
