@@ -2,6 +2,11 @@ import { gradeTierColor } from "@/lib/rate";
 
 const SIZES = {
   sm: "h-6 min-w-6 px-1.5 text-sm",
+  // Overlay badges sit on artwork and have to read at a glance from across the
+  // card. A size key rather than a className override: SIZES and className are
+  // concatenated into one class list, so an override like "h-10" ties with
+  // "h-6" on specificity and loses or wins on stylesheet order, not intent.
+  md: "h-11 min-w-11 px-3 text-[28px]",
   lg: "h-12 min-w-12 px-3 text-3xl md:h-16 md:min-w-16 md:text-5xl",
 } as const;
 
