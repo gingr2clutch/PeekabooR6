@@ -15,9 +15,11 @@ import { usePathname } from "next/navigation";
 // Where it would be redundant or out of place:
 //   /            the real form is already on the page
 //   /gadgets     same, the gadget form is at the bottom
+//   /top         the same ask is now the first card in their ExploreNext row,
+//   /underrated  so the bar would repeat it within one screen
 //   /admin/*     internal tooling, not a place to recruit clips
 //   auth pages   a login screen should ask for one thing only
-const EXCLUDED_EXACT = new Set(["/", "/gadgets"]);
+const EXCLUDED_EXACT = new Set(["/", "/gadgets", "/top", "/underrated"]);
 const EXCLUDED_PREFIXES = ["/admin"];
 const AUTH_PATHS = new Set([
   "/login",

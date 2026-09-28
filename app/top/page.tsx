@@ -268,13 +268,26 @@ export default async function TopPeeksPage() {
           )}
         </div>
 
-        <ExploreNext
-          line="The community's highest-rated peeks. Think one's ranked wrong? Cast your vote."
-          cards={[
-            { href: "/underrated", emoji: "💎", label: "Underrated Peeks" },
-            { href: "/#maps", emoji: "🗺️", label: "Browse Maps" },
-          ]}
-        />
+        {/* Same container the list above uses, so the row lines up with it. */}
+        <div className="site-shell mx-auto max-w-3xl px-4">
+          <ExploreNext
+            line="The community's highest-rated peeks. Think one's ranked wrong? Cast your vote."
+            cards={[
+              {
+                href: "/underrated",
+                icon: "gem",
+                label: "Underrated peeks",
+                subtitle: "Hidden gems, few votes",
+              },
+              {
+                href: "/#maps",
+                icon: "map",
+                label: "Browse maps",
+                subtitle: "Every map",
+              },
+            ]}
+          />
+        </div>
       </main>
     </>
   );
