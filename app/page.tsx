@@ -10,6 +10,7 @@ import {
 } from "@/lib/map-activity";
 import { BackToTop } from "@/components/BackToTop";
 import PeekabooIntro from "@/components/PeekabooIntro";
+import { SubmitSideArt } from "@/components/SubmitSideArt";
 import { SubmitSpot } from "@/components/SubmitSpot";
 import { FutureMapSlots } from "@/components/FutureMapSlots";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
@@ -283,12 +284,30 @@ export default async function Home() {
           </div>
         </div>
 
-        <SubmitSpot
-          config={PEEK_SUBMIT}
-          maps={maps
-            .filter((m) => m.published)
-            .map((m) => ({ slug: m.slug, name: m.name }))}
-        />
+        {/* The form keeps its own width and position; this only fills the
+            margins beside it. Below xl the wrapper is not a grid at all and
+            both panels are display:none. display:contents below xl means this
+            wrapper generates no box at all there, so the page under 1280 is
+            not merely unchanged to the eye — it has the same element boxes it
+            had before the wrapper existed. data-reveal is what starts the panels' loop —
+            the site's existing observer sets .is-revealed here. */}
+        <div
+          data-reveal
+          className="csa-row contents xl:grid xl:grid-cols-[1fr_620px_1fr] xl:items-center xl:gap-6"
+        >
+          <SubmitSideArt
+            side="phone"
+            coverUrl={maps[0]?.cover_image_url}
+            mapName={maps[0]?.name}
+          />
+          <SubmitSpot
+            config={PEEK_SUBMIT}
+            maps={maps
+              .filter((m) => m.published)
+              .map((m) => ({ slug: m.slug, name: m.name }))}
+          />
+          <SubmitSideArt side="pc" />
+        </div>
         {/* Nitro's CCPA opt-out. Empty until __uspapi injects into it, so it
             sits on its own line below the form with a committed height — an
             injection here cannot move the form above it. */}

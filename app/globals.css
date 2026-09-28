@@ -2830,3 +2830,215 @@ html.is-live .reveal {
     border-radius: 11px;
   }
 }
+
+/* The form carries mx-auto, and auto inline margins switch a grid item from
+   stretch to shrink-to-fit — it collapsed from 620px to its content width of
+   ~483 the moment the wrapper became a grid. Restoring an explicit 100% (its
+   own max-width still caps it at 620) puts it back exactly where it sits on
+   every narrower width, which is the point: this row is meant to add panels
+   beside the form, not resize it. */
+@media (min-width: 1280px) {
+  .csa-row > section {
+    width: 100%;
+  }
+}
+
+/* --- Homepage submit side art (xl only) -----------------------------------
+   Keyframes for components/SubmitSideArt.tsx. Transform and opacity only, one
+   shared 6s loop, so nothing here can reflow the form between them.
+
+   Held paused until the surrounding section is revealed, so the loop does not
+   run through its beats while it is still below the fold. That reuses the
+   site's existing IntersectionObserver (the one that adds .is-revealed to
+   [data-reveal]) rather than adding a second observer for decoration. If that
+   script never runs — no JS, no IntersectionObserver — html.reveal-ready is
+   never set and the second selector lets the animations run anyway, so the
+   art is never left frozen on its first frame. */
+.csa-float {
+  animation: csa-float 6s ease-in-out infinite;
+}
+/* Half a cycle behind the phone. */
+.csa-float-off {
+  animation: csa-float 6s ease-in-out infinite;
+  animation-delay: -3s;
+}
+.csa-zoom {
+  animation: csa-zoom 6s ease-in-out infinite;
+}
+.csa-prog {
+  animation: csa-prog 6s linear infinite;
+}
+.csa-pop {
+  animation: csa-pop 6s ease-out infinite;
+}
+.csa-fill {
+  animation: csa-fill 6s ease-out infinite;
+}
+.csa-playfade {
+  animation: csa-playfade 6s ease-out infinite;
+}
+.csa-glide {
+  animation: csa-glide 6s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
+}
+.csa-trail {
+  animation: csa-trail 6s ease infinite;
+}
+.csa-hide {
+  animation: csa-hide 6s ease infinite;
+}
+.csa-flash {
+  animation: csa-flash 6s ease infinite;
+}
+
+/* Declared AFTER every rule above on purpose. `animation` is a shorthand and
+   resets animation-play-state to running, so a paused rule written before them
+   is silently undone — which is exactly what happened the first time. */
+.csa-anim {
+  animation-play-state: paused;
+}
+[data-reveal].is-revealed .csa-anim,
+html:not(.reveal-ready) .csa-anim {
+  animation-play-state: running;
+}
+
+@keyframes csa-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes csa-zoom {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+@keyframes csa-prog {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes csa-pop {
+  0%,
+  58%,
+  100% {
+    transform: scale(1);
+  }
+  64% {
+    transform: scale(1.3);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+@keyframes csa-fill {
+  0%,
+  58% {
+    opacity: 0;
+  }
+  62%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes csa-playfade {
+  0% {
+    opacity: 1;
+  }
+  10%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes csa-glide {
+  0% {
+    transform: translate(-64px, -40px);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  24% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  78% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  88%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+}
+@keyframes csa-trail {
+  0% {
+    opacity: 0;
+  }
+  6%,
+  18% {
+    opacity: 1;
+  }
+  28%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes csa-hide {
+  0%,
+  24% {
+    opacity: 1;
+  }
+  30%,
+  74% {
+    opacity: 0;
+  }
+  86%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes csa-flash {
+  0%,
+  24% {
+    opacity: 0;
+  }
+  30%,
+  74% {
+    opacity: 1;
+  }
+  86%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Reduced motion: no loop at all, and the PC settles on the state the loop
+   exists to show — file dropped, zone lit, "ready to tag". Without these the
+   still frame would be the animations' 0% values, which is an empty zone and
+   a file parked off-screen: the panel would read as broken rather than calm. */
+@media (prefers-reduced-motion: reduce) {
+  .csa-anim {
+    animation: none !important;
+  }
+  .csa-hit,
+  .csa-ok {
+    opacity: 1 !important;
+  }
+  .csa-zonetext {
+    opacity: 0 !important;
+  }
+}
