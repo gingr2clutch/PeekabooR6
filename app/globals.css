@@ -3100,6 +3100,17 @@ html:not(.reveal-ready) .csa-anim {
 /* The intended width lives on the ITEM, not the card, so flex-shrink can act
    on it: at 320 the two lower pennants plus their gap want 350px inside a
    288px column, and a fixed width on the card would simply overflow. */
+/* Hanger and cloth exist in the markup at every width but only become boxes
+   at md+. Below md the hanger is display:none and the cloth is
+   display:contents, so the mobile pennants lay out exactly as they did before
+   these two elements were added. */
+.pnt-hanger {
+  display: none;
+}
+.pnt-cloth {
+  display: contents;
+}
+
 .pnt-item {
   flex: 0 1 168px;
   min-width: 0;
@@ -3274,33 +3285,16 @@ html:not(.reveal-ready) .csa-anim {
 
 @media (min-width: 768px) {
   .pnt {
-    position: relative;
     flex-direction: row;
     justify-content: center;
     align-items: flex-start;
-    gap: 36px;
+    /* Gap scales with the row so three banners plus their rods still fit at
+       768, where a flat 64px would overflow the column by ~220px. */
+    gap: clamp(20px, 4.2vw, 64px);
     width: 100%;
-    padding-top: 14px; /* the rod's own height */
-    --pnt-notch: 48px;
+    --pnt-notch: 38px;
   }
-  /* One rod across the whole podium. Drawn on the container rather than as an
-     element so the two mobile rods can stay in the markup unchanged — they
-     simply stop rendering. */
-  .pnt::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(1220px, 100%);
-    height: 14px;
-    border-radius: 999px;
-    background: #3a3a3c;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.18),
-      0 6px 14px rgba(20, 16, 8, 0.26);
-  }
-  /* The two mobile groups dissolve, so all three pennants become children of
+  /* The two mobile groups dissolve, so all three banners become children of
      one row and can be ordered 2 / 1 / 3 across it. */
   .pnt-group,
   .pnt-hang {
@@ -3318,46 +3312,216 @@ html:not(.reveal-ready) .csa-anim {
   .pnt-item--3 {
     order: 3;
   }
-  /* Widths are proportional rather than fixed so the row still fits at 768,
-     where three fixed pennants plus their gaps would need 1202px. The grow
-     ratios are 430/350, so at a full-width podium they resolve to exactly the
-     intended 350 / 430 / 350 and stop there. */
+
+  /* Fixed widths rather than flex-grow: a banner is a real object with a size,
+     and growing it to fill the row is what made these read as panels. --pnt-w
+     is the cloth; the item is 26px wider because the rod overhangs the fabric
+     by 13px at each end. Both scale with the viewport and stop at the mock's
+     numbers. */
   .pnt-item {
-    flex: 1 1 0;
-    max-width: 350px;
+    --pnt-w: clamp(150px, 16.5vw, 208px);
+    /* One unit = one mock pixel at full size. Every number below is written as
+       its value from the mock times this, so the whole banner scales as a
+       single object: if the content fits at 208px wide it fits at every width,
+       and the height is known from the width alone rather than from how the
+       name happened to wrap. */
+    --pnt-u: calc(var(--pnt-w) / 208);
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: center;
+    width: calc(var(--pnt-w) + 26px);
+    max-width: none;
+    /* The shadow moves to the cloth, so it wraps the fabric and not the rod. */
+    filter: none;
   }
   .pnt-item--1 {
-    flex-grow: 1.2286;
-    max-width: 430px;
+    --pnt-w: clamp(176px, 19.4vw, 244px);
+    --pnt-u: calc(var(--pnt-w) / 244);
   }
+
+  /* ---- hanger: cord to a nail, then the brass rod ---- */
+  .pnt-hanger {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: calc(46 * var(--pnt-u));
+  }
+  .pnt-cord {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .pnt-nail {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: calc(7 * var(--pnt-u));
+    height: calc(7 * var(--pnt-u));
+    border-radius: 50%;
+    background: #6b5a3c;
+    transform: translateX(-50%);
+  }
+  .pnt-rodbar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: calc(9 * var(--pnt-u));
+    border-radius: 999px;
+    background: linear-gradient(180deg, #e2c27a, #b8923f 55%, #8a6a2e);
+    box-shadow: 0 3px 6px rgba(60, 40, 10, 0.3);
+  }
+  /* Round finials, one at each end of the rod. */
+  .pnt-rodbar::before,
+  .pnt-rodbar::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: calc(15 * var(--pnt-u));
+    height: calc(15 * var(--pnt-u));
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #f3dca0, #b8923f 60%, #7d5f26);
+    transform: translateY(-50%);
+  }
+  .pnt-rodbar::before {
+    left: calc(-7 * var(--pnt-u));
+  }
+  .pnt-rodbar::after {
+    right: calc(-7 * var(--pnt-u));
+  }
+
+  .pnt-cloth {
+    display: block;
+    width: var(--pnt-w);
+    margin-top: calc(-4 * var(--pnt-u)); /* the fabric tucks behind the rod */
+    filter: drop-shadow(0 12px 16px rgba(40, 30, 10, 0.22));
+  }
+  /* Focus ring, still in two parts and still tracing the clipped silhouette —
+     now on the cloth, so it follows the fabric and not the hardware above it. */
+  .pnt-item:focus-within {
+    filter: none;
+  }
+  .pnt-item:focus-within .pnt-cloth {
+    filter: drop-shadow(2px 0 0 #f2640e) drop-shadow(-2px 0 0 #f2640e)
+      drop-shadow(0 2px 0 #f2640e) drop-shadow(0 -2px 0 #f2640e)
+      drop-shadow(0 12px 16px rgba(40, 30, 10, 0.22));
+  }
+
+  /* ---- fabric, not metal ---- */
   .pnt-card {
-    height: clamp(400px, 45vw, 540px);
-    gap: 10px;
-    padding: 22px 18px calc(var(--pnt-notch) + 18px);
+    width: 100%;
+    /* Height is derived from the width, not from the content. aspect-ratio
+       would have yielded to a name that wrapped one line further — which is
+       exactly what happened at 768, where two equally wide banners came out
+       340px and 365px tall and the reflow cost 0.05 CLS. */
+    height: calc(452 * var(--pnt-u));
+    --pnt-notch: calc(38 * var(--pnt-u));
+    gap: 0;
+    padding: calc(34 * var(--pnt-u)) calc(16 * var(--pnt-u))
+      calc(64 * var(--pnt-u));
+    border: none;
+    box-shadow: none;
+    /* A darker 20px sleeve band across the top, then soft vertical folds. No
+       diagonal gloss — that read as sheet metal. */
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.1) 0,
+        rgba(0, 0, 0, 0.1) calc(20 * var(--pnt-u)),
+        rgba(255, 255, 255, 0.35) calc(20 * var(--pnt-u)),
+        rgba(255, 255, 255, 0) calc(90 * var(--pnt-u))
+      ),
+      repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0,
+        rgba(255, 255, 255, 0.22) 18px,
+        rgba(0, 0, 0, 0.035) 38px,
+        rgba(255, 255, 255, 0) 56px
+      );
+  }
+  /* Stitch line under the sleeve band. */
+  .pnt-card::after {
+    content: "";
+    position: absolute;
+    left: calc(10 * var(--pnt-u));
+    right: calc(10 * var(--pnt-u));
+    top: calc(20 * var(--pnt-u));
+    border-top: 1.5px dashed rgba(0, 0, 0, 0.18);
   }
   .pnt-card--1 {
-    height: clamp(460px, 52vw, 620px);
+    height: calc(540 * var(--pnt-u));
+    padding-top: calc(28 * var(--pnt-u));
+  }
+  .pnt-card--2 {
+    background-color: #e7eaee;
+  }
+  .pnt-card--3 {
+    background-color: #eed7bd;
+  }
+  .pnt-card--1 {
+    background-color: #f3dd96;
+  }
+
+  .pnt-crown {
+    font-size: calc(24 * var(--pnt-u));
+    margin-bottom: calc(4 * var(--pnt-u));
+  }
+  .pnt-coin {
+    width: calc(52 * var(--pnt-u));
+    height: calc(52 * var(--pnt-u));
+    min-width: 0;
+    margin-top: calc(8 * var(--pnt-u));
+    font-size: calc(24 * var(--pnt-u));
+  }
+  .pnt-card--1 .pnt-coin {
+    width: calc(60 * var(--pnt-u));
+    height: calc(60 * var(--pnt-u));
+    font-size: calc(28 * var(--pnt-u));
   }
   .pnt-name {
-    font-size: 22px;
+    margin-top: calc(16 * var(--pnt-u));
+    font-size: calc(23 * var(--pnt-u));
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
   }
   .pnt-card--1 .pnt-name {
-    font-size: 30px;
+    font-size: calc(28 * var(--pnt-u));
   }
   .pnt-loc {
-    font-size: 14px;
+    margin-top: calc(8 * var(--pnt-u));
+    font-size: calc(13.5 * var(--pnt-u));
+    line-height: 1.35;
   }
-  .pnt-card--1 .pnt-loc {
-    font-size: 16px;
+  .pnt-grade {
+    margin-top: calc(14 * var(--pnt-u));
+    min-width: 0;
+    height: auto;
+    padding: calc(5 * var(--pnt-u)) calc(10 * var(--pnt-u));
+    font-size: calc(15 * var(--pnt-u));
   }
+  .pnt-watch {
+    font-size: calc(14 * var(--pnt-u));
+  }
+  /* Desktop wording. Lost when this block was rewritten, which left the
+     mobile labels ("Watch" / "Tap to watch") showing on a mouse-driven page. */
   .pnt-watch-desk {
     display: inline;
   }
   .pnt-watch-mob {
     display: none;
   }
+  .pnt-watch-glyph {
+    font-size: calc(11 * var(--pnt-u));
+    margin-right: calc(6 * var(--pnt-u));
+  }
   .pnt-votes {
-    font-size: 12px;
+    margin-top: calc(6 * var(--pnt-u));
+    font-size: calc(11 * var(--pnt-u));
+    letter-spacing: 0.12em;
   }
 }
 

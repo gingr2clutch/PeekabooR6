@@ -279,9 +279,37 @@ function Pennant({ peek, rank }: { peek: PeekWithContext; rank: number }) {
   const votes = peek.vote_count ?? 0;
 
   return (
-    // Wrapper carries the shadow: clip-path cuts a box-shadow off with the
-    // rest of the box, so the depth has to come from a filter on the parent.
     <div className={`pnt-item pnt-item--${rank}`}>
+      {/* The hanger — cord, nail and brass rod. Decorative and md+ only: it is
+          display:none below md, where the two shared mobile rods do the job
+          instead. Inside the item so it travels with its own banner rather
+          than being positioned against the row. */}
+      <span className="pnt-hanger" aria-hidden="true">
+        <svg
+          className="pnt-cord"
+          viewBox="0 0 100 46"
+          preserveAspectRatio="none"
+          aria-hidden
+        >
+          {/* preserveAspectRatio="none" stretches the triangle to whatever
+              width the banner ends up; non-scaling-stroke keeps the cord a
+              constant 1.6px instead of stretching with it. */}
+          <path
+            d="M2.6 44 L50 2.6 L97.4 44"
+            fill="none"
+            stroke="#7d6a4a"
+            strokeWidth="1.6"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+        <span className="pnt-nail" />
+        <span className="pnt-rodbar" />
+      </span>
+      {/* Carries the banner's drop-shadow and its focus ring at md+. Both have
+          to be a filter, because clip-path cuts a box-shadow away with the
+          corners it clips. display:contents below md, so the mobile layout
+          gains no box and stays exactly as it is. */}
+      <span className="pnt-cloth">
       <Link
         href={`/peeks/${peek.slug}?from=top`}
         aria-label={`Open peek: ${peek.name}, ${map.name}`}
@@ -321,6 +349,7 @@ function Pennant({ peek, rank }: { peek: PeekWithContext; rank: number }) {
         </span>
         <span className="pnt-votes">{voteLabel(votes)}</span>
       </Link>
+      </span>
     </div>
   );
 }
