@@ -106,8 +106,18 @@ export function MapViewToggle({
     // reads as one unit between the stats box and the trends chart. The cards
     // inside keep their white styling; modest padding on mobile so the tint
     // doesn't steal card width.
-    <div className="rounded-card border border-brand/20 bg-brand/[0.11] px-3 py-4 sm:p-6">
-      <div className="mb-8 flex justify-center">
+    //
+    // Dropped at lg. The desktop floor cards carry the map's accent on their
+    // own outline, and a tinted box around them fought that — two competing
+    // frames around the same content. Desktop gets a plain heading row
+    // instead: label left, toggle right. Below lg the bubble is untouched.
+    <div className="rounded-card border border-brand/20 bg-brand/[0.11] px-3 py-4 sm:p-6 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
+      <div className="mb-8 flex justify-center lg:mb-5 lg:items-center lg:justify-between">
+        {/* Desktop-only section heading. Tracks the toggle, because on the
+            ranked view "Pick a floor" would be describing the wrong thing. */}
+        <h2 className="hidden text-2xl font-bold tracking-tight text-ink lg:block">
+          {view === "ranked" ? "Every peek, ranked" : "Pick a floor"}
+        </h2>
         <div
           role="tablist"
           aria-label="Map view"

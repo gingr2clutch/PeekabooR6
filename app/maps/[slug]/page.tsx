@@ -16,12 +16,13 @@ import {
   getRankedPeeksForMap,
   getTopPeekForMap,
 } from "@/lib/db";
-import { rating } from "@/lib/rate";
+import { gradeTierColor, rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
 import { TrendArrow } from "@/components/TrendArrow";
 import { MultiTrendChart, type TrendSeries } from "@/components/MultiTrendChart";
 import {
   computeDirection,
+  computeMover,
   getSnapshotsForPeeks,
   pointsWithinDays,
   TREND_LINE_COLORS,
@@ -29,6 +30,12 @@ import {
 import { coverThumb } from "@/lib/cover-image";
 import { mapAccent } from "@/lib/map-accents";
 import { MAP_GUIDES } from "@/content/map-guides";
+
+// Most dots a floor card shows. At 1024px a 3-floor map gives each card about
+// 300px, and 14 dots at 13px + 6px gap is ~260px — the widest row that still
+// clears the card's padding. Floors with more peeks than this just stop the
+// row; the count above it already states the real number.
+const MAX_FLOOR_DOTS = 14;
 
 export const dynamic = "force-dynamic";
 
@@ -171,14 +178,30 @@ export default async function MapPage({
     bestByFloorName.set(fname, { name: pk.name, label: rr.label, score: rr.score });
   }
 
+  // Grade dots for the desktop floor cards: every peek on a floor, best-first,
+  // as its tier colour. rankedPeeks is already sorted best-first and already
+  // loaded, so this is another reshape — no extra query, no DB change.
+  const gradeDotsByFloorId = new Map<string, string[]>();
+  for (const pk of rankedPeeks) {
+    const fid = pk.floor_id;
+    if (!fid) continue;
+    const arr = gradeDotsByFloorId.get(fid) ?? [];
+    arr.push(gradeTierColor(rating(pk.base_success_rate, pk.worked_votes, pk.vote_count).label));
+    gradeDotsByFloorId.set(fid, arr);
+  }
+
   // "This week's top 5" — the same five peeks the chart plots, in the same
   // order and with the same colours, so a row's dot always matches its line.
+  // Carries the floor name, the measured percentage (measured peeks only) and
+  // the 7-day move, all from data already in hand.
   const weekTop5 = rankedPeeks.slice(0, 5).map((pk, i) => ({
     id: pk.id,
     slug: pk.slug,
     name: pk.name,
+    floorName: pk.floors?.name ?? null,
     color: TREND_LINE_COLORS[i % TREND_LINE_COLORS.length],
     r: rating(pk.base_success_rate, pk.worked_votes, pk.vote_count),
+    mover: computeMover(rankedTrends.get(pk.id) ?? [], 7),
   }));
 
   const floorLabel = `${floors.length} ${floors.length === 1 ? "floor" : "floors"}`;
@@ -315,6 +338,7 @@ export default async function MapPage({
                 {floors.map((floor, i) => {
                   const n = peekCountByFloor.get(floor.id) ?? 0;
                   const best = bestByFloorName.get(floor.name);
+                  const dots = gradeDotsByFloorId.get(floor.id) ?? [];
                   return (
                     <li
                       key={floor.id}
@@ -325,9 +349,18 @@ export default async function MapPage({
                         } as React.CSSProperties
                       }
                     >
+                      {/* The accent rides in as a custom property rather than an
+                          inline borderColor: inline styles have no media query,
+                          and below lg this card must keep its white border
+                          exactly as it is today. Only the lg class reads it. */}
                       <Link
                         href={`/maps/${map.slug}/${floor.slug}`}
-                        className="peek-lift group relative flex items-center justify-between gap-4 overflow-hidden rounded-card border-[3px] border-white bg-card px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:border-brand sm:px-6 sm:py-5 lg:h-[190px] lg:flex-col lg:items-start lg:justify-start lg:py-6"
+                        style={
+                          {
+                            ["--floor-accent"]: mapAccent(map.slug),
+                          } as React.CSSProperties
+                        }
+                        className="peek-lift group relative flex items-center justify-between gap-4 overflow-hidden rounded-card border-[3px] border-white bg-card px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:border-brand sm:px-6 sm:py-5 lg:h-[300px] lg:flex-col lg:items-start lg:justify-end lg:gap-0 lg:border-[color:var(--floor-accent)] lg:p-6 lg:hover:border-[color:var(--floor-accent)]"
                       >
                         {/* Faint floor blueprint as the card background —
                             decorative, lazy, behind the text. The white card base
@@ -344,30 +377,61 @@ export default async function MapPage({
                             className="pointer-events-none object-cover object-center opacity-[0.16] lg:opacity-100"
                           />
                         )}
-                        {/* At lg the art is fully visible on the right, with a
-                            card-coloured fade so the text keeps its contrast. */}
+                        {/* At lg the art fills the card and the text sits on
+                            it, so the fade is the same bottom-weighted scrim
+                            the top-peek card uses — same stops, tuned there
+                            against the brightest thumbnail on the site. */}
                         <span
                           aria-hidden
-                          className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-card via-card/92 to-transparent lg:block"
+                          className="pointer-events-none absolute inset-0 hidden lg:block"
+                          style={{
+                            backgroundImage:
+                              "linear-gradient(to top, rgba(0,0,0,0.93) 0%, rgba(0,0,0,0.88) 28%, rgba(0,0,0,0.76) 52%, rgba(0,0,0,0.42) 74%, rgba(0,0,0,0.12) 100%)",
+                          }}
                         />
-                        <span className="relative z-10 text-xl font-bold tracking-tight text-ink transition-colors group-hover:text-brand sm:text-2xl lg:text-3xl">
+                        <span className="relative z-10 text-xl font-bold tracking-tight text-ink transition-colors group-hover:text-brand sm:text-2xl lg:order-2 lg:overflow-hidden lg:text-[28px] lg:leading-[1.05] lg:text-white lg:group-hover:text-white xl:text-[34px]"
+                          style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                          }}>
                           {floor.name}
                         </span>
-                        <span className="relative z-10 shrink-0 font-mono text-sm font-semibold uppercase tracking-wider text-brand lg:mt-1">
+                        <span className="relative z-10 shrink-0 font-mono text-sm font-semibold uppercase tracking-wider text-brand lg:order-1 lg:mb-1 lg:text-[12px] lg:tracking-[0.18em] lg:text-[#ffb27a]">
                           {n} {n === 1 ? "peek" : "peeks"}
                         </span>
                         {/* lg-only tile furniture: best peek on this floor and
                             the arrow. Both read from data already loaded. */}
                         {best && (
-                          <span className="relative z-10 mt-auto hidden items-center gap-2 text-[13px] text-muted lg:inline-flex">
+                          <span className="relative z-10 hidden items-center gap-2 text-[13px] text-white/85 lg:order-3 lg:mt-2 lg:inline-flex lg:max-w-[calc(100%-70px)]">
                             Best:
-                            <span className="font-semibold text-ink">{best.name}</span>
-                            <GradeBadge label={best.label} score={best.score} />
+                            <span className="min-w-0 truncate font-semibold text-white">
+                              {best.name}
+                            </span>
+                            <span className="shrink-0">
+                              <GradeBadge label={best.label} score={best.score} />
+                            </span>
+                          </span>
+                        )}
+                        {/* One dot per peek on this floor, best-first, in its
+                            grade tier colour — the floor's shape at a glance.
+                            Capped so a busy floor cannot push the row wider
+                            than the card at 1024px. */}
+                        {dots.length > 0 && (
+                          <span className="relative z-10 hidden flex-wrap gap-1.5 lg:order-4 lg:mt-3 lg:flex lg:max-w-[calc(100%-70px)]">
+                            {dots.slice(0, MAX_FLOOR_DOTS).map((c, di) => (
+                              <span
+                                key={di}
+                                aria-hidden
+                                className="h-[13px] w-[13px] rounded-[3px]"
+                                style={{ backgroundColor: c }}
+                              />
+                            ))}
                           </span>
                         )}
                         <span
                           aria-hidden
-                          className="absolute bottom-5 right-5 z-10 hidden h-10 w-10 items-center justify-center rounded-full bg-brand text-white transition-transform duration-150 ease-out group-hover:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none lg:inline-flex"
+                          className="absolute bottom-5 right-5 z-10 hidden h-10 w-10 items-center justify-center rounded-full bg-brand text-white transition-transform duration-150 ease-out group-hover:translate-x-0.5 motion-reduce:transform-none motion-reduce:transition-none lg:inline-flex lg:h-[54px] lg:w-[54px] lg:text-[22px]"
                         >
                           →
                         </span>
@@ -465,7 +529,19 @@ export default async function MapPage({
                   daily.
                 </p>
               ) : (
-                <MultiTrendChart series={mapSeries7} />
+                <>
+                  <MultiTrendChart series={mapSeries7} className="lg:hidden" />
+                  {/* Desktop gets the names on the lines. Separate render
+                      because the labelled chart needs a wider viewBox, and a
+                      viewBox cannot change at a breakpoint. The breakpoint
+                      class rides on the chart's own root — a wrapper here
+                      would be one more box in the mobile layout. */}
+                  <MultiTrendChart
+                    series={mapSeries7}
+                    endLabels
+                    className="hidden lg:block"
+                  />
+                </>
               )}
               <div className="mt-3 text-center lg:text-left">
                 <Link
@@ -485,18 +561,51 @@ export default async function MapPage({
                   This week&apos;s top 5
                 </h2>
                 <ol className="space-y-1">
-                  {weekTop5.map((pk, i) => (
-                    <li key={pk.id} className="flex items-center gap-3 border-t border-border py-2.5 first:border-t-0">
-                      <span className="w-3 shrink-0 font-mono text-[11px] text-muted tabular-nums">
-                        {i + 1}
-                      </span>
-                      <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: pk.color }} />
-                      <Link href={`/peeks/${pk.slug}?from=map`} className="min-w-0 flex-1 truncate text-[15px] font-medium text-ink hover:text-brand">
-                        {pk.name}
-                      </Link>
-                      <GradeBadge label={pk.r.label} score={pk.r.score} />
-                    </li>
-                  ))}
+                  {weekTop5.map((pk, i) => {
+                    // Percentage is shown only where it is real: measured peeks
+                    // carry a vote-derived pct, estimates do not, and printing
+                    // a seed value as "71%" would claim a precision the data
+                    // does not have.
+                    const sub = [
+                      pk.floorName,
+                      pk.r.tier === "measured" ? `${pk.r.pct}%` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ");
+                    const move = pk.mover ? Math.round(pk.mover.changePct) : null;
+                    return (
+                      <li key={pk.id} className="flex items-center gap-3 border-t border-border py-2.5 first:border-t-0">
+                        <span className="w-5 shrink-0 text-center font-mono text-[22px] font-bold leading-none text-border tabular-nums">
+                          {i + 1}
+                        </span>
+                        <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: pk.color }} />
+                        <span className="min-w-0 flex-1">
+                          <Link href={`/peeks/${pk.slug}?from=map`} className="block truncate text-[15px] font-medium text-ink hover:text-brand">
+                            {pk.name}
+                          </Link>
+                          {sub && (
+                            <span className="mt-0.5 block truncate text-[12px] text-muted">
+                              {sub}
+                            </span>
+                          )}
+                        </span>
+                        {/* Weekly move, same window the chart plots. */}
+                        {move !== null && (
+                          <span
+                            className="shrink-0 whitespace-nowrap font-mono text-[12px] font-bold tabular-nums"
+                            style={{
+                              color:
+                                move > 0 ? "#1f9d55" : move < 0 ? "#d1573a" : "#8b8d86",
+                            }}
+                            title={`${move > 0 ? "Up" : move < 0 ? "Down" : "Flat"} over the last 7 days`}
+                          >
+                            {move > 0 ? `\u25B2${move}` : move < 0 ? `\u25BC${Math.abs(move)}` : "\u2013"}
+                          </span>
+                        )}
+                        <GradeBadge label={pk.r.label} score={pk.r.score} />
+                      </li>
+                    );
+                  })}
                 </ol>
               </div>
             )}
