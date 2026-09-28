@@ -136,6 +136,22 @@ export function SiteSearch() {
 
   const [index, setIndex] = useState<SearchIndex | null>(null);
   const [expanded, setExpanded] = useState(false);
+
+  // Cmd+K / Ctrl+K opens search from anywhere. Ignored while a field has focus
+  // so it cannot hijack typing in the search box itself or in a form.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "k" && e.key !== "K") return;
+      if (!e.metaKey && !e.ctrlKey) return;
+      const t = e.target as HTMLElement | null;
+      const tag = t?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || t?.isContentEditable) return;
+      e.preventDefault();
+      setExpanded(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -247,9 +263,26 @@ export function SiteSearch() {
         aria-label="Search"
         aria-expanded={expanded}
         onClick={expand}
-        className="inline-flex h-11 w-11 lg:h-[54px] lg:w-[54px] lg:[&>svg]:h-[26px] lg:[&>svg]:w-[26px] items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
+        className="inline-flex h-11 w-11 lg:hidden  items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
       >
         <Search size={20} strokeWidth={2} aria-hidden />
+      </button>
+      {/* At lg the trigger becomes the mock's field. It is still a button:
+          it opens the existing overlay rather than accepting text in place,
+          and calling it a textbox would tell a screen reader to type into
+          something that cannot be typed into. */}
+      <button
+        type="button"
+        aria-label="Search peeks"
+        aria-keyshortcuts="Meta+K Control+K"
+        onClick={expand}
+        className="hidden h-[42px] w-[210px] items-center gap-2 rounded-btn lg:order-1 border border-border bg-card px-3 text-left text-[14px] text-muted outline-none transition-colors duration-150 ease-out hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 lg:inline-flex"
+      >
+        <Search size={17} strokeWidth={2} aria-hidden className="shrink-0" />
+        <span className="flex-1 truncate">Search peeks</span>
+        <kbd aria-hidden className="shrink-0 rounded-[5px] border border-border bg-bg px-1.5 py-0.5 font-mono text-[11px] font-medium text-muted">
+          ⌘K
+        </kbd>
       </button>
 
       {expanded && (
@@ -268,7 +301,7 @@ export function SiteSearch() {
                 type="button"
                 aria-label="Close search"
                 onClick={collapse}
-                className="inline-flex h-11 w-11 lg:h-[54px] lg:w-[54px] lg:[&>svg]:h-[26px] lg:[&>svg]:w-[26px] shrink-0 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
+                className="inline-flex h-11 w-11  shrink-0 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand"
               >
                 <ArrowLeft size={22} strokeWidth={2} aria-hidden />
               </button>

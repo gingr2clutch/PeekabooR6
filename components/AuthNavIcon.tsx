@@ -37,7 +37,7 @@ export function AuthNavIcon({ iconSize = 22 }: { iconSize?: number }) {
       href={href}
       aria-label={label}
       title={label}
-      className={`inline-flex h-11 w-11 lg:h-[54px] lg:w-[54px] lg:[&>svg]:h-[26px] lg:[&>svg]:w-[26px] items-center justify-center rounded-btn transition-colors duration-150 ease-out ${
+      className={`inline-flex h-11 w-11 lg:order-2 lg:h-[42px] lg:w-[42px] lg:[&>svg]:h-[22px] lg:[&>svg]:w-[22px] items-center justify-center rounded-btn outline-none transition-colors duration-150 ease-out focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
         isIn
           ? "text-teal hover:bg-teal/[0.08]"
           : "text-ink hover:bg-ink/[0.06] hover:text-brand"

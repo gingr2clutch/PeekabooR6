@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { createPortal } from "react-dom";
+import { OPEN_NAV_EVENT } from "./DesktopNav";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -200,6 +201,17 @@ export function SiteNav({
     transitionDelay: reduce || !show ? "0ms" : `${i * 40}ms`,
   });
 
+  // "More" on the desktop bar lives in the header's LEFT cluster, while this
+  // drawer's state lives here in the right one. An event keeps the two
+  // decoupled instead of threading a setter up through PageHeader and back.
+  useEffect(() => {
+    // setOpen is stable; openDrawer is redefined each render and would make
+    // this re-subscribe on every one.
+    const onOpen = () => setOpen(true);
+    window.addEventListener(OPEN_NAV_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_NAV_EVENT, onOpen);
+  }, []);
+
   return (
     <>
       {/* One nav row at every width: the drawer is now the only link surface,
@@ -221,7 +233,11 @@ export function SiteNav({
       <div className="reveal flex items-center gap-0.5 lg:gap-2">
         {/* Desktop only. At 360px the row already runs to ~308px of its 328px,
             so a ~124px button here would overflow and squeeze the wordmark. */}
-        <SubmitPeekButton className="hidden lg:inline-flex" />
+        {/* DOM order is unchanged from before — the bar's visual order at lg
+            (search, account, submit) is done with CSS `order` on each item.
+            Reordering the DOM instead swapped the search and account icons on
+            MOBILE too, which the 390px geometry check caught. */}
+        <SubmitPeekButton className="hidden lg:order-3 lg:inline-flex" />
         <AuthNavIcon />
         <SiteSearch />
         <button
@@ -230,7 +246,7 @@ export function SiteNav({
           aria-label="Open navigation menu"
           aria-expanded={open}
           aria-controls="mobile-nav"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-btn text-ink transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand lg:h-[54px] lg:w-[54px] lg:[&>svg]:h-[27px] lg:[&>svg]:w-[27px]"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-btn text-ink outline-none transition-colors duration-150 ease-out hover:bg-ink/[0.06] hover:text-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 lg:hidden"
         >
           <Menu size={22} strokeWidth={2} aria-hidden />
         </button>

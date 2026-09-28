@@ -25,7 +25,7 @@ export function Wordmark({ href = "/", showText = false, large = false }: Props)
       // AuthShell and the drawer also pass showText, so reusing it would have
       // grown the logo on the login pages too. Only PageHeader sets it, and
       // only from its `home` prop, so the bump is the homepage header alone.
-      className={`flex items-center gap-2.5 text-xl font-semibold tracking-tight transition-colors ${
+      className={`flex items-center gap-2.5 rounded-btn text-xl font-semibold tracking-tight outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 lg:gap-3 lg:text-[26px] lg:font-bold lg:tracking-[-0.02em] ${
         large ? "lg:gap-3 lg:text-2xl" : ""
       }`}
     >
@@ -62,12 +62,16 @@ export function Wordmark({ href = "/", showText = false, large = false }: Props)
           showText: the blue "R6" is the mode signal, and an icon-only logo
           would hide it. Deciding it here rather than at the 29 call sites keeps
           every page file untouched. */}
-      {(showText || gadgets) && (
-        <span data-intro-target="word">
-          <span className="text-ink">peekaboo</span>
-          <span className={gadgets ? "text-blue" : "text-brand"}>R6</span>
-        </span>
-      )}
+      {/* Always rendered now; hidden below lg where it was not shown before,
+          so mobile is unchanged and the desktop bar always carries the full
+          wordmark the way the mock does. */}
+      <span
+        data-intro-target="word"
+        className={showText || gadgets ? undefined : "hidden lg:inline"}
+      >
+        <span className="text-ink">peekaboo</span>
+        <span className={gadgets ? "text-blue" : "text-brand"}>R6</span>
+      </span>
     </Link>
   );
 }

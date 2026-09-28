@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { isGadgetsPath } from "./ModeToggle";
 
 type Props = {
   // Extra classes for layout overrides (e.g. full-width in the mobile drawer).
@@ -28,10 +29,20 @@ export function SubmitPeekButton({
 }: Props) {
   const pathname = usePathname();
 
+  // The bar's primary action follows the mode, like the wordmark and the
+  // toggle dot already do — an orange button on a blue page was the one piece
+  // of the bar still ignoring it.
+  const gadgets = isGadgetsPath(pathname ?? "");
   const tone =
     variant === "outline"
-      ? "border border-border bg-card text-ink hover:border-brand hover:text-brand"
-      : "bg-brand text-white hover:bg-[#d95a0c]";
+      ? `border border-border bg-card text-ink ${
+          gadgets
+            ? "hover:border-blue hover:text-blue"
+            : "hover:border-brand hover:text-brand"
+        }`
+      : gadgets
+        ? "bg-blue text-white hover:bg-[#2367a2]"
+        : "bg-brand text-white hover:bg-[#d95a0c]";
 
   // Already on the homepage: scroll rather than navigate. A plain hash href
   // would jump, and letting the router handle it would re-run the page for no
@@ -55,7 +66,7 @@ export function SubmitPeekButton({
     <a
       href={SUBMIT_HREF}
       onClick={handleClick}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-btn ${tone} px-3 py-1.5 text-xs font-semibold lg:gap-2 lg:px-4 lg:py-2.5 lg:text-sm lg:[&>svg]:h-[18px] lg:[&>svg]:w-[18px] transition-[background-color,box-shadow,transform] duration-150 ease-out motion-safe:hover:scale-[1.04] motion-safe:hover:shadow-md motion-safe:active:scale-[0.98] ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-btn ${tone} px-3 py-1.5 text-xs font-semibold lg:gap-1.5 lg:px-3.5 lg:py-2 lg:text-[13px] lg:[&>svg]:h-[16px] lg:[&>svg]:w-[16px] outline-none transition-[background-color,box-shadow,transform] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 motion-safe:hover:scale-[1.04] motion-safe:hover:shadow-md motion-safe:active:scale-[0.98] ${className}`}
     >
       <UploadIcon />
       <span>Submit a peek</span>
