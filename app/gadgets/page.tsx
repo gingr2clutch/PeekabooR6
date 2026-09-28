@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { MapCardImage } from "@/components/MapCardImage";
+import { FutureMapSlots } from "@/components/FutureMapSlots";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { LiveStats } from "@/components/LiveStats";
 import {
@@ -196,6 +197,9 @@ export default async function GadgetsIndexPage() {
                 </Fragment>
               );
             })}
+            {/* Same tiles as the homepage grid; this grid has no card
+                entrance animation, so they do not animate either. */}
+            <FutureMapSlots mapCount={maps.length} orderStep={CARD_ORDER_STEP} />
           </ul>
         )}
 
