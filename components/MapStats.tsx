@@ -192,7 +192,7 @@ export function MapStats({
               className="absolute inset-0 block"
               style={{
                 backgroundImage:
-                  "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.86) 22%, rgba(0,0,0,0.62) 45%, rgba(0,0,0,0.28) 68%, rgba(0,0,0,0.10) 100%)",
+                  "linear-gradient(to top, rgba(0,0,0,0.93) 0%, rgba(0,0,0,0.88) 28%, rgba(0,0,0,0.76) 52%, rgba(0,0,0,0.42) 74%, rgba(0,0,0,0.12) 100%)",
               }}
             />
 
@@ -201,19 +201,19 @@ export function MapStats({
                 <GradeBadge
                   label={r.label}
                   score={r.score}
-                  className="h-8 min-w-8 px-2 text-[22px]"
+                  size="md"
                 />
               </span>
             )}
 
             <span className="absolute inset-x-0 bottom-0 z-10 block px-5 pb-5">
-              <span className="block font-mono text-[12px] uppercase tracking-[0.18em] text-[#ffb27a]">
+              <span className="block font-mono text-[13px] font-bold uppercase tracking-[0.18em] text-[#ffb27a]">
                 Top Peek
               </span>
               {/* Up to two lines, then ellipsis — the longest name on the site
                   ("Garage (bottom white) door") wraps to two and still fits. */}
               <span
-                className="mt-1.5 block overflow-hidden text-[36px] font-bold leading-[1.08] tracking-tight text-white"
+                className="mt-1.5 block overflow-hidden text-[44px] font-extrabold leading-[1.05] tracking-tight text-white"
                 style={{
                   display: "-webkit-box",
                   WebkitLineClamp: 2,
@@ -222,7 +222,7 @@ export function MapStats({
               >
                 {topPeek.name}
               </span>
-              <span className="mt-1.5 block text-[18px] text-white/85">
+              <span className="mt-2 block text-[20px] font-medium text-white/90">
                 {topPeek.floors?.name} · {topPeek.vote_count}{" "}
                 {topPeek.vote_count === 1 ? "vote" : "votes"}
               </span>
