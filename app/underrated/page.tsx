@@ -103,48 +103,60 @@ export default async function UnderratedPage() {
           </div>
         </section>
 
-        <div className="site-shell mx-auto max-w-3xl px-4">
-          {peeks.length === 0 ? (
-            <p className="mt-10 text-center text-sm text-muted">
-              No underrated peeks right now — they surface here once a high-grade
-              peek picks up a few (but not too many) votes.
-            </p>
-          ) : (
-            <ol className="arena-list arena-list--podium">
-              {banners.map((peek, i) => (
-                <Podium key={peek.id} peek={peek} rank={i + 1} />
-              ))}
+        {/* One centered column holds the podium, the ad and the gem list.
+            The 970px cap lives on an inner div rather than on .site-shell,
+            because that rule is doubled (.site-shell.site-shell, 0,2,0) and
+            sets max-width:1520px at lg — it would beat a lg:max-w-[970px]
+            utility (0,1,0) on the same element. */}
+        <div className="site-shell mx-auto px-4">
+          <div className="mx-auto w-full lg:max-w-[970px]">
+            {peeks.length === 0 ? (
+              <p className="mt-10 text-center text-sm text-muted">
+                No underrated peeks right now — they surface here once a
+                high-grade peek picks up a few (but not too many) votes.
+              </p>
+            ) : (
+              <>
+                <ol className="gem-podium">
+                  {banners.map((peek, i) => (
+                    <Podium key={peek.id} peek={peek} rank={i + 1} />
+                  ))}
+                </ol>
 
-              {/* content-1 — below the podium, above MORE GEMS. */}
-              {/* lg:w-full — .arena-list is flex-wrap, so a bare <li>
-                  shrink-wrapped to the ad frame's 300px min-width and sat in a
-                  1235px column on desktop. Gated to lg because widening it at
-                  every size would move the ad on mobile, which this pass is
-                  not allowed to touch. */}
-              <li className="lg:w-full">
+                {/* content-1 — below the podium, above MORE GEMS, at every
+                    width. It is no longer wrapped in an <li>: the flex list it
+                    used to sit in is gone, and that list is exactly what put
+                    the ad above the podium (the <li> had no `order`, so its
+                    default 0 sorted ahead of the podium's 1/2/3). Out here it
+                    simply follows in document order. Same id, same className. */}
                 <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
-              </li>
 
-              {gems.length > 0 && (
-                <li className="arena-climb-head" aria-hidden="true">
-                  <span className="arena-climb-dot" />
-                  <span className="arena-climb-label">More gems</span>
-                  <span className="arena-climb-rule" />
-                </li>
-              )}
+                {gems.length > 0 && (
+                  <>
+                    <div className="arena-climb-head" aria-hidden="true">
+                      <span className="arena-climb-dot" />
+                      <span className="arena-climb-label">More gems</span>
+                      <span className="arena-climb-rule" />
+                    </div>
 
-              {gems.map((peek, i) => (
-                <ClimbRow
-                  key={peek.id}
-                  peek={peek}
-                  rank={i + 4}
-                  falling={
-                    computeDirection(trends.get(peek.id) ?? []) === "down"
-                  }
-                />
-              ))}
-            </ol>
-          )}
+                    <ol className="gem-list" start={4}>
+                      {gems.map((peek, i) => (
+                        <ClimbRow
+                          key={peek.id}
+                          peek={peek}
+                          rank={i + 4}
+                          falling={
+                            computeDirection(trends.get(peek.id) ?? []) ===
+                            "down"
+                          }
+                        />
+                      ))}
+                    </ol>
+                  </>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
         <ExploreNext
@@ -166,22 +178,26 @@ function Podium({ peek, rank }: { peek: PeekWithContext; rank: number }) {
   const votes = peek.vote_count ?? 0;
 
   return (
-    <li className={`arena-podium arena-podium--${rank}`}>
-      <Link
-        href={`/peeks/${peek.slug}?from=underrated`}
-        className="arena-podium-link"
-      >
+    // A card standing on a medal step. The crown and the card share the
+    // .gem-rise wrapper so the entrance animation lives there, leaving the
+    // card's own `transform` free for the hover lift.
+    <li className={`gem-pod gem-pod--${rank}`}>
+      <div className="gem-rise">
         {rank === 1 && (
-          <span className="arena-podium-crown" aria-hidden>
+          <span className="gem-crown" aria-hidden>
             👑
           </span>
         )}
-        <div className="arena-podium-info">
-          <span className="arena-podium-name">{peek.name}</span>
-          <span className="arena-podium-loc">
+        <Link
+          href={`/peeks/${peek.slug}?from=underrated`}
+          className="gem-card"
+          aria-label={`Open peek: ${peek.name}, ${map.name}`}
+        >
+          <span className="gem-card-name">{peek.name}</span>
+          <span className="gem-card-loc">
             {map.name} · {floor.name}
           </span>
-          <span className="arena-podium-meta">
+          <span className="gem-card-meta">
             <span
               className="arena-grade"
               style={{ backgroundColor: gradeTierColor(r.label) }}
@@ -189,13 +205,14 @@ function Podium({ peek, rank }: { peek: PeekWithContext; rank: number }) {
             >
               {r.label}
             </span>
+            <span className="gem-card-votes">{voteLabel(votes)}</span>
           </span>
-          <span className="arena-podium-votes">{voteLabel(votes)}</span>
-        </div>
-        <div className="arena-podium-block">
-          <span className="arena-podium-rank">{rank}</span>
-        </div>
-      </Link>
+          <span className="gem-card-cta">Watch peek →</span>
+        </Link>
+      </div>
+      <div className="gem-step">
+        <span className="gem-step-rank">{rank}</span>
+      </div>
     </li>
   );
 }
