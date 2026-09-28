@@ -159,13 +159,28 @@ export default async function UnderratedPage() {
           </div>
         </div>
 
-        <ExploreNext
-          line="Great peeks almost nobody's found yet. Vote one up and help it get discovered."
-          cards={[
-            { href: "/top", emoji: "🏆", label: "Top Peeks" },
-            { href: "/#maps", emoji: "🗺️", label: "Browse Maps" },
-          ]}
-        />
+        {/* Same container the list above uses, so the row lines up with it. */}
+        <div className="site-shell mx-auto px-4">
+          <div className="mx-auto w-full lg:max-w-[970px]">
+            <ExploreNext
+              line="Great peeks almost nobody's found yet. Vote one up and help it get discovered."
+              cards={[
+                {
+                  href: "/top",
+                  icon: "flame",
+                  label: "Top peeks",
+                  subtitle: "Highest-rated angles",
+                },
+                {
+                  href: "/#maps",
+                  icon: "map",
+                  label: "Browse maps",
+                  subtitle: "Every map",
+                },
+              ]}
+            />
+          </div>
+        </div>
       </main>
     </>
   );
