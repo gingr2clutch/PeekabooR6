@@ -1,5 +1,10 @@
 import { AdSlot, type AdSlotProps } from "./AdSlot";
-import { adCollapseUnfilled, adDemoMode, nitroEnabled } from "@/lib/ad-env";
+import {
+  adCollapseUnfilled,
+  adDemoMode,
+  nitroDomainWorkaround,
+  nitroEnabled,
+} from "@/lib/ad-env";
 
 // Environment-gated wrapper around AdSlot.
 //
@@ -30,6 +35,7 @@ export function NitroAdSlot(props: AdSlotProps) {
       {...props}
       demo={adDemoMode()}
       collapseUnfilled={adCollapseUnfilled()}
+      refreshOnCreate={nitroDomainWorkaround()}
     />
   );
 }

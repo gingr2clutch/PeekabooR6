@@ -1,4 +1,4 @@
-import { adDemoMode, nitroEnabled } from "@/lib/ad-env";
+import { adDemoMode, nitroDomainWorkaround, nitroEnabled } from "@/lib/ad-env";
 import { NitroAnchorSlot } from "./NitroAnchorSlot";
 
 // Nitro base loader + the site-wide anchor.
@@ -44,7 +44,10 @@ export function NitroScripts() {
         async
         src="https://s.nitropay.com/ads-2632.js"
       />
-      <NitroAnchorSlot demo={adDemoMode()} />
+      <NitroAnchorSlot
+        demo={adDemoMode()}
+        refreshOnCreate={nitroDomainWorkaround()}
+      />
     </>
   );
 }
