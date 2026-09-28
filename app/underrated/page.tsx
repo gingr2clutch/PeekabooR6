@@ -5,9 +5,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { ExploreNext } from "@/components/ExploreNext";
 import { getUnderratedPeeks, type PeekWithContext } from "@/lib/db";
-import { rating, gradeTierColor } from "@/lib/rate";
+import { rating, gradeTierColor, GRADED_THRESHOLDS } from "@/lib/rate";
 import { computeDirection, getSnapshotsForPeeks } from "@/lib/trends";
-import { isPeekNew } from "@/lib/peek-recency";
 
 export const dynamic = "force-dynamic";
 
@@ -67,19 +66,36 @@ function Diamond() {
 export default async function UnderratedPage() {
   const peeks = await getUnderratedPeeks();
 
-  // Batched trend direction for the "falling" ▼ marker on the list rows.
+  // Batched trend direction for the "falling" marker on the tier chips.
   const trends = await getSnapshotsForPeeks(
     peeks.map((p) => p.id),
     14
   );
 
-  const banners = peeks.slice(0, 3); // ranks 1–3
-  const gems = peeks.slice(3); // ranks 4+
+  const banners = peeks.slice(0, 3); // ranks 1-3
+  const climbing = peeks.slice(3); // ranks 4+
+
+  const climbEntries = climbing.map((peek, i) => ({
+    peek,
+    rank: i + 4,
+    falling: computeDirection(trends.get(peek.id) ?? []) === "down",
+    r: rating(peek.base_success_rate, peek.worked_votes, peek.vote_count),
+  }));
+  // GRADED_THRESHOLDS is already ordered best-first and covers every label
+  // rating() can return, so walking it both orders the tiers and drops the
+  // empty ones without a second list of grades to keep in sync. The peeks
+  // themselves stay in getUnderratedPeeks()' order within each tier.
+  const tiers = GRADED_THRESHOLDS.map((t) => ({
+    label: t.label,
+    items: climbEntries.filter((e) => e.r.label === t.label),
+  })).filter((t) => t.items.length > 0);
 
   return (
     <>
       <PageHeader />
       <main className="arena fade-in-up pb-8">
+        {/* Same rafter shell as Top Peeks, but this page's own header: the
+            spinning diamond instead of the flame crest, and no eyebrow. */}
         <section className="arena-rafter">
           <div className="site-shell mx-auto max-w-3xl px-4 pb-14 pt-8 text-center sm:pt-10">
             {/* Rotating diamond — the header's signature animation. */}
@@ -91,11 +107,6 @@ export default async function UnderratedPage() {
               <span className="arena-gem-spark arena-gem-spark--2" />
               <span className="arena-gem-spark arena-gem-spark--3" />
             </div>
-            <div className="arena-eyebrow">
-              <span className="arena-eyebrow-rule" aria-hidden />
-              <span>Hidden Gems</span>
-              <span className="arena-eyebrow-rule" aria-hidden />
-            </div>
             <h1 className="arena-title mt-4 text-5xl sm:text-6xl">Underrated</h1>
             <p className="arena-subline mt-4 text-base sm:text-lg">
               Great peeks almost nobody has voted on — yet.
@@ -103,192 +114,216 @@ export default async function UnderratedPage() {
           </div>
         </section>
 
-        {/* One centered column holds the podium, the ad and the gem list.
-            The 970px cap lives on an inner div rather than on .site-shell,
-            because that rule is doubled (.site-shell.site-shell, 0,2,0) and
-            sets max-width:1520px at lg — it would beat a lg:max-w-[970px]
-            utility (0,1,0) on the same element. */}
-        <div className="site-shell mx-auto px-4">
-          <div className="mx-auto w-full lg:max-w-[970px]">
-            {peeks.length === 0 ? (
-              <p className="mt-10 text-center text-sm text-muted">
-                No underrated peeks right now — they surface here once a
-                high-grade peek picks up a few (but not too many) votes.
-              </p>
-            ) : (
-              <>
-                <ol className="gem-podium">
-                  {banners.map((peek, i) => (
-                    <Podium key={peek.id} peek={peek} rank={i + 1} />
-                  ))}
-                </ol>
-
-                {/* content-1 — below the podium, above MORE GEMS, at every
-                    width. It is no longer wrapped in an <li>: the flex list it
-                    used to sit in is gone, and that list is exactly what put
-                    the ad above the podium (the <li> had no `order`, so its
-                    default 0 sorted ahead of the podium's 1/2/3). Out here it
-                    simply follows in document order. Same id, same className. */}
-                <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
-
-                {gems.length > 0 && (
-                  <>
-                    <div className="arena-climb-head" aria-hidden="true">
-                      <span className="arena-climb-dot" />
-                      <span className="arena-climb-label">More gems</span>
-                      <span className="arena-climb-rule" />
-                    </div>
-
-                    <ol className="gem-list" start={4}>
-                      {gems.map((peek, i) => (
-                        <ClimbRow
-                          key={peek.id}
-                          peek={peek}
-                          rank={i + 4}
-                          falling={
-                            computeDirection(trends.get(peek.id) ?? []) ===
-                            "down"
-                          }
-                        />
-                      ))}
-                    </ol>
-                  </>
-                )}
-              </>
-            )}
+        {/* Banners are their own block, outside the list below, exactly as on
+            Top Peeks: they need to be wider than the max-w-3xl the rest of the
+            page uses, and keeping them out of the list is what leaves the ad
+            below them in plain document order. */}
+        {peeks.length > 0 && (
+          <div className="site-shell mx-auto max-w-[1260px] px-4">
+            <div className="pnt">
+              <div className="pnt-group pnt-group--champ">
+                <span className="pnt-rod" aria-hidden />
+                <div className="pnt-hang">
+                  <Pennant peek={banners[0]} rank={1} />
+                </div>
+              </div>
+              {banners.length > 1 && (
+                <div className="pnt-group pnt-group--pair">
+                  <span className="pnt-rod" aria-hidden />
+                  <div className="pnt-hang">
+                    {banners[1] && <Pennant peek={banners[1]} rank={2} />}
+                    {banners[2] && <Pennant peek={banners[2]} rank={3} />}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+        )}
+
+        {/* content-1, directly under the banners at every width. Same id, same
+            className, same container as Top Peeks. */}
+        <div className="site-shell mx-auto max-w-3xl px-4">
+          <NitroAdSlot id="pkb-content-1" className="my-8 md:my-7" />
+        </div>
+
+        <div className="site-shell mx-auto max-w-3xl px-4">
+          {peeks.length === 0 ? (
+            <p className="mt-10 text-center text-sm text-muted">
+              No underrated peeks right now — they surface here once a
+              high-grade peek picks up a few (but not too many) votes.
+            </p>
+          ) : (
+            tiers.length > 0 && (
+              <>
+                <div className="arena-climb-head" aria-hidden="true">
+                  <span className="arena-climb-dot" />
+                  <span className="arena-climb-label">More gems</span>
+                  <span className="arena-climb-rule" />
+                </div>
+
+                <ol className="tier-list">
+                  {tiers.map((tier) => {
+                    const color = gradeTierColor(tier.label);
+                    return (
+                      <li className="tier" key={tier.label}>
+                        <div
+                          className="tier-badge"
+                          style={{ backgroundColor: color }}
+                          aria-hidden="true"
+                        >
+                          <span className="tier-grade">{tier.label}</span>
+                          <span className="tier-word">Tier</span>
+                        </div>
+                        <ol className="tier-items">
+                          {tier.items.map(({ peek, rank, falling }) => {
+                            const floor = peek.floors!;
+                            const map = floor.maps;
+                            const votes = peek.vote_count ?? 0;
+                            return (
+                              <li key={peek.id}>
+                                <Link
+                                  href={`/peeks/${peek.slug}?from=underrated`}
+                                  aria-label={`Open peek: ${peek.name}, ${map.name}`}
+                                  className="tier-chip"
+                                >
+                                  <span className="tier-chip-top">
+                                    <span className="tier-chip-rank">
+                                      #{rank}
+                                    </span>
+                                    {falling && (
+                                      <span className="tier-chip-down">▼</span>
+                                    )}
+                                    <span className="tier-chip-votes">
+                                      {voteLabel(votes)}
+                                    </span>
+                                  </span>
+                                  <span className="tier-chip-name">
+                                    {peek.name}
+                                  </span>
+                                  <span className="tier-chip-loc">
+                                    {map.name} · {floor.name}
+                                  </span>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ol>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </>
+            )
+          )}
         </div>
 
         {/* Same container the list above uses, so the row lines up with it. */}
-        <div className="site-shell mx-auto px-4">
-          <div className="mx-auto w-full lg:max-w-[970px]">
-            <ExploreNext
-              line="Great peeks almost nobody's found yet. Vote one up and help it get discovered."
-              cards={[
-                {
-                  href: "/top",
-                  icon: "flame",
-                  label: "Top peeks",
-                  subtitle: "Highest-rated angles",
-                },
-                {
-                  href: "/#maps",
-                  icon: "map",
-                  label: "Browse maps",
-                  subtitle: "Every map",
-                },
-              ]}
-            />
-          </div>
+        <div className="site-shell mx-auto max-w-3xl px-4">
+          <ExploreNext
+            line="Great peeks almost nobody's found yet. Vote one up and help it get discovered."
+            cards={[
+              {
+                href: "/top",
+                icon: "flame",
+                label: "Top peeks",
+                subtitle: "Highest-rated angles",
+              },
+              {
+                href: "/#maps",
+                icon: "map",
+                label: "Browse maps",
+                subtitle: "Every map",
+              },
+            ]}
+          />
         </div>
       </main>
     </>
   );
 }
 
-function Podium({ peek, rank }: { peek: PeekWithContext; rank: number }) {
+// One hanging pennant. The whole banner is the link — a real <a>, so it is
+// reachable by keyboard, opens in a new tab on middle-click, and carries the
+// same ?from=underrated the rest of the page uses.
+function Pennant({ peek, rank }: { peek: PeekWithContext; rank: number }) {
   const floor = peek.floors!;
   const map = floor.maps;
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
   const votes = peek.vote_count ?? 0;
 
   return (
-    // A card standing on a medal step. The crown and the card share the
-    // .gem-rise wrapper so the entrance animation lives there, leaving the
-    // card's own `transform` free for the hover lift.
-    <li className={`gem-pod gem-pod--${rank}`}>
-      <div className="gem-rise">
+    <div className={`pnt-item pnt-item--${rank}`}>
+      {/* The hanger — cord, nail and brass rod. Decorative and md+ only: it is
+          display:none below md, where the two shared mobile rods do the job
+          instead. Inside the item so it travels with its own banner rather
+          than being positioned against the row. */}
+      <span className="pnt-hanger" aria-hidden="true">
+        <svg
+          className="pnt-cord"
+          viewBox="0 0 100 46"
+          preserveAspectRatio="none"
+          aria-hidden
+        >
+          {/* preserveAspectRatio="none" stretches the triangle to whatever
+              width the banner ends up; non-scaling-stroke keeps the cord a
+              constant 1.6px instead of stretching with it. */}
+          <path
+            d="M2.6 44 L50 2.6 L97.4 44"
+            fill="none"
+            stroke="#7d6a4a"
+            strokeWidth="1.6"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+        <span className="pnt-nail" />
+        <span className="pnt-rodbar" />
+      </span>
+      {/* Carries the banner's drop-shadow and its focus ring at md+. Both have
+          to be a filter, because clip-path cuts a box-shadow away with the
+          corners it clips. display:contents below md, so the mobile layout
+          gains no box and stays exactly as it is. */}
+      <span className="pnt-cloth">
+      <Link
+        href={`/peeks/${peek.slug}?from=underrated`}
+        aria-label={`Open peek: ${peek.name}, ${map.name}`}
+        className={`pnt-card pnt-card--${rank}`}
+      >
         {rank === 1 && (
-          <span className="gem-crown" aria-hidden>
+          <span className="pnt-crown" aria-hidden>
             👑
           </span>
         )}
-        <Link
-          href={`/peeks/${peek.slug}?from=underrated`}
-          className="gem-card"
-          aria-label={`Open peek: ${peek.name}, ${map.name}`}
-        >
-          <span className="gem-card-name">{peek.name}</span>
-          <span className="gem-card-loc">
-            {map.name} · {floor.name}
-          </span>
-          <span className="gem-card-meta">
-            <span
-              className="arena-grade"
-              style={{ backgroundColor: gradeTierColor(r.label) }}
-              aria-label={`Grade ${r.label}`}
-            >
-              {r.label}
-            </span>
-            <span className="gem-card-votes">{voteLabel(votes)}</span>
-          </span>
-          <span className="gem-card-cta">Watch peek →</span>
-        </Link>
-      </div>
-      <div className="gem-step">
-        <span className="gem-step-rank">{rank}</span>
-      </div>
-    </li>
-  );
-}
-
-function ClimbRow({
-  peek,
-  rank,
-  falling,
-}: {
-  peek: PeekWithContext;
-  rank: number;
-  falling: boolean;
-}) {
-  const floor = peek.floors!;
-  const map = floor.maps;
-  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
-  const votes = peek.vote_count ?? 0;
-
-  return (
-    // Gem rows only. The podium above keeps the arena's own entrance, same
-    // reasoning as /top.
-    <li
-      className="arena-climb"
-      data-reveal="quick"
-      style={
-        {
-          "--reveal-delay": `${Math.min(Math.max(rank - 4, 0), 5) * 50}ms`,
-        } as CSSProperties
-      }
-    >
-      <Link
-        href={`/peeks/${peek.slug}?from=underrated`}
-        className="arena-climb-link"
-        style={{ ["--tier"]: gradeTierColor(r.label) } as CSSProperties}
-      >
-        <span className="arena-climb-rank">{rank}</span>
-        <span className="arena-climb-main">
-          <span className="arena-climb-name">
-            <span className="arena-climb-nametext">{peek.name}</span>
-            {isPeekNew(peek.created_at) && (
-              <span className="arena-newpill">New</span>
-            )}
-            {falling && (
-              <span className="arena-trend-down" aria-label="Trend falling">
-                ▼
-              </span>
-            )}
-          </span>
-          <span className="arena-climb-loc">
-            {map.name} · {floor.name}
-          </span>
+        <span className={`arena-coin arena-coin--${rank} pnt-coin`} aria-hidden>
+          {rank}
         </span>
+        <span className="pnt-name">{peek.name}</span>
+        <span className="pnt-loc">
+          {map.name} · {floor.name}
+        </span>
+        {/* Colour still comes from gradeTierColor, never a fixed green — the
+            grade tiers are not allowed to collapse into one colour. */}
         <span
-          className="arena-chip"
+          className="arena-grade pnt-grade"
           style={{ backgroundColor: gradeTierColor(r.label) }}
           aria-label={`Grade ${r.label}`}
         >
           {r.label}
         </span>
-        <span className="arena-climb-votes">{voteLabel(votes)}</span>
+        <span className="pnt-spacer" aria-hidden />
+        <span className="pnt-watch" aria-hidden>
+          <span className="pnt-watch-glyph">▶</span>
+          {/* The desktop wording is fixed; the mobile wording depends only on
+              rank, which is known here, so only one of the two needs a
+              breakpoint to choose between them. */}
+          <span className="pnt-watch-desk">Watch peek</span>
+          <span className="pnt-watch-mob">
+            {rank === 1 ? "Tap to watch" : "Watch"}
+          </span>
+        </span>
+        <span className="pnt-votes">{voteLabel(votes)}</span>
       </Link>
-    </li>
+      </span>
+    </div>
   );
 }
+
