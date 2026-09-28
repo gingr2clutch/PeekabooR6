@@ -1600,177 +1600,347 @@ h4 {
   margin-top: 0;
 }
 
-/* --- Podium variant (top 3 on the underrated page) ------------------------
-   Three medal pedestals, bottom-aligned as a winner's podium: #1 tallest in
-   the center, #2 left, #3 right. Info cards are equal height so only the
-   pedestal height staggers the tops. */
-.arena-list--podium {
-  align-items: flex-end;
-  margin-top: 12px;
-}
-.arena-podium {
+/* --- Hidden-gems podium (top 3 on the underrated page) --------------------
+   A card standing on a medal step. This is its own grid rather than three
+   items in the shared .arena-list flex row, because that list is what broke
+   the old layout: the ad <li> carried no `order`, so its default 0 sorted it
+   ahead of the podium items' 1/2/3. On desktop the ad rendered ABOVE the
+   podium; on phones its 300px min-width shared a flex line with three
+   flex-basis:0 items and crushed them to ~10px strips. The ad now sits
+   outside any list, after this one, in plain document order — the same fix
+   /top already made (see app/top/page.tsx).
+
+   Steps scale (arena-podium-grow), cards translate (arena-podium-rise):
+   transform and opacity only, so the entrance costs no layout and CLS is 0. */
+.gem-podium {
   position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "one one"
+    "two three";
+  gap: 14px 10px;
+  align-items: end;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.gem-pod {
   display: flex;
-  flex: 1 1 0;
+  flex-direction: column;
+  justify-content: flex-end;
   min-width: 0;
-  z-index: 1;
 }
-.arena-podium--2 {
-  order: 1;
+/* Medal palette — the same three gradients the old pedestals used. */
+.gem-pod--1 {
+  grid-area: one;
+  --gem-medal: linear-gradient(180deg, #ffe89a 0%, #e6b422 100%);
+  --gem-strip: #e6b422;
+  --gem-ink: #7a5600;
 }
-.arena-podium--1 {
-  order: 2;
-  flex-grow: 1.16; /* champion column a touch wider */
-  z-index: 2;
+.gem-pod--2 {
+  grid-area: two;
+  --gem-medal: linear-gradient(180deg, #f3f4f6 0%, #c3c7cc 100%);
+  --gem-strip: #c3c7cc;
+  --gem-ink: #565a61;
 }
-.arena-podium--3 {
-  order: 3;
+.gem-pod--3 {
+  grid-area: three;
+  --gem-medal: linear-gradient(180deg, #eecaa0 0%, #c17d3e 100%);
+  --gem-strip: #c17d3e;
+  --gem-ink: #5a3410;
 }
-.arena-podium-link {
+/* The riser carries the entrance animation so the card keeps `transform`
+   free for :hover. arena-podium-rise fills `both`, so its end keyframe
+   (translateY(0)) would otherwise outrank the hover lift for the life of
+   the page — animations beat non-!important declarations in the cascade. */
+.gem-rise {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  text-align: center;
+  /* inset from the step's edges, so the card reads as standing ON it */
+  margin-inline: 8px;
   animation: arena-podium-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.arena-podium--3 .arena-podium-link {
+.gem-pod--3 .gem-rise {
   animation-delay: 0ms;
 }
-.arena-podium--2 .arena-podium-link {
+.gem-pod--2 .gem-rise {
   animation-delay: 120ms;
 }
-.arena-podium--1 .arena-podium-link {
+.gem-pod--1 .gem-rise {
   animation-delay: 260ms;
 }
-.arena-podium-link:focus-visible {
-  outline: 2px solid #0e8f8b;
-  outline-offset: 2px;
-  border-radius: 10px;
-}
-.arena-podium-crown {
+.gem-crown {
   font-size: 20px;
   line-height: 1;
   margin-bottom: 3px;
   filter: drop-shadow(0 1px 1px rgba(120, 80, 0, 0.4));
 }
-.arena-podium-info {
+.gem-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  gap: 3px;
   width: 100%;
-  min-height: 116px; /* uniform baseline; grows if a peek needs more room */
-  padding: 8px 6px 10px;
+  padding: 12px 10px;
+  text-align: center;
   background: #fffdf7;
   border: 1px solid #e6dfcf;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px -6px rgba(20, 16, 8, 0.28);
-  margin-bottom: 5px;
+  /* medal strip along the top edge */
+  border-top: 4px solid var(--gem-strip, #e6dfcf);
+  border-radius: 16px;
+  box-shadow: 0 6px 16px -10px rgba(20, 16, 8, 0.32);
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
-.arena-podium-name {
+.gem-card:hover {
+  transform: translateY(-4px);
+  border-color: #0e8f8b;
+  box-shadow: 0 12px 22px -12px rgba(20, 16, 8, 0.4);
+}
+.gem-card:focus-visible {
+  outline: 2px solid #0e8f8b;
+  outline-offset: 2px;
+}
+/* max-width + min-width + overflow-wrap are load-bearing, not belt-and-braces.
+   These are flex items, so min-width defaults to `auto` and the box refuses to
+   shrink below its min-content width. A single unbreakable peek name (no
+   spaces to wrap at) therefore sized the box WIDER than the card: the line
+   clamp still hid the text, but the oversized box painted outside the card,
+   which has overflow:visible for the hover shadow. `anywhere` lets the word
+   break AND reduces min-content width, so the box can shrink to the card. */
+.gem-card-name {
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 12px;
-  line-height: 1.2;
+  font-weight: 700;
+  line-height: 1.16;
   color: #1b1813;
+  text-wrap: balance;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.arena-podium--1 .arena-podium-name {
-  font-size: 13.5px;
-}
-.arena-podium-loc {
-  font-size: 10px;
-  line-height: 1.2;
+.gem-card-loc {
+  margin-top: 4px;
+  line-height: 1.25;
   color: #8a8274;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.arena-podium-meta {
+.gem-card-meta {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  margin-top: 1px;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 8px;
 }
-.arena-podium-votes {
+.gem-card-votes {
   font-family: var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #8a8274;
 }
-/* The pedestal block — medal-colored, with a big rank number and a subtle
-   3D read (top highlight + inner bottom shade). */
-.arena-podium-block {
+.gem-card-cta {
+  margin-top: auto;
+  padding-top: 10px;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: #0e8f8b;
+}
+/* The step — medal gradient, big rank number, and the same subtle 3D read
+   the old pedestal had (top highlight + inner bottom shade). */
+.gem-step {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
+  background: var(--gem-medal);
   border-radius: 8px 8px 0 0;
   box-shadow:
     inset 0 2px 0 rgba(255, 255, 255, 0.55),
     inset 0 -12px 18px -12px rgba(0, 0, 0, 0.32),
     0 -1px 0 rgba(0, 0, 0, 0.06);
-  /* the pedestal rises up from the ground */
+  /* the step rises up from the ground */
   transform-origin: bottom center;
   animation: arena-podium-grow 640ms cubic-bezier(0.34, 1.3, 0.5, 1) both;
 }
-.arena-podium-rank {
+.gem-pod--3 .gem-step {
+  animation-delay: 0ms;
+}
+.gem-pod--2 .gem-step {
+  animation-delay: 130ms;
+}
+.gem-pod--1 .gem-step {
+  animation-delay: 280ms;
+}
+.gem-step-rank {
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
   font-weight: 800;
-  font-size: 30px;
   line-height: 1;
+  color: var(--gem-ink);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
-  /* pops in once the pedestal has risen (kept crisp — no stretch) */
+  /* pops in once the step has risen (kept crisp — no stretch) */
   opacity: 0;
   animation: arena-podium-num 240ms ease-out both;
 }
-/* Pedestals rise bronze → silver → gold; numbers follow. */
-.arena-podium--3 .arena-podium-block {
-  animation-delay: 0ms;
-}
-.arena-podium--2 .arena-podium-block {
-  animation-delay: 130ms;
-}
-.arena-podium--1 .arena-podium-block {
-  animation-delay: 280ms;
-}
-.arena-podium--3 .arena-podium-rank {
+.gem-pod--3 .gem-step-rank {
   animation-delay: 420ms;
 }
-.arena-podium--2 .arena-podium-rank {
+.gem-pod--2 .gem-step-rank {
   animation-delay: 550ms;
 }
-.arena-podium--1 .arena-podium-rank {
+.gem-pod--1 .gem-step-rank {
   animation-delay: 700ms;
 }
-.arena-podium--1 .arena-podium-block {
-  height: 98px;
-  background: linear-gradient(180deg, #ffe89a 0%, #e6b422 100%);
+/* Mobile: #1 spans both columns, #2 and #3 sit side by side and share a card
+   min-height so only their steps stagger. */
+.gem-pod--1 .gem-card-name {
+  font-size: 24px;
 }
-.arena-podium--2 .arena-podium-block {
-  height: 70px;
-  background: linear-gradient(180deg, #f3f4f6 0%, #c3c7cc 100%);
+.gem-pod--1 .gem-card-loc {
+  font-size: 13px;
 }
-.arena-podium--3 .arena-podium-block {
-  height: 54px;
-  background: linear-gradient(180deg, #eecaa0 0%, #c17d3e 100%);
+.gem-pod--1 .gem-step {
+  height: 52px;
 }
-.arena-podium--1 .arena-podium-rank {
-  font-size: 36px;
-  color: #7a5600;
+.gem-pod--1 .gem-step-rank {
+  font-size: 34px;
 }
-.arena-podium--2 .arena-podium-rank {
-  color: #565a61;
+.gem-pod--2 .gem-card,
+.gem-pod--3 .gem-card {
+  min-height: 176px;
 }
-.arena-podium--3 .arena-podium-rank {
-  color: #5a3410;
+.gem-pod--2 .gem-card-name,
+.gem-pod--3 .gem-card-name {
+  font-size: 17px;
+}
+.gem-pod--2 .gem-card-loc,
+.gem-pod--3 .gem-card-loc {
+  font-size: 12px;
+}
+.gem-pod--2 .gem-step {
+  height: 40px;
+}
+.gem-pod--3 .gem-step {
+  height: 30px;
+}
+.gem-pod--2 .gem-step-rank,
+.gem-pod--3 .gem-step-rank {
+  font-size: 26px;
+}
+@media (min-width: 1024px) {
+  .gem-podium {
+    grid-template-columns: 1fr 1.16fr 1fr;
+    grid-template-areas: "two one three";
+    gap: 20px;
+    /* room for the base strip the three steps stand on */
+    padding-bottom: 6px;
+  }
+  /* Thin neutral base under all three steps. Absolutely positioned, so it
+     stays out of flow and never becomes a fourth grid item. */
+  .gem-podium::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 6px;
+    border-radius: 0 0 6px 6px;
+    background: linear-gradient(180deg, #e9e2d2 0%, #d9d1bd 100%);
+  }
+  .gem-rise {
+    margin-inline: 12px;
+  }
+  /* One min-height for all three cards, so only the steps stagger the tops. */
+  .gem-card,
+  .gem-pod--2 .gem-card,
+  .gem-pod--3 .gem-card {
+    min-height: 236px;
+    padding: 16px 14px;
+  }
+  .gem-card-name,
+  .gem-pod--2 .gem-card-name,
+  .gem-pod--3 .gem-card-name {
+    font-size: 24px;
+  }
+  .gem-pod--1 .gem-card-name {
+    font-size: 28px;
+  }
+  .gem-card-loc,
+  .gem-pod--1 .gem-card-loc,
+  .gem-pod--2 .gem-card-loc,
+  .gem-pod--3 .gem-card-loc {
+    font-size: 14px;
+  }
+  .gem-card-cta {
+    font-size: 13.5px;
+  }
+  .gem-pod--1 .gem-step {
+    height: 124px;
+  }
+  .gem-pod--2 .gem-step {
+    height: 88px;
+  }
+  .gem-pod--3 .gem-step {
+    height: 64px;
+  }
+  .gem-pod--1 .gem-step-rank {
+    font-size: 56px;
+  }
+  .gem-pod--2 .gem-step-rank {
+    font-size: 46px;
+  }
+  .gem-pod--3 .gem-step-rank {
+    font-size: 40px;
+  }
+}
+
+/* --- More gems (ranks 4+) -------------------------------------------------
+   Reuses the .arena-climb row design. Spacing comes from `gap` rather than
+   the row's own margin-bottom, so the 2-column desktop grid has no dangling
+   margin under its last row. Every override is scoped under .gem-list, so
+   the .arena-climb-* rules /top shares are untouched. */
+.gem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gem-list .arena-climb {
+  margin-bottom: 0;
+}
+@media (min-width: 1024px) {
+  .gem-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
+  }
+  .gem-list .arena-climb-link {
+    padding: 14px 16px;
+  }
+  .gem-list .arena-climb-name {
+    font-size: 15.5px;
+  }
+  .gem-list .arena-climb-rank {
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+  }
 }
 @keyframes arena-podium-rise {
   0% {
@@ -2269,18 +2439,25 @@ h4 {
   .arena-banner-card::after {
     animation: none !important;
   }
-  .arena-podium-link {
+  .gem-rise {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
   }
-  .arena-podium-block {
+  .gem-step {
     animation: none !important;
     transform: none !important;
   }
-  .arena-podium-rank {
+  .gem-step-rank {
     animation: none !important;
     opacity: 1 !important;
+  }
+  /* Keep the hover affordance, drop its motion: the border still goes teal. */
+  .gem-card {
+    transition: none !important;
+  }
+  .gem-card:hover {
+    transform: none !important;
   }
   /* Freeze the diamond at a nice angle; hide sparkles. */
   .arena-gem {
