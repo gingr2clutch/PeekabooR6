@@ -205,12 +205,17 @@ export default async function FloorPage({
         />
 
         {/* Floor-level stats — server-rendered so crawlers and ad units see
-            them on load. All values derived from this floor's peeks. */}
-        <section className="mx-auto mt-12 max-w-md">
-          <h2 className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+            them on load. All values derived from this floor's peeks.
+            At lg the whole block is 1.5x its previous size — real sizes, not a
+            transform, so it still lays out and wraps normally. Every value is
+            1.5x what lg rendered before: 448->672 wide, 11->16.5 labels,
+            26->39 numbers, 36->54 padding, 14->21 radius. tracking-[0.14em]
+            and leading-none are relative, so they follow for free. */}
+        <section className="mx-auto mt-12 max-w-md lg:max-w-[672px]">
+          <h2 className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted lg:text-[16.5px]">
             Floor stats
           </h2>
-          <div className="mt-3 grid grid-cols-2 gap-y-6 rounded-card border border-border bg-card px-2 py-6 shadow-[0_2px_10px_rgba(0,0,0,0.05)] sm:grid-cols-4 sm:gap-y-0 lg:py-9">
+          <div className="mt-3 grid grid-cols-2 gap-y-6 rounded-card border border-border bg-card px-2 py-6 shadow-[0_2px_10px_rgba(0,0,0,0.05)] sm:grid-cols-4 sm:gap-y-0 lg:mt-[18px] lg:rounded-[21px] lg:px-3 lg:py-[54px]">
             <FloorStatCell label="Peeks" value={String(floorStats.total)} />
             <FloorStatCell
               label="Best"
@@ -310,12 +315,13 @@ function FloorStatCell({
   className?: string;
 }) {
   return (
-    <div className={`flex flex-col items-center px-3 ${className ?? ""}`}>
-      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+    <div className={`flex flex-col items-center px-3 lg:px-[18px] ${className ?? ""}`}>
+      {/* tracking is in em, so it scales with the font size on its own */}
+      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted lg:text-[16.5px]">
         {label}
       </span>
       <span
-        className={`mt-2 text-[26px] font-extrabold leading-none ${
+        className={`mt-2 text-[26px] font-extrabold leading-none lg:mt-3 lg:text-[39px] ${
           valueClassName ?? "text-ink"
         }`}
         style={valueStyle}
