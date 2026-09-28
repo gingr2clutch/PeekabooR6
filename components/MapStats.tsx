@@ -5,6 +5,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { rating } from "@/lib/rate";
 import { GradeMixBar, type MapGrades } from "@/components/GradeMixBar";
 import { GRADE_TIER_COLORS } from "@/lib/rate";
+import { mapAccent } from "@/lib/map-accents";
 import type { PeekWithContext } from "@/lib/db";
 
 export type { MapGrades };
@@ -18,6 +19,8 @@ type Props = {
   /** Desktop header row, right side: "{Map} · N floors". */
   mapName?: string;
   floorLabel?: string;
+  /** Drives the card's accent border — same source and fallback as the hero. */
+  mapSlug?: string;
 };
 
 // Grade spread segments, strongest -> weakest. Same colours as GradeMixBar,
@@ -50,6 +53,7 @@ export function MapStats({
   topPeek,
   mapName,
   floorLabel,
+  mapSlug,
 }: Props) {
   const stats = [
     { label: "Peeks", value: peeks },
@@ -153,45 +157,76 @@ export function MapStats({
           exactly one is ever visible — the hidden one is display:none, not a
           second link a reader or a crawler follows twice into the page. */}
       {topPeek && (
-        <div className="lg:col-span-4 lg:overflow-hidden lg:rounded-card lg:border-2 lg:border-brand lg:bg-card lg:shadow-sm">
+        <div
+          className="lg:col-span-4 lg:overflow-hidden lg:rounded-card lg:border-[3px] lg:bg-card lg:shadow-sm"
+          // Same accent, width and radius as the hero, and the same fallback
+          // for maps that have none — one source, so the two boxes cannot
+          // drift apart.
+          style={{ borderColor: mapAccent(mapSlug) }}
+        >
           <div className="lg:hidden">
             <div className="my-4 border-t border-border" />
             <BestPeek peek={topPeek} eyebrow="Top Peek" bare />
           </div>
 
-          {/* Whole card is the link — the mock drops the separate "Watch the
-              clip" affordance, so the target has to be the card itself. Focus
-              ring is explicit because the visible border is the brand outline,
-              which would otherwise be the only focus cue. */}
+          {/* Whole card is the link. The mock has no separate affordance, so
+              the target is the card; the focus ring is explicit because the
+              accent border would otherwise be the only focus cue — and it is a
+              different colour per map, so it cannot carry that job. */}
           <Link
             href={`/peeks/${topPeek.slug}?from=map`}
-            className="peek-lift hidden rounded-card outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 lg:flex lg:h-full lg:flex-col lg:overflow-hidden"
+            className="peek-lift relative hidden rounded-card outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 lg:block lg:h-full lg:overflow-hidden"
           >
-            {/* Same cascade BestPeek uses below lg — clip first frame, then
-                map cover, then stripes. Fixed 16/9 box, so nothing shifts when
-                the frame decodes. */}
-            <div className="relative aspect-video w-full overflow-hidden bg-black">
+            {/* Fills the card. The height comes from the row — the stats card
+                opposite sets it — so this box is sized before anything loads
+                and a decoding frame cannot shift the page. */}
+            <span className="absolute inset-0 block bg-black">
               <PeekThumb peek={topPeek} sizes="420px" />
-            </div>
-            <div className="flex flex-1 flex-col justify-center px-5 py-4">
-              <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-brand">
+            </span>
+
+            {/* Scrim. Weighted to the bottom where the text sits and carried
+                far enough up that a bright frame cannot wash out the name —
+                measured on the brightest thumbnail on the site, not assumed. */}
+            <span
+              aria-hidden
+              className="absolute inset-0 block"
+              style={{
+                backgroundImage:
+                  "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.86) 22%, rgba(0,0,0,0.62) 45%, rgba(0,0,0,0.28) 68%, rgba(0,0,0,0.10) 100%)",
+              }}
+            />
+
+            {r && (
+              <span className="absolute right-3 top-3 z-10">
+                <GradeBadge
+                  label={r.label}
+                  score={r.score}
+                  className="h-8 min-w-8 px-2 text-[22px]"
+                />
+              </span>
+            )}
+
+            <span className="absolute inset-x-0 bottom-0 z-10 block px-5 pb-5">
+              <span className="block font-mono text-[12px] uppercase tracking-[0.18em] text-[#ffb27a]">
                 Top Peek
               </span>
-              <span className="mt-1.5 flex items-start gap-2.5">
-                <span className="min-w-0 flex-1 text-xl font-bold leading-tight tracking-tight text-ink">
-                  {topPeek.name}
-                </span>
-                {r && (
-                  <span className="shrink-0">
-                    <GradeBadge label={r.label} score={r.score} />
-                  </span>
-                )}
+              {/* Up to two lines, then ellipsis — the longest name on the site
+                  ("Garage (bottom white) door") wraps to two and still fits. */}
+              <span
+                className="mt-1.5 block overflow-hidden text-[36px] font-bold leading-[1.08] tracking-tight text-white"
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                }}
+              >
+                {topPeek.name}
               </span>
-              <span className="mt-1 text-[14px] text-muted">
+              <span className="mt-1.5 block text-[18px] text-white/85">
                 {topPeek.floors?.name} · {topPeek.vote_count}{" "}
                 {topPeek.vote_count === 1 ? "vote" : "votes"}
               </span>
-            </div>
+            </span>
           </Link>
         </div>
       )}
