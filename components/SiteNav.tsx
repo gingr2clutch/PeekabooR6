@@ -15,7 +15,6 @@ import {
   Menu,
   Plus,
   Scale,
-  Swords,
   Target,
   Trophy,
   X,
@@ -75,7 +74,6 @@ const SECTIONS: { label: string; items: MenuItem[] }[] = [
     items: [
       { href: "/blog", label: "Guides", subtitle: "Tips & strategy", Icon: BookOpen },
       { href: "/compare", label: "Compare maps", subtitle: "Map vs map", Icon: Scale },
-      { href: "/attacking", label: "Attacker Guides", subtitle: "Counter every spawn peek", Icon: Swords },
     ],
   },
 ];
