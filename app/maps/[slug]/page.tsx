@@ -7,6 +7,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { MapStats } from "@/components/MapStats";
 import { MapEntryScope } from "@/components/MapEntryScope";
 import { MapViewToggle } from "@/components/MapViewToggle";
+import { MapWeekCard, type WeekRow } from "@/components/MapWeekCard";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { PageHeader } from "@/components/PageHeader";
 import { PeekRouletteBar } from "@/components/PeekRouletteBar";
@@ -204,6 +205,59 @@ export default async function MapPage({
     r: rating(pk.base_success_rate, pk.worked_votes, pk.vote_count),
     mover: computeMover(rankedTrends.get(pk.id) ?? [], 7),
   }));
+
+  // Seven day buckets, oldest first. Built from the snapshots the chart
+  // already loaded — a reshape, not a read.
+  //
+  // The window ends on the most recent day that actually HAS a snapshot, not
+  // on the calendar date. Snapshots are captured once a day, so anchoring on
+  // "today" left the last column empty for every peek until that day's capture
+  // ran — a whole column of "–" for most of each day. Labels stay honest about
+  // it: the last column only says "Today" when that day really is today.
+  const DAY_MS = 86400000;
+  const dayOf = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+  const todayKey = dayOf(Date.now());
+  let newest = "";
+  for (const pk of weekTop5) {
+    for (const pt of rankedTrends.get(pk.id) ?? []) {
+      if (pt.date > newest) newest = pt.date;
+    }
+  }
+  // Fall back to today when there are no snapshots at all, and never run the
+  // window past today even if a capture is somehow stamped ahead.
+  const anchorKey = !newest || newest > todayKey ? todayKey : newest;
+  const anchorMs = Date.parse(`${anchorKey}T00:00:00Z`);
+  const dayKeys = Array.from({ length: 7 }, (_, k) =>
+    dayOf(anchorMs - (6 - k) * DAY_MS)
+  );
+  const daysAgoOfKey = (key: string) =>
+    Math.round((Date.parse(`${todayKey}T00:00:00Z`) - Date.parse(`${key}T00:00:00Z`)) / DAY_MS);
+  const weekRows: WeekRow[] = weekTop5.map((pk) => {
+    const byDate = new Map(
+      (rankedTrends.get(pk.id) ?? []).map((p) => [p.date, p.pct])
+    );
+    return {
+      id: pk.id,
+      slug: pk.slug,
+      name: pk.name,
+      floorName: pk.floorName,
+      color: pk.color,
+      label: pk.r.label,
+      score: pk.r.score,
+      // Only measured peeks carry a real percentage; an estimate printed as
+      // "71%" would claim a precision the data does not have.
+      pct: pk.r.tier === "measured" ? pk.r.pct : null,
+      movePct: pk.mover ? Math.round(pk.mover.changePct) : null,
+      days: dayKeys.map((key) => {
+        const ago = daysAgoOfKey(key);
+        return {
+          key,
+          label: ago === 0 ? "Today" : `${ago}d`,
+          pct: byDate.get(key) ?? null,
+        };
+      }),
+    };
+  });
 
   const floorLabel = `${floors.length} ${floors.length === 1 ? "floor" : "floors"}`;
 
@@ -529,11 +583,16 @@ export default async function MapPage({
 
         {/* Effectiveness trend — always visible, below the floor picker. The
             7-day chart lives here; the full 30-day chart + Movers are one tap
-            away. Card matches the stats box width/styling. */}
+            away.
+
+            Below lg this is exactly what it always was: one card with the
+            chart and the "See full trends" link. At lg the chart and the
+            separate "This week's top 5" companion are replaced by a single
+            full-width card with two views (MapWeekCard). */}
         {totalPeeks >= 2 && (
-          <div className="mt-8 md:mt-7 lg:grid lg:grid-cols-12 lg:gap-6">
-            <div className="rounded-card border border-border bg-card px-4 py-4 shadow-sm sm:px-6 md:py-5 lg:col-span-8 lg:px-8 lg:py-7">
-              <h2 className="mb-4 text-center text-lg font-bold tracking-tight text-ink lg:mb-5 lg:text-xl">
+          <div className="mt-8 md:mt-7">
+            <div className="rounded-card border border-border bg-card px-4 py-4 shadow-sm sm:px-6 md:py-5 lg:hidden">
+              <h2 className="mb-4 text-center text-lg font-bold tracking-tight text-ink">
                 Last 7 days — Top 5 peeks
               </h2>
               {mapSeries7.length === 0 ? (
@@ -542,21 +601,9 @@ export default async function MapPage({
                   daily.
                 </p>
               ) : (
-                <>
-                  <MultiTrendChart series={mapSeries7} className="lg:hidden" />
-                  {/* Desktop gets the names on the lines. Separate render
-                      because the labelled chart needs a wider viewBox, and a
-                      viewBox cannot change at a breakpoint. The breakpoint
-                      class rides on the chart's own root — a wrapper here
-                      would be one more box in the mobile layout. */}
-                  <MultiTrendChart
-                    series={mapSeries7}
-                    endLabels
-                    className="hidden lg:block"
-                  />
-                </>
+                <MultiTrendChart series={mapSeries7} />
               )}
-              <div className="mt-3 text-center lg:text-left">
+              <div className="mt-3 text-center">
                 <Link
                   href={`/maps/${map.slug}/trends`}
                   className="text-sm font-semibold text-brand hover:underline"
@@ -566,61 +613,12 @@ export default async function MapPage({
               </div>
             </div>
 
-            {/* lg-only companion to the chart. Same five peeks, same order,
-                same colours, so a row's dot is its line. */}
-            {weekTop5.length > 0 && (
-              <div className="hidden lg:col-span-4 lg:block lg:rounded-card lg:border lg:border-border lg:bg-card lg:px-6 lg:py-7 lg:shadow-sm">
-                <h2 className="mb-4 text-lg font-bold tracking-tight text-ink lg:text-xl">
-                  This week&apos;s top 5
-                </h2>
-                <ol className="space-y-1">
-                  {weekTop5.map((pk, i) => {
-                    // Percentage is shown only where it is real: measured peeks
-                    // carry a vote-derived pct, estimates do not, and printing
-                    // a seed value as "71%" would claim a precision the data
-                    // does not have.
-                    const sub = [
-                      pk.floorName,
-                      pk.r.tier === "measured" ? `${pk.r.pct}%` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ");
-                    const move = pk.mover ? Math.round(pk.mover.changePct) : null;
-                    return (
-                      <li key={pk.id} className="flex items-center gap-3 border-t border-border py-2.5 first:border-t-0">
-                        <span className="w-5 shrink-0 text-center font-mono text-[22px] font-bold leading-none text-border tabular-nums">
-                          {i + 1}
-                        </span>
-                        <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: pk.color }} />
-                        <span className="min-w-0 flex-1">
-                          <Link href={`/peeks/${pk.slug}?from=map`} className="block truncate text-[15px] font-medium text-ink hover:text-brand">
-                            {pk.name}
-                          </Link>
-                          {sub && (
-                            <span className="mt-0.5 block truncate text-[12px] text-muted">
-                              {sub}
-                            </span>
-                          )}
-                        </span>
-                        {/* Weekly move, same window the chart plots. */}
-                        {move !== null && (
-                          <span
-                            className="shrink-0 whitespace-nowrap font-mono text-[12px] font-bold tabular-nums"
-                            style={{
-                              color:
-                                move > 0 ? "#1f9d55" : move < 0 ? "#d1573a" : "#8b8d86",
-                            }}
-                            title={`${move > 0 ? "Up" : move < 0 ? "Down" : "Flat"} over the last 7 days`}
-                          >
-                            {move > 0 ? `\u25B2${move}` : move < 0 ? `\u25BC${Math.abs(move)}` : "\u2013"}
-                          </span>
-                        )}
-                        <GradeBadge label={pk.r.label} score={pk.r.score} />
-                      </li>
-                    );
-                  })}
-                </ol>
-              </div>
+            {weekRows.length > 0 && (
+              <MapWeekCard
+                rows={weekRows}
+                trendsHref={`/maps/${map.slug}/trends`}
+                className="hidden lg:block"
+              />
             )}
           </div>
         )}
