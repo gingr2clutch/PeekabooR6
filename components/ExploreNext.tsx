@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ChevronRight, Flame, Gem, Map, Video } from "lucide-react";
+import { ChevronRight, Flame, Gem, Map } from "lucide-react";
+import { SubmitSplit } from "@/components/SubmitSplit";
 
 // "Where to next" row for the Top Peeks / Underrated pages. Those two are the
 // only callers.
@@ -41,33 +42,11 @@ export function ExploreNext({
 
       {/* Equal heights come free: grid items stretch by default. */}
       <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-[1.7fr_1fr_1fr] lg:gap-5">
-        {/* Submit card. Not a whole-card link — the button is the target, so a
-            big tap area does not sit under an ad. Same href as the sitewide
-            bar used here. */}
-        <div className="flex flex-col gap-3 rounded-card border border-[#f7cfb3] bg-[#fff6ef] p-4 lg:flex-row lg:items-center lg:gap-4 lg:p-5">
-          <div className="flex items-start gap-3 lg:flex-1">
-            <span
-              aria-hidden
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand"
-            >
-              <Video size={22} />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-[15px] font-bold leading-snug text-ink">
-                Got a clip of a peek we&rsquo;re missing?
-              </span>
-              <span className="mt-1 block text-[13px] leading-snug text-muted">
-                Send it in and the community grades it.
-              </span>
-            </span>
-          </div>
-          <a
-            href={submitHref}
-            className="inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-btn bg-brand px-4 py-2.5 text-[14px] font-semibold text-white transition duration-150 ease-out hover:-translate-y-0.5 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0 lg:w-auto"
-          >
-            Submit a clip
-            <ArrowIcon />
-          </a>
+        {/* Both asks, sharing the slot the single "Submit a clip" card used
+            to fill. Same component as the sitewide bar and the map aside, so
+            the three cannot drift apart again. */}
+        <div className="overflow-hidden rounded-card border border-[#f7cfb3] bg-[#fff6ef]">
+          <SubmitSplit className="divide-[#f0d6bf]" />
         </div>
 
         {/* Link cards, in the More drawer's item style. */}
