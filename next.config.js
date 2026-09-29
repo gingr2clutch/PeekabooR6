@@ -76,6 +76,18 @@ const nextConfig = {
         destination: "/",
         permanent: false,
       },
+      // Attacker Guides retired Sep 2026. Pages kept for a future attacking
+      // feature; delete these redirects to restore.
+      {
+        source: "/attacking",
+        destination: "/",
+        permanent: false,
+      },
+      {
+        source: "/maps/:slug/attacking",
+        destination: "/maps/:slug",
+        permanent: false,
+      },
       {
         source: "/ads.txt",
         destination: "https://api.nitropay.com/v1/ads-2632.txt",

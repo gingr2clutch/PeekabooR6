@@ -154,11 +154,6 @@ function backOrigin(
       return { href: "/peeks?sort=votes", label: "Most-voted peeks" };
     case "stier":
       return { href: "/peeks?tier=s", label: "S-Tier peeks" };
-    case "attacking":
-      return {
-        href: `/maps/${map.slug}/attacking`,
-        label: `${map.name} · Attacker's Guide`,
-      };
     default:
       return null;
   }
