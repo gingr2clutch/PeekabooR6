@@ -1512,7 +1512,10 @@ h4 {
    the fold. Toggled by components/FlameCrestMotion.tsx. */
 .arena-crest[data-paused="true"] .crest-cl,
 .arena-crest[data-paused="true"] .crest-layer,
-.arena-crest[data-paused="true"] .crest-ember {
+.arena-crest[data-paused="true"] .crest-ember,
+.arena-crest[data-paused="true"] .arena-trophy,
+.arena-crest[data-paused="true"] .arena-trophy-gleam,
+.arena-crest[data-paused="true"] .arena-trophy-spark {
   animation-play-state: paused;
 }
 
@@ -2015,6 +2018,15 @@ h4 {
   }
   .arena-banner-card::after {
     animation: none !important;
+  }
+  /* Freeze the trophy square-on; hide its gleam and sparks. */
+  .arena-trophy {
+    animation: none !important;
+    transform: rotateX(8deg) rotateY(0deg);
+  }
+  .arena-trophy-gleam,
+  .arena-trophy-spark {
+    display: none;
   }
   /* Freeze the diamond at a nice angle; hide sparkles. */
   .arena-gem {
@@ -3866,4 +3878,282 @@ html:not(.reveal-ready) .csa-anim {
   .msc-spark-cover {
     display: none;
   }
+}
+
+/* --- Leaderboard: gold trophy ---------------------------------------------
+   The Underrated page's spinning diamond, rebuilt in gold for /contributors.
+   Same construction on purpose: a server-rendered SVG plus CSS, animated with
+   transform and opacity only. It sits inside FlameCrestMotion, so the pause
+   rule above (.arena-crest[data-paused="true"]) reaches these too — see the
+   selector list there. */
+.arena-trophy-stage {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 10px;
+  perspective: 620px;
+}
+.arena-trophy {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  /* A trophy reads as a front-facing object, so it rocks rather than spinning
+     through its own back like the faceted gem does. */
+  animation: arena-trophy-tilt 4.8s ease-in-out infinite;
+  filter: drop-shadow(0 5px 9px rgba(176, 130, 20, 0.42));
+}
+.arena-trophy-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+@keyframes arena-trophy-tilt {
+  0%,
+  100% {
+    transform: rotateX(8deg) rotateY(-13deg);
+  }
+  50% {
+    transform: rotateX(8deg) rotateY(13deg);
+  }
+}
+/* Gleam that sweeps across the cup, then waits. */
+.arena-trophy-gleam {
+  animation: arena-trophy-gleam 4.2s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes arena-trophy-gleam {
+  0%,
+  62%,
+  100% {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  72% {
+    opacity: 0.85;
+  }
+  86% {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+.arena-trophy-spark {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(
+    closest-side,
+    #ffffff,
+    rgba(255, 233, 160, 0.65) 45%,
+    rgba(255, 255, 255, 0) 72%
+  );
+  clip-path: polygon(
+    50% 0,
+    58% 42%,
+    100% 50%,
+    58% 58%,
+    50% 100%,
+    42% 58%,
+    0 50%,
+    42% 42%
+  );
+  opacity: 0;
+  transform: scale(0);
+  animation: arena-trophy-spark 2.6s ease-in-out infinite;
+}
+.arena-trophy-spark--1 {
+  top: 12px;
+  left: 6px;
+  animation-delay: 0s;
+}
+.arena-trophy-spark--2 {
+  top: 30px;
+  right: 2px;
+  animation-delay: 0.9s;
+}
+.arena-trophy-spark--3 {
+  bottom: 14px;
+  left: 16px;
+  animation-delay: 1.7s;
+}
+@keyframes arena-trophy-spark {
+  0%,
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1) rotate(35deg);
+  }
+  28% {
+    opacity: 0;
+    transform: scale(0.5) rotate(60deg);
+  }
+}
+
+/* --- Leaderboard podium + list (/contributors) -----------------------------
+   Same idea as the Underrated podium: a card on a medal step, first raised in
+   the middle. Its own lb- prefix rather than reusing the pennant classes,
+   which are sized for peek banners and belong to Top Peeks. */
+.lb-podium {
+  display: grid;
+  grid-template-columns: 1fr 1.14fr 1fr;
+  align-items: end;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 640px) {
+  .lb-podium {
+    gap: 16px;
+  }
+}
+.lb-pod {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 0;
+}
+/* Gold / silver / bronze are the only place these three colours appear on the
+   site, so they are literals rather than palette tokens. */
+.lb-pod--1 {
+  --lb-medal: linear-gradient(180deg, #ffe89a 0%, #e6b422 100%);
+  --lb-ink: #7a5600;
+  --lb-step: 44px;
+}
+.lb-pod--2 {
+  --lb-medal: linear-gradient(180deg, #f3f4f6 0%, #c3c7cc 100%);
+  --lb-ink: #565a61;
+  --lb-step: 28px;
+}
+.lb-pod--3 {
+  --lb-medal: linear-gradient(180deg, #eecaa0 0%, #c17d3e 100%);
+  --lb-ink: #5a3410;
+  --lb-step: 18px;
+}
+.lb-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 18px 8px 12px;
+  text-align: center;
+  background: #fffdf7;
+  border: 1px solid #e6dfcf;
+  border-top: 4px solid var(--lb-ink);
+  border-radius: 14px 14px 0 0;
+  transition: transform 150ms ease, border-color 150ms ease;
+}
+.lb-card:hover {
+  transform: translateY(-3px);
+  border-color: #0e8f8b;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb-card {
+    transition: none;
+  }
+  .lb-card:hover {
+    transform: none;
+  }
+}
+.lb-medal {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background: var(--lb-medal);
+  color: var(--lb-ink);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+}
+.lb-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+}
+.lb-pod--1 .lb-avatar {
+  width: 52px;
+  height: 52px;
+  font-size: 20px;
+}
+.lb-name {
+  margin-top: 6px;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.2;
+  color: #1b1813;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.lb-pod--1 .lb-name {
+  font-size: 15px;
+}
+.lb-count {
+  font-size: 11.5px;
+  color: #8a8274;
+}
+.lb-count b {
+  font-weight: 700;
+  color: #1b1813;
+}
+.lb-pill {
+  margin-top: 6px;
+  border-radius: 9999px;
+  background: rgba(242, 100, 14, 0.1);
+  color: #f2640e;
+  padding: 2px 7px;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.lb-pill--gadget {
+  background: rgba(42, 117, 184, 0.12);
+  color: #2a75b8;
+}
+/* The step the card stands on. */
+.lb-step {
+  display: block;
+  height: var(--lb-step);
+  background: var(--lb-medal);
+  border-radius: 0 0 6px 6px;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -8px 12px -8px rgba(0, 0, 0, 0.3);
+}
+/* Ranks 4+ reuse the arena row, spaced with gap rather than each row's own
+   margin. Scoped to .lb-list so Underrated's rows are untouched. */
+.lb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lb-list .arena-climb {
+  margin-bottom: 0;
+}
+.lb-list .arena-climb-votes {
+  width: auto;
+  white-space: nowrap;
 }
