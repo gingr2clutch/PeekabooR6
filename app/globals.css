@@ -4157,3 +4157,229 @@ html:not(.reveal-ready) .csa-anim {
   width: auto;
   white-space: nowrap;
 }
+
+/* --- Top 3 swipe row (phones only) ----------------------------------------
+   Below md, /top and /underrated swap their hanging pennants for a horizontal
+   swipe row: one card at a time with the next peeking in. The pennant block is
+   hidden with a class at this width, not removed — its CSS is untouched and
+   md+ still renders exactly what it always did.
+
+   Nothing here is fixed-position or animated on load, and the row is a normal
+   block in flow, so the ad below it does not move. */
+.t3 {
+  /* full-bleed to the screen edges, out of the page's padded column */
+  width: 100vw;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  margin-top: 12px;
+}
+.t3-row {
+  display: flex;
+  gap: 12px;
+  margin: 0;
+  padding: 4px 16px 10px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 16px;
+  /* stops a horizontal swipe from chaining into a browser back-gesture */
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.t3-row::-webkit-scrollbar {
+  display: none;
+}
+.t3-item {
+  flex: 0 0 auto;
+  width: 76vw;
+  max-width: 340px;
+  scroll-snap-align: start;
+}
+.t3-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid #cfd5db;
+  text-decoration: none;
+  /* Same metallic surface as the pennants: top sheen plus a diagonal gloss,
+     tinted per rank below. */
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0) 32%),
+    linear-gradient(115deg, rgba(255, 255, 255, 0) 42%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 58%);
+  box-shadow: 0 6px 16px -10px rgba(20, 16, 8, 0.4);
+  transition: transform 150ms ease;
+}
+.t3-card:active {
+  transform: translateY(2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .t3-card {
+    transition: none;
+  }
+  .t3-card:active {
+    transform: none;
+  }
+}
+/* Gold / silver / bronze. Same values as .pnt-card--1/2/3, repeated rather
+   than borrowed because that class also carries the pennant's fixed height. */
+.t3-card--1 {
+  background-color: #f7e6ac;
+  border-color: #e6cf82;
+}
+.t3-card--2 {
+  background-color: #eceef1;
+  border-color: #cfd5db;
+}
+.t3-card--3 {
+  background-color: #f0ddc6;
+  border-color: #ddc09c;
+}
+
+.t3-preview {
+  position: relative;
+  display: block;
+  height: 150px;
+  /* Dark base so a blueprint that has not decoded yet reads as the map's
+     background rather than a white flash — and it is what shows when a floor
+     has no birds_eye_url at all. */
+  background: #1d2226;
+  overflow: hidden;
+}
+.t3-img {
+  display: block;
+  width: 100%;
+  height: 150px;
+  /* `none`, not cover: the image keeps its natural size and object-position
+     slides the crop so the peek's own pin lands under the marker. */
+  object-fit: none;
+}
+.t3-pin {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 9999px;
+  background: #f2640e;
+  box-shadow: 0 0 0 2px #fff, 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+.t3-watch {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 9999px;
+  background: rgba(20, 22, 24, 0.86);
+  color: #fff;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.t3-watch-glyph {
+  font-size: 9px;
+}
+/* Coin overlaps the preview's bottom-left edge. */
+.t3-coin {
+  position: absolute;
+  left: 14px;
+  top: 150px;
+  transform: translateY(-58%);
+  z-index: 2;
+}
+.t3-crown {
+  position: absolute;
+  /* Centred over the coin: the coin sits at left:14px and .arena-coin--1 is
+     54px wide, so its centre is 41px in. Its top edge lands at ~119px, so 94
+     puts the crown just clear of it instead of behind it. */
+  left: 41px;
+  top: 94px;
+  transform: translateX(-50%);
+  z-index: 3;
+  font-size: 20px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(120, 80, 0, 0.4));
+}
+
+.t3-body {
+  display: block;
+  /* clears the overlapping coin */
+  padding: 30px 14px 14px;
+}
+.t3-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.18;
+  color: #1b1813;
+  overflow-wrap: anywhere;
+}
+.t3-loc {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  color: #6b6558;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.t3-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+.t3-grade {
+  flex-shrink: 0;
+}
+.t3-votes {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b6558;
+}
+
+.t3-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+}
+.t3-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.t3-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #d8d2c4;
+  transition: width 160ms ease, background-color 160ms ease;
+}
+.t3-dot--on {
+  width: 22px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .t3-dot {
+    transition: none;
+  }
+}
+.t3-hint {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8a8274;
+}
