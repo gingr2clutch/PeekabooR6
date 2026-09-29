@@ -3602,3 +3602,268 @@ html:not(.reveal-ready) .csa-anim {
   background: #f1eee7;
   box-shadow: none;
 }
+
+/* --- Map page: this week's card (lg only) ---------------------------------
+   Two views over the same five peeks. Row and header heights are identical in
+   both, so switching cannot move anything below the card — and that holds for
+   a map with two peeks as well as five, which a fixed card height would not.
+   All motion is transform/opacity and runs on entry + on each view switch. */
+.msc-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border, #e6dfcf);
+  border-radius: 10px;
+  background: #faf8f4;
+}
+.msc-seg button {
+  border-radius: 7px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #8a8274;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+.msc-seg button:hover {
+  color: #1b1813;
+}
+.msc-seg button.msc-seg-on {
+  background: #f2640e;
+  color: #fff;
+}
+
+.msc-row {
+  display: grid;
+  align-items: center;
+  gap: 14px;
+}
+.msc-row--top5 {
+  grid-template-columns: 34px minmax(0, 1fr) 230px 150px 64px 58px;
+}
+.msc-row--days {
+  grid-template-columns: minmax(0, 1fr) repeat(7, 58px) 64px 58px 58px;
+}
+.msc-head {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a8a294;
+}
+.msc-body-row {
+  border-top: 1px solid var(--border, #e6dfcf);
+}
+.msc-body-row:first-of-type {
+  border-top: 0;
+}
+.msc-rank {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ddd6c6;
+  font-variant-numeric: tabular-nums;
+}
+.msc-peek {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.msc-dot {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+}
+.msc-name {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1b1813;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.msc-name:hover {
+  color: #f2640e;
+}
+.msc-floor {
+  display: block;
+  margin-top: 1px;
+  font-size: 12px;
+  color: #8a8274;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.msc-rate {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.msc-bar {
+  position: relative;
+  flex: 1;
+  height: 9px;
+  border-radius: 9999px;
+  background: #efece4;
+  overflow: hidden;
+}
+.msc-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 9999px;
+  transform-origin: left center;
+}
+.msc-pct {
+  width: 44px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1b1813;
+  font-variant-numeric: tabular-nums;
+}
+.msc-spark {
+  position: relative;
+  display: block;
+  width: 150px;
+  height: 30px;
+  overflow: hidden;
+}
+.msc-spark-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.msc-spark-cover {
+  position: absolute;
+  inset: 0;
+  background: var(--card, #fffdf7);
+  transform-origin: right center;
+  /* Revealed by default, so the line is visible if the animation never runs
+     (no JS, or the card is never scrolled into view). The keyframes fill
+     `both`, so they still start from a fully covering scaleX(1). */
+  transform: scaleX(0);
+}
+.msc-move {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.msc-up {
+  color: #1f9d55;
+}
+.msc-down {
+  color: #d1573a;
+}
+.msc-flat {
+  color: #8b8d86;
+}
+/* Day-by-day cells */
+.msc-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  border-radius: 9px;
+  overflow: hidden;
+}
+.msc-cell-box {
+  position: absolute;
+  inset: 0;
+  border-radius: 9px;
+}
+.msc-cell--none .msc-cell-box {
+  background: #f1eee7;
+  opacity: 1;
+}
+.msc-cell-txt {
+  position: relative;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #29331f;
+  font-variant-numeric: tabular-nums;
+}
+.msc-cell--none .msc-cell-txt {
+  color: #a8a294;
+}
+.msc-now {
+  text-align: right;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1b1813;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- entry motion. Only inside .msc-in, which is set once the card has been
+   seen; the keyed subtree restarts it on every view switch. --- */
+.msc-in .msc-bar-fill {
+  animation: msc-grow 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes msc-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.msc-in .msc-spark-cover {
+  animation: msc-wipe 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--d, 0ms) + 120ms);
+}
+@keyframes msc-wipe {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+.msc-in .msc-move {
+  animation: msc-pop 320ms cubic-bezier(0.34, 1.4, 0.5, 1) both;
+  animation-delay: calc(var(--d, 0ms) + 380ms);
+}
+@keyframes msc-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.msc-in .msc-cell {
+  animation: msc-cell-in 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--c, 0ms);
+}
+@keyframes msc-cell-in {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .msc-in .msc-bar-fill,
+  .msc-in .msc-spark-cover,
+  .msc-in .msc-move,
+  .msc-in .msc-cell {
+    animation: none !important;
+  }
+  /* the cover would otherwise sit over the line at its start value */
+  .msc-spark-cover {
+    display: none;
+  }
+}
