@@ -17,22 +17,49 @@ import { coverThumb } from "@/lib/cover-image";
 // the section is revealed (see .csa-anim in globals.css, which hangs off the
 // site's existing reveal observer rather than adding a second one).
 
+// Both variants are the same art; only the accent moves. Driving it from CSS
+// variables set on each panel's root keeps this ONE copy of the markup — a
+// duplicated gadget version would drift the moment either one is touched.
+//
+// Peek values are the brand orange and peach the art already used, so "peek"
+// renders byte-for-byte what it did before this prop existed.
+const ACCENTS = {
+  peek: {
+    "--csa-accent": "#f2640e",
+    "--csa-accent-wash": "rgba(242, 100, 14, 0.16)",
+    "--csa-accent-trail": "rgba(242, 100, 14, 0.85)",
+    "--csa-ok": "#ffb07a",
+  },
+  gadget: {
+    // GADGET_SUBMIT.accent, with a light blue where the peek art uses peach.
+    "--csa-accent": "#2e6f96",
+    "--csa-accent-wash": "rgba(46, 111, 150, 0.18)",
+    "--csa-accent-trail": "rgba(46, 111, 150, 0.85)",
+    "--csa-ok": "#9ad2f0",
+  },
+} as const;
+
 export function SubmitSideArt({
   side,
+  kind = "peek",
   coverUrl,
   mapName,
 }: {
   side: "phone" | "pc";
+  /** Which form this art sits beside. Only the accent colour changes. */
+  kind?: keyof typeof ACCENTS;
   /** Phone only: a map cover already fetched for the grid above. */
   coverUrl?: string | null;
   /** Phone only: names the clip in the overlay. */
   mapName?: string;
 }) {
+  const accent = ACCENTS[kind] as React.CSSProperties;
   if (side === "phone") {
     const src = coverUrl ? coverThumb(coverUrl, 400) : null;
     return (
       <div
         aria-hidden="true"
+        style={accent}
         className="hidden text-center xl:block xl:translate-y-[67px]"
       >
         <div className="font-mono text-[11.5px] font-semibold uppercase tracking-[0.18em] text-muted">
@@ -66,7 +93,7 @@ export function SubmitSideArt({
                 of the loop — the "someone liked it" beat. */}
             <span className="absolute bottom-[62px] right-2.5 flex flex-col gap-3">
               <span className="csa-anim csa-pop relative block h-[26px] w-[26px] rounded-full bg-white/20">
-                <span className="csa-anim csa-fill absolute inset-0 block rounded-full bg-brand opacity-0" />
+                <span className="csa-anim csa-fill absolute inset-0 block rounded-full bg-[var(--csa-accent)] opacity-0" />
               </span>
               <span className="block h-[26px] w-[26px] rounded-full bg-white/20" />
               <span className="block h-[26px] w-[26px] rounded-full bg-white/20" />
@@ -108,6 +135,7 @@ export function SubmitSideArt({
   return (
     <div
       aria-hidden="true"
+      style={accent}
       className="hidden text-center xl:block xl:translate-y-[67px]"
     >
       <div className="font-mono text-[11.5px] font-semibold uppercase tracking-[0.18em] text-muted">
@@ -118,21 +146,21 @@ export function SubmitSideArt({
       <div className="csa-anim csa-float-off mx-auto mt-4 w-full max-w-[250px]">
         <div className="relative h-[160px] overflow-hidden rounded-[12px] bg-ink p-2.5">
           <div className="relative grid h-full place-items-center rounded-[8px] border-[1.5px] border-dashed border-white/35">
-            <span className="csa-anim csa-flash csa-hit absolute -inset-[1.5px] block rounded-[8px] border-[1.5px] border-brand bg-brand/[0.16] opacity-0" />
+            <span className="csa-anim csa-flash csa-hit absolute -inset-[1.5px] block rounded-[8px] border-[1.5px] border-[var(--csa-accent)] bg-[var(--csa-accent-wash)] opacity-0" />
             <span className="csa-anim csa-hide csa-zonetext absolute inset-x-0 bottom-2.5 text-[12px] text-white/50">
               drop zone
             </span>
-            <span className="csa-anim csa-flash csa-ok absolute inset-x-0 bottom-2 text-[12px] font-bold text-[#ffb07a] opacity-0">
+            <span className="csa-anim csa-flash csa-ok absolute inset-x-0 bottom-2 text-[12px] font-bold text-[var(--csa-ok)] opacity-0">
               ✓ ready to tag
             </span>
           </div>
 
           {/* Dashed trail behind the file as it glides in, then gone. */}
-          <span className="csa-anim csa-trail absolute left-3.5 top-[22px] w-[86px] origin-left rotate-[26deg] border-t-2 border-dashed border-brand/85 opacity-0" />
+          <span className="csa-anim csa-trail absolute left-3.5 top-[22px] w-[86px] origin-left rotate-[26deg] border-t-2 border-dashed border-[var(--csa-accent-trail)] opacity-0" />
 
           <span className="csa-anim csa-glide absolute left-[75px] top-[52px] block">
             <span className="flex items-center gap-2 whitespace-nowrap rounded-[8px] bg-white px-2.5 py-[7px] font-mono text-[12px] font-semibold shadow-[0_8px_18px_rgba(0,0,0,0.35)]">
-              <span className="block h-5 w-4 bg-brand [clip-path:polygon(0_0,70%_0,100%_25%,100%_100%,0_100%)]" />
+              <span className="block h-5 w-4 bg-[var(--csa-accent)] [clip-path:polygon(0_0,70%_0,100%_25%,100%_100%,0_100%)]" />
               clip.mp4
             </span>
             <svg

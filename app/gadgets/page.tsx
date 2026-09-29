@@ -13,6 +13,7 @@ import {
   getMaps,
 } from "@/lib/db";
 import { SubmitSpot } from "@/components/SubmitSpot";
+import { SubmitSideArt } from "@/components/SubmitSideArt";
 import { GADGET_SUBMIT } from "@/lib/submit-config";
 import { Fragment } from "react";
 
@@ -54,6 +55,9 @@ export default async function GadgetsIndexPage() {
       getGadgetOperatorNames(),
     ]);
   const maps = allMaps.filter((m) => m.published);
+  // First published map that actually has a cover — the phone panel's screen.
+  // Already-loaded data, so this adds no query.
+  const artMap = maps.find((m) => m.cover_image_url) ?? null;
 
   const gridAd = maps.length > MIN_MAPS_FOR_GRID_AD;
 
@@ -211,13 +215,32 @@ export default async function GadgetsIndexPage() {
         {/* Community submissions, gadget variant — same component as the
             homepage, different config. Bomb sites and operators come from the
             queries above; the map list is the published set already used by
-            the grid. */}
-        <SubmitSpot
-          config={GADGET_SUBMIT}
-          maps={maps.map((m) => ({ slug: m.slug, name: m.name }))}
-          sites={siteOptions}
-          operators={operatorNames}
-        />
+            the grid.
+
+            Same wrapper the homepage uses, so the two submit sections behave
+            identically: display:contents below xl means this generates no box
+            at all there and the form keeps the exact position it had before the
+            side art existed. data-reveal is what starts the panels' loop — the
+            site's existing reveal observer sets .is-revealed here rather than a
+            second observer being added. */}
+        <div
+          data-reveal
+          className="csa-row contents xl:grid xl:grid-cols-[1fr_620px_1fr] xl:items-center xl:gap-6"
+        >
+          <SubmitSideArt
+            side="phone"
+            kind="gadget"
+            coverUrl={artMap?.cover_image_url}
+            mapName={artMap?.name}
+          />
+          <SubmitSpot
+            config={GADGET_SUBMIT}
+            maps={maps.map((m) => ({ slug: m.slug, name: m.name }))}
+            sites={siteOptions}
+            operators={operatorNames}
+          />
+          <SubmitSideArt side="pc" kind="gadget" />
+        </div>
       </main>
     </>
   );
