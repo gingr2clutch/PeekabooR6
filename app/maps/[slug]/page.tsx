@@ -23,12 +23,10 @@ import {
 import { gradeTierColor, rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
 import { TrendArrow } from "@/components/TrendArrow";
-import { MultiTrendChart, type TrendSeries } from "@/components/MultiTrendChart";
 import {
   computeDirection,
   computeMover,
   getSnapshotsForPeeks,
-  pointsWithinDays,
   TREND_LINE_COLORS,
 } from "@/lib/trends";
 import { coverThumb } from "@/lib/cover-image";
@@ -43,6 +41,8 @@ import { MAP_GUIDES } from "@/content/map-guides";
 const MAX_FLOOR_DOTS = 14;
 
 export const dynamic = "force-dynamic";
+
+const SITE_URL = "https://peekaboor6.com";
 
 export async function generateMetadata({
   params,
@@ -150,26 +150,12 @@ export default async function MapPage({
     videoUrl: p.video_url,
     posterUrl: p.poster_url,
   }));
-
-  // Always-visible "Last 7 days" chart: top 5 peeks, reusing the 14-day
-  // snapshots above (filtered to the last 7 days). Only series with a real
-  // slope (>= 2 points in the window) are plotted.
-  const mapSeries7: TrendSeries[] = rankedPeeks
-    .slice(0, 5)
-    .map((peek, i) => ({
-      label: peek.name,
-      href: `/peeks/${peek.slug}`,
-      color: TREND_LINE_COLORS[i % TREND_LINE_COLORS.length],
-      points: pointsWithinDays(rankedTrends.get(peek.id) ?? [], 7),
-    }))
-    .filter((s) => s.points.length >= 2);
-
-  const lastUpdatedLabel = latestPeekAt
-    ? new Date(latestPeekAt).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+  // Kept as an ISO timestamp for the JSON-LD below. The human-readable
+  // "Updated <date>" badge it used to feed is gone, but the signal it carried
+  // to Google should not be — dateModified is where a crawler actually looks
+  // for it, rather than inside a sentence.
+  const dateModified = latestPeekAt
+    ? new Date(latestPeekAt).toISOString()
     : null;
 
   // Best peek per floor for the desktop tiles. rankedPeeks is already loaded
@@ -268,6 +254,24 @@ export default async function MapPage({
     <>
       <PageHeader />
       <main className="site-shell mx-auto max-w-5xl px-6 pb-8 pt-6">
+        {/* Minimal WebPage node, only so the freshness signal survives the
+            blurb card's removal. Serialised with JSON.stringify rather than a
+            template literal, so a map name containing a quote cannot break the
+            script tag. */}
+        {dateModified && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "WebPage",
+                name: MAP_GUIDES[map.slug]?.seoTitle ?? map.name,
+                url: `${SITE_URL}/maps/${map.slug}`,
+                dateModified,
+              }),
+            }}
+          />
+        )}
         <MapEntryScope>
         {/* Header with a subtle backdrop of the map's own cover image — faint,
             cover-cropped, fading into the page background at the bottom so it
@@ -591,44 +595,20 @@ export default async function MapPage({
         )}
 
         {/* Effectiveness trend — always visible, below the floor picker. The
-            7-day chart lives here; the full 30-day chart + Movers are one tap
+            7-day card lives here; the full 30-day chart + Movers are one tap
             away.
 
-            Below lg this is exactly what it always was: one card with the
-            chart and the "See full trends" link. At lg the chart and the
-            separate "This week's top 5" companion are replaced by a single
-            full-width card with two views (MapWeekCard). */}
+            One card at every width now. The separate below-lg
+            "Last 7 days — Top 5 peeks" chart card is gone: it showed the same
+            five peeks as MapWeekCard's Top 5 view but with no percentages, no
+            grades and no per-day detail, so phones got strictly less than
+            desktop out of more vertical space. */}
         {totalPeeks >= 2 && (
           <div className="mt-8 md:mt-7">
-            <div className="rounded-card border border-border bg-card px-4 py-4 shadow-sm sm:px-6 md:py-5 lg:hidden">
-              <h2 className="mb-4 text-center text-lg font-bold tracking-tight text-ink">
-                Last 7 days — Top 5 peeks
-              </h2>
-              {mapSeries7.length === 0 ? (
-                <p className="text-center text-sm text-muted">
-                  Trend data is still being collected — snapshots are captured
-                  daily.
-                </p>
-              ) : (
-                <MultiTrendChart series={mapSeries7} />
-              )}
-              <div className="mt-3 text-center">
-                <Link
-                  href={`/maps/${map.slug}/trends`}
-                  className="text-sm font-semibold text-brand hover:underline"
-                >
-                  See full trends →
-                </Link>
-              </div>
-            </div>
-
-            {weekRows.length > 0 && (
-              <MapWeekCard
-                rows={weekRows}
-                trendsHref={`/maps/${map.slug}/trends`}
-                className="hidden lg:block"
-              />
-            )}
+            <MapWeekCard
+              rows={weekRows}
+              trendsHref={`/maps/${map.slug}/trends`}
+            />
           </div>
         )}
 
@@ -698,38 +678,6 @@ export default async function MapPage({
               </details>
             )}
           </section>
-        )}
-
-        {/* Descriptive blurb, now in a card of its own so it reads as a
-            deliberate footer note rather than text that ran out of page.
-
-            The sentence is UNCHANGED, including the trailing "Updated <date>."
-            — it is indexed copy, so the date is repeated inside the badge
-            rather than moved into it. Visually the badge carries it; in the
-            markup the sentence is still whole. */}
-        {totalPeeks > 0 && (
-          <div className="mx-auto mt-10 max-w-2xl md:mt-8 lg:mx-0 lg:mt-auto lg:max-w-none lg:pt-6">
-            <div className="flex flex-col items-center gap-2.5 rounded-card border border-border bg-card px-5 py-4 text-center shadow-sm lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:rounded-none lg:border-x-0 lg:border-b-0 lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-5 lg:text-left lg:shadow-none">
-              <p className="max-w-[65ch] text-sm leading-relaxed text-muted">
-                Community-graded spawn peeks for {map.name} — pick a floor to
-                see exact spots, watch clips, and learn the setups.
-                {lastUpdatedLabel ? (
-                  <span className="sr-only">{` Updated ${lastUpdatedLabel}.`}</span>
-                ) : (
-                  ""
-                )}
-              </p>
-              {lastUpdatedLabel && (
-                <span
-                  aria-hidden="true"
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-btn border border-border bg-bg px-2.5 py-1 text-[11px] font-medium text-muted"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-                  Updated {lastUpdatedLabel}
-                </span>
-              )}
-            </div>
-          </div>
         )}
         </div>
 

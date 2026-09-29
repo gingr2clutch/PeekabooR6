@@ -5,13 +5,18 @@ import Link from "next/link";
 import { GradeBadge } from "@/components/GradeBadge";
 import { gradeTierColor, gradedLabel } from "@/lib/rate";
 
-// The map page's 7-day card — lg only. Below lg the original chart card is
-// still what renders; this component is never mounted there.
+// The map page's 7-day card, at EVERY width.
 //
-// Two views over the SAME five peeks and the same data the chart already
-// loaded (no new queries). Both views use identical row and header heights, so
-// switching cannot move anything below the card — that holds for a map with
-// two peeks as well as five, which a fixed card height would not.
+// It used to be lg-only, with phones getting a plain 7-day line chart instead.
+// That chart showed the same five peeks with no percentages, no grades and no
+// per-day detail, so the small screen got strictly less out of more vertical
+// space. Now both sizes get this card; the phone layout drops the columns that
+// do not survive the width rather than dropping the information.
+//
+// Two views over the SAME five peeks and the same data the page already loaded
+// (no new queries). Both views use identical row and header heights AT EVERY
+// WIDTH, so toggling can never move the ad below the card — that holds for a
+// map with two peeks as well as five, which a fixed card height would not.
 
 export type WeekDay = { key: string; label: string; pct: number | null };
 
@@ -30,8 +35,10 @@ export type WeekRow = {
 
 type View = "top5" | "days";
 
-const ROW_H = 58;
-const HEAD_H = 28;
+// Row and header heights live in CSS (--msc-row-h / --msc-head-h) rather than
+// inline, so they can differ between phone and desktop while staying identical
+// BETWEEN THE TWO VIEWS at each width — which is what keeps the ad below the
+// card still when you toggle.
 
 // The bar is drawn on a 50-90 scale, not 0-100: every peek worth showing sits
 // in a narrow band up there, and a full-range bar makes 68% and 81% look
@@ -132,9 +139,11 @@ export function MapWeekCard({
 
   return (
     <div ref={ref} className={className}>
-      <div className="rounded-card border border-border bg-card px-8 py-7 shadow-sm">
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="text-xl font-bold tracking-tight text-ink">
+      <div className="rounded-card border border-border bg-card px-3 py-5 shadow-sm sm:px-5 lg:px-8 lg:py-7">
+        {/* Below lg: title centred, then a full-width toggle. At lg the header
+            is one row with the link on the right, exactly as before. */}
+        <div className="mb-4 flex flex-col items-stretch gap-3 lg:mb-5 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+          <h2 className="text-center text-lg font-bold tracking-tight text-ink lg:text-left lg:text-xl">
             This week&apos;s top 5
           </h2>
           <div className="flex items-center gap-4">
@@ -159,22 +168,35 @@ export function MapWeekCard({
             </div>
             <Link
               href={trendsHref}
-              className="whitespace-nowrap text-sm font-semibold text-brand hover:underline"
+              className="hidden whitespace-nowrap text-sm font-semibold text-brand hover:underline lg:inline"
             >
               See full trends →
             </Link>
           </div>
         </div>
 
+        {rows.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted">
+            Trend data is still being collected — snapshots are captured daily.
+          </p>
+        ) : (
         <div key={`${view}-${run}`} className={seen ? "msc-in" : undefined}>
           {view === "top5" ? (
             <div role="table" aria-label="This week's top 5">
-              <div role="row" className="msc-row msc-row--top5 msc-head" style={{ height: HEAD_H }}>
+              <div role="row" className="msc-row msc-row--top5 msc-head">
                 <span role="columnheader">#</span>
                 <span role="columnheader">Peek</span>
-                <span role="columnheader">Success rate</span>
-                <span role="columnheader">Last 7 days</span>
-                <span role="columnheader">Week</span>
+                <span role="columnheader" className="msc-head-rate">
+                  Success rate
+                </span>
+                <span role="columnheader">
+                  <span className="lg:hidden">7 days</span>
+                  <span className="hidden lg:inline">Last 7 days</span>
+                </span>
+                <span role="columnheader" className="text-right lg:text-left">
+                  <span className="lg:hidden">Now</span>
+                  <span className="hidden lg:inline">Week</span>
+                </span>
                 <span role="columnheader">Grade</span>
               </div>
               {rows.map((r, i) => (
@@ -182,7 +204,7 @@ export function MapWeekCard({
                   role="row"
                   key={r.id}
                   className="msc-row msc-row--top5 msc-body-row"
-                  style={{ height: ROW_H, ["--d" as string]: `${i * 80}ms` }}
+                  style={{ ["--d" as string]: `${i * 80}ms` }}
                 >
                   <span role="cell" className="msc-rank">{i + 1}</span>
                   <span role="cell" className="msc-peek">
@@ -209,7 +231,14 @@ export function MapWeekCard({
                     <Spark days={r.days} color={r.color} />
                   </span>
                   <span role="cell">
-                    <Move value={r.movePct} />
+                    {/* Below lg the success-rate column is hidden, so the %
+                        rides here with the weekly change stacked under it. */}
+                    <span className="msc-nowwrap">
+                      <span className="msc-now-inline">
+                        {r.pct !== null ? `${r.pct}%` : "–"}
+                      </span>
+                      <Move value={r.movePct} />
+                    </span>
                   </span>
                   <span role="cell">
                     <GradeBadge label={r.label} score={r.score} />
@@ -219,23 +248,32 @@ export function MapWeekCard({
             </div>
           ) : (
             <div role="table" aria-label="Last 7 days, day by day">
-              <div role="row" className="msc-row msc-row--days msc-head" style={{ height: HEAD_H }}>
+              <div role="row" className="msc-row msc-row--days msc-head">
                 <span role="columnheader">Peek</span>
                 {dayLabels.map((d) => (
                   <span role="columnheader" key={d.key} className="text-center">
-                    {d.label}
+                    {/* 24px cells cannot hold "Today" — the first character is
+                        enough to order them, and Top 5 carries the detail. */}
+                    <span className="sm:hidden">{d.label.charAt(0)}</span>
+                    <span className="hidden sm:inline">{d.label}</span>
                   </span>
                 ))}
-                <span role="columnheader" className="text-right">Now</span>
-                <span role="columnheader" className="text-right">Week</span>
-                <span role="columnheader" className="text-right">Grade</span>
+                <span role="columnheader" className="msc-now text-right">
+                  Now
+                </span>
+                <span role="columnheader" className="msc-move text-right">
+                  Week
+                </span>
+                <span role="columnheader" className="msc-grade-cell text-right">
+                  Grade
+                </span>
               </div>
               {rows.map((r, i) => (
                 <div
                   role="row"
                   key={r.id}
                   className="msc-row msc-row--days msc-body-row"
-                  style={{ height: ROW_H }}
+
                 >
                   <span role="cell" className="msc-peek">
                     <span className="msc-dot" style={{ backgroundColor: r.color }} aria-hidden />
@@ -274,16 +312,28 @@ export function MapWeekCard({
                   <span role="cell" className="msc-now">
                     {r.pct !== null ? `${r.pct}%` : "–"}
                   </span>
-                  <span role="cell" className="text-right">
+                  <span role="cell" className="msc-move text-right">
                     <Move value={r.movePct} />
                   </span>
-                  <span role="cell" className="flex justify-end">
+                  <span role="cell" className="msc-grade-cell justify-end">
                     <GradeBadge label={r.label} score={r.score} />
                   </span>
                 </div>
               ))}
             </div>
           )}
+        </div>
+        )}
+
+        {/* Below lg the link sits at the bottom, centred — the header there is
+            a centred title over a full-width toggle with no room beside it. */}
+        <div className="mt-4 text-center lg:hidden">
+          <Link
+            href={trendsHref}
+            className="text-sm font-semibold text-brand hover:underline"
+          >
+            See full trends →
+          </Link>
         </div>
       </div>
     </div>
