@@ -8,6 +8,8 @@ import { MapStats } from "@/components/MapStats";
 import { MapEntryScope } from "@/components/MapEntryScope";
 import { MapViewToggle } from "@/components/MapViewToggle";
 import { MapWeekCard, type WeekRow } from "@/components/MapWeekCard";
+import { MapPin } from "lucide-react";
+import { GADGET_HREF, PEEK_HREF } from "@/components/SubmitSplit";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { PageHeader } from "@/components/PageHeader";
 import { PeekRouletteBar } from "@/components/PeekRouletteBar";
@@ -768,11 +770,15 @@ export default async function MapPage({
 
             {/* In flow, not absolute, so it starts at the same 40px from the
                 top as the guide's eyebrow opposite. */}
-            <span
-              aria-hidden
-              className="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-btn border border-white/20 bg-black/45 text-white backdrop-blur-sm"
-            >
-              <CameraIcon />
+            {/* Both chips now: the ask below covers peeks AND gadget spots,
+                so showing only a camera undersold half of it. */}
+            <span aria-hidden className="relative z-10 inline-flex gap-2">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-btn border border-white/20 bg-black/45 text-white backdrop-blur-sm">
+                <CameraIcon />
+              </span>
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-btn border border-white/20 bg-black/45 text-white backdrop-blur-sm">
+                <MapPin size={20} strokeWidth={1.8} aria-hidden />
+              </span>
             </span>
 
             <div className="relative z-10 mt-auto">
@@ -780,7 +786,7 @@ export default async function MapPage({
                 Help grade {map.name}
               </span>
               <h2 className="mt-2.5 text-[24px] font-extrabold leading-[1.1] tracking-tight text-white [text-wrap:balance] xl:text-[30px]">
-                Got a clip of a peek we&rsquo;re missing?
+                Got a peek or gadget spot we&rsquo;re missing?
               </h2>
               <p className="mt-2 text-[15px] leading-relaxed text-white/85">
                 Send it in and the community grades it.
@@ -788,13 +794,24 @@ export default async function MapPage({
               {/* The button is the link, not the card: this sits beside an ad
                   slot, and a card-sized tap target next to one is exactly the
                   accident we do not want. */}
-              <a
-                href="/#submit"
-                className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-btn bg-brand px-4 py-3 text-[15px] font-semibold text-white transition duration-150 ease-out hover:-translate-y-0.5 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-              >
-                Submit a clip
-                <ArrowIcon />
-              </a>
+              {/* Two equal buttons. flex-wrap, not a fixed 2-column grid, so
+                  a narrow aside stacks them instead of squeezing both labels. */}
+              <div className="mt-5 flex flex-wrap gap-2.5">
+                <a
+                  href={PEEK_HREF}
+                  className="flex min-w-[160px] flex-1 items-center justify-center gap-1.5 rounded-btn bg-brand px-3 py-3 text-[14px] font-semibold text-white transition duration-150 ease-out hover:-translate-y-0.5 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                >
+                  Submit a peek
+                  <ArrowIcon />
+                </a>
+                <a
+                  href={GADGET_HREF}
+                  className="flex min-w-[160px] flex-1 items-center justify-center gap-1.5 rounded-btn bg-blue px-3 py-3 text-[14px] font-semibold text-white transition duration-150 ease-out hover:-translate-y-0.5 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                >
+                  Submit a gadget
+                  <ArrowIcon />
+                </a>
+              </div>
             </div>
           </aside>
         </div>
