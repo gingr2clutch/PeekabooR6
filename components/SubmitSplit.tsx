@@ -1,3 +1,5 @@
+import { MapPin } from "lucide-react";
+
 // The two submit asks — peek and gadget — as one shared pair.
 //
 // Three surfaces render this: the sitewide bar (SubmitCta), the bottom row on
@@ -31,27 +33,13 @@ export function CameraIcon() {
   );
 }
 
-// Gadget glyph, drawn inline in the same style as CameraIcon so the two halves
-// read as a pair rather than one icon set against another.
+// A map pin, not the old sun/crosshair. A gadget submission is fundamentally
+// "here, on this map", and the pin is the same idea the floor maps already use
+// — the crosshair read as a setting or a target, which is neither. Sized and
+// stroked to match CameraIcon exactly (17px box, 1.8) so the two chips read as
+// a pair. Defined here, so every surface using SubmitSplit changes at once.
 export function GadgetIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="17"
-      height="17"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      className="shrink-0"
-    >
-      <circle cx="12" cy="12" r="3.2" />
-      <path d="M12 2v3.4M12 18.6V22M2 12h3.4M18.6 12H22" />
-      <path d="M5.6 5.6l2.4 2.4M16 16l2.4 2.4M18.4 5.6L16 8M8 16l-2.4 2.4" />
-    </svg>
-  );
+  return <MapPin size={17} strokeWidth={1.8} aria-hidden className="shrink-0" />;
 }
 
 export function ArrowIcon() {
