@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { ExploreNext } from "@/components/ExploreNext";
+import { TopThreeSwipe } from "@/components/TopThreeSwipe";
 import { getTopPeeks, type PeekWithContext } from "@/lib/db";
 import { rating, gradeTierColor, GRADED_THRESHOLDS } from "@/lib/rate";
 import { computeDirection, getSnapshotsForPeeks } from "@/lib/trends";
@@ -167,8 +168,18 @@ export default async function TopPeeksPage() {
             container, the banners carried order 1/2/3, and the ad <li> had no
             order at all, so its default 0 sorted it ahead of all three. Out
             here the ad simply follows in document order. */}
+        {/* Phones get a swipe row instead of the pennants: three 440px
+            banners side by side on a 390px screen pushed the ad most of a
+            screen further down. The pennant block below is hidden with a
+            class rather than removed, so md+ is byte-identical and its CSS
+            is untouched. Both render in the same DOM position, so the ad
+            after them does not move. */}
         {peeks.length > 0 && (
-          <div className="site-shell mx-auto max-w-[1260px] px-4">
+          <TopThreeSwipe peeks={banners} from="top" className="md:hidden" />
+        )}
+
+        {peeks.length > 0 && (
+          <div className="site-shell mx-auto hidden max-w-[1260px] px-4 md:block">
             <div className="pnt">
               <div className="pnt-group pnt-group--champ">
                 <span className="pnt-rod" aria-hidden />
