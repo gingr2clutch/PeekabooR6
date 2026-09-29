@@ -7,11 +7,11 @@ import {
   type PeekWithContext,
 } from "@/lib/db";
 import { gradedLabel, rating, ratingScore } from "@/lib/rate";
+// Pair-URL helpers live in a db-free module so client components can use them;
+// re-exported here so every existing `from "@/lib/compare"` import still works.
+import { canonicalPair, pairId, VS } from "@/lib/compare-pair";
+export { VS, canonicalPair, pairId, parsePair } from "@/lib/compare-pair";
 
-// Delimiter between the two map slugs in a comparison URL. Map slugs contain
-// hyphens (e.g. "nighthaven-labs"), so we split on this exact token, never a
-// bare "-".
-export const VS = "-vs-";
 
 // Everything a comparison page needs about one side of the matchup. All figures
 // are computed from PUBLISHED peeks using the same rating() the rest of the site
@@ -124,26 +124,6 @@ export function decideComparison(
 // alphabetically. parsePair() accepts either order; the page redirects a
 // non-canonical order to the canonical one.
 // ---------------------------------------------------------------------------
-
-export function canonicalPair(a: string, b: string): [string, string] {
-  return a <= b ? [a, b] : [b, a];
-}
-
-export function pairId(a: string, b: string): string {
-  const [first, second] = canonicalPair(a, b);
-  return `${first}${VS}${second}`;
-}
-
-// Split a `[pair]` route param into its two slugs, or null if it isn't a
-// well-formed pair (missing delimiter, extra delimiters, or self-vs-self).
-export function parsePair(param: string): { a: string; b: string } | null {
-  const parts = param.split(VS);
-  if (parts.length !== 2) return null;
-  const [a, b] = parts;
-  if (!a || !b || a === b) return null;
-  return { a, b };
-}
-
 // Every canonical unordered pairing across the given slugs.
 export function allPairings(slugs: string[]): string[] {
   const out: string[] = [];
