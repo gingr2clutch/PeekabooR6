@@ -6,6 +6,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link2, Share2, X } from "lucide-react";
 import { BirdsEyeWatermark } from "@/components/BirdsEyeWatermark";
 import { PeekPin } from "@/components/PeekPin";
+import { BlueprintImage } from "@/components/BlueprintImage";
+import { mapAccent } from "@/lib/map-accents";
 import type { Floor, Map, Peek } from "@/lib/db";
 import { rating, ratingLabel, votesText } from "@/lib/rate";
 import { GradeBadge } from "@/components/GradeBadge";
@@ -149,13 +151,20 @@ export function FloorView({ map, floor, peeks }: Props) {
         <div className="absolute inset-0 overflow-hidden rounded-card border border-border bg-card">
           {floor.birds_eye_url ? (
             <>
-              <Image
+              <BlueprintImage
                 src={floor.birds_eye_url}
-                alt={`${map.name} ${floor.name} bird's-eye view`}
-                fill
-                sizes="(max-width: 1024px) 100vw, 1024px"
+                widths={[960, 1440, 1920]}
+                // NOT the box width. The box is 16:10 and the blueprints are
+                // 16:9, so object-cover scales to fill the HEIGHT and crops the
+                // sides — it consumes width * (16/10) / (16/9) = 1.111x the box
+                // width. Asking for the box width (960px) made the browser pick
+                // the 960w candidate and then upscale it ~11%, which is visibly
+                // softer than main downscaling the 1600x900 original. Asking for
+                // what cover actually needs picks 1440w and downscales instead.
+                sizes="(max-width: 1024px) 112vw, 1064px"
+                accent={mapAccent(map.slug)}
+                eager
                 className="object-cover"
-                priority
               />
               <BirdsEyeWatermark />
             </>

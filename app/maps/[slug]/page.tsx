@@ -31,6 +31,7 @@ import {
 } from "@/lib/trends";
 import { coverThumb } from "@/lib/cover-image";
 import { mapAccent } from "@/lib/map-accents";
+import { BlueprintImage } from "@/components/BlueprintImage";
 import { MAP_GUIDES } from "@/content/map-guides";
 
 // Most dots a floor card shows. At 1024px a 3-floor map gives each card about
@@ -422,14 +423,20 @@ export default async function MapPage({
                             keeps the name/count fully readable. Omitted when the
                             floor has no image, so those cards stay plain. */}
                         {floor.birds_eye_url && (
-                          <Image
+                          // eager + low priority: there are only 2-3 of these
+                          // and they were waiting for the viewport before they
+                          // even started. The hero stays the one high-priority
+                          // image. Placeholder is lg-only, matching the scrim
+                          // below it — under lg the card is white with a faint
+                          // wash, where an accent block would be wrong.
+                          <BlueprintImage
                             src={floor.birds_eye_url}
-                            alt=""
-                            aria-hidden
-                            fill
+                            widths={[640, 960, 1280]}
                             sizes="(max-width: 896px) 100vw, 848px"
-                            loading="lazy"
-                            className="pointer-events-none object-cover object-center opacity-[0.16] lg:opacity-100"
+                            accent={mapAccent(map.slug)}
+                            placeholderClassName="hidden lg:block"
+                            eager
+                            className="object-cover object-center opacity-[0.16] lg:opacity-100"
                           />
                         )}
                         {/* At lg the art fills the card and the text sits on
