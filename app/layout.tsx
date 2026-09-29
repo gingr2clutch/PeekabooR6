@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MEDIA_ORIGIN } from "@/lib/media-host";
 import Script from "next/script";
 import { Space_Grotesk, Inter, IBM_Plex_Mono } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
@@ -96,12 +97,12 @@ setTimeout(function(){if(!h.classList.contains('is-live')){h.removeAttribute('da
           }}
         />
         {/* Open connections to the image hosts early: wsrv.nl serves resized
-            cover WebPs, R2 serves the rest (floor blueprints, peek posters). */}
+            cover and blueprint WebPs, and the media origin serves the
+            originals it pulls from plus the rest (peek posters, clip video).
+            MEDIA_ORIGIN follows the MEDIA_HOST env var, so this hint moves with
+            the bucket's domain instead of pointing at a stale r2.dev host. */}
         <link rel="preconnect" href="https://wsrv.nl" />
-        <link
-          rel="preconnect"
-          href="https://pub-c11cdf7d63734d52945843745d8e60a8.r2.dev"
-        />
+        <link rel="preconnect" href={MEDIA_ORIGIN} />
         {/* Nitro loader + anchor — the site's only ad loader, every
             environment. The Grow by Mediavine (Journey) script that used to sit
             directly above this was removed on go-live, 2026-09-26; it is not

@@ -1,4 +1,5 @@
 import { supabasePublic } from "./supabase";
+import { withMediaHostDeep } from "./media-host";
 import { createSupabaseServerClient } from "./supabase/server";
 import { GRADED_THRESHOLDS, rating, ratingScore } from "./rate";
 import { isUnderrated, UNDERRATED_TOP_COUNT } from "./underrated";
@@ -74,21 +75,23 @@ const PEEK_COLUMNS =
   "id, floor_id, slug, name, x_pct, y_pct, video_url, poster_url, tiktok_url, instructions, difficulty, risk, tip, useful_pct, vote_count, worked_votes, total_casts, success_rate, base_success_rate, published, is_pro_only, created_at";
 
 export async function getMaps(): Promise<Map[]> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("maps")
     .select("id, slug, name, published, cover_image_url")
     .order("name", { ascending: true });
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return data ?? [];
 }
 
 export async function getMapBySlug(slug: string): Promise<Map | null> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("maps")
     .select("id, slug, name, published, cover_image_url")
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return data;
 }
 
@@ -144,11 +147,12 @@ function floorAltitude(slug: string, name: string): number {
 // set inconsistently per map and it can't be trusted as a height index.
 // See floorAltitude() above for the parsing rules.
 export async function getFloorsForMap(mapId: string): Promise<Floor[]> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("floors")
     .select("id, map_id, slug, name, display_order, birds_eye_url")
     .eq("map_id", mapId);
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   const floors = data ?? [];
   return [...floors].sort((a, b) => {
     const da = floorAltitude(a.slug, a.name);
@@ -165,26 +169,28 @@ export async function getFloorBySlug(
   mapId: string,
   floorSlug: string
 ): Promise<Floor | null> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("floors")
     .select("id, map_id, slug, name, display_order, birds_eye_url")
     .eq("map_id", mapId)
     .eq("slug", floorSlug)
     .maybeSingle();
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return data;
 }
 
 export async function getPublishedPeeksForFloor(
   floorId: string
 ): Promise<Peek[]> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("peeks")
     .select(PEEK_COLUMNS)
     .eq("floor_id", floorId)
     .eq("published", true)
     .order("created_at", { ascending: true });
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   // Rank by the same Effectiveness score the /popular page uses, so pin
   // numbers match the grades users see. created_at stays the DB fetch order,
   // so a stable sort keeps it as the tiebreaker for equal scores.
@@ -225,11 +231,12 @@ export async function getTopPeeks(limit = 5): Promise<PeekWithContext[]> {
   // top-ranked peek (e.g. a low-seed angle that voted its way to S+). ~140 rows
   // today, well under PostgREST's 1000-row cap; the page is force-dynamic so
   // this runs per request.
-  const { data, error } = await sb
+  const { data: rawData, error } = await sb
     .from("peeks")
     .select(select)
     .eq("published", true);
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
 
   // Only peeks whose map is also published are actually viewable.
   const candidates = ((data ?? []) as unknown as PeekWithContext[]).filter(
@@ -257,13 +264,14 @@ const LIST_OVERFETCH = 3;
 
 // Newest published peeks first (created_at desc) — the homepage "Peeks" stat.
 export async function getNewestPeeks(limit = 30): Promise<PeekWithContext[]> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("peeks")
     .select(PEEK_WITH_CONTEXT_SELECT)
     .eq("published", true)
     .order("created_at", { ascending: false })
     .limit(limit * LIST_OVERFETCH);
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return ((data ?? []) as unknown as PeekWithContext[])
     .filter((row) => row.floors?.maps?.published)
     .slice(0, limit);
@@ -271,13 +279,14 @@ export async function getNewestPeeks(limit = 30): Promise<PeekWithContext[]> {
 
 // Most-voted published peeks (vote_count desc) — the homepage "Votes" stat.
 export async function getMostVotedPeeks(limit = 30): Promise<PeekWithContext[]> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("peeks")
     .select(PEEK_WITH_CONTEXT_SELECT)
     .eq("published", true)
     .order("vote_count", { ascending: false })
     .limit(limit * LIST_OVERFETCH);
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return ((data ?? []) as unknown as PeekWithContext[])
     .filter((row) => row.floors?.maps?.published)
     .slice(0, limit);
@@ -286,11 +295,12 @@ export async function getMostVotedPeeks(limit = 30): Promise<PeekWithContext[]> 
 // S-tier published peeks only (grade letter "S" = S+, S, S-), ranked best-first
 // — the homepage "S-Tier" stat.
 export async function getSTierPeeks(limit = 30): Promise<PeekWithContext[]> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("peeks")
     .select(PEEK_WITH_CONTEXT_SELECT)
     .eq("published", true);
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return ((data ?? []) as unknown as PeekWithContext[])
     .filter(
       (row) =>
@@ -333,12 +343,13 @@ export async function getTopPeekForMap(
   floorIds: string[]
 ): Promise<PeekWithContext | null> {
   if (floorIds.length === 0) return null;
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("peeks")
     .select(PEEK_WITH_CONTEXT_SELECT)
     .in("floor_id", floorIds)
     .eq("published", true);
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   const candidates = ((data ?? []) as unknown as PeekWithContext[]).filter(
     (row) => row.floors?.maps?.published
   );
@@ -351,12 +362,13 @@ export async function getRankedPeeksForMap(
   floorIds: string[]
 ): Promise<PeekWithContext[]> {
   if (floorIds.length === 0) return [];
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("peeks")
     .select(PEEK_WITH_CONTEXT_SELECT)
     .in("floor_id", floorIds)
     .eq("published", true);
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return ((data ?? []) as unknown as PeekWithContext[])
     .filter((row) => row.floors?.maps?.published)
     .sort(compareBestPeek);
@@ -370,11 +382,12 @@ export async function getRankedPeeksForMap(
 export async function getUnderratedPeeks(
   limit = UNDERRATED_TOP_COUNT
 ): Promise<PeekWithContext[]> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("peeks")
     .select(PEEK_WITH_CONTEXT_SELECT)
     .eq("published", true);
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return ((data ?? []) as unknown as PeekWithContext[])
     .filter((row) => row.floors?.maps?.published && isUnderrated(row))
     .sort((a, b) => {
@@ -399,11 +412,12 @@ export async function getUnderratedTopIds(): Promise<Set<string>> {
 // returns [] when signed out or before the favorites table exists.
 export async function getFavoritePeeks(): Promise<PeekWithContext[]> {
   const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
+  const { data: rawData, error } = await supabase
     .from("favorites")
     .select(`peek:peeks(${PEEK_WITH_CONTEXT_SELECT})`)
     .order("created_at", { ascending: false });
   if (error) return [];
+  const data = withMediaHostDeep(rawData);
   const rows = (data ?? []) as unknown as { peek: PeekWithContext | null }[];
   return rows
     .map((r) => r.peek)
@@ -414,24 +428,26 @@ export async function getFavoritePeeks(): Promise<PeekWithContext[]> {
 }
 
 export async function getPublishedPeekById(id: string): Promise<Peek | null> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("peeks")
     .select(PEEK_COLUMNS)
     .eq("id", id)
     .eq("published", true)
     .maybeSingle();
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return data;
 }
 
 export async function getPublishedPeekBySlug(slug: string): Promise<Peek | null> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("peeks")
     .select(PEEK_COLUMNS)
     .eq("slug", slug)
     .eq("published", true)
     .maybeSingle();
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return data;
 }
 
@@ -456,7 +472,7 @@ export type PublicCreator = Pick<
 // access requires an RLS policy on creators allowing select where
 // approved_at is not null; without it this returns an empty list.
 export async function getApprovedCreators(): Promise<PublicCreator[]> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("creators")
     .select(
       "id, display_name, tiktok, bio, profile_image_url, rank, region, platform, youtube_url, twitch_url, x_url, is_founder"
@@ -464,6 +480,7 @@ export async function getApprovedCreators(): Promise<PublicCreator[]> {
     .not("approved_at", "is", null)
     .order("approved_at", { ascending: false });
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return data ?? [];
 }
 
@@ -498,11 +515,12 @@ export async function getHomeStats(): Promise<HomeStats> {
     .select("id", { count: "exact", head: true })
     .eq("published", true);
 
-  const { data, error } = await sb
+  const { data: rawData, error } = await sb
     .from("peeks")
     .select("vote_count, worked_votes, base_success_rate")
     .eq("published", true);
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
 
   const rows = (data ?? []) as {
     vote_count: number;
@@ -605,13 +623,14 @@ export type GadgetSiteWithFloor = GadgetSite & {
 export async function getGadgetSitesForMap(
   mapId: string
 ): Promise<GadgetSiteWithFloor[]> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("gadget_sites")
     .select(GADGET_SITE_WITH_FLOOR_COLUMNS)
     .eq("map_id", mapId)
     .order("display_order", { ascending: true })
     .order("name", { ascending: true });
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
 
   const rows = (data ?? []) as unknown as (GadgetSite & {
     floors: { name: string; birds_eye_url: string | null } | null;
@@ -624,25 +643,27 @@ export async function getGadgetSiteBySlug(
   mapId: string,
   siteSlug: string
 ): Promise<GadgetSite | null> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("gadget_sites")
     .select(GADGET_SITE_COLUMNS)
     .eq("map_id", mapId)
     .eq("slug", siteSlug)
     .maybeSingle();
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return data;
 }
 
 export async function getGadgetOperatorBySlug(
   slug: string
 ): Promise<GadgetOperator | null> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("gadget_operators")
     .select("id, slug, name, role, gadget_name, display_order, icon_url")
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return data;
 }
 
@@ -651,13 +672,14 @@ export async function getGadgetOperatorBySlug(
 export async function getGadgetOperatorsForSite(
   siteId: string
 ): Promise<GadgetOperator[]> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("gadget_setups")
     .select(
       "operator_id, gadget_operators!inner(id, slug, name, role, gadget_name, display_order, icon_url)"
     )
     .eq("site_id", siteId);
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
 
   const rows = (data ?? []) as unknown as {
     gadget_operators: GadgetOperator | null;
@@ -687,13 +709,14 @@ export async function getGadgetSetups(
   siteId: string,
   operatorId: string
 ): Promise<GadgetSetup[]> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("gadget_setups")
     .select(GADGET_SETUP_COLUMNS)
     .eq("site_id", siteId)
     .eq("operator_id", operatorId)
     .order("display_order", { ascending: true });
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
 
   const rows = (data ?? []) as unknown as (Omit<
     GadgetSetup,
@@ -770,10 +793,11 @@ export async function siteHasPublishedSetups(siteId: string): Promise<boolean> {
 // since counting an unreachable one would leave a map clickable that leads
 // nowhere.
 export async function getMapIdsWithGadgetPlacements(): Promise<Set<string>> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("gadget_setups")
     .select("gadget_sites!inner(map_id)");
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
 
   const rows = (data ?? []) as unknown as {
     gadget_sites: { map_id: string } | null;
@@ -795,11 +819,12 @@ export async function getMapIdsWithGadgetPlacements(): Promise<Set<string>> {
 export async function getGadgetSiteOptions(): Promise<
   { mapSlug: string; name: string }[]
 > {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("gadget_sites")
     .select("name, maps!inner(slug)")
     .order("display_order", { ascending: true });
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   const rows = (data ?? []) as unknown as {
     name: string;
     maps: { slug: string } | null;
@@ -811,11 +836,12 @@ export async function getGadgetSiteOptions(): Promise<
 
 // Operator names for the gadget submission form.
 export async function getGadgetOperatorNames(): Promise<string[]> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("gadget_operators")
     .select("name")
     .order("display_order", { ascending: true });
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
   return ((data ?? []) as { name: string }[]).map((o) => o.name);
 }
 
@@ -827,10 +853,11 @@ export async function getGadgetOperatorNames(): Promise<string[]> {
 // it: it is the closest honest equivalent, being the number of spots actually
 // marked on a blueprint.
 export async function getGadgetStats(): Promise<GadgetStats> {
-  const { data, error } = await supabasePublic()
+  const { data: rawData, error } = await supabasePublic()
     .from("gadget_setups")
     .select("operator_id, gadget_sites!inner(map_id), gadget_setup_pins(id)");
   if (error) throw error;
+  const data = withMediaHostDeep(rawData);
 
   const rows = (data ?? []) as unknown as {
     operator_id: string;
