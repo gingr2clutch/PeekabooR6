@@ -23,12 +23,10 @@ import {
 import { gradeTierColor, rating } from "@/lib/rate";
 import { supabasePublic } from "@/lib/supabase";
 import { TrendArrow } from "@/components/TrendArrow";
-import { MultiTrendChart, type TrendSeries } from "@/components/MultiTrendChart";
 import {
   computeDirection,
   computeMover,
   getSnapshotsForPeeks,
-  pointsWithinDays,
   TREND_LINE_COLORS,
 } from "@/lib/trends";
 import { coverThumb } from "@/lib/cover-image";
@@ -150,20 +148,6 @@ export default async function MapPage({
     videoUrl: p.video_url,
     posterUrl: p.poster_url,
   }));
-
-  // Always-visible "Last 7 days" chart: top 5 peeks, reusing the 14-day
-  // snapshots above (filtered to the last 7 days). Only series with a real
-  // slope (>= 2 points in the window) are plotted.
-  const mapSeries7: TrendSeries[] = rankedPeeks
-    .slice(0, 5)
-    .map((peek, i) => ({
-      label: peek.name,
-      href: `/peeks/${peek.slug}`,
-      color: TREND_LINE_COLORS[i % TREND_LINE_COLORS.length],
-      points: pointsWithinDays(rankedTrends.get(peek.id) ?? [], 7),
-    }))
-    .filter((s) => s.points.length >= 2);
-
   const lastUpdatedLabel = latestPeekAt
     ? new Date(latestPeekAt).toLocaleDateString("en-US", {
         year: "numeric",
@@ -591,44 +575,20 @@ export default async function MapPage({
         )}
 
         {/* Effectiveness trend — always visible, below the floor picker. The
-            7-day chart lives here; the full 30-day chart + Movers are one tap
+            7-day card lives here; the full 30-day chart + Movers are one tap
             away.
 
-            Below lg this is exactly what it always was: one card with the
-            chart and the "See full trends" link. At lg the chart and the
-            separate "This week's top 5" companion are replaced by a single
-            full-width card with two views (MapWeekCard). */}
+            One card at every width now. The separate below-lg
+            "Last 7 days — Top 5 peeks" chart card is gone: it showed the same
+            five peeks as MapWeekCard's Top 5 view but with no percentages, no
+            grades and no per-day detail, so phones got strictly less than
+            desktop out of more vertical space. */}
         {totalPeeks >= 2 && (
           <div className="mt-8 md:mt-7">
-            <div className="rounded-card border border-border bg-card px-4 py-4 shadow-sm sm:px-6 md:py-5 lg:hidden">
-              <h2 className="mb-4 text-center text-lg font-bold tracking-tight text-ink">
-                Last 7 days — Top 5 peeks
-              </h2>
-              {mapSeries7.length === 0 ? (
-                <p className="text-center text-sm text-muted">
-                  Trend data is still being collected — snapshots are captured
-                  daily.
-                </p>
-              ) : (
-                <MultiTrendChart series={mapSeries7} />
-              )}
-              <div className="mt-3 text-center">
-                <Link
-                  href={`/maps/${map.slug}/trends`}
-                  className="text-sm font-semibold text-brand hover:underline"
-                >
-                  See full trends →
-                </Link>
-              </div>
-            </div>
-
-            {weekRows.length > 0 && (
-              <MapWeekCard
-                rows={weekRows}
-                trendsHref={`/maps/${map.slug}/trends`}
-                className="hidden lg:block"
-              />
-            )}
+            <MapWeekCard
+              rows={weekRows}
+              trendsHref={`/maps/${map.slug}/trends`}
+            />
           </div>
         )}
 
