@@ -5,11 +5,13 @@ import { PageHeader } from "@/components/PageHeader";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { ExploreNext } from "@/components/ExploreNext";
 import { TopThreeSwipe } from "@/components/TopThreeSwipe";
-import { getTopPeeks, type PeekWithContext } from "@/lib/db";
+import { TopTifo } from "@/components/TopTifo";
+import { getTopPeeks } from "@/lib/db";
 import { rating, gradeTierColor, GRADED_THRESHOLDS } from "@/lib/rate";
+import type { TifoDrop } from "@/lib/tifo/layout";
 import { computeDirection, getSnapshotsForPeeks } from "@/lib/trends";
 import { FlameCrestMotion } from "@/components/FlameCrestMotion";
-import { DESKTOP_CREST, MOBILE_CREST, type Crest } from "@/lib/flame-crest";
+import { MOBILE_CREST, type Crest } from "@/lib/flame-crest";
 
 export const dynamic = "force-dynamic";
 
@@ -115,6 +117,25 @@ export default async function TopPeeksPage() {
   const banners = peeks.slice(0, 3); // ranks 1–3
   const climbing = peeks.slice(3); // ranks 4+
 
+  // The three banners of the Tifo hero. Flat and serializable — nothing but
+  // what gets painted crosses into the client, and the percentage is the same
+  // rating() number the peek page shows.
+  const tifoTop3: TifoDrop[] = banners.map((peek, i) => {
+    const floor = peek.floors!;
+    const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
+    return {
+      slug: peek.slug,
+      rank: (i + 1) as 1 | 2 | 3,
+      name: peek.name,
+      map: floor.maps.name,
+      floor: floor.name,
+      grade: r.label,
+      votes: peek.vote_count ?? 0,
+      pct: r.tier === "measured" ? r.pct : 0,
+      estimate: r.tier !== "measured",
+    };
+  });
+
   // Climbing, grouped into grade tiers. Same peeks and the same order as the
   // flat list this replaces — rank is still position in `peeks`, so the
   // numbers shown are the real overall ranks, not a per-tier count.
@@ -140,20 +161,25 @@ export default async function TopPeeksPage() {
             Rendered server-side so there's no flash against the cream page. */}
         <section className="arena-rafter">
           {/* Decorative flame crest rising from the beam around the title.
-              The SVGs are server-rendered; FlameCrestMotion is a client shell
-              that only pauses the animation while the header is off screen. */}
+              Phones only: at md and up the Tifo banner below IS the header, so
+              the desktop crest would be burning behind an sr-only heading. The
+              SVGs are server-rendered; FlameCrestMotion is a client shell that
+              only pauses the animation while the header is off screen. */}
           <FlameCrestMotion>
-            <FlameCrest crest={DESKTOP_CREST} variant="d" />
             <FlameCrest crest={MOBILE_CREST} variant="m" />
-            <CrestEmbers crest={DESKTOP_CREST} variant="d" />
             <CrestEmbers crest={MOBILE_CREST} variant="m" />
           </FlameCrestMotion>
           {/* No eyebrow here (Underrated keeps its own). arena-head--noeyebrow
               gives back exactly the height the eyebrow occupied as EXTRA bottom
               padding, so the rafter is the same height as before and nothing
               below it moves — the text simply sits higher and the freed room
-              goes to the flames. */}
-          <div className="site-shell arena-head--noeyebrow mx-auto max-w-3xl px-4 pb-14 pt-8 text-center sm:pt-10">
+              goes to the flames.
+
+              arena-head--tifo takes this block sr-only at md and up, where the
+              painted banner carries the title. sr-only, never display:none:
+              there is exactly ONE <h1> on this page at every width and it stays
+              in the accessibility tree. */}
+          <div className="site-shell arena-head--noeyebrow arena-head--tifo mx-auto max-w-3xl px-4 pb-14 pt-8 text-center sm:pt-10">
             <h1 className="arena-title text-5xl sm:text-6xl">Top Peeks</h1>
             <p className="arena-subline mt-4 text-base sm:text-lg">
               Banners hang for the community&rsquo;s best.
@@ -180,23 +206,7 @@ export default async function TopPeeksPage() {
 
         {peeks.length > 0 && (
           <div className="site-shell mx-auto hidden max-w-[1260px] px-4 md:block">
-            <div className="pnt">
-              <div className="pnt-group pnt-group--champ">
-                <span className="pnt-rod" aria-hidden />
-                <div className="pnt-hang">
-                  <Pennant peek={banners[0]} rank={1} />
-                </div>
-              </div>
-              {banners.length > 1 && (
-                <div className="pnt-group pnt-group--pair">
-                  <span className="pnt-rod" aria-hidden />
-                  <div className="pnt-hang">
-                    {banners[1] && <Pennant peek={banners[1]} rank={2} />}
-                    {banners[2] && <Pennant peek={banners[2]} rank={3} />}
-                  </div>
-                </div>
-              )}
-            </div>
+            <TopTifo top3={tifoTop3} className="mt-6" />
           </div>
         )}
 
@@ -303,89 +313,3 @@ export default async function TopPeeksPage() {
     </>
   );
 }
-
-// One hanging pennant. The whole banner is the link — a real <a>, so it is
-// reachable by keyboard, opens in a new tab on middle-click, and carries the
-// same ?from=top the rest of the page uses.
-function Pennant({ peek, rank }: { peek: PeekWithContext; rank: number }) {
-  const floor = peek.floors!;
-  const map = floor.maps;
-  const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
-  const votes = peek.vote_count ?? 0;
-
-  return (
-    <div className={`pnt-item pnt-item--${rank}`}>
-      {/* The hanger — cord, nail and brass rod. Decorative and md+ only: it is
-          display:none below md, where the two shared mobile rods do the job
-          instead. Inside the item so it travels with its own banner rather
-          than being positioned against the row. */}
-      <span className="pnt-hanger" aria-hidden="true">
-        <svg
-          className="pnt-cord"
-          viewBox="0 0 100 46"
-          preserveAspectRatio="none"
-          aria-hidden
-        >
-          {/* preserveAspectRatio="none" stretches the triangle to whatever
-              width the banner ends up; non-scaling-stroke keeps the cord a
-              constant 1.6px instead of stretching with it. */}
-          <path
-            d="M2.6 44 L50 2.6 L97.4 44"
-            fill="none"
-            stroke="#7d6a4a"
-            strokeWidth="1.6"
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
-        <span className="pnt-nail" />
-        <span className="pnt-rodbar" />
-      </span>
-      {/* Carries the banner's drop-shadow and its focus ring at md+. Both have
-          to be a filter, because clip-path cuts a box-shadow away with the
-          corners it clips. display:contents below md, so the mobile layout
-          gains no box and stays exactly as it is. */}
-      <span className="pnt-cloth">
-      <Link
-        href={`/peeks/${peek.slug}?from=top`}
-        aria-label={`Open peek: ${peek.name}, ${map.name}`}
-        className={`pnt-card pnt-card--${rank}`}
-      >
-        {rank === 1 && (
-          <span className="pnt-crown" aria-hidden>
-            👑
-          </span>
-        )}
-        <span className={`arena-coin arena-coin--${rank} pnt-coin`} aria-hidden>
-          {rank}
-        </span>
-        <span className="pnt-name">{peek.name}</span>
-        <span className="pnt-loc">
-          {map.name} · {floor.name}
-        </span>
-        {/* Colour still comes from gradeTierColor, never a fixed green — the
-            grade tiers are not allowed to collapse into one colour. */}
-        <span
-          className="arena-grade pnt-grade"
-          style={{ backgroundColor: gradeTierColor(r.label) }}
-          aria-label={`Grade ${r.label}`}
-        >
-          {r.label}
-        </span>
-        <span className="pnt-spacer" aria-hidden />
-        <span className="pnt-watch" aria-hidden>
-          <span className="pnt-watch-glyph">▶</span>
-          {/* The desktop wording is fixed; the mobile wording depends only on
-              rank, which is known here, so only one of the two needs a
-              breakpoint to choose between them. */}
-          <span className="pnt-watch-desk">Watch peek</span>
-          <span className="pnt-watch-mob">
-            {rank === 1 ? "Tap to watch" : "Watch"}
-          </span>
-        </span>
-        <span className="pnt-votes">{voteLabel(votes)}</span>
-      </Link>
-      </span>
-    </div>
-  );
-}
-

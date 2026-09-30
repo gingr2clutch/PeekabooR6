@@ -206,32 +206,6 @@ const SWAY: [number, number][] = [
   [5.8, -4.5],
 ];
 
-const D_W = 1440;
-
-/**
- * Desktop profile, in RENDERED px.
- *
- * A 40px bed under the text, twin clusters peaking at 190px out at 14%/86%, and
- * ~70px at the far edges instead of v1's thin taper.
- *
- * `taper` is the load-bearing part. A bare Gaussian's tail was still ~110px tall
- * where the subline's ink begins at 768 — the narrowest width that still uses
- * this crest — nowhere near the 40px of clearance the side clusters are meant to
- * keep. taper forces the hump to exactly zero by u = GUARD, so the drop into the
- * bed is quick and the clearance holds at every width, not only at wide ones.
- */
-const GUARD = 0.205;
-function desktopProfile(t: number) {
-  const bed = 40;
-  const peak = 190;
-  const u = t <= 0.5 ? t : 1 - t; // mirror; the crest is symmetric
-  const edge = 30 * Math.exp(-((u / 0.06) ** 2));
-  if (u >= GUARD) return bed;
-  const hump = Math.exp(-(((u - 0.14) / 0.06) ** 2));
-  const taper = clamp01((GUARD - u) / 0.04);
-  return bed + (peak - bed) * hump * taper + edge;
-}
-
 const M_W = 390;
 
 /**
@@ -282,18 +256,9 @@ function build(
   return { layers, embers: buildEmbers(emberCount, hotspots, emberRise, rand) };
 }
 
-// 24+26+28+30 tongues merged 3 at a time => ~40 animated elements.
-export const DESKTOP_CREST: Crest = build(
-  0x5eed1,
-  D_W,
-  desktopProfile,
-  [24, 26, 28, 30],
-  3,
-  1,
-  24,
-  [0.14, 0.86],
-  180
-);
+// The desktop crest, its width and its profile used to live here. /top carries
+// the Tifo banner at md and up and nothing rendered them any more, so they are
+// gone; the mobile crest below never depended on them.
 
 // 10+11+12+13 tongues merged 3 at a time => ~16 animated elements.
 export const MOBILE_CREST: Crest = build(
