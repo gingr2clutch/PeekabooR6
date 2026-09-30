@@ -320,7 +320,7 @@ export default async function MapPage({
               unchanged. Falls back to the ordinary border colour. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 z-20 hidden rounded-card border-[3px] lg:bottom-0 lg:right-[calc(33.333%+8px)] lg:block"
+            className="pointer-events-none absolute inset-0 z-20 hidden rounded-card border-[5px] lg:bottom-0 lg:right-[calc(33.333%+8px)] lg:block"
             style={{ borderColor: mapAccent(map.slug) }}
           />
           <div className="relative z-10 px-4 pb-0 pt-8 text-center lg:col-span-8 lg:py-0 lg:flex lg:min-h-[340px] lg:flex-col lg:justify-center lg:px-12 lg:text-left">
