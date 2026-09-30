@@ -1,13 +1,19 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { isSameSpot } from "@/lib/pin-groups";
+import type { FloorPeekPin } from "./PeekForm";
 
 type Props = {
   src: string | null;
   initialX: number;
   initialY: number;
   name?: string;
+  /** Every other peek pinned on this floor, published or draft. */
+  others?: FloorPeekPin[];
+  /** The peek being edited, so it cannot match itself. */
+  excludeId?: string;
 };
 
 // Click-to-place pin editor. Renders the bird's-eye image and lets the admin
@@ -16,8 +22,40 @@ type Props = {
 //
 // If no bird's-eye image is uploaded yet, falls back to two numeric inputs so
 // the admin can still seed coordinates (e.g. before the screenshot exists).
-export function PinPlacer({ src, initialX, initialY, name }: Props) {
+export function PinPlacer({
+  src,
+  initialX,
+  initialY,
+  name,
+  others = [],
+  excludeId,
+}: Props) {
   const [pos, setPos] = useState({ x: initialX, y: initialY });
+
+  // Everything already pinned at this exact spot. Uses the same isSameSpot the
+  // floor page groups pins with, so this warns about precisely the peeks that
+  // would end up sharing one pin — not an approximation of them.
+  const sameSpot = useMemo(() => {
+    const here = { x_pct: pos.x, y_pct: pos.y };
+    return others.filter(
+      (o) => o.id !== excludeId && isSameSpot(o, here)
+    );
+  }, [others, excludeId, pos.x, pos.y]);
+
+  // Purely advisory: no snapping, no blocking, and nothing here touches the
+  // hidden inputs the form submits.
+  const note =
+    sameSpot.length > 0 ? (
+      <div className="rounded-btn border border-amber-300 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
+        {sameSpot.map((o) => (
+          <p key={o.id}>
+            Same spot as <b className="font-semibold">{o.name}</b> (
+            {o.published ? "published" : "draft"}). Once both are published they
+            share one pin with a +N badge.
+          </p>
+        ))}
+      </div>
+    ) : null;
 
   if (!src) {
     return (
@@ -59,6 +97,7 @@ export function PinPlacer({ src, initialX, initialY, name }: Props) {
             />
           </label>
         </div>
+        {note}
       </div>
     );
   }
@@ -91,6 +130,7 @@ export function PinPlacer({ src, initialX, initialY, name }: Props) {
           <span className="block h-3.5 w-3.5 rounded-full bg-brand shadow-md ring-2 ring-white" />
         </span>
       </div>
+      {note}
       <p className="text-xs text-muted">
         Click anywhere on the image to move the pin. Current: {pos.x.toFixed(1)}
         %, {pos.y.toFixed(1)}%.
