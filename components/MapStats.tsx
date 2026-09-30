@@ -158,7 +158,7 @@ export function MapStats({
           second link a reader or a crawler follows twice into the page. */}
       {topPeek && (
         <div
-          className="lg:col-span-4 lg:overflow-hidden lg:rounded-card lg:border-[3px] lg:bg-card lg:shadow-sm"
+          className="lg:col-span-4 lg:overflow-hidden lg:rounded-card lg:border-[5px] lg:bg-card lg:shadow-sm"
           // Same accent, width and radius as the hero, and the same fallback
           // for maps that have none — one source, so the two boxes cannot
           // drift apart.
@@ -175,7 +175,7 @@ export function MapStats({
               different colour per map, so it cannot carry that job. */}
           <Link
             href={`/peeks/${topPeek.slug}?from=map`}
-            className="peek-lift relative hidden rounded-card outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 lg:block lg:h-full lg:overflow-hidden"
+            className="peek-lift relative hidden rounded-card outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 lg:block lg:h-full lg:overflow-hidden lg:rounded-[9px]"
           >
             {/* Fills the card. The height comes from the row — the stats card
                 opposite sets it — so this box is sized before anything loads
