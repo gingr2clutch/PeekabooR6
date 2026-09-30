@@ -37,6 +37,28 @@ export const EXTERNAL_CREATOR = (platform: string) => `the ${platform} creator`;
 /** An external clip whose host we cannot identify — an older row. */
 export const UNKNOWN_CREATOR = "the original creator";
 
+/**
+ * Who to name for a clip, as plain text.
+ *
+ * Extracted so the floor page's spot list resolves credits through the exact
+ * same precedence the peek page renders — a contributor should never find
+ * themselves credited one way on a peek page and another way in a pin list.
+ */
+export function clipCreditName({
+  contributor,
+  platform = null,
+  externalUnknown = false,
+}: {
+  contributor: { display_name: string; slug: string } | null;
+  platform?: string | null;
+  externalUnknown?: boolean;
+}): string {
+  if (contributor) return contributor.display_name;
+  if (platform) return EXTERNAL_CREATOR(platform);
+  if (externalUnknown) return UNKNOWN_CREATOR;
+  return HOUSE_CREDIT;
+}
+
 export type ClipCreditProps = {
   /** Wins outright when set: a named person beats any platform guess. */
   contributor: { display_name: string; slug: string } | null;
@@ -66,14 +88,10 @@ export function ClipCredit({
   label = "Clip",
   className = "",
 }: ClipCreditProps) {
-  // Priority: a named contributor, then the platform it came from, then us.
-  // Resolved here rather than at each call site so the pages cannot disagree
-  // about precedence.
-  const fallback = platform
-    ? EXTERNAL_CREATOR(platform)
-    : externalUnknown
-      ? UNKNOWN_CREATOR
-      : HOUSE_CREDIT;
+  // Precedence lives in clipCreditName so every surface agrees. Only the
+  // no-contributor branch needs it here — a named contributor renders as a
+  // link, which is markup this helper cannot return.
+  const fallback = clipCreditName({ contributor: null, platform, externalUnknown });
 
   return (
     <p className={`text-center text-sm font-bold text-brand ${className}`}>

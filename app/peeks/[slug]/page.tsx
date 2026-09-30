@@ -6,6 +6,7 @@ import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { PeekMedia } from "@/components/PeekMedia";
 import { ClipCredit } from "@/components/ClipCredit";
 import { clipPlatform } from "@/lib/gadget-embed";
+import { isSameSpot } from "@/lib/pin-groups";
 import { VoteButtons } from "@/components/VoteButtons";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { supabasePublic } from "@/lib/supabase";
@@ -239,7 +240,16 @@ export default async function PeekDetailPage({
     })
     .sort((a, b) => a.dist - b.dist)
     .slice(0, 4)
-    .map((x) => x.p);
+    .map((x) => ({
+      ...x.p,
+      // Same grouping rule the floor page pins by, so "Same spot" here and one
+      // shared pin there can never disagree. A null coordinate fails
+      // Number.isFinite inside isSameSpot, so it never counts.
+      sameSpot: isSameSpot(
+        { x_pct: x.p.x_pct as number, y_pct: x.p.y_pct as number },
+        { x_pct: peek.x_pct, y_pct: peek.y_pct }
+      ),
+    }));
 
   // Effectiveness rating for the hero grade tile + measured stat line.
   const r = rating(peek.base_success_rate, peek.worked_votes, peek.vote_count);
@@ -419,8 +429,13 @@ export default async function PeekDetailPage({
                     href={`/peeks/${p.slug}`}
                     className="group flex items-center justify-between gap-4 rounded-card border border-border bg-card p-4 transition-all duration-150 ease-out hover:-translate-y-0.5 hover:border-brand hover:shadow-md"
                   >
-                    <h3 className="min-w-0 flex-1 truncate text-base font-semibold text-ink group-hover:text-brand">
-                      {p.name}
+                    <h3 className="flex min-w-0 flex-1 items-center gap-2 text-base font-semibold text-ink group-hover:text-brand">
+                      <span className="truncate">{p.name}</span>
+                      {p.sameSpot && (
+                        <span className="shrink-0 rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand">
+                          Same spot
+                        </span>
+                      )}
                     </h3>
                     <NearbyStat
                       peek={p}
