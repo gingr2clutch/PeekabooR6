@@ -13,6 +13,14 @@ type Props = {
   ratingText?: string;
   isSelected?: boolean;
   onSelect?: () => void;
+  /**
+   * How many peeks sit at this spot. 1 (the default) is the pin this component
+   * has always rendered: a Link straight to the peek.
+   *
+   * 2+ makes it a cluster — a button that opens the spot's list instead, since
+   * there is no single peek for it to navigate to.
+   */
+  count?: number;
 };
 
 type Placement =
@@ -76,8 +84,17 @@ export function PeekPin({
   ratingText,
   isSelected = false,
   onSelect,
+  count = 1,
 }: Props) {
   const placement = tooltipPlacement(xPct, yPct);
+  const isCluster = count > 1;
+
+  function handleClusterClick(e: React.MouseEvent<HTMLButtonElement>) {
+    // Same stopPropagation reasoning as a single pin: the pin layer's backdrop
+    // click deselects, and this IS the pin.
+    e.stopPropagation();
+    onSelect?.();
+  }
 
   function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
     // Always stop propagation so the parent backdrop click (which
@@ -105,16 +122,24 @@ export function PeekPin({
     ? "scale-[1.2] shadow-[0_0_16px_rgba(242,100,14,0.55)]"
     : "";
 
-  return (
-    <Link
-      href={`/peeks/${slug}`}
-      onClick={handleClick}
-      className={`group absolute ${zCls} flex -translate-x-1/2 -translate-y-1/2 items-center justify-center`}
-      style={{ left: `${xPct}%`, top: `${yPct}%` }}
-      aria-label={`${number}. ${name}`}
-      aria-pressed={isSelected || undefined}
-    >
+  const shared = (
+    <>
       <span className="absolute h-12 w-12 rounded-full" />
+      {/* Two rings behind a cluster pin, so "more than one here" reads before
+          the +N is legible. Absolutely positioned inside the pin, so neither
+          ring can affect layout. */}
+      {isCluster && (
+        <>
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -inset-[7px] rounded-full border-[1.5px] border-brand/55"
+          />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -inset-[12px] rounded-full border-[1.5px] border-brand/20"
+          />
+        </>
+      )}
       <span
         className="peek-pin-in"
         style={{ animationDelay: `${(number - 1) * 100}ms` }}
@@ -141,12 +166,24 @@ export function PeekPin({
               </svg>
             </span>
           )}
+          {isCluster && (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -right-3 -top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-ink px-1 text-[10.5px] font-bold leading-none text-white ring-2 ring-white md:h-5 md:min-w-5"
+            >
+              +{count - 1}
+            </span>
+          )}
         </span>
       </span>
       {/* Floating tooltip — desktop hover only. Hidden on mobile so we
           rely on the fixed detail card surfaced by FloorView. */}
       <span
-        className={`pointer-events-none absolute z-50 hidden max-w-[140px] rounded-btn bg-ink px-2.5 py-1 text-center text-[13px] leading-tight text-white opacity-0 shadow transition-opacity duration-150 [hyphens:none] group-hover:opacity-100 md:block md:text-xs ${tooltipClass(placement)}`}
+        className={`pointer-events-none absolute z-50 hidden max-w-[140px] rounded-btn bg-ink px-2.5 py-1 text-center text-[13px] leading-tight text-white opacity-0 shadow transition-opacity duration-150 [hyphens:none] md:block md:text-xs ${
+          // While a cluster's popover is open the tooltip would sit on top of
+          // it saying the same thing, so suppress it for that pin only.
+          isCluster && isSelected ? "" : "group-hover:opacity-100"
+        } ${tooltipClass(placement)}`}
       >
         {name}
         {isNew && (
@@ -159,7 +196,47 @@ export function PeekPin({
             {ratingText}
           </span>
         )}
+        {isCluster && (
+          <span className="mt-0.5 block text-[11px] font-normal text-white/75">
+            {count} peeks here
+          </span>
+        )}
       </span>
+    </>
+  );
+
+  const posCls = `group absolute ${zCls} flex -translate-x-1/2 -translate-y-1/2 items-center justify-center`;
+  const posStyle = { left: `${xPct}%`, top: `${yPct}%` };
+
+  // A cluster has no single destination, so it is a button rather than a Link.
+  // Enter and Space come free with <button>; the spot's peeks stay reachable
+  // through the list it opens and through FloorView's sr-only link index.
+  if (isCluster) {
+    return (
+      <button
+        type="button"
+        onClick={handleClusterClick}
+        className={posCls}
+        style={posStyle}
+        aria-haspopup="dialog"
+        aria-expanded={isSelected}
+        aria-label={`${number}. ${name}, ${count} peeks at this spot`}
+      >
+        {shared}
+      </button>
+    );
+  }
+
+  return (
+    <Link
+      href={`/peeks/${slug}`}
+      onClick={handleClick}
+      className={posCls}
+      style={posStyle}
+      aria-label={`${number}. ${name}`}
+      aria-pressed={isSelected || undefined}
+    >
+      {shared}
     </Link>
   );
 }

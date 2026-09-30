@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FloorView } from "@/components/FloorView";
+import { FloorView, type FloorSpot } from "@/components/FloorView";
+import { groupIntoSpots } from "@/lib/pin-groups";
+import { clipCreditName } from "@/components/ClipCredit";
+import { clipPlatform } from "@/lib/gadget-embed";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -15,34 +18,6 @@ import type { Peek } from "@/lib/db";
 import { rating, gradeTierColor, displayRate } from "@/lib/rate";
 
 export const dynamic = "force-dynamic";
-
-// When two or more peeks share the same (x_pct, y_pct), they render on top of
-// each other and only the topmost is visible. We push duplicates onto a small
-// circle around the shared point so every pin remains tappable. Order in the
-// returned array is preserved (so pin numbers still match success-rate rank).
-function fanOutCoincidentPins<
-  T extends { x_pct: number; y_pct: number },
->(peeks: T[]): Array<T & { displayX: number; displayY: number }> {
-  const seen = new Map<string, number>();
-  return peeks.map((peek) => {
-    // Bucket to ~0.5% so near-coincident points still cluster.
-    const key = `${Math.round(peek.x_pct * 2)},${Math.round(peek.y_pct * 2)}`;
-    const idx = seen.get(key) ?? 0;
-    seen.set(key, idx + 1);
-    if (idx === 0) {
-      return { ...peek, displayX: peek.x_pct, displayY: peek.y_pct };
-    }
-    // Spiral outward in 60° steps. Radius grows slowly so big clusters
-    // still stay near the original point.
-    const angle = (Math.PI / 3) * (idx - 1);
-    const radius = 3 + Math.floor((idx - 1) / 6) * 1.5;
-    return {
-      ...peek,
-      displayX: peek.x_pct + radius * Math.cos(angle),
-      displayY: peek.y_pct + radius * Math.sin(angle),
-    };
-  });
-}
 
 export async function generateMetadata({
   params,
@@ -71,8 +46,40 @@ export default async function FloorPage({
   if (!floor) notFound();
 
   const peeks = await getPublishedPeeksForFloor(floor.id);
-  // Every peek's position is public (Pro tier not launched).
-  const positioned = fanOutCoincidentPins(peeks);
+
+  // Peeks filmed at the same window or door collapse into one pin. Grouping
+  // happens here, on the server, so the client is handed the finished shape —
+  // and the old fan-out spiral is gone with it: spots are at least SAME_SPOT
+  // apart by construction, so there is nothing left to un-overlap.
+  //
+  // Credits resolve here too, through the SAME clipCreditName the peek page
+  // renders, so a contributor cannot be worded differently in a pin list than
+  // on their own peek. Only these plain fields cross to the client — never a
+  // contributor row, and never another column of the peeks table.
+  const spots: FloorSpot[] = groupIntoSpots(peeks).map((spot) => ({
+    members: spot.members.map((p) => {
+      const platform = p.tiktok_url ? clipPlatform(p.tiktok_url) : null;
+      return {
+        id: p.id,
+        slug: p.slug,
+        name: p.name,
+        x_pct: p.x_pct,
+        y_pct: p.y_pct,
+        tiktok_url: p.tiktok_url,
+        base_success_rate: p.base_success_rate,
+        worked_votes: p.worked_votes,
+        vote_count: p.vote_count,
+        created_at: p.created_at,
+        difficulty: p.difficulty,
+        risk: p.risk,
+        credit: clipCreditName({
+          contributor: p.contributors,
+          platform,
+          externalUnknown: !!p.tiktok_url && platform === null,
+        }),
+      };
+    }),
+  }));
   // Same query path /maps/[slug]/page.tsx uses — one extra round trip,
   // ordered by display_order ascending.
   const allFloors = await getFloorsForMap(map.id);
@@ -162,7 +169,7 @@ export default async function FloorPage({
             percentages, scale with it. `floor-stage` also carries the one rule
             that reaches "Ranked by grade" inside FloorView (globals.css). */}
         <div className="floor-stage lg:mx-auto lg:max-w-[960px]">
-          <FloorView map={map} floor={floor} peeks={positioned} />
+          <FloorView map={map} floor={floor} spots={spots} />
         </div>
 
         {peeks.length === 0 && (

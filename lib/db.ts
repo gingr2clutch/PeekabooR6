@@ -180,12 +180,25 @@ export async function getFloorBySlug(
   return data;
 }
 
+/**
+ * A floor's peek plus the person credited for its clip.
+ *
+ * Its own type rather than a widened Peek: PEEK_COLUMNS is shared by several
+ * other queries that do NOT join contributors, so adding the relation there
+ * would make every one of them pay for a join they never read.
+ */
+export type FloorPeek = Peek & {
+  contributors: { display_name: string; slug: string } | null;
+};
+
 export async function getPublishedPeeksForFloor(
   floorId: string
-): Promise<Peek[]> {
+): Promise<FloorPeek[]> {
   const { data: rawData, error } = await supabasePublic()
     .from("peeks")
-    .select(PEEK_COLUMNS)
+    // Explicit columns, never * — the peeks table carries admin-only fields
+    // (claimed_by among them) that must not reach a public query.
+    .select(`${PEEK_COLUMNS}, contributors(display_name, slug)`)
     .eq("floor_id", floorId)
     .eq("published", true)
     .order("created_at", { ascending: true });
@@ -194,7 +207,7 @@ export async function getPublishedPeeksForFloor(
   // Rank by the same Effectiveness score the /popular page uses, so pin
   // numbers match the grades users see. created_at stays the DB fetch order,
   // so a stable sort keeps it as the tiebreaker for equal scores.
-  const peeks = data ?? [];
+  const peeks = (data ?? []) as unknown as FloorPeek[];
   return peeks.sort(
     (a, b) =>
       ratingScore(b.base_success_rate, b.worked_votes, b.vote_count) -
