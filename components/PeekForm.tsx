@@ -5,11 +5,22 @@ import { displayRate } from "@/lib/rate";
 import { InstructionsEditor } from "./InstructionsEditor";
 import { PinPlacer } from "./PinPlacer";
 
+/** Another peek already pinned on the same floor. */
+export type FloorPeekPin = {
+  id: string;
+  name: string;
+  published: boolean;
+  x_pct: number;
+  y_pct: number;
+};
+
 export type FloorOption = {
   id: string;
   name: string;
   mapName: string;
   birdsEyeUrl: string | null;
+  /** Every peek pinned on this floor, published or draft. */
+  peeks?: FloorPeekPin[];
 };
 
 type Props = {
@@ -254,6 +265,10 @@ export function PeekForm({
               ? `${selectedFloor.mapName} ${selectedFloor.name}`
               : undefined
           }
+          // The peek being edited is its own nearest neighbour, so it has to be
+          // excluded or every edit would warn about itself.
+          others={selectedFloor?.peeks ?? []}
+          excludeId={initial?.id}
         />
       </div>
     </form>
