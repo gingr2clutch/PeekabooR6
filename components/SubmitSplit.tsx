@@ -71,12 +71,23 @@ export function SubmitHalf({
   href,
   cta,
   ctaShort,
+  stack = false,
 }: {
   tone: "brand" | "blue";
   title: string;
   href: string;
   cta: string;
   ctaShort: string;
+  /**
+   * Keep the label above the button at every width.
+   *
+   * The default goes label-left / button-right at lg, which is right for the
+   * full-width sitewide bar. In a narrow column it is not: ExploreNext gives
+   * each half ~274px, and after the icon chip, the gap and a ~150px button the
+   * label was left with ~25px — so "Missing a peek?" broke onto three lines and
+   * spilled out from under the button.
+   */
+  stack?: boolean;
 }) {
   const chip =
     tone === "brand" ? "bg-brand/10 text-brand" : "bg-blue/10 text-blue";
@@ -86,8 +97,14 @@ export function SubmitHalf({
       : "bg-blue focus-visible:ring-blue";
 
   return (
-    <div className="flex flex-col items-center gap-2.5 p-3 text-center sm:gap-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between lg:gap-4 lg:p-5 lg:text-left">
-      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+    <div
+      className={`flex flex-col items-center gap-2.5 p-3 text-center sm:gap-3 sm:p-4 ${
+        stack
+          ? "lg:p-4"
+          : "lg:flex-row lg:items-center lg:justify-between lg:gap-4 lg:p-5 lg:text-left"
+      }`}
+    >
+      <div className="flex min-w-0 max-w-full items-center gap-2 sm:gap-3">
         {/* Flat fill behind the icon. No glow, nothing that resizes on hover. */}
         <span
           aria-hidden
@@ -101,7 +118,9 @@ export function SubmitHalf({
       </div>
       <a
         href={href}
-        className={`inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-btn px-3 py-2 text-[12.5px] font-semibold text-white transition duration-150 ease-out hover:-translate-y-0.5 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:px-4 sm:text-[13px] lg:w-auto ${button}`}
+        className={`inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-btn px-3 py-2 text-[12.5px] font-semibold text-white transition duration-150 ease-out hover:-translate-y-0.5 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:px-4 sm:text-[13px] ${
+          stack ? "" : "lg:w-auto"
+        } ${button}`}
       >
         {/* Short label on the narrowest screens so two buttons and a divider
             still fit on one 390px line without wrapping. */}
@@ -120,7 +139,14 @@ export function SubmitHalf({
  * page's height budget, and doubling its height on mobile to fit a second ask
  * would cost more than the second ask is worth.
  */
-export function SubmitSplit({ className = "" }: { className?: string }) {
+export function SubmitSplit({
+  className = "",
+  stack = false,
+}: {
+  className?: string;
+  /** Pass on narrow containers — see SubmitHalf's `stack`. */
+  stack?: boolean;
+}) {
   return (
     <div className={`grid grid-cols-2 divide-x divide-border ${className}`}>
       <SubmitHalf
@@ -129,6 +155,7 @@ export function SubmitSplit({ className = "" }: { className?: string }) {
         href={PEEK_HREF}
         cta="Submit a peek"
         ctaShort="Submit"
+        stack={stack}
       />
       <SubmitHalf
         tone="blue"
@@ -136,6 +163,7 @@ export function SubmitSplit({ className = "" }: { className?: string }) {
         href={GADGET_HREF}
         cta="Submit a gadget"
         ctaShort="Submit"
+        stack={stack}
       />
     </div>
   );

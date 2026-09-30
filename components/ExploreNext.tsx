@@ -46,7 +46,7 @@ export function ExploreNext({
             to fill. Same component as the sitewide bar and the map aside, so
             the three cannot drift apart again. */}
         <div className="overflow-hidden rounded-card border border-[#f7cfb3] bg-[#fff6ef]">
-          <SubmitSplit className="divide-[#f0d6bf]" />
+          <SubmitSplit className="divide-[#f0d6bf]" stack />
         </div>
 
         {/* Link cards, in the More drawer's item style. */}
