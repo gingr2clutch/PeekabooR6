@@ -1,45 +1,53 @@
 /**
  * Option 2 · TIFO — the /top hero, as a framework-free engine.
  *
- * A 1:1 port of tifo-reference.html (approved Sep 30 2026, kept in the repo
- * root as the design reference and never imported). Ultras end at night: two
- * flares ignite behind the fence, orange smoke rolls up through the stand, and
- * three spray-stencilled canvas banners drop from the upper-tier rail and
- * ripple in the wind. The page title is the frontline banner tied to the fence.
+ * A 1:1 port of tifo-reference.html (light version approved Oct 1 2026, kept
+ * in the repo root as the design reference and never imported). Three
+ * spray-stencilled canvas banners and a TOP PEEKS strip hang from two dark
+ * rods straight on the site's cream page, drop one after another and ripple in
+ * the wind.
+ *
+ * There is no night stadium any more: the two flares, the orange smoke, the
+ * sparks, the crowd, the fence and the vignette are gone, and so is the 30 Hz
+ * particle sim that drove them. Every frame is now a pure function of scene
+ * time, which is why render() needs no dt and a still is just one draw.
+ *
+ * The frame the cloth hangs ON — both rods, the ropes and the ties — is
+ * server-rendered SVG in components/TopTifo.tsx, so it is on screen before this
+ * chunk is even fetched. The engine only ever draws the four cloth canvases.
  *
  * What the port deliberately leaves out: the mock nav (R6.nav) and its CSS, the
  * display-font picker table (production has one font config), and the
- * capture/__seek harness. What it adds: drawStill(), stopEmitters()/isSettled()
- * for the wind-down, and a cloth resolution that follows the device instead of
- * being pinned at 1.5.
+ * capture/__seek harness. What it adds: a cloth resolution that follows the
+ * device instead of being pinned at 1.5.
  *
  * Nothing here injects CSS at runtime — the reference's `.o2` block lives in
- * globals.css under the `.tifo-*` names.
+ * globals.css under the `.tifo-*` names, the cloth drop shadow included.
  *
- * Coordinates are the reference's 1100 x 800 scene; see lib/tifo/layout.ts.
+ * There are two scenes, chosen by the `layout` option: the 1100 x 800 desktop
+ * one and a 780 x 596 phone one. Same banners, same rods, same timing — the
+ * phone artwork just says less (rank, name, map, grade), because the eyebrow
+ * and the votes line would paint at ~5px there.
+ *
+ * Coordinates are the reference's scene; see lib/tifo/layout.ts.
  */
 
 import { gradeTierColor } from "@/lib/rate";
 import {
-  DROP_GEO,
-  H,
-  NAV_H,
-  TOP_Y,
-  W,
   floorAbbrev,
+  layoutFor,
   type DropGeo,
   type TifoDrop,
+  type TifoLayout,
+  type TifoLayoutName,
 } from "@/lib/tifo/layout";
 
-const RAIL_Y = 106;
-const FENCE_Y = 606;
 const CANVAS = "#e6dfcc";
 const ORANGE = "#e9550f";
 const INK = "#1c1d1a";
 
-/** Banner art resolution, and the back/front smoke canvases'. */
+/** Banner art resolution. */
 const ART = 2;
-const SMOKE = 0.5;
 
 /**
  * Cloth column width in scene px. The reference redraws every banner in 2px
@@ -64,18 +72,10 @@ const DW = 700;
 /** Weight of the mono labels. */
 const LW = 600;
 
-const STR = { x: 78, y: 620, w: 944, h: 126, t0: 0.62 };
+/** How long a drop takes to unroll once its rope is cut. */
 const DROP_T = 0.55;
-const FLARE_SEED: ReadonlyArray<{ x: number; y: number; t0: number; fig: number }> = [
-  { x: 136, y: 574, t0: 0.12, fig: 2 },
-  { x: 968, y: 570, t0: 0.34, fig: 17 },
-];
 
-/** How long the flare glow takes to die once the emitters are cut. */
-const FADE = 1.5;
-
-// --- helpers (R6.rng / clamp / lerp / prog / smooth / wobble) ---------------
-
+// --- helpers (R6.rng / clamp / prog / wobble) -------------------------------
 function rng(seed: number): () => number {
   let a = seed >>> 0;
   return function () {
@@ -87,9 +87,7 @@ function rng(seed: number): () => number {
   };
 }
 const clamp = (x: number, a = 0, b = 1) => (x < a ? a : x > b ? b : x);
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const prog = (t: number, a: number, b: number) => clamp((t - a) / (b - a));
-const smooth = (t: number) => t * t * (3 - 2 * t);
 /** Damped oscillation after an impulse at t = 0 (starts and ends at 0). */
 const wobble = (t: number, f = 1.6, d = 2.2) =>
   t <= 0 ? 0 : Math.exp(-d * t) * Math.sin(2 * Math.PI * f * t);
@@ -152,82 +150,6 @@ function fitPx(
 ) {
   const m = metrics(text, fam, weight, tr);
   return Math.min(capH / m.asc, maxW / m.w);
-}
-
-// --- smoke sprites ---------------------------------------------------------
-
-/** Fractal value noise, used to give each puff its wisps. */
-function vnoise(seed: number) {
-  const rnd = rng(seed);
-  const tab = new Float32Array(65536);
-  for (let i = 0; i < 65536; i++) tab[i] = rnd();
-  const at = (x: number, y: number) => tab[((y & 255) << 8) | (x & 255)];
-  return (x: number, y: number) => {
-    const xi = Math.floor(x);
-    const yi = Math.floor(y);
-    const xf = x - xi;
-    const yf = y - yi;
-    const u = xf * xf * (3 - 2 * xf);
-    const v = yf * yf * (3 - 2 * yf);
-    const a = at(xi, yi);
-    const b = at(xi + 1, yi);
-    const c = at(xi, yi + 1);
-    const d = at(xi + 1, yi + 1);
-    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
-  };
-}
-function puff(color: string, seed: number): HTMLCanvasElement {
-  const s = 128;
-  const c = cnv(s, s);
-  const g = ctx2d(c);
-  const im = g.createImageData(s, s);
-  const n = vnoise(seed);
-  const k = parseInt(color.slice(1), 16);
-  const cr = k >> 16;
-  const cg = (k >> 8) & 255;
-  const cb = k & 255;
-  for (let y = 0; y < s; y++)
-    for (let x = 0; x < s; x++) {
-      const dx = (x - s / 2) / (s / 2);
-      const dy = (y - s / 2) / (s / 2);
-      const d = Math.sqrt(dx * dx + dy * dy);
-      let f = 0;
-      let amp = 0.5;
-      let fr = 1 / 18;
-      for (let o = 0; o < 4; o++) {
-        f += amp * n(x * fr + seed * 31, y * fr + seed * 17);
-        amp *= 0.5;
-        fr *= 2;
-      }
-      const fall = Math.max(0, 1 - d);
-      const a = Math.pow(fall, 1.3) * clamp(0.15 + 1.25 * (f - 0.3));
-      const i = (y * s + x) * 4;
-      im.data[i] = cr;
-      im.data[i + 1] = cg;
-      im.data[i + 2] = cb;
-      im.data[i + 3] = Math.round(a * 200);
-    }
-  g.putImageData(im, 0, 0);
-  return c;
-}
-
-type Sprites = {
-  hot: HTMLCanvasElement[];
-  warm: HTMLCanvasElement[];
-  dust: HTMLCanvasElement[];
-};
-/**
- * Nine 128px puffs, each ~65k four-octave noise samples. They are fixed art,
- * so they are built once per page rather than once per mount.
- */
-let SPRITES: Sprites | null = null;
-function sprites(): Sprites {
-  if (SPRITES) return SPRITES;
-  return (SPRITES = {
-    hot: [puff("#ff7a34", 1), puff("#ff8a3c", 2), puff("#ff6a28", 7)],
-    warm: [puff("#e0642e", 3), puff("#e3773f", 4), puff("#d9602c", 8)],
-    dust: [puff("#9a7466", 5), puff("#8a6f68", 6), puff("#a17c6c", 9)],
-  });
 }
 
 /** Vertical alpha ramps for fold shading (taut at the top / bellied in the middle). */
@@ -363,31 +285,6 @@ type SprayOpts = {
   alpha?: number;
 };
 
-type Smoke = {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  r0: number;
-  r1: number;
-  life: number;
-  age: number;
-  sp: number;
-  front: boolean;
-  hot: boolean;
-  ph: number;
-};
-type Spark = {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  life: number;
-  age: number;
-  s: number;
-};
-type Fig = { ph: number; f: number; a: number; hr: number; x: number; y: number };
-type Flare = { x: number; y: number; t0: number; fig: number };
 type Cloth = {
   g: CanvasRenderingContext2D;
   art: HTMLCanvasElement;
@@ -397,81 +294,58 @@ type Cloth = {
   lite: HTMLCanvasElement;
 };
 type DropSlot = Cloth & { o: DropGeo };
-type FlareSlot = {
-  f: Flare;
-  el: HTMLElement;
-  spill: HTMLElement;
-  halo: HTMLElement;
-  core: HTMLElement;
-};
 
 export type TifoOptions = {
   /** The top three, best first. Missing ranks simply leave their banner out. */
   top3: TifoDrop[];
+  /**
+   * Which scene to build. The two are the same banners on the same rods with
+   * the same timing; they differ in geometry and in how much the artwork says.
+   */
+  layout: TifoLayoutName;
   /**
    * Ready-to-use CSS family lists (what the page reads out of
    * --font-space-grotesk / --font-plex-mono, with a system fallback appended).
    */
   fonts: { display: string; label: string };
   /**
-   * Current stage scale (box width / 1100). Fixes the cloth canvas resolution
-   * at min(2, dpr x scale), so a retina desktop gets sharper banners than the
-   * reference's hard-coded 1.5 and a small window does not pay for pixels it
-   * cannot show.
+   * Current stage scale (box width / scene width). Fixes the cloth canvas
+   * resolution at min(2, dpr x scale), so a retina desktop gets sharper
+   * banners than the reference's hard-coded 1.5 and a small window does not
+   * pay for pixels it cannot show.
    */
   scale?: number;
 };
 
 export type TifoHandle = {
-  /** Advance the sim by dt and draw the frame at scene time t. */
-  render(t: number, dt: number): void;
-  reset(): void;
+  /** Draw the frame at scene time t. */
+  render(t: number): void;
   /**
-   * One deterministic frame at t: steps the sim up to t WITHOUT drawing, then
-   * draws once. (The reference's still() draws every intermediate frame, which
-   * costs ~180 full redraws for the same picture.)
+   * One deterministic frame at t. The same single draw render() does — with
+   * the particle sim gone there is no state to wind forward first — but kept
+   * under its own name because the two call sites mean different things by it.
    */
   drawStill(t: number): void;
-  /** Cut the flares, sparks and background smoke; the glow then fades out. */
-  stopEmitters(): void;
-  /** True once the glow has faded and the last particle has expired. */
-  isSettled(): boolean;
   destroy(): void;
 };
 
 type State = {
   root: HTMLDivElement;
-  bg: CanvasRenderingContext2D;
-  fg: CanvasRenderingContext2D;
-  xg: CanvasRenderingContext2D;
   drops: DropSlot[];
   strip: Cloth;
-  flares: FlareSlot[];
-  tint: HTMLElement;
-  figEls: SVGGElement[];
-  figData: Fig[];
-  sprites: Sprites;
-  smoke: Smoke[];
-  sparks: Spark[];
-  acc: number;
-  simT: number;
-  lastT: number;
-  rnd: () => number;
-  emit: number[];
-  stopped: boolean;
-  stopT: number;
 };
 
 // --- engine ----------------------------------------------------------------
 
 export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
+  const L: TifoLayout = layoutFor(opts.layout);
+  const PH = opts.layout === "phone";
   const dispFam = opts.fonts.display;
   const labelFam = opts.fonts.label;
   const byRank = new Map<number, TifoDrop>(opts.top3.map((d) => [d.rank, d]));
-  const geos = DROP_GEO.filter((g) => byRank.has(g.rank));
+  const geos = L.DROPS.filter((g) => byRank.has(g.rank));
   const dpr = typeof devicePixelRatio === "number" ? devicePixelRatio : 1;
   const CL = Math.max(1, Math.min(2, dpr * (opts.scale || 1)));
-
   // --- painting ------------------------------------------------------------
 
   /** Spray-stencil text: overspray halo + grain knocked out of the paint. */
@@ -608,6 +482,7 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
   }
 
   function dropArt(o: DropGeo, d: TifoDrop, idx: number): HTMLCanvasElement {
+    if (PH) return dropArtPhone(o, d, idx);
     const { w, h } = o;
     const k = w / 290;
     const c = cnv(w * ART, h * ART);
@@ -683,14 +558,73 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
     return c;
   }
 
+  /**
+   * Phone banner: rank numeral, name, map, grade disc. The TOP PEEK eyebrow and
+   * the votes line are left off — at this size they would paint at ~5px. Sizes
+   * are scene px, so x0.5 on a 390 phone.
+   */
+  function dropArtPhone(o: DropGeo, d: TifoDrop, idx: number): HTMLCanvasElement {
+    const { w, h } = o;
+    const c = cnv(w * ART, h * ART);
+    const g = ctx2d(c);
+    g.scale(ART, ART);
+    const { segs, gx } = clothBase(g, w, h, 20 + idx, 62);
+    const cx = w / 2;
+    // rank numeral
+    const capN = d.rank === 1 ? 108 : 94;
+    const num = String(d.rank);
+    let y = 34 + capN;
+    spray(g, num, cx, y, fitPx(num, dispFam, DW, 0, capN, w * 0.78), ORANGE, {
+      align: "center",
+      family: dispFam,
+      weight: DW,
+      blur: 10,
+      cut: STENCIL_CUTS,
+    });
+    // peek name: one size for both lines, never more than two
+    const capM = 21;
+    const maxW = w - 30;
+    const lines = nameLines(d.name, capM, maxW);
+    const npx = Math.min(
+      ...lines.map((s) => fitPx(s, dispFam, DW, TR, capM, maxW))
+    );
+    y += 26 + capM;
+    lines.forEach((ln, i) => {
+      spray(g, ln, cx, y, npx, INK, {
+        align: "center",
+        family: dispFam,
+        weight: DW,
+        ls: TR * npx,
+        blur: 2.5,
+        cut: STENCIL_CUTS,
+      });
+      if (i < lines.length - 1) y += npx * 0.95;
+    });
+    // map only — no floor, and no votes line
+    const map = d.map.toUpperCase();
+    const l = monoFit(map, 18, 1.2, w - 34);
+    spray(g, map, cx, y + 30, l.px, INK, {
+      align: "center",
+      family: labelFam,
+      weight: LW,
+      ls: l.ls,
+      grain: 0.2,
+      blur: 1.2,
+      alpha: 0.85,
+    });
+    sprayDisc(g, cx, h - 42, 25, gradeTierColor(d.grade), d.grade, 20);
+    grommets(g, gx, segs, 8);
+    return c;
+  }
+
   function stripArt(): HTMLCanvasElement {
-    const { w, h } = STR;
+    const { w, h } = L.STR;
     const c = cnv(w * ART, h * ART);
     const g = ctx2d(c);
     g.scale(ART, ART);
     const { segs, gx } = clothBase(g, w, h, 90, 94);
-    const tp = fitPx("TOP PEEKS", dispFam, DW, TR_STRIP, 74, w - 290);
-    spray(g, "TOP PEEKS", w / 2, 102, tp, ORANGE, {
+    const tp = fitPx("TOP PEEKS", dispFam, DW, TR_STRIP, PH ? 60 : 74, w - (PH ? 250 : 290));
+    spray(g, "TOP PEEKS", w / 2, PH ? 89 : 102, tp, ORANGE, {
       align: "center",
       family: dispFam,
       weight: DW,
@@ -699,7 +633,8 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
       cut: STENCIL_CUTS,
     });
     // stencilled crest at both ends
-    [70, w - 70].forEach((x, i) => {
+    const cs = PH ? 76 : 90; // painted at 90 either way, drawn at this size
+    (PH ? [58, w - 58] : [70, w - 70]).forEach((x, i) => {
       const s = cnv(90 * ART, 90 * ART);
       const tg = ctx2d(s);
       tg.scale(ART, ART);
@@ -736,7 +671,7 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
       tg.globalAlpha = 0.3;
       tg.fillStyle = tg.createPattern(noise(), "repeat") as CanvasPattern;
       tg.fillRect(0, 0, s.width, s.height);
-      g.drawImage(s, x - 45, h / 2 - 45 + 2 + (i ? 1 : -1), 90, 90);
+      g.drawImage(s, x - cs / 2, h / 2 - cs / 2 + 2 + (i ? 1 : -1), cs, cs);
     });
     grommets(g, gx, segs, 8);
     return c;
@@ -744,7 +679,6 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
 
   // --- scene ---------------------------------------------------------------
 
-  const FLARES: Flare[] = FLARE_SEED.map((f) => ({ ...f }));
   let S: State | null = null;
 
   function build(): State {
@@ -755,53 +689,26 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
     root.className = "tifo-scene";
     stage.appendChild(root);
 
-    const mk = (
-      x: number,
-      y: number,
-      w: number,
-      h: number,
-      sc: number,
-      z?: number
-    ) => {
+    // Every canvas left in the scene is cloth, so every one of them carries the
+    // warm drop shadow the banners hang on. The rods, ropes and ties they hang
+    // FROM are server-rendered — the engine never builds them.
+    const mk = (x: number, y: number, w: number, h: number) => {
       const c = document.createElement("canvas");
-      c.className = "tifo-canvas";
-      c.width = Math.ceil(w * sc);
-      c.height = Math.ceil(h * sc);
+      c.className = "tifo-canvas tifo-cloth";
+      c.width = Math.ceil(w * CL);
+      c.height = Math.ceil(h * CL);
       c.style.left = x + "px";
       c.style.top = y + "px";
       c.style.width = w + "px";
       c.style.height = h + "px";
-      if (z) c.style.zIndex = String(z);
       root.appendChild(c);
       return c;
     };
 
-    // back smoke, drawn at half resolution
-    const back = mk(0, NAV_H, W, H - NAV_H, SMOKE);
-    // upper-tier rail + posts + ropes
-    let posts = "";
-    for (let x = 30; x < W; x += 116)
-      posts += `<rect x="${x}" y="64" width="7" height="${RAIL_Y - 60}" fill="#1c1d19"/>`;
-    let ropes = "";
-    geos.forEach((o) => {
-      const segs = Math.max(3, Math.round(o.w / 62));
-      for (let i = 0; i <= segs; i++) {
-        const x = o.cx - o.w / 2 + 9 + (i * (o.w - 18)) / segs;
-        ropes += `<path d="M${x} ${RAIL_Y + 3} q2 6 0 ${TOP_Y + 8 - RAIL_Y - 3}" stroke="#8a7b5c" stroke-width="1.6" fill="none"/>`;
-      }
-    });
-    root.insertAdjacentHTML(
-      "beforeend",
-      `<svg width="${W}" height="140" viewBox="0 0 ${W} 140">${posts}` +
-        `<rect x="0" y="${RAIL_Y - 4}" width="${W}" height="8" rx="4" fill="#262822"/>` +
-        `<rect x="0" y="${RAIL_Y - 4}" width="${W}" height="1.6" fill="#6d7680"/>${ropes}</svg>`
-    );
-
-    // drop banners (cloth canvases)
     const drops: DropSlot[] = geos.map((o, i) => {
       const cw = o.w + 80;
       const chh = o.h + 50;
-      const c = mk(o.cx - cw / 2, TOP_Y - 6, cw, chh, CL);
+      const c = mk(o.cx - cw / 2, L.TOP_Y - 6, cw, chh);
       return {
         o,
         g: ctx2d(c),
@@ -813,258 +720,17 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
       };
     });
 
-    const front = mk(0, NAV_H, W, H - NAV_H, SMOKE);
-
-    // crowd behind the fence
-    const rnd = rng(99);
-    let figs = "";
-    const figData: Fig[] = [];
-    for (let i = 0; i < 20; i++) {
-      const x = 40 + i * 53 + (rnd() - 0.5) * 18;
-      const hr = 12 + rnd() * 4;
-      const y = 594 + rnd() * 16;
-      const arm = FLARES.some((f) => f.fig === i) ? "flare" : rnd() < 0.3 ? "up" : "";
-      let s = `<g><circle cx="${x}" cy="${y}" r="${hr}"/><path d="M${x - hr * 2.3} ${y + hr * 4} Q${x - hr * 2.2} ${y + hr * 1.1} ${x} ${y + hr * 1.05} Q${x + hr * 2.2} ${y + hr * 1.1} ${x + hr * 2.3} ${y + hr * 4} Z"/>`;
-      if (arm === "flare")
-        s += `<path d="M${x + hr * 1.3} ${y + hr * 1.6} L${x + hr * 0.3} ${y - hr * 1.2}" stroke="#070807" stroke-width="${hr * 0.9}" stroke-linecap="round"/>`;
-      else if (arm === "up") {
-        const dir = rnd() < 0.5 ? -1 : 1;
-        s += `<path d="M${x + dir * hr * 1.4} ${y + hr * 1.6} L${x + dir * hr * 2.0} ${y - hr * 1.7}" stroke="#070807" stroke-width="${hr * 0.85}" stroke-linecap="round"/>`;
-      }
-      figs += s + "</g>";
-      figData.push({ ph: rnd() * 6.28, f: 1.8 + rnd() * 0.5, a: 3 + rnd() * 6, hr, x, y });
-    }
-    root.insertAdjacentHTML(
-      "beforeend",
-      `<svg class="tifo-crowd" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="#070807">${figs}</svg>`
-    );
-    const figEls = Array.from(
-      root.querySelectorAll<SVGGElement>("svg.tifo-crowd > g")
-    );
-
-    const tint = document.createElement("div");
-    tint.className = "tifo-tint";
-    root.appendChild(tint);
-
-    const flares: FlareSlot[] = FLARES.map((f) => {
-      const el = document.createElement("div");
-      el.className = "tifo-fl";
-      el.innerHTML =
-        '<div class="tifo-spill"></div><div class="tifo-stick"></div><div class="tifo-halo"></div><div class="tifo-core"></div>';
-      root.appendChild(el);
-      const fd = figData[f.fig];
-      f.x = fd.x + fd.hr * 0.3;
-      f.y = fd.y - fd.hr * 1.2 - 8;
-      el.style.left = f.x + "px";
-      el.style.top = f.y + "px";
-      return {
-        f,
-        el,
-        spill: el.querySelector(".tifo-spill") as HTMLElement,
-        halo: el.querySelector(".tifo-halo") as HTMLElement,
-        core: el.querySelector(".tifo-core") as HTMLElement,
-      };
-    });
-
-    // fence
-    let fposts = "";
-    for (let x = 22; x < W; x += 108)
-      fposts += `<rect x="${x}" y="${FENCE_Y}" width="8" height="${H - FENCE_Y}" fill="#141512"/>`;
-    root.insertAdjacentHTML(
-      "beforeend",
-      `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${fposts}` +
-        `<rect x="0" y="${FENCE_Y - 5}" width="${W}" height="9" rx="4.5" fill="#1e1f1b"/>` +
-        `<rect x="0" y="${FENCE_Y - 5}" width="${W}" height="1.6" fill="#57402c"/>` +
-        `<rect x="0" y="770" width="${W}" height="8" rx="4" fill="#1a1b17"/></svg>`
-    );
-
-    const stripCanvas = mk(STR.x - 20, STR.y - 12, STR.w + 40, STR.h + 36, CL);
     const strip: Cloth = {
-      g: ctx2d(stripCanvas),
+      g: ctx2d(mk(L.STR.x - 20, L.STR.y - 12, L.STR.w + 40, L.STR.h + 36)),
       art: stripArt(),
       ox: 20,
       oy: 12,
-      dark: ramp(STR.h, "belly", "#000000"),
-      lite: ramp(STR.h, "belly", "#fff3dc"),
+      dark: ramp(L.STR.h, "belly", "#000000"),
+      lite: ramp(L.STR.h, "belly", "#fff3dc"),
     };
-    // ties from fence to the striscione grommets
-    {
-      const segs = Math.max(3, Math.round(STR.w / 94));
-      let ties = "";
-      for (let i = 0; i <= segs; i++) {
-        const x = STR.x + 9 + (i * (STR.w - 18)) / segs;
-        ties += `<path d="M${x} ${FENCE_Y + 2} L${x} ${STR.y + 9}" stroke="#8a7b5c" stroke-width="1.6"/>`;
-      }
-      root.insertAdjacentHTML(
-        "beforeend",
-        `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="z-index:5">${ties}</svg>`
-      );
-      stripCanvas.style.zIndex = "4";
-    }
 
-    const fx = mk(0, NAV_H, W, H - NAV_H, 1, 6);
-    const vig = document.createElement("div");
-    vig.className = "tifo-vig";
-    vig.style.zIndex = "7";
-    root.appendChild(vig);
-
-    return {
-      root,
-      bg: ctx2d(back),
-      fg: ctx2d(front),
-      xg: ctx2d(fx),
-      drops,
-      strip,
-      flares,
-      tint,
-      figEls,
-      figData,
-      sprites: sprites(),
-      smoke: [],
-      sparks: [],
-      acc: 0,
-      simT: 0,
-      lastT: 0,
-      rnd: rng(2024),
-      emit: [],
-      stopped: false,
-      stopT: 0,
-    };
+    return { root, drops, strip };
   }
-
-  function reset() {
-    if (!S) return;
-    S.smoke = [];
-    S.sparks = [];
-    S.acc = 0;
-    S.simT = 0;
-    S.lastT = 0;
-    S.rnd = rng(2024);
-    S.emit = FLARES.map(() => 0).concat([0, 0]);
-    S.stopped = false;
-    S.stopT = 0;
-  }
-
-  function flareLevel(t: number, f: Flare) {
-    const u = t - f.t0;
-    if (u < 0) return 0;
-    const pop = u < 0.12 ? 1.6 : u < 0.3 ? lerp(1.6, 1, (u - 0.12) / 0.18) : 1;
-    return pop * (0.86 + 0.14 * Math.sin(t * 31 + f.x) * Math.sin(t * 17.3 + f.y));
-  }
-
-  function step(t: number, dt: number) {
-    if (!S) return;
-    const rnd = S.rnd;
-    const wind = 26 + 16 * Math.sin(t * 0.35) + 10 * Math.sin(t * 1.1);
-    if (!S.stopped) {
-      // emit
-      FLARES.forEach((f, i) => {
-        if (t < f.t0) return;
-        S!.emit[i] += dt * 34;
-        while (S!.emit[i] >= 1) {
-          S!.emit[i] -= 1;
-          S!.smoke.push({
-            x: f.x + (rnd() - 0.5) * 6,
-            y: f.y - 4,
-            vx: (rnd() - 0.5) * 60,
-            vy: -120 - rnd() * 60,
-            r0: 9 + rnd() * 8,
-            r1: 110 + rnd() * 90,
-            life: 3.6 + rnd() * 2.2,
-            age: 0,
-            sp: Math.floor(rnd() * 3),
-            front: rnd() < 0.3,
-            hot: true,
-            ph: rnd() * 6.28,
-          });
-        }
-        const sparkRate = 46;
-        const n = dt * sparkRate + (rnd() < (dt * sparkRate) % 1 ? 1 : 0);
-        for (let j = 0; j < Math.floor(n); j++) {
-          const a = -Math.PI / 2 + (rnd() - 0.5) * 2.2;
-          const v = 70 + rnd() * 170;
-          S!.sparks.push({
-            x: f.x,
-            y: f.y - 6,
-            vx: Math.cos(a) * v,
-            vy: Math.sin(a) * v,
-            life: 0.35 + rnd() * 0.7,
-            age: 0,
-            s: 1 + rnd() * 1.6,
-          });
-        }
-      });
-      // off-screen smoke banks at the bottom corners keep the stand hazy
-      ([[-60, 830], [W + 60, 830]] as const).forEach(([x, y], i) => {
-        if (t < 0.2) return;
-        S!.emit[2 + i] += dt * 5;
-        while (S!.emit[2 + i] >= 1) {
-          S!.emit[2 + i] -= 1;
-          S!.smoke.push({
-            x: x + (rnd() - 0.5) * 60,
-            y,
-            vx: (i ? -30 : 50) + (rnd() - 0.5) * 30,
-            vy: -45 - rnd() * 25,
-            r0: 90,
-            r1: 260 + rnd() * 90,
-            life: 7 + rnd() * 3,
-            age: 0,
-            sp: Math.floor(rnd() * 3),
-            front: rnd() < 0.25,
-            hot: false,
-            ph: rnd() * 6.28,
-          });
-        }
-      });
-    }
-    S.smoke.forEach((p) => {
-      p.age += dt;
-      p.vx +=
-        (wind * 0.9 - p.vx) * 0.35 * dt +
-        Math.sin(p.y * 0.012 + t * 0.7 + p.ph) * 22 * dt;
-      p.vy += (-42 - p.vy) * 0.8 * dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-    });
-    S.smoke = S.smoke.filter((p) => p.age < p.life);
-    S.sparks.forEach((s) => {
-      s.age += dt;
-      s.vy += 260 * dt;
-      s.vx *= 0.99;
-      s.x += s.vx * dt;
-      s.y += s.vy * dt;
-    });
-    S.sparks = S.sparks.filter((s) => s.age < s.life);
-  }
-
-  function drawSmoke(g: CanvasRenderingContext2D, front: boolean) {
-    if (!S) return;
-    g.setTransform(SMOKE, 0, 0, SMOKE, 0, -NAV_H * SMOKE);
-    g.clearRect(0, NAV_H, W, H);
-    for (const p of S.smoke) {
-      if (p.front !== front) continue;
-      const u = p.age / p.life;
-      const r = p.r0 + (p.r1 - p.r0) * Math.pow(u, 0.55);
-      let a = clamp(p.age / 0.25) * Math.pow(1 - u, 1.4) * (front ? 0.42 : 0.8);
-      if (p.y < 300) a *= clamp((p.y - 40) / 260);
-      const sp = p.sp;
-      if (p.hot && p.age < 0.6) {
-        g.globalCompositeOperation = "lighter";
-        g.globalAlpha = a * (1 - p.age / 0.6) * 0.5;
-        g.drawImage(S.sprites.hot[sp], p.x - r, p.y - r, r * 2, r * 2);
-      }
-      g.globalCompositeOperation = "source-over";
-      const warmW = p.hot ? clamp(1 - (p.age - 0.4) / 2.2) : 0.25;
-      g.globalAlpha = a * warmW;
-      if (warmW > 0.01)
-        g.drawImage(S.sprites.warm[sp], p.x - r, p.y - r, r * 2, r * 2);
-      g.globalAlpha = a * (1 - warmW) * 0.9;
-      g.drawImage(S.sprites.dust[sp], p.x - r, p.y - r, r * 2, r * 2);
-    }
-    g.globalAlpha = 1;
-    g.globalCompositeOperation = "source-over";
-  }
-
   /**
    * Draw a hanging cloth in `col`-wide columns: each column stretches a touch
    * (wavy hem) and takes fold shading that grows toward the free edge.
@@ -1107,23 +773,24 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
       }
     }
     if (reveal < h + 30) {
-      // the roll, tied until it is cut loose, then unwinding as it falls
+      // the roll, tied until it is cut loose, then unwinding as it falls.
+      // Canvas-toned, not dark-edged: it sits on the cream page, not a night stage.
       const full = Math.min(34, 14 + w * 0.05);
       const rh = 10 + (full - 10) * (1 - clamp(reveal / h));
       const y = Math.min(reveal, h) - rh * 0.3;
       const gr = g.createLinearGradient(0, y, 0, y + rh);
-      gr.addColorStop(0, "#2e2a23");
-      gr.addColorStop(0.25, "#7f7664");
-      gr.addColorStop(0.45, "#b3aa95");
-      gr.addColorStop(0.65, "#8e8571");
-      gr.addColorStop(1, "#2a261f");
+      gr.addColorStop(0, "#9a907a");
+      gr.addColorStop(0.25, "#cfc6af");
+      gr.addColorStop(0.45, "#efe8d6");
+      gr.addColorStop(0.65, "#d6cdb6");
+      gr.addColorStop(1, "#958b75");
       g.globalAlpha = clamp(1 - (reveal - h) / 30);
       g.fillStyle = gr;
       g.beginPath();
       g.roundRect(-3, y, w + 6, rh, 4);
       g.fill();
       // spiral ends
-      g.strokeStyle = "rgba(40,34,26,.55)";
+      g.strokeStyle = "rgba(90,78,55,.45)";
       g.lineWidth = 1;
       ([[-3, 1], [w + 3, -1]] as const).forEach(([ex, dir]) => {
         g.beginPath();
@@ -1148,52 +815,9 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
     }
   }
 
-  /** The fixed-step half of a frame: advance the 30 Hz sim by dt. */
-  function advance(dt: number) {
-    if (!S) return;
-    S.acc += Math.min(dt, 0.1);
-    while (S.acc >= 1 / 30) {
-      S.acc -= 1 / 30;
-      S.simT += 1 / 30;
-      step(S.simT, 1 / 30);
-    }
-  }
-
+  /** One frame. Pure in t — there is no sim state left to advance. */
   function draw(t: number) {
     if (!S) return;
-    S.lastT = t;
-    // Once the emitters are cut the flare glow dies over FADE seconds; the
-    // banners stay hanging.
-    const fade = S.stopped ? clamp(1 - (t - S.stopT) / FADE) : 1;
-
-    // flares + light
-    let lvSum = 0;
-    S.flares.forEach(({ f, el, spill, halo, core }) => {
-      const lv = flareLevel(t, f);
-      lvSum += Math.min(1, lv);
-      el.style.opacity = lv > 0 ? String(fade) : "0";
-      halo.style.transform = `scale(${(0.8 + 0.35 * lv).toFixed(3)})`;
-      halo.style.opacity = Math.min(1, lv).toFixed(3);
-      spill.style.opacity = (0.75 * Math.min(1.2, lv)).toFixed(3);
-      core.style.transform = `scale(${(0.9 + 0.2 * Math.sin(t * 40 + f.x)).toFixed(3)})`;
-    });
-    S.tint.style.opacity = ((lvSum / S.flares.length) * fade).toFixed(3);
-
-    // jumping crowd (starts once the flares are lit)
-    const jump = smooth(prog(t, 0.5, 1.4));
-    const st = S;
-    st.figEls.forEach((g, i) => {
-      const fd = st.figData[i];
-      const y = -jump * fd.a * Math.abs(Math.sin(Math.PI * fd.f * t + fd.ph));
-      g.setAttribute("transform", `translate(0 ${y.toFixed(2)})`);
-      st.flares.forEach((fl) => {
-        if (fl.f.fig === i) fl.el.style.transform = `translateY(${y.toFixed(2)}px)`;
-      });
-    });
-
-    drawSmoke(S.bg, false);
-    drawSmoke(S.fg, true);
-
     const gust = 0.5 + 0.3 * Math.sin(t * 0.55) + 0.2 * Math.sin(t * 1.7);
     S.drops.forEach(({ o, g, art, ox, oy, dark, lite }) => {
       const u = prog(t, o.t0, o.t0 + DROP_T);
@@ -1211,59 +835,22 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
     });
     {
       const s = S.strip;
-      const u = prog(t, STR.t0, STR.t0 + 0.42);
-      const reveal = (u <= 0 ? 0 : Math.min(1, 0.15 * u + 0.85 * u * u)) * (STR.h + 30);
-      const done = STR.t0 + 0.42;
+      const u = prog(t, L.STR.t0, L.STR.t0 + 0.42);
+      const reveal = (u <= 0 ? 0 : Math.min(1, 0.15 * u + 0.85 * u * u)) * (L.STR.h + 30);
+      const done = L.STR.t0 + 0.42;
       const stretch = t > done ? 1 + 0.04 * wobble(t - done, 2.8, 6) : 1;
-      drawCloth(s.g, s.art, STR.w, STR.h, t * 0.8, 1.3, 0.45 + 0.2 * gust, 0, reveal, stretch, s.ox, s.oy, s, COL_STRIP);
+      drawCloth(s.g, s.art, L.STR.w, L.STR.h, t * 0.8, 1.3, 0.45 + 0.2 * gust, 0, reveal, stretch, s.ox, s.oy, s, COL_STRIP);
     }
-
-    // sparks
-    const x = S.xg;
-    x.setTransform(1, 0, 0, 1, 0, -NAV_H);
-    x.clearRect(0, NAV_H, W, H);
-    x.globalCompositeOperation = "lighter";
-    for (const s of S.sparks) {
-      const u = s.age / s.life;
-      x.globalAlpha = (1 - u) * 0.95;
-      x.fillStyle = u < 0.3 ? "#fff1c2" : u < 0.6 ? "#ffb04a" : "#ff6a26";
-      x.beginPath();
-      x.arc(s.x, s.y, s.s * (1 - u * 0.5), 0, 7);
-      x.fill();
-    }
-    x.globalAlpha = 1;
-    x.globalCompositeOperation = "source-over";
   }
 
   S = build();
-  reset();
 
   return {
-    render(t: number, dt: number) {
-      advance(dt);
+    render(t: number) {
       draw(t);
     },
-    reset,
     drawStill(t: number) {
-      reset();
-      // Same fixed-step path the live loop takes, so a still at t is the frame
-      // the loop would have drawn at t — just without the 30 redraws a second
-      // on the way there.
-      for (let u = 0; u <= t + 1e-9; u += 1 / 30) advance(1 / 30);
       draw(t);
-    },
-    stopEmitters() {
-      if (!S || S.stopped) return;
-      S.stopped = true;
-      S.stopT = S.lastT;
-    },
-    isSettled() {
-      if (!S || !S.stopped) return false;
-      return (
-        S.smoke.length === 0 &&
-        S.sparks.length === 0 &&
-        S.lastT - S.stopT >= FADE
-      );
     },
     destroy() {
       if (!S) return;

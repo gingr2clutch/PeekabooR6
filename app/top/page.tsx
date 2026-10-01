@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { ExploreNext } from "@/components/ExploreNext";
-import { TopThreeSwipe } from "@/components/TopThreeSwipe";
 import { TopTifo } from "@/components/TopTifo";
 import { getTopPeeks } from "@/lib/db";
 import { rating, gradeTierColor, GRADED_THRESHOLDS } from "@/lib/rate";
 import type { TifoDrop } from "@/lib/tifo/layout";
 import { computeDirection, getSnapshotsForPeeks } from "@/lib/trends";
-import { FlameCrestMotion } from "@/components/FlameCrestMotion";
-import { MOBILE_CREST, type Crest } from "@/lib/flame-crest";
 
 export const dynamic = "force-dynamic";
 
@@ -26,84 +22,6 @@ function voteLabel(votes: number) {
   return `${votes} ${votes === 1 ? "vote" : "votes"}`;
 }
 
-// --- Rafter flame crest -------------------------------------------------
-// Sharp, flat flames. Geometry is static seeded data from lib/flame-crest.ts
-// (SSR-safe, no runtime randomness); this only renders it.
-//
-// Each cluster is a plain div: the layer's gradient as a background, the merged
-// outline of 2-3 tongues as clip-path. Divs rather than SVG paths because a
-// transform animation on a div is composited, while the same animation on an
-// SVG child is not — that is what lets every flame move instead of a quarter of
-// them. See the note at the top of lib/flame-crest.ts.
-function FlameCrest({ crest, variant }: { crest: Crest; variant: "d" | "m" }) {
-  return (
-    <div className={`crest crest--${variant}`} aria-hidden>
-      {crest.layers.map((l) => {
-        const fill = `linear-gradient(0deg, ${l.from} 0%, ${l.to} 100%)`;
-        return (
-          <div
-            key={l.id}
-            className="crest-layer"
-            style={
-              {
-                "--sway-dur": `${l.swayDur}s`,
-                "--sway-delay": `${l.swayDelay}s`,
-              } as CSSProperties
-            }
-          >
-            {/* solid band along the bottom edge — the banner cords hang off
-                this, and it hides the seams between neighbouring clusters */}
-            <div
-              className="crest-base"
-              style={{ height: l.baseH, background: fill }}
-            />
-            {l.clusters.map((c, i) => (
-              <div
-                key={i}
-                className="crest-cl"
-                style={
-                  {
-                    left: c.left,
-                    width: c.width,
-                    height: c.height,
-                    background: fill,
-                    clipPath: `path("${c.path}")`,
-                    "--dur": `${c.dur}s`,
-                    "--delay": `${c.delay}s`,
-                  } as CSSProperties
-                }
-              />
-            ))}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function CrestEmbers({ crest, variant }: { crest: Crest; variant: "d" | "m" }) {
-  return (
-    <div className={`crest-embers crest-embers--${variant}`} aria-hidden>
-      {crest.embers.map((e, i) => (
-        <span
-          key={i}
-          className="crest-ember"
-          style={
-            {
-              left: e.left,
-              width: e.size,
-              height: e.size,
-              "--from": `${e.from}px`,
-              "--drift": e.drift,
-              "--dur": `${e.dur}s`,
-              "--delay": `${e.delay}s`,
-            } as CSSProperties
-          }
-        />
-      ))}
-    </div>
-  );
-}
 export default async function TopPeeksPage() {
   const peeks = await getTopPeeks(10);
 
@@ -157,28 +75,15 @@ export default async function TopPeeksPage() {
     <>
       <PageHeader />
       <main className="arena fade-in-up pb-8">
-        {/* Rafter header — dark, full-bleed, with the beam at its bottom edge.
-            Rendered server-side so there's no flash against the cream page. */}
-        <section className="arena-rafter">
-          {/* Decorative flame crest rising from the beam around the title.
-              Phones only: at md and up the Tifo banner below IS the header, so
-              the desktop crest would be burning behind an sr-only heading. The
-              SVGs are server-rendered; FlameCrestMotion is a client shell that
-              only pauses the animation while the header is off screen. */}
-          <FlameCrestMotion>
-            <FlameCrest crest={MOBILE_CREST} variant="m" />
-            <CrestEmbers crest={MOBILE_CREST} variant="m" />
-          </FlameCrestMotion>
-          {/* No eyebrow here (Underrated keeps its own). arena-head--noeyebrow
-              gives back exactly the height the eyebrow occupied as EXTRA bottom
-              padding, so the rafter is the same height as before and nothing
-              below it moves — the text simply sits higher and the freed room
-              goes to the flames.
+        {/* Rafter header. The Tifo banner below carries the title at every
+            width now, so there is nothing left to draw here: no flames, no
+            beam, and — because arena-head--tifo takes the head block out of
+            flow — no empty band either. The section stays as the h1's home.
 
-              arena-head--tifo takes this block sr-only at md and up, where the
-              painted banner carries the title. sr-only, never display:none:
-              there is exactly ONE <h1> on this page at every width and it stays
-              in the accessibility tree. */}
+            arena-head--tifo is sr-only, never display:none: there is exactly
+            ONE <h1> on this page at every width and it stays in the
+            accessibility tree. */}
+        <section className="arena-rafter">
           <div className="site-shell arena-head--noeyebrow arena-head--tifo mx-auto max-w-3xl px-4 pb-14 pt-8 text-center sm:pt-10">
             <h1 className="arena-title text-5xl sm:text-6xl">Top Peeks</h1>
             <p className="arena-subline mt-4 text-base sm:text-lg">
@@ -187,21 +92,19 @@ export default async function TopPeeksPage() {
           </div>
         </section>
 
-        {/* The podium is its own block, OUTSIDE the list below, for two
-            reasons. It needs to be wider than the max-w-3xl the rest of the
-            page uses — the rod is up to 1220px — and being in the same flex
-            list as the ad is what put the ad above it: .arena-list is a flex
-            container, the banners carried order 1/2/3, and the ad <li> had no
-            order at all, so its default 0 sorted it ahead of all three. Out
-            here the ad simply follows in document order. */}
-        {/* Phones get a swipe row instead of the pennants: three 440px
-            banners side by side on a 390px screen pushed the ad most of a
-            screen further down. The pennant block below is hidden with a
-            class rather than removed, so md+ is byte-identical and its CSS
-            is untouched. Both render in the same DOM position, so the ad
-            after them does not move. */}
+        {/* The podium is its own block, OUTSIDE the list below: it needs to be
+            wider than the max-w-3xl the rest of the page uses, and out here the
+            ad simply follows it in document order.
+
+            Phones hang the same three banners, full-bleed and with no side
+            padding, directly under the nav — the rafter above has collapsed to
+            nothing. Each TopTifo bails out at the width it is not for, so only
+            one of these two ever builds a scene, and the ad below does not move
+            either way. */}
         {peeks.length > 0 && (
-          <TopThreeSwipe peeks={banners} from="top" className="md:hidden" />
+          <div className="md:hidden">
+            <TopTifo top3={tifoTop3} layout="phone" />
+          </div>
         )}
 
         {peeks.length > 0 && (
