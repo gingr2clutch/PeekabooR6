@@ -1,25 +1,16 @@
 /**
  * Scene geometry for the /top Tifo hero, plus the data shape it paints.
  *
- * Split out of engine.ts on purpose. The page renders three real <a>s over the
- * banners server-side and needs the cloth rectangles to place them; if it
- * imported engine.ts for those numbers the whole canvas scene would be pulled
- * into the main bundle — including on phones, which must never download it.
- * Nothing in here touches the DOM.
+ * Split out of engine.ts on purpose. The page server-renders the frame the
+ * banners hang on — both rods, the ropes and the ties — plus three real <a>s
+ * over the cloth, and needs these numbers for all of it; if it imported
+ * engine.ts for them the whole canvas scene would be pulled into the main
+ * bundle. Nothing in here touches the DOM.
  *
- * Coordinates are the reference's internal 1100 x 800 scene, with y = 0 at the
- * top of the mock nav strip that production framing crops off. The visible
- * stage is therefore y 64..800, i.e. 1100 x 736.
+ * Coordinates are the reference's internal scene, with y = 0 at the top of the
+ * mock nav strip that production framing crops off: 1100 x 800 with a 64px
+ * strip cut away, so the visible stage is 1100 x 736.
  */
-
-export const W = 1100;
-export const H = 800;
-/** Height of the mock nav strip the production framing cuts away. */
-export const NAV_H = 64;
-/** Visible stage height. */
-export const VIEW_H = H - NAV_H; // 736
-/** Scene y of the banner tops (where the cloth hangs from the rail ropes). */
-export const TOP_Y = 116;
 
 /** One banner's worth of peek data, as the engine paints it. */
 export type TifoDrop = {
@@ -51,24 +42,65 @@ export type DropGeo = {
   ph: number;
 };
 
-/** The three banners, in scene order (left to right): #2, #1, #3. */
-export const DROP_GEO: readonly DropGeo[] = [
-  { rank: 2, cx: 250, w: 250, h: 392, t0: 1.2, ph: 0.4 },
-  { rank: 1, cx: 550, w: 290, h: 442, t0: 1.62, ph: 2.1 },
-  { rank: 3, cx: 850, w: 250, h: 392, t0: 1.38, ph: 4.2 },
-];
+/** The TOP PEEKS strip tied under the drops. */
+export type StripGeo = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  /** When the roll is cut loose. */
+  t0: number;
+};
+
+export type TifoLayout = {
+  /** Scene width, and full scene height including the cropped nav strip. */
+  W: number;
+  H: number;
+  /** Height of the mock nav strip the production framing cuts away. */
+  NAV_H: number;
+  /** Visible stage height — H - NAV_H. */
+  VIEW_H: number;
+  /** Scene y of the rod the drops hang from. */
+  RAIL_Y: number;
+  /** Scene y of the banner tops (where the cloth hangs off the rail ropes). */
+  TOP_Y: number;
+  /** Scene y of the rod the TOP PEEKS strip hangs from. */
+  FENCE_Y: number;
+  /** x extent of the rod the drops hang from. */
+  RODX: readonly [number, number];
+  /** The three banners, in scene order (left to right): #2, #1, #3. */
+  DROPS: readonly DropGeo[];
+  STR: StripGeo;
+};
+
+export const DESKTOP: TifoLayout = {
+  W: 1100,
+  H: 800,
+  NAV_H: 64,
+  VIEW_H: 736,
+  RAIL_Y: 106,
+  TOP_Y: 116,
+  FENCE_Y: 606,
+  RODX: [104, 996],
+  DROPS: [
+    { rank: 2, cx: 250, w: 250, h: 392, t0: 1.2, ph: 0.4 },
+    { rank: 1, cx: 550, w: 290, h: 442, t0: 1.62, ph: 2.1 },
+    { rank: 3, cx: 850, w: 250, h: 392, t0: 1.38, ph: 4.2 },
+  ],
+  STR: { x: 78, y: 620, w: 944, h: 126, t0: 0.62 },
+};
 
 /**
  * A banner's cloth rectangle as percentages of the visible box, which is how
  * the links over it are positioned — so they follow the scene at every scale
  * without a single line of layout JS.
  */
-export function dropRect(g: DropGeo) {
+export function dropRect(g: DropGeo, L: TifoLayout) {
   return {
-    left: ((g.cx - g.w / 2) / W) * 100,
-    width: (g.w / W) * 100,
-    top: ((TOP_Y - NAV_H) / VIEW_H) * 100,
-    height: (g.h / VIEW_H) * 100,
+    left: ((g.cx - g.w / 2) / L.W) * 100,
+    width: (g.w / L.W) * 100,
+    top: ((L.TOP_Y - L.NAV_H) / L.VIEW_H) * 100,
+    height: (g.h / L.VIEW_H) * 100,
   };
 }
 
