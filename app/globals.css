@@ -1395,120 +1395,20 @@ h4 {
   }
 }
 
-/* --- Rafter flame crest --------------------------------------------------
-   Flat vector flames, no filters. Each cluster is an absolutely positioned div
-   carrying its layer's gradient with the merged outline of 2-3 tongues as
-   clip-path, and the transform animation runs on that div.
-
-   Divs, not SVG paths, for one measured reason: Blink does not composite
-   transforms on SVG children, so every animated <path> costs main-thread style
-   and layout each frame (v1: ~305ms/3s with all of them moving, which is why it
-   shipped animating only 25%). A transform on a promoted div is handed to the
-   compositor, so all ~40 clusters can move for less than a quarter of them did
-   before. See lib/flame-crest.ts. */
+/* --- Animated header decoration ------------------------------------------
+   The flame crest this started as is gone: /top was its only user and it now
+   hangs the phone Tifo there instead. What survives is the shell, because
+   /contributors still wraps its trophy in FlameCrestMotion to get the
+   off-screen pause below. */
 .arena-crest {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
 }
-.crest {
-  position: absolute;
-  inset: 0;
-}
-/* Phones only. The desktop variant is gone — /top hangs the Tifo banner at md
-   and up, so there was nothing left for a crest to sit behind. */
-@media (min-width: 768px) {
-  .crest--m,
-  .crest-embers--m {
-    display: none;
-  }
-}
-
-/* Whole layers sway against each other, out of phase, so the fire never reads
-   as one rigid row. Separate element from the clusters because the sway and the
-   flicker run at different durations and both animate `transform`. */
-.crest-layer {
-  position: absolute;
-  inset: 0;
-  animation: crest-sway var(--sway-dur, 6s) ease-in-out var(--sway-delay, 0s)
-    infinite alternate;
-  will-change: transform;
-}
-@keyframes crest-sway {
-  0% {
-    transform: translate3d(-8px, 0, 0);
-  }
-  100% {
-    transform: translate3d(8px, 0, 0);
-  }
-}
-
-/* Overhangs both edges so the sway never pulls the band off the corner. */
-.crest-base {
-  position: absolute;
-  left: -14px;
-  right: -14px;
-  bottom: 0;
-}
-
-.crest-cl {
-  position: absolute;
-  bottom: 0;
-  transform-origin: 50% 100%;
-  animation: crest-flicker var(--dur, 1.4s) ease-in-out var(--delay, 0s)
-    infinite alternate;
-  will-change: transform;
-}
-/* Bigger and quicker than v1: scaleY 0.85-1.18, skewX +-5deg, plus a small bob.
-   The bob stays smaller than .crest-base's height, so lifting a cluster never
-   opens a gap at its foot. */
-@keyframes crest-flicker {
-  0% {
-    transform: translate3d(0, 0, 0) scaleY(0.85) skewX(-5deg);
-  }
-  100% {
-    transform: translate3d(0, -3px, 0) scaleY(1.18) skewX(5deg);
-  }
-}
-
-.crest-embers {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.crest-ember {
-  position: absolute;
-  bottom: var(--from, 40px);
-  border-radius: 9999px;
-  background: #ffc24a;
-  opacity: 0;
-  animation: crest-ember-rise var(--dur, 3.5s) ease-out var(--delay, 0s)
-    infinite;
-  will-change: transform, opacity;
-}
-@keyframes crest-ember-rise {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  70% {
-    opacity: 0.8;
-  }
-  100% {
-    transform: translate3d(var(--drift, 0), -180px, 0) scale(0.35);
-    opacity: 0;
-  }
-}
 
 /* Off-screen header: stop every animation rather than let it burn CPU behind
    the fold. Toggled by components/FlameCrestMotion.tsx. */
-.arena-crest[data-paused="true"] .crest-cl,
-.arena-crest[data-paused="true"] .crest-layer,
-.arena-crest[data-paused="true"] .crest-ember,
 .arena-crest[data-paused="true"] .arena-trophy,
 .arena-crest[data-paused="true"] .arena-trophy-gleam,
 .arena-crest[data-paused="true"] .arena-trophy-spark {
@@ -2030,16 +1930,6 @@ h4 {
     transform: rotateX(10deg) rotateY(-22deg);
   }
   .arena-gem-spark {
-    display: none;
-  }
-  /* Flames hold still and the embers go away; the crest itself stays, so the
-     header keeps its shape and the banner cords still hang off the fire. */
-  .crest-cl,
-  .crest-layer {
-    animation: none !important;
-    transform: none !important;
-  }
-  .crest-ember {
     display: none;
   }
   .arena-title {
@@ -4577,6 +4467,19 @@ html:not(.reveal-ready) .csa-anim {
 .tifo-canvas {
   position: absolute;
 }
+/* Below md: the same scene at 780 x 596, full-bleed, and with no mock nav strip
+   to crop — so the scene sits flush in the box instead of being shifted up. */
+.tifo--phone {
+  aspect-ratio: 780 / 596;
+}
+.tifo--phone .tifo-stage {
+  width: 780px;
+  height: 596px;
+}
+.tifo--phone .tifo-scene {
+  top: 0;
+  height: 596px;
+}
 /* Every canvas left in the scene is cloth, and cloth hanging on a light page
    needs its own shadow to lift off the cream. The reference sets this inline in
    initBare(); here it is a class, so the engine ships no style strings. */
@@ -4601,25 +4504,27 @@ html:not(.reveal-ready) .csa-anim {
   outline-offset: 3px;
 }
 
-/* At md and up the painted banner carries the page title, so the HTML heading
-   block goes screen-reader-only. sr-only and never display:none: exactly one
-   <h1> has to exist on this page at every width and stay in the accessibility
-   tree.
+/* The painted banner carries the page title at every width now — the phone
+   scene hangs the same three banners — so the HTML heading block is always
+   screen-reader-only. sr-only and never display:none: exactly one <h1> has to
+   exist on this page at every width and stay in the accessibility tree.
 
-   Spelled out here rather than as Tailwind's `md:sr-only` because two rules in
+   Taking it out of flow at every width is also what collapses the rafter on
+   phones: the section has nothing left with height, so there is no empty band
+   above the banners.
+
+   Spelled out here rather than as Tailwind's `sr-only` because two rules in
    this file — `.arena-rafter > *` (position: relative) and
    `.arena-head--noeyebrow` (padding-bottom) — come after the utilities layer
    and would otherwise win on exactly the two properties that matter. */
-@media (min-width: 768px) {
-  .arena-head--tifo {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
-  }
+.arena-head--tifo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }

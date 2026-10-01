@@ -24,16 +24,22 @@
  * Nothing here injects CSS at runtime — the reference's `.o2` block lives in
  * globals.css under the `.tifo-*` names, the cloth drop shadow included.
  *
+ * There are two scenes, chosen by the `layout` option: the 1100 x 800 desktop
+ * one and a 780 x 596 phone one. Same banners, same rods, same timing — the
+ * phone artwork just says less (rank, name, map, grade), because the eyebrow
+ * and the votes line would paint at ~5px there.
+ *
  * Coordinates are the reference's scene; see lib/tifo/layout.ts.
  */
 
 import { gradeTierColor } from "@/lib/rate";
 import {
-  DESKTOP,
   floorAbbrev,
+  layoutFor,
   type DropGeo,
   type TifoDrop,
   type TifoLayout,
+  type TifoLayoutName,
 } from "@/lib/tifo/layout";
 
 const CANVAS = "#e6dfcc";
@@ -293,6 +299,11 @@ export type TifoOptions = {
   /** The top three, best first. Missing ranks simply leave their banner out. */
   top3: TifoDrop[];
   /**
+   * Which scene to build. The two are the same banners on the same rods with
+   * the same timing; they differ in geometry and in how much the artwork says.
+   */
+  layout: TifoLayoutName;
+  /**
    * Ready-to-use CSS family lists (what the page reads out of
    * --font-space-grotesk / --font-plex-mono, with a system fallback appended).
    */
@@ -327,7 +338,8 @@ type State = {
 // --- engine ----------------------------------------------------------------
 
 export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
-  const L: TifoLayout = DESKTOP;
+  const L: TifoLayout = layoutFor(opts.layout);
+  const PH = opts.layout === "phone";
   const dispFam = opts.fonts.display;
   const labelFam = opts.fonts.label;
   const byRank = new Map<number, TifoDrop>(opts.top3.map((d) => [d.rank, d]));
@@ -470,6 +482,7 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
   }
 
   function dropArt(o: DropGeo, d: TifoDrop, idx: number): HTMLCanvasElement {
+    if (PH) return dropArtPhone(o, d, idx);
     const { w, h } = o;
     const k = w / 290;
     const c = cnv(w * ART, h * ART);
@@ -545,14 +558,73 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
     return c;
   }
 
+  /**
+   * Phone banner: rank numeral, name, map, grade disc. The TOP PEEK eyebrow and
+   * the votes line are left off — at this size they would paint at ~5px. Sizes
+   * are scene px, so x0.5 on a 390 phone.
+   */
+  function dropArtPhone(o: DropGeo, d: TifoDrop, idx: number): HTMLCanvasElement {
+    const { w, h } = o;
+    const c = cnv(w * ART, h * ART);
+    const g = ctx2d(c);
+    g.scale(ART, ART);
+    const { segs, gx } = clothBase(g, w, h, 20 + idx, 62);
+    const cx = w / 2;
+    // rank numeral
+    const capN = d.rank === 1 ? 108 : 94;
+    const num = String(d.rank);
+    let y = 34 + capN;
+    spray(g, num, cx, y, fitPx(num, dispFam, DW, 0, capN, w * 0.78), ORANGE, {
+      align: "center",
+      family: dispFam,
+      weight: DW,
+      blur: 10,
+      cut: STENCIL_CUTS,
+    });
+    // peek name: one size for both lines, never more than two
+    const capM = 21;
+    const maxW = w - 30;
+    const lines = nameLines(d.name, capM, maxW);
+    const npx = Math.min(
+      ...lines.map((s) => fitPx(s, dispFam, DW, TR, capM, maxW))
+    );
+    y += 26 + capM;
+    lines.forEach((ln, i) => {
+      spray(g, ln, cx, y, npx, INK, {
+        align: "center",
+        family: dispFam,
+        weight: DW,
+        ls: TR * npx,
+        blur: 2.5,
+        cut: STENCIL_CUTS,
+      });
+      if (i < lines.length - 1) y += npx * 0.95;
+    });
+    // map only — no floor, and no votes line
+    const map = d.map.toUpperCase();
+    const l = monoFit(map, 18, 1.2, w - 34);
+    spray(g, map, cx, y + 30, l.px, INK, {
+      align: "center",
+      family: labelFam,
+      weight: LW,
+      ls: l.ls,
+      grain: 0.2,
+      blur: 1.2,
+      alpha: 0.85,
+    });
+    sprayDisc(g, cx, h - 42, 25, gradeTierColor(d.grade), d.grade, 20);
+    grommets(g, gx, segs, 8);
+    return c;
+  }
+
   function stripArt(): HTMLCanvasElement {
     const { w, h } = L.STR;
     const c = cnv(w * ART, h * ART);
     const g = ctx2d(c);
     g.scale(ART, ART);
     const { segs, gx } = clothBase(g, w, h, 90, 94);
-    const tp = fitPx("TOP PEEKS", dispFam, DW, TR_STRIP, 74, w - 290);
-    spray(g, "TOP PEEKS", w / 2, 102, tp, ORANGE, {
+    const tp = fitPx("TOP PEEKS", dispFam, DW, TR_STRIP, PH ? 60 : 74, w - (PH ? 250 : 290));
+    spray(g, "TOP PEEKS", w / 2, PH ? 89 : 102, tp, ORANGE, {
       align: "center",
       family: dispFam,
       weight: DW,
@@ -561,7 +633,8 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
       cut: STENCIL_CUTS,
     });
     // stencilled crest at both ends
-    [70, w - 70].forEach((x, i) => {
+    const cs = PH ? 76 : 90; // painted at 90 either way, drawn at this size
+    (PH ? [58, w - 58] : [70, w - 70]).forEach((x, i) => {
       const s = cnv(90 * ART, 90 * ART);
       const tg = ctx2d(s);
       tg.scale(ART, ART);
@@ -598,7 +671,7 @@ export function createTifo(stage: HTMLElement, opts: TifoOptions): TifoHandle {
       tg.globalAlpha = 0.3;
       tg.fillStyle = tg.createPattern(noise(), "repeat") as CanvasPattern;
       tg.fillRect(0, 0, s.width, s.height);
-      g.drawImage(s, x - 45, h / 2 - 45 + 2 + (i ? 1 : -1), 90, 90);
+      g.drawImage(s, x - cs / 2, h / 2 - cs / 2 + 2 + (i ? 1 : -1), cs, cs);
     });
     grommets(g, gx, segs, 8);
     return c;

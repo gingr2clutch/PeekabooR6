@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import {
-  DESKTOP,
   dropRect,
+  layoutFor,
   type DropGeo,
   type TifoDrop,
   type TifoLayout,
+  type TifoLayoutName,
 } from "@/lib/tifo/layout";
 import type { TifoHandle } from "@/lib/tifo/engine";
 
@@ -22,15 +23,25 @@ import type { TifoHandle } from "@/lib/tifo/engine";
  * The frame the cloth hangs on is server-rendered: both rods, the ropes, the
  * ties and the three banner links are in the HTML, so the scene is on screen
  * before any JS runs and the hero is three crawlable, keyboard-reachable links
- * with JS off. The engine is a dynamic import that only happens at md and up,
- * only once the box is near the viewport, and only when the browser is idle.
- * Phones never download it.
+ * with JS off. The engine is a dynamic import that only happens once the box
+ * is near the viewport, and only when the browser is idle.
+ *
+ * The page mounts this twice — a phone scene below md and a desktop one at md
+ * and up — but each instance bails out immediately at the width it is not for,
+ * so a visit downloads and runs at most ONE scene.
  */
 
-/** Seconds of VISIBLE play before the scene draws its last frame and stops. */
-const PLAY_S = 45;
-/** Until the banners have dropped, every frame counts; after it, 30fps does. */
-const SETTLE_S = 3;
+/**
+ * Seconds of VISIBLE play before the scene draws its last frame and stops.
+ * Desktop keeps swaying in the wind for a while; a phone plays the drop and
+ * settles, and is never worth 45s of a battery.
+ */
+const PLAY_S = { desktop: 45, phone: 3.5 };
+/**
+ * Until the banners have dropped, every frame counts; after it, 30fps does.
+ * The phone scene is over before this would bite, so it never halves.
+ */
+const SETTLE_S = { desktop: 3, phone: Infinity };
 /** Frame the reduced-motion / Save-Data still is taken at (the reference's `still`). */
 const STILL_T = 6;
 
@@ -112,13 +123,17 @@ function tiePaths(L: TifoLayout) {
 
 export function TopTifo({
   top3,
+  layout = "desktop",
   className = "",
 }: {
   /** The top three, best first. */
   top3: TifoDrop[];
+  /** Which scene to hang. Below md the page asks for "phone". */
+  layout?: TifoLayoutName;
   className?: string;
 }) {
-  const L = DESKTOP;
+  const phone = layout === "phone";
+  const L = layoutFor(layout);
   const boxRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
@@ -166,9 +181,10 @@ export function TopTifo({
       engine = null;
     };
 
-    // Phones get the server-rendered frame and the three links, and nothing
-    // else: no chunk, no canvas, no work during hydration.
-    if (!window.matchMedia("(min-width: 768px)").matches) return cleanup;
+    // One scene per device. The desktop instance runs only at md and up and the
+    // phone one only below it, so the wrong one costs nothing but its
+    // server-rendered frame: no chunk, no canvas, no work during hydration.
+    if (window.matchMedia("(min-width: 768px)").matches === phone) return cleanup;
 
     // QA hook: /top?tifo_t=4.5 draws exactly the frame
     // tifo-reference.html?t=4.5 draws, and never starts a loop.
@@ -179,6 +195,8 @@ export function TopTifo({
     const saveData = (navigator as Nav).connection?.saveData === true;
 
     // --- the loop ---------------------------------------------------------
+    const playS = phone ? PLAY_S.phone : PLAY_S.desktop;
+    const settleS = phone ? SETTLE_S.phone : SETTLE_S.desktop;
     let t = 0; // scene time
     let visT = 0; // visible play time, which is what the wind-down counts
     let last = 0;
@@ -210,7 +228,7 @@ export function TopTifo({
       visT += dt;
       // Wind-down: one last frame, and the loop is finished for good. The
       // banners just keep hanging in it.
-      if (visT > PLAY_S) {
+      if (visT > playS) {
         done = true;
         e.render(t);
         stop();
@@ -218,7 +236,7 @@ export function TopTifo({
       }
       // Half the frames once the banners are hanging.
       other = !other;
-      if (t > SETTLE_S && other) return;
+      if (t > settleS && other) return;
       e.render(t);
     }
 
@@ -261,6 +279,7 @@ export function TopTifo({
       if (dead) return;
       engine = mod.createTifo(stage, {
         top3,
+        layout,
         fonts: { display, label },
         scale,
       });
@@ -302,7 +321,7 @@ export function TopTifo({
     loadIO.observe(box);
 
     return cleanup;
-  }, [L, top3]);
+  }, [L, layout, phone, top3]);
 
   const byRank = new Map(top3.map((d) => [d.rank, d]));
   const present = L.DROPS.filter((g) => byRank.has(g.rank));
@@ -315,7 +334,9 @@ export function TopTifo({
   return (
     <div
       ref={boxRef}
-      className={`tifo mx-auto w-full max-w-[1100px] overflow-hidden ${className}`}
+      className={`tifo overflow-hidden ${
+        phone ? "tifo--phone w-full" : "mx-auto w-full max-w-[1100px]"
+      } ${className}`}
     >
       {/* Top rod + cords: under the drops, so the cord ends disappear behind
           the cloth exactly as they do in the reference. */}

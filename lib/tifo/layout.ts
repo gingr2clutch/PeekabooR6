@@ -7,9 +7,10 @@
  * engine.ts for them the whole canvas scene would be pulled into the main
  * bundle. Nothing in here touches the DOM.
  *
- * Coordinates are the reference's internal scene, with y = 0 at the top of the
- * mock nav strip that production framing crops off: 1100 x 800 with a 64px
- * strip cut away, so the visible stage is 1100 x 736.
+ * Coordinates are the reference's internal scene. On desktop y = 0 is the top
+ * of the mock nav strip that production framing crops off: 1100 x 800 with a
+ * 64px strip cut away, so the visible stage is 1100 x 736. The phone scene has
+ * no nav strip to crop, so it is simply 780 x 596.
  */
 
 /** One banner's worth of peek data, as the engine paints it. */
@@ -73,6 +74,9 @@ export type TifoLayout = {
   STR: StripGeo;
 };
 
+/** Which of the two scenes an instance is drawing. */
+export type TifoLayoutName = "desktop" | "phone";
+
 export const DESKTOP: TifoLayout = {
   W: 1100,
   H: 800,
@@ -89,6 +93,34 @@ export const DESKTOP: TifoLayout = {
   ],
   STR: { x: 78, y: 620, w: 944, h: 126, t0: 0.62 },
 };
+
+/**
+ * Below md. A 780 x 596 scene drawn full-bleed at width/780 (0.5 on a 390
+ * phone), so the cloth, stitches and grommets keep their desktop proportions
+ * at half the size. Same podium (#2 / #1 / #3), same rods, ropes, ties,
+ * shadows and timing as desktop, and no nav strip to crop — only the banner
+ * artwork is simplified for the size (see dropArtPhone in engine.ts).
+ */
+export const PHONE: TifoLayout = {
+  W: 780,
+  H: 596,
+  NAV_H: 0,
+  VIEW_H: 596,
+  RAIL_Y: 20,
+  TOP_Y: 30,
+  FENCE_Y: 424,
+  RODX: [16, 764],
+  DROPS: [
+    { rank: 2, cx: 134, w: 214, h: 320, t0: 1.2, ph: 0.4 },
+    { rank: 1, cx: 390, w: 250, h: 360, t0: 1.62, ph: 2.1 },
+    { rank: 3, cx: 646, w: 214, h: 320, t0: 1.38, ph: 4.2 },
+  ],
+  STR: { x: 27, y: 438, w: 726, h: 112, t0: 0.62 },
+};
+
+export function layoutFor(name: TifoLayoutName): TifoLayout {
+  return name === "phone" ? PHONE : DESKTOP;
+}
 
 /**
  * A banner's cloth rectangle as percentages of the visible box, which is how
