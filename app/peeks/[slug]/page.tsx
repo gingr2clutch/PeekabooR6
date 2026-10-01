@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { NitroAdSlot } from "@/components/NitroAdSlot";
 import { PeekMedia } from "@/components/PeekMedia";
 import { ClipCredit } from "@/components/ClipCredit";
+import { PeekTitle } from "@/components/PeekTitle";
 import { clipPlatform } from "@/lib/gadget-embed";
 import { isSameSpot } from "@/lib/pin-groups";
 import { VoteButtons } from "@/components/VoteButtons";
@@ -279,9 +280,18 @@ export default async function PeekDetailPage({
               <span>Back</span>
             </Link>
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
-            {peek.name}
-          </h1>
+          {/* Map and floor used to run along a breadcrumb line below the
+              credit. They now sit behind the circled-i beside the title —
+              still in the HTML and still linked, just not spending a row of
+              the header on themselves. The BreadcrumbList JSON-LD below is
+              untouched, so the trail Google renders is unchanged. */}
+          <PeekTitle
+            name={peek.name}
+            mapName={map.name}
+            mapHref={`/maps/${map.slug}`}
+            floorName={floor.name}
+            floorHref={floorHref}
+          />
           <ClipCredit
             contributor={peek.contributors}
             // A peek's external clip is tiktok_url — the one off-site field it
@@ -292,18 +302,9 @@ export default async function PeekDetailPage({
               !!peek.tiktok_url && clipPlatform(peek.tiktok_url) === null
             }
             label="Peek"
-            className="mt-2"
+            size="lg"
+            className="mt-3"
           />
-          <p className="mt-3 text-sm text-ink">
-            <Link href={`/maps/${map.slug}`} className="hover:text-brand">
-              {map.name}
-            </Link>{" "}
-            ›{" "}
-            <Link href={floorHref} className="hover:text-brand">
-              {floor.name}
-            </Link>{" "}
-            › {peek.name}
-          </p>
         </div>
 
         {/* Peek stats */}

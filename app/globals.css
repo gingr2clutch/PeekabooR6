@@ -4409,6 +4409,18 @@ html:not(.reveal-ready) .csa-anim {
   color: #8a8274;
 }
 
+/* Label in the peek header's "where is this?" card. The site's 11px uppercase
+   mono label, spelled out here because the mono family is a CSS variable and
+   there is no Tailwind utility for it. */
+.peek-where-label {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8b8d86;
+}
+
 /* --- /top Tifo hero ------------------------------------------------------
    The reference's `.o2` block, renamed. It used to be injected at runtime by
    R6.css(); here it is plain stylesheet, which is what lets the whole frame —

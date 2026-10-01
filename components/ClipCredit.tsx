@@ -78,6 +78,12 @@ export type ClipCreditProps = {
    * credit sits under the title, so it should name what the title names.
    */
   label?: string;
+  /**
+   * Type size. "sm" is what every surface used before and stays the default;
+   * the peek page asks for "lg", where the title is now 36/60px and 14px read
+   * as a caption under it rather than as part of the header.
+   */
+  size?: "sm" | "lg";
   className?: string;
 };
 
@@ -86,6 +92,7 @@ export function ClipCredit({
   platform = null,
   externalUnknown = false,
   label = "Clip",
+  size = "sm",
   className = "",
 }: ClipCreditProps) {
   // Precedence lives in clipCreditName so every surface agrees. Only the
@@ -94,7 +101,11 @@ export function ClipCredit({
   const fallback = clipCreditName({ contributor: null, platform, externalUnknown });
 
   return (
-    <p className={`text-center text-sm font-bold text-brand ${className}`}>
+    <p
+      className={`text-center font-bold text-brand ${
+        size === "lg" ? "text-base sm:text-lg" : "text-sm"
+      } ${className}`}
+    >
       {label} by{" "}
       {contributor ? (
         <Link
