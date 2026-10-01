@@ -74,7 +74,13 @@ export async function createPeek(
    * no way to reach it and fell back to the house credit for everyone. It has
    * to land on the row being inserted.
    */
-  contributorId: string | null = null
+  contributorId: string | null = null,
+  /**
+   * An external clip URL (Medal / TikTok / YouTube) for a link-only
+   * submission, written to tiktok_url — the field clipPlatform() and
+   * ClipCredit read. Null for a file upload, which uses video_url instead.
+   */
+  externalClipUrl: string | null = null
 ): Promise<string> {
   console.log(
     "[createPeek] start. form keys:",
@@ -162,6 +168,7 @@ export async function createPeek(
       is_pro_only,
       instructions: instructions.length ? instructions : null,
       video_url: videoUrl,
+      tiktok_url: externalClipUrl,
       contributor_id: contributorId,
     })
     .select("id")

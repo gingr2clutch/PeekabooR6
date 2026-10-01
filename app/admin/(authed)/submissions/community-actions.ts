@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
+import { clipFieldsForSubmission } from "@/lib/submission-clip";
 import { createPeek } from "../peeks/actions";
 import { copySubmissionClipToR2 } from "@/lib/submission-media";
 import { resolveContributor } from "@/lib/contributors";
@@ -182,12 +183,16 @@ export async function publishSubmissionAction(
     }
   }
 
-  // 2. Clip. A link-only submission has nothing to copy and publishes
-  //    without a video — the admin can attach one on the peek's edit page.
-  let videoUrl: string | null = null;
+  // 2. Clip. An upload is copied to R2; a link-only submission has nothing to
+  //    copy, and its URL is carried across instead.
+  //
+  //    It used to publish with neither field set, which silently threw away the
+  //    clip the submitter actually sent — the peek went live with no video and
+  //    the house credit, and the only way to notice was to open the page.
+  let copiedVideoUrl: string | null = null;
   if (sub.file_path) {
     try {
-      videoUrl = await copySubmissionClipToR2(sub.file_path as string);
+      copiedVideoUrl = await copySubmissionClipToR2(sub.file_path as string);
     } catch (e) {
       throw new Error(
         `Clip copy failed, so nothing was created and the submission is still pending. ${
@@ -196,12 +201,24 @@ export async function publishSubmissionAction(
       );
     }
   }
+  const clip = clipFieldsForSubmission(
+    {
+      file_path: (sub.file_path as string | null) ?? null,
+      source_url: (sub.source_url as string | null) ?? null,
+    },
+    copiedVideoUrl
+  );
 
   // 3. Then the peek, through the shared creation path, with the credit as
   //    part of the insert rather than a follow-up write.
   let peekId: string;
   try {
-    peekId = await createPeek(formData, videoUrl, contributorId);
+    peekId = await createPeek(
+      formData,
+      clip.video_url,
+      contributorId,
+      clip.tiktok_url
+    );
   } catch (e) {
     if (e instanceof Error && e.message === "MISSING_REQUIRED_FIELD") {
       throw new Error("Pick a floor and give the peek a name before publishing.");
