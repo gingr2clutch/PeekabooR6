@@ -270,7 +270,18 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
               <div className={s.cell} key={k}>
                 <div className={s.num}>
                   {icons[k]}
-                  <span>{counts[k].toLocaleString('en-US')}</span>
+                  {/* The slot is sized by the FINAL value from the very first
+                      frame. .num is a centred row, so without it every digit
+                      the count gains re-centres the row and visibly hops the
+                      icon and the number sideways — 5.6px per digit, 8.3px on
+                      Votes when the thousands comma arrives. tabular-nums
+                      equalises digit widths but not digit counts. */}
+                  <span className={s.slot}>
+                    <span className={s.sizer} aria-hidden>
+                      {stats[k].toLocaleString('en-US')}
+                    </span>
+                    <span>{counts[k].toLocaleString('en-US')}</span>
+                  </span>
                 </div>
                 <div className={s.lbl}>{LABELS[k]}</div>
               </div>
