@@ -93,10 +93,23 @@ export function PeekTitle({
 
   const where = `${mapName} · ${floorName}`;
 
+  // Split off the final word so it can be glued to the icon. The capture keeps
+  // the exact whitespace run that separated them, so head + gap + tail is the
+  // name character-for-character — a name with a double space or an unusual
+  // separator still renders as itself. A single-word name has no head at all.
+  const m = /^([\s\S]*\S)(\s+)(\S+)$/.exec(name);
+  const [head, gap, tail] = m ? [m[1], m[2], m[3]] : ["", "", name];
+
   return (
     <div className="relative">
-      {/* The left padding is the icon plus its gap, so the NAME stays optically
-          centred even though the icon adds width on the right.
+      {/* No padding to balance the icon. Padding only ever balanced the ONE
+          line the icon sits on; every other line of a wrapped name inherited
+          the offset and sat half the padding to the right of centre. Without
+          it each line centres on the page centre, and the icon's line centres
+          as text-plus-icon together, which is what it should have been.
+
+          text-balance splits a two-line name evenly instead of leaving a
+          near-empty second line.
 
           aria-label looks redundant next to identical text, but it is load
           bearing: a heading's accessible name is built from its descendants,
@@ -106,28 +119,36 @@ export function PeekTitle({
           own label for when it is focused. */}
       <h1
         aria-label={name}
-        className="pl-[30px] text-4xl font-semibold leading-[1.1] tracking-tight sm:pl-[38px] sm:text-6xl"
+        className="text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-6xl"
       >
-        {name}
-        <button
-          ref={btnRef}
-          type="button"
-          aria-expanded={open}
-          aria-controls={cardId}
-          aria-label={`Where is this peek? ${where}`}
-          onClick={() => setOpen((v) => !v)}
-          className={`relative ml-[8px] inline-flex h-[22px] w-[22px] translate-y-[-0.09em] align-middle transition-colors duration-150 sm:ml-[10px] sm:h-7 sm:w-7 ${
-            open ? "text-brand" : "text-muted hover:text-brand"
-          }`}
-        >
-          <InfoIcon />
-          {/* A 44px target centred on a 22px glyph. Absolute, so the tap area
-              is comfortable without the icon taking more room in the line. */}
-          <span
-            aria-hidden
-            className="absolute left-1/2 top-1/2 h-11 w-11 -translate-x-1/2 -translate-y-1/2"
-          />
-        </button>
+        {head}
+        {gap}
+        {/* The last word and the icon break as one unit, so the icon can never
+            be left stranded on a line of its own. Splitting on the final run of
+            whitespace and re-rendering that exact run keeps the h1's text
+            content character-for-character the peek name. */}
+        <span className="whitespace-nowrap">
+          {tail}
+          <button
+            ref={btnRef}
+            type="button"
+            aria-expanded={open}
+            aria-controls={cardId}
+            aria-label={`Where is this peek? ${where}`}
+            onClick={() => setOpen((v) => !v)}
+            className={`relative ml-[8px] inline-flex h-[22px] w-[22px] translate-y-[-0.09em] align-middle transition-colors duration-150 sm:ml-[10px] sm:h-7 sm:w-7 ${
+              open ? "text-brand" : "text-muted hover:text-brand"
+            }`}
+          >
+            <InfoIcon />
+            {/* A 44px target centred on a 22px glyph. Absolute, so the tap area
+                is comfortable without the icon taking more room in the line. */}
+            <span
+              aria-hidden
+              className="absolute left-1/2 top-1/2 h-11 w-11 -translate-x-1/2 -translate-y-1/2"
+            />
+          </button>
+        </span>
       </h1>
 
       <div
