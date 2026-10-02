@@ -84,7 +84,12 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
   // Decide synchronously on the client so there's no flash of the page underneath.
   const [active, setActive] = useState<boolean | null>(null);
   const [phase, setPhase] = useState<Set<string>>(() => new Set());
-  const [counts, setCounts] = useState<Stats>({ maps: 0, peeks: 0, votes: 0, tier: 0 });
+  // The count-up writes to these spans directly. It used to live in state, and
+  // a setState per animation frame re-rendered this whole tree — bands, lockup,
+  // four brackets, ring, dot, and four cells with inline SVGs — about seventy
+  // times in 1.2s. A desktop absorbs that; a phone does not. Measured at 4x CPU
+  // throttle it rendered 11 frames instead of 54 and showed 3 of the 18 values,
+  // so the counter lurched in a few steps instead of counting.
   const [gone, setGone] = useState(false);
   const [handed, setHanded] = useState(false);
 
@@ -92,6 +97,7 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
   const mark = useRef<HTMLDivElement>(null);
   const word = useRef<HTMLDivElement>(null);
   const statsEl = useRef<HTMLDivElement>(null);
+  const numEls = useRef<Partial<Record<keyof Stats, HTMLSpanElement | null>>>({});
   const doneRef = useRef(false);
   const timers = useRef<number[]>([]);
 
@@ -138,6 +144,13 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
         }
       }
     }
+    // The spans carry no React children, so nothing here is ever overwritten by
+    // a later render and the start value has to be written once by hand.
+    ORDER.forEach((k) => {
+      const el = numEls.current[k];
+      if (el) el.textContent = '0';
+    });
+
     const add = (c: string) => setPhase((p) => new Set(p).add(c));
     const at = (ms: number, fn: () => void) => timers.current.push(window.setTimeout(fn, ms));
     const target = (name: string) => document.querySelector<HTMLElement>(`[data-intro-target="${name}"]`);
@@ -161,15 +174,22 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
     const countUp = (ms: number) => {
       const start = performance.now();
       const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+      const shown: Partial<Record<keyof Stats, string>> = {};
       const frame = (now: number) => {
         const p = Math.min(1, (now - start) / ms);
         const e = ease(p);
-        setCounts({
-          maps: Math.round(stats.maps * e),
-          peeks: Math.round(stats.peeks * e),
-          votes: Math.round(stats.votes * e),
-          tier: Math.round(stats.tier * e),
-        });
+        for (const k of ORDER) {
+          const el = numEls.current[k];
+          if (!el) continue;
+          const v = Math.round(stats[k] * e).toLocaleString('en-US');
+          // Eighteen distinct values over 1.2s means most frames round to the
+          // number already on screen. Skipping those writes leaves the browser
+          // nothing to lay out or paint for them.
+          if (v !== shown[k]) {
+            shown[k] = v;
+            el.textContent = v;
+          }
+        }
         if (p < 1 && !doneRef.current) requestAnimationFrame(frame);
       };
       requestAnimationFrame(frame);
@@ -280,7 +300,14 @@ export default function PeekabooIntro({ stats }: { stats: Stats }) {
                     <span className={s.sizer} aria-hidden>
                       {stats[k].toLocaleString('en-US')}
                     </span>
-                    <span>{counts[k].toLocaleString('en-US')}</span>
+                    {/* Deliberately childless: the count-up owns this node's
+                        text. React declaring no children means a re-render for
+                        `phase` or `handed` leaves it alone. */}
+                    <span
+                      ref={(el) => {
+                        numEls.current[k] = el;
+                      }}
+                    />
                   </span>
                 </div>
                 <div className={s.lbl}>{LABELS[k]}</div>
