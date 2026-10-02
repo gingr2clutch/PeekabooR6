@@ -96,6 +96,12 @@
 .num { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 36px; font-weight: 700; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
 .num svg { width: 14px; height: 14px; stroke: #8b8d86; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transform: translateY(6px); transition: opacity .4s ease .35s, transform .5s cubic-bezier(.2, .7, .2, 1) .35s; }
 .isStats .num svg { opacity: 1; transform: none; }
+/* Count-up width lock: both children share one grid cell, so the box is as wide
+   as the final value and the live number is centred inside it. The count can
+   gain digits without the row around it moving a pixel. */
+.slot { display: inline-grid; }
+.slot > * { grid-area: 1 / 1; justify-self: center; }
+.sizer { visibility: hidden; }
 .lbl { margin-top: 4px; font-size: 13px; font-weight: 600; letter-spacing: .12em; color: var(--orange); text-transform: uppercase; }
 
 /* progress + skip */
